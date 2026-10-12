@@ -1,0 +1,14 @@
+{
+  "revision": 6,
+  "installed": true,
+  "checks": [
+    "The installed frozen program includes the exact local grammar engines, WASM, licenses and example",
+    "The R6 installation detects the existing shared SDK and thirteen tools",
+    "The installed frozen simulator executes the shipped x86-64 loop and stack example: 55, 55, 0, 110"
+  ],
+  "errors": [],
+  "architecturesTested": [
+    "x86_64"
+  ],
+  "sdkReusedWithoutFullRehash": true
+}

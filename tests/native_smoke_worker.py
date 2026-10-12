@@ -225,6 +225,6 @@ def main():
             server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()
             args.report.parent.mkdir(parents=True,exist_ok=True)
             args.report.write_text(json.dumps({'platform':sys.platform,'revision':REVISION,'checks':checks,'errors':errors,'javascriptErrors':javascript_errors},indent=2),encoding='utf-8')
-        if errors or len(checks)!=14:raise AssertionError('Packaged desktop verification failed')
+    if errors or len(checks)!=15:raise AssertionError('Packaged desktop verification failed')
 
 if __name__=='__main__':main()

@@ -133,3 +133,27 @@ anteriores no se presentan como builds de estos cambios. Consulte
 dinámicamente. El recorrido del paquete comprueba sus bytes contra el código,
 la integridad de la geometría Blender y el módulo de creación de proyectos, junto
 con los catorce contratos nativos anteriores (quince comprobaciones en total).
+
+
+## Windows construido, instalado y publicado
+
+Build de producto: `10ca2270c23ee8bccbe06e48529fa03c7b1dfc57`. El instalador
+Windows y el portable se publicaron como assets alternativos `UI-10ca227` en la
+release R6, con manifiesto, quince comprobaciones nativas y SHA-256. GitHub devolvió
+digests iguales a los archivos locales. Los assets anteriores permanecen intactos.
+
+La instalación local se actualizó y conservó una copia recuperable de su payload
+anterior, cuatro archivos del perfil y las selecciones Java/C++/Python del SDK.
+El frozen helper instalado detectó trece herramientas y ejecutó el ejemplo
+x86-64 con 36 instrucciones: RAX/RBX = 55, RCX = 0 y RDX = 110. No se reconstruyó
+ni rehasheó por completo el SDK compartido.
+
+Se compararon 27 archivos entre fuente, bundle e instalación. Otra comprobación
+abrió la UI instalada con perfil desechable: bienvenida a pantalla completa,
+geometría Blender, WebGL2, material avanzando, límite configurado de 60 dibujos,
+ayuda de Melody desactivada sin peticiones IA y pausa de la esfera al entrar al
+editor. Son cuatro comprobaciones adicionales, sin modificar los datos del usuario.
+
+Evidencia: `tests/visual/evidence/windows-crystal-*.json`. El build mantiene la
+revisión R6: se instala manualmente y no se presenta como actualización de versión
+automática. Linux/macOS no se reconstruyeron para esta corrección.

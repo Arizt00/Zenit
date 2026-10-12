@@ -53,6 +53,9 @@
 15. **Distribución:** esta entrega prepara Windows desde el código actual. No
     reconstruye aquí Linux/macOS ni firma/notariza esos paquetes. Los binarios
     públicos anteriores de GitHub no se sobrescriben ni se etiquetan como nuevos.
+    El nuevo Windows se publica como asset alternativo UI-10ca227 dentro de R6,
+    con su propio manifiesto, verificación y SHA-256. Como conserva la revisión,
+    no se ofrece como actualización de versión automática: su instalación es manual.
 
 Los estados de compatibilidad parcial siguen visibles. Las pruebas no sustituyen
 datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inventados.

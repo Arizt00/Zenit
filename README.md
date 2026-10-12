@@ -1,5 +1,9 @@
 # Zénit 0.5.3 Preview R6
 
+Actualización visual y Melody: [instalador Windows UI-10ca227](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.6/Zenit-0.5.3-R6-UI-10ca227-Windows-Setup.exe) · [portable](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.6/Zenit-0.5.3-R6-UI-10ca227-Windows-Portable.zip) · [SHA-256](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.6/Zenit-0.5.3-R6-UI-10ca227-SHA256.txt). Esta compilación incorpora bienvenida a pantalla completa, cristal de Blender animado con Babylon/WebGL2, separadores corregidos y ayuda opcional de Melody mientras escribes. Es un build alternativo de R6 y requiere instalación manual; no sustituye los assets anteriores ni representa un nuevo build Linux/macOS. Consulta [implementación y pruebas](IMPLEMENTATION_REPORT.md), [comparación visual](VISUAL_DIFF_REPORT.md) y [límites reales](KNOWN_LIMITATIONS.md).
+
+Para activar los consejos, pulsa «Ayuda en tiempo real» o escribe «Ayúdame en tiempo real mientras escribo» en Melody y confirma el destino. «Sugerir siguiente código» muestra una propuesta en Monaco para aceptar con Tab. La edición en vivo conserva su permiso separado por archivo.
+
 Zénit es un IDE de escritorio con editor Monaco, terminal integrada, depuración por lenguaje, Lantern Live y asistencia de IA. R6 ejecuta gramáticas TextMate de extensiones con Oniguruma local y mejora el laboratorio ASM con sugerencias por CPU, vista decimal y un ejemplo x86-64 de bucles y pila. Consulta [los cambios y límites de R6](docs/PREVIEW_053_R6.md).
 
 ## Usar Zénit
