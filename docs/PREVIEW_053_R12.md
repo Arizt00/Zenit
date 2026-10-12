@@ -17,3 +17,5 @@ Los demás cambios de interfaz y límites de VS Code de R11 se conservan.
 
 [Implementación](../IMPLEMENTATION_REPORT.md) · [Límites](../KNOWN_LIMITATIONS.md)
 · [Comparación visual](../VISUAL_DIFF_REPORT.md).
+
+La distribución Windows publicada supera 15 comprobaciones nativas y 12 del runtime instalado; 101 archivos coinciden con el build. El perfil y los SDK existentes se conservan.
