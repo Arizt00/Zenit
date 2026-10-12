@@ -1,0 +1,25 @@
+{
+  "python": {
+    "executed": 304,
+    "passed": 299,
+    "skipped": 5
+  },
+  "nodePassed": 95,
+  "syntaxFiles": 63,
+  "uiChecks": {
+    "icons-ui": 12,
+    "refinement": 11,
+    "correction": 21,
+    "voice-ui": 14,
+    "themes": 10,
+    "files": 7,
+    "debug": 12,
+    "textmate": 7
+  },
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "originalReferencesUnchanged": true,
+  "actualIconTheme": "PKief.material-icon-theme; >1000 local SVG definitions; actual TTF fixture loaded and released",
+  "ai": "UI text/transport fixtures, real Python debugger and Node services; R12 Qwen WAV replayed. No new external model quality claim."
+}

@@ -55,7 +55,11 @@ def capture(page,base,out,core=False,screenshot_scale='css',profile_animation=Fa
     errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
     def inject(route):
         response=route.fetch();route.fulfill(response=response,body=response.text()+"\nwindow.__zenitQa={get editor(){return editor},get studio(){return studio},get platform(){return platformUI},get dock(){return dock},get desktop(){return desktopUI},get profiles(){return workspaceProfiles},openFile,closeFile,perform,openPalette};")
-    page.route('**/src/app.js',inject);page.goto(base+'?diagnostics=1');page.wait_for_function('window.lumen?.ready',timeout=45000)
+    page.route('**/src/app.js',inject);page.goto(base+'?diagnostics=1')
+    try:page.wait_for_function('window.lumen?.ready',timeout=45000)
+    except Exception:
+        state=page.evaluate('()=>({ready:!!window.lumen?.ready,booting:document.documentElement.dataset.booting,bridge:typeof window.pywebview?.api?.status,monaco:typeof window.monaco,babylon:typeof window.BABYLON,notifications:[...document.querySelectorAll(".toast,.notification,.error-message")].map(e=>e.textContent.slice(0,1000)),visible:document.visibilityState})')
+        (out/'boot-failure.json').write_text(json.dumps({'errors':errors,'state':state,'profile':'Isolated QA profile'},indent=2),encoding='utf-8');page.screenshot(path=str(out/'boot-failure.png'));raise
     page.evaluate('async()=>{await __zenitQa.openFile("Web.html");await __zenitQa.openFile("prueba.sm");await __zenitQa.openFile("java-inicial/E1.java");await __zenitQa.openFile("prueba.asm");await __zenitQa.openFile("java-inicial/E1.java");await __zenitQa.closeFile("Web.html");await __zenitQa.closeFile("prueba.sm");}')
     page.wait_for_function('__zenitQa.editor.getValue().includes("public")&&document.querySelector(".view-lines")');page.evaluate('__zenitQa.editor.view.focus()')
     if not core:

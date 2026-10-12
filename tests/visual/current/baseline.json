@@ -657,10 +657,10 @@
         "display": "flex"
       },
       "#platform-page": {
-        "x": 330,
-        "y": 72.66667175292969,
-        "width": 1012,
-        "height": 792,
+        "x": 356,
+        "y": 98.66667175292969,
+        "width": 960,
+        "height": 740,
         "display": "flex"
       },
       "#lumen-home": {
@@ -1928,7 +1928,7 @@
   "settings": {
     "contentRetained": true,
     "navigationRetained": true,
-    "mutations": 60,
+    "mutations": 51,
     "scrollRestored": true,
     "focusRestored": true
   },

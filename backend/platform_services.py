@@ -27,11 +27,13 @@ from .simulation import Simulation
 from .machines import Machines
 from .melody_files import MelodyFiles
 from .melody_voice import MelodyVoice
+from .permissions import WorkspacePermissions
 
 
 class PlatformServices:
     def __init__(self,app,directory=None):
         self.app=app;self.prefs=Preferences(directory);self.extensions=ExtensionStore(self.prefs)
+        self.permissions=WorkspacePermissions(self.prefs.directory)
         self.terminals=TerminalManager(self.prefs,app.project);self.tools=Toolchains(self.prefs,app.runner)
         self.lsp=LanguageServers(self.prefs,self.tools);self.ai=AIRouter(self.prefs);self.hardware=HardwareMonitor(self.prefs)
         self.command_seq=0;self.command_events=[];self.command_lock=threading.Lock()
@@ -45,6 +47,14 @@ class PlatformServices:
         self.extension_services=ExtensionServices(self);self.extension_runtime.services=self.extension_services
         self.melody_files=MelodyFiles(self)
         self.voice=MelodyVoice(self.prefs)
+    def restore_trust(self):
+        state=self.permissions.state(self.app.workspace.root,direct=not self.prefs.get('security.confirmRoutineActions'))
+        self.app.workspace.trusted=state['trusted'];return state
+    def trust(self,value):
+        self.permissions.set(self.app.workspace.root,value);self.app.workspace.trusted=value
+        if not value:self.workspace_changed()
+        state=self.permissions.state(self.app.workspace.root)
+        self.extension_services.emit('zenit.trust.changed',**state);return state
     def state(self):
         web=self.app.project/'web/vendor'
         return {'version':VERSION,'revision':REVISION,'preferences':self.prefs.export(),'providers':self.ai.vault.state(),
@@ -167,8 +177,12 @@ class PlatformServices:
         if path=='/debug/input':self._trusted();return self.debugger.input(body.get('text'))
         if path=='/settings':
             result=self.prefs.update(body.get('settings',{}),body.get('reset') is True)
-            if body.get('reset') is True or any(key.startswith(('appearance.','editor.','terminal.')) or key in ('general.locale','extensions.loadContributions') for key in body.get('settings',{})):
-                self.extension_services.theme_changed()
+            if body.get('reset') is True or 'security.confirmRoutineActions' in body.get('settings',{}):
+                state=self.restore_trust()
+                if not state['trusted']:self.workspace_changed()
+                self.extension_services.emit('zenit.trust.changed',**state)
+            if body.get('reset') is True or any(key.startswith(('appearance.','editor.','terminal.','security.')) or key in ('general.locale','extensions.loadContributions') for key in body.get('settings',{})):
+                self.extension_services.theme_changed();self.extension_services.icons_changed()
                 self.extension_services.emit('zenit.preferences.changed')
             if not self.prefs.get('security.terminals'):self.terminals.shutdown()
             if not self.prefs.get('security.cloudAI'):
@@ -184,21 +198,21 @@ class PlatformServices:
             if body.get('plan'):
                 result=self.extensions.install_plan(body['plan'],body.get('consent'))
                 self.extension_runtime.invalidate([x['id'] for x in result['installed']])
-                self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed')
+                self.extension_services.theme_changed();self.extension_services.icons_changed();self.extension_services.emit('zenit.contributions.changed')
                 return result
             result=self.extensions.install(body.get('ticket',''),body.get('consent'))
-            self.extension_runtime.invalidate([result['id']]);self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed');return result
+            self.extension_runtime.invalidate([result['id']]);self.extension_services.theme_changed();self.extension_services.icons_changed();self.extension_services.emit('zenit.contributions.changed');return result
         if path=='/extensions/discard':
             if body.get('plan'):self.extensions.discard_plan(body['plan'])
             else:self.extensions.discard(body.get('ticket',''))
             return {'discarded':True}
         if path=='/extensions/toggle':
             self.extension_runtime.invalidate([body.get('id')],'Una extensión se activó o desactivó. Revisa e inicia de nuevo los motores afectados.')
-            result=self.extensions.update_state(body.get('id'),body.get('enabled'));self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed');return result
+            result=self.extensions.update_state(body.get('id'),body.get('enabled'));self.extension_services.theme_changed();self.extension_services.icons_changed();self.extension_services.emit('zenit.contributions.changed');return result
         if path=='/extensions/remove':
             if body.get('consent') is not True:raise PermissionError('Confirma la desinstalación.')
             self.extension_runtime.invalidate([body.get('id')],'Se desinstaló una dependencia. Revisa los paquetes del motor.')
-            result=self.extensions.update_state(body.get('id'),remove=True);self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed');return result
+            result=self.extensions.update_state(body.get('id'),remove=True);self.extension_services.theme_changed();self.extension_services.icons_changed();self.extension_services.emit('zenit.contributions.changed');return result
         if path=='/extensions/updates':return self.extensions.updates()
         if path=='/extensions/export':return self.extensions.export_package(body.get('id'))
         if path=='/terminals/create':return self.terminals.create(ws,body.get('profile'),body.get('consent'),body.get('cols',100),body.get('rows',26),environment=self.extension_services.environment(ws.root))

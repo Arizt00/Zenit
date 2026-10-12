@@ -23,6 +23,7 @@ from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from .preferences import atomic_json
 from .extension_install_plan import ExtensionInstallPlans
+from .version import VERSION as PRODUCT_VERSION
 
 ID_PART=re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$')
 VERSION=re.compile(r'^[0-9][A-Za-z0-9.+_-]{0,79}$')
@@ -67,7 +68,7 @@ def validate_remote(url):
 
 def download(url,limit=2_000_000):
     validate_remote(url)
-    req=urllib.request.Request(url,headers={'User-Agent':'Zenit/0.5.3','Accept':'application/json, application/octet-stream'})
+    req=urllib.request.Request(url,headers={'User-Agent':'Zenit/'+PRODUCT_VERSION,'Accept':'application/json, application/octet-stream'})
     opener=urllib.request.build_opener(CheckedRedirect())
     # HTTPError is also an OSError. Preserve 404 so platform resolution can try
     # universal packages, rather than misreporting a healthy registry as offline.
@@ -93,7 +94,7 @@ def download(url,limit=2_000_000):
 def download_file(url, destination, progress=lambda **kw:None, cancelled=lambda:False):
     """Bounded memory, validated redirects, disk preflight and cancellable reads."""
     validate_remote(url)
-    req=urllib.request.Request(url,headers={'User-Agent':'Zenit/0.5.3','Accept':'application/octet-stream'})
+    req=urllib.request.Request(url,headers={'User-Agent':'Zenit/'+PRODUCT_VERSION,'Accept':'application/octet-stream'})
     opener=urllib.request.build_opener(CheckedRedirect())
     with opener.open(req,timeout=25) as response, destination.open('wb') as output:
         validate_remote(response.geturl())
@@ -186,23 +187,60 @@ def color_theme(root,relative,seen=None):
 
 def icon_theme(root,declaration,owner):
     theme_path=(root/str(safe_member(declaration.get('path','')))).resolve()
-    data=json_resource(root,declaration.get('path'));definitions={};size=0
-    for key,value in list(data.get('iconDefinitions',{}).items())[:4000]:
-        relative=value.get('iconPath') if isinstance(value,dict) else None
-        if not isinstance(relative,str) or ':' in relative or '\\' in relative:continue
+    data=json_resource(root,declaration.get('path'));definitions={};fonts=[];size=0;rejected=0
+    def resource(relative,limit):
+        if not isinstance(relative,str) or ':' in relative or '\\' in relative:raise ValueError('Ruta de icono inválida.')
         path=(theme_path.parent/relative).resolve()
-        if not path.is_relative_to(root.resolve()) or not path.is_file() or path.stat().st_size>50000:continue
-        if path.suffix.lower()!='.svg':continue
-        raw=path.read_text(encoding='utf-8-sig')
-        if re.search(r'<(?:script|foreignObject|iframe|image)\b|\bon\w+\s*=|(?:href\s*=\s*[\"\'](?!#))|url\(\s*[\"\']?(?!#)|<!ENTITY|<!DOCTYPE',raw,re.I):continue
-        size+=len(raw)
-        if size>2_000_000:break
-        definitions[key]='data:image/svg+xml;base64,'+base64.b64encode(raw.encode()).decode('ascii')
-    return {'id':owner+':'+str(declaration.get('id','icons')),'label':str(declaration.get('label','Iconos'))[:160],
-            'definitions':definitions,'fileExtensions':data.get('fileExtensions',{}),'fileNames':data.get('fileNames',{}),'file':data.get('file'),'owner':owner}
+        if not path.is_relative_to(root.resolve()) or not path.is_file() or path.stat().st_size>limit:raise ValueError('Recurso de icono fuera de límites.')
+        return path.read_bytes()
+    for font in data.get('fonts',[])[:12]:
+        if not isinstance(font,dict) or not isinstance(font.get('id'),str):continue
+        for source in font.get('src',[])[:4]:
+            try:
+                raw=resource(source.get('path'),2_000_000)
+                mime={b'wOFF':'font/woff',b'wOF2':'font/woff2',b'OTTO':'font/otf',b'\x00\x01\x00\x00':'font/ttf'}.get(raw[:4])
+                if not mime or size+len(raw)>8_000_000:raise ValueError('Fuente de iconos inválida.')
+                size+=len(raw);item={'id':font['id'][:160],'data':'data:'+mime+';base64,'+base64.b64encode(raw).decode('ascii')}
+                if re.fullmatch(r'(?:[5-9][0-9]|1[0-9]{2}|200)%',str(font.get('size',''))):item['size']=font['size']
+                if str(font.get('weight','')) in ('normal','bold',*[str(n) for n in range(100,1000,100)]):item['weight']=str(font['weight'])
+                if font.get('style') in ('normal','italic','oblique'):item['style']=font['style']
+                fonts.append(item);break
+            except (OSError,ValueError,TypeError,AttributeError):rejected+=1
+    for key,value in list(data.get('iconDefinitions',{}).items())[:4000]:
+        if not isinstance(value,dict):continue
+        try:
+            if 'iconPath' in value:
+                raw=resource(value['iconPath'],512_000)
+                if size+len(raw)>8_000_000:raise ValueError('Presupuesto de iconos superado.')
+                definitions[key]=image_data(raw,allow_local_use=True);size+=len(raw)
+            elif isinstance(value.get('fontCharacter'),str):
+                character=value['fontCharacter'];match=re.fullmatch(r'\\([a-fA-F0-9]{1,6})',character)
+                if match:character=chr(int(match[1],16))
+                font_id=value.get('fontId',fonts[0]['id'] if fonts else None)
+                if not 1<=len(character)<=2 or not any(f['id']==font_id for f in fonts):raise ValueError('Glifo de icono inválido.')
+                item={'fontCharacter':character,'fontId':font_id}
+                if re.fullmatch(r'#[0-9a-fA-F]{3,8}',str(value.get('fontColor',''))):item['fontColor']=value['fontColor']
+                if re.fullmatch(r'(?:[5-9][0-9]|1[0-9]{2}|200)%',str(value.get('fontSize',''))):item['fontSize']=value['fontSize']
+                definitions[key]=item
+        except (OSError,ValueError,UnicodeError,TypeError,AttributeError):rejected+=1
+    maps=('fileExtensions','fileNames','languageIds','folderNames','folderNamesExpanded','rootFolderNames','rootFolderNamesExpanded')
+    defaults=('file','folder','folderExpanded','rootFolder','rootFolderExpanded')
+    def associations(source):
+        result={}
+        if not isinstance(source,dict):return result
+        for field in maps:
+            entries=source.get(field,{})
+            if isinstance(entries,dict):result[field]={k.replace('\\','/').lower():v for k,v in list(entries.items())[:20000] if isinstance(k,str) and len(k)<=400 and isinstance(v,str) and v in definitions}
+        for field in defaults:
+            if isinstance(source.get(field),str) and source[field] in definitions:result[field]=source[field]
+        return result
+    return {'id':owner+':'+str(declaration.get('id','icons')),'configurationId':str(declaration.get('id','icons')),
+            'label':str(declaration.get('label','Iconos'))[:160],'owner':owner,'definitions':definitions,'fonts':fonts,
+            **associations(data),'light':associations(data.get('light')),'highContrast':associations(data.get('highContrast')),
+            'hidesExplorerArrows':data.get('hidesExplorerArrows') is True,'rejectedResources':rejected}
 
 
-def image_data(raw):
+def image_data(raw,allow_local_use=False):
     """Catalog images never become executable markup or external resource loaders."""
     if len(raw)>512_000:raise ValueError('Icono demasiado grande.')
     if raw.startswith(b'\x89PNG\r\n\x1a\n'):mime='image/png'
@@ -211,7 +249,7 @@ def image_data(raw):
     elif raw.startswith((b'GIF87a',b'GIF89a')):mime='image/gif'
     else:
         svg=raw.decode('utf-8-sig')
-        if not re.search(r'<svg\b',svg,re.I) or re.search(r'<(?:script|foreignObject|iframe|image|use)\b|\bon\w+\s*=|(?:href\s*=\s*[\"\'](?!#))|url\(\s*[\"\']?(?!#)|<!ENTITY|<!DOCTYPE',svg,re.I):raise ValueError('Icono no válido.')
+        if not re.search(r'<svg\b',svg,re.I) or re.search(r'<(?:script|foreignObject|iframe|image)\b|\bon\w+\s*=|(?:href\s*=\s*[\"\'](?!#))|url\(\s*[\"\']?(?!#)|<!ENTITY|<!DOCTYPE',svg,re.I) or not allow_local_use and re.search(r'<use\b',svg,re.I):raise ValueError('Icono no válido.')
         mime='image/svg+xml'
     return 'data:'+mime+';base64,'+base64.b64encode(raw).decode('ascii')
 

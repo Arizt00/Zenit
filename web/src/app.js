@@ -4,7 +4,7 @@ import {installDiagnostics} from './diagnostics.js';
 import {installExplorerMenu} from './explorer-menu.js';
 import './controls.js';
 import {installPreview} from './preview.js';
-import {icon,renderIcons,escapeHTML as esc,fileIcon} from './icons.js';
+import {icon,renderIcons,escapeHTML as esc,fileIcon,folderIcon} from './icons.js';
 import {LumenEditor,languageLabel,languageFor} from './editor.js';
 import {createLumenScene} from './glass.js';
 import {LenonStudio} from './studio.js';
@@ -90,14 +90,14 @@ function treeMarkup(nodes,depth=0){
   return nodes.map(node=>{
     const isOpen=openFolders.has(node.path),selected=editor?.current===node.path;
     const indent=16+depth*20;
-    if(node.directory)return `<div class="tree-node"><button class="tree-row" data-dir="${esc(node.path)}" style="padding-left:${indent}px" aria-expanded="${isOpen}"><span class="tree-chevron">${icon(isOpen?'chevron-down':'chevron-right')}</span><span class="folder-icon">${icon('folder')}</span><span class="label">${esc(node.name)}</span></button><div class="tree-children${isOpen?'':' closed'}">${treeMarkup(node.children||[],depth+1)}</div></div>`;
+    if(node.directory)return `<div class="tree-node"><button class="tree-row" data-dir="${esc(node.path)}" style="padding-left:${indent}px" aria-expanded="${isOpen}"><span class="tree-chevron">${icon(isOpen?'chevron-down':'chevron-right')}</span><span class="folder-icon">${folderIcon(node.path,isOpen)}</span><span class="label">${esc(node.name)}</span></button><div class="tree-children${isOpen?'':' closed'}">${treeMarkup(node.children||[],depth+1)}</div></div>`;
     return `<button class="tree-row${selected?' active':''}" draggable="true" data-file="${esc(node.path)}" title="${esc(node.path)}" style="padding-left:${indent+20}px">${fileIcon(node.path)}<span class="label">${esc(node.name)}</span></button>`;
   }).join('');
 }
 function renderTree(){
   if(activeView!=='explorer')return;
   $('#sidebar-title').textContent=platformUI?.t('Proyecto','Project')||'Project';
-  $('#sidebar-content').innerHTML=`<button class="tree-root" data-action="toggle-root" aria-expanded="${rootExpanded}">${icon(rootExpanded?'chevron-down':'chevron-right')}${icon('folder-open')}<span>${esc(service?.name||'MyProject')}</span></button><div class="tree-children${rootExpanded?'':' closed'}">${treeMarkup(tree)}</div>`;
+  $('#sidebar-content').innerHTML=`<button class="tree-root" data-action="toggle-root" aria-expanded="${rootExpanded}">${icon(rootExpanded?'chevron-down':'chevron-right')}${folderIcon(service?.workspace||'',rootExpanded,true)}<span>${esc(service?.name||'MyProject')}</span></button><div class="tree-children${rootExpanded?'':' closed'}">${treeMarkup(tree)}</div>`;
 }
 async function refreshTree(){const data=await api('/tree');tree=data.tree;service.name=data.name;renderTree();}
 function revealFile(path){
@@ -253,7 +253,7 @@ function componentsDialog(){
   modal('Componentes de Zénit',`<p>Estado de las integraciones incluidas. No es un marketplace de extensiones de Visual Studio.</p><dl class="about-grid"><dt>Python bridge</dt><dd>Activo · archivos, búsquedas y tareas.</dd><dt>Monaco</dt><dd>${service.monaco?'Instalado':'No descargado; editor base activo'}.</dd><dt>Babylon.js</dt><dd>${service.babylon?'Instalado':'No descargado; esfera CSS activa'}.</dd><dt>C / C++ / ASM</dt><dd>${esc(service.native)}.</dd><dt>Git</dt><dd>Estado, diferencias resumidas e historial del repositorio local.</dd><dt>Ollama</dt><dd>Adaptador disponible. Modelo no incluido.</dd></dl><p>Instala las dependencias visuales con <code>python tools/setup_assets.py</code>. Compila el núcleo opcional con <code>python tools/build_native.py</code> y reinicia Zénit.</p><div class="modal-actions"><button class="primary-button" data-action="close-modal">Cerrar</button></div>`);
 }
 function sessionDialog(){
-  modal('Sesión local',`<p>El proyecto permanece en este equipo. Zénit no requiere cuenta, no envía telemetría y no sincroniza tus archivos con una nube.</p><dl class="about-grid"><dt>Carpeta</dt><dd>${esc(service.workspace)}</dd><dt>Ejecución</dt><dd>${service.trusted?'Autorizada para esta sesión':'Protegida: requiere confirmación'}</dd><dt>Shell</dt><dd>${service.shell?'Sin restricciones, iniciada con --allow-shell':'Comandos locales limitados'}</dd></dl><div class="modal-actions"><button class="secondary-button" id="revoke-trust">Revocar confianza</button><button class="primary-button" data-action="close-modal">Cerrar</button></div>`);
+  modal('Sesión local',`<p>El proyecto permanece en este equipo. Zénit no requiere cuenta, no envía telemetría y no sincroniza tus archivos con una nube.</p><dl class="about-grid"><dt>Carpeta</dt><dd>${esc(service.workspace)}</dd><dt>Ejecución</dt><dd>${service.trusted?'Autorizada en este equipo':'Protegida: requiere confirmación'}</dd><dt>Shell</dt><dd>${service.shell?'Sin restricciones, iniciada con --allow-shell':'Comandos locales limitados'}</dd></dl><div class="modal-actions"><button class="secondary-button" id="revoke-trust">Revocar confianza</button><button class="primary-button" data-action="close-modal">Cerrar</button></div>`);
   $('#revoke-trust').onclick=guard(async()=>{await api('/trust',{trusted:false});service.trusted=false;closeModal();notify('Confianza revocada. Las tareas nuevas necesitan autorización.');});
 }
 function showMenu(anchor,items,label=''){
@@ -285,7 +285,7 @@ async function setView(view){
   }
   if(view==='run'){
     $('#sidebar-title').textContent='Run & Debug';const examples=allFiles().filter(path=>path.startsWith('Examples/'));
-    $('#sidebar-content').innerHTML=`<div class="sidebar-section"><h3>Current file</h3><button class="sidebar-task" data-action="run">${icon('play')} Run active file <kbd>F5</kbd></button><button class="sidebar-task" data-action="check-file">${icon('check')} Check syntax</button><button class="sidebar-task" data-action="workspace-check">${icon('files')} Check workspace</button><span class="sidebar-badge">${icon('shield')}${service.trusted?'Trusted for this session':'Workspace protected'}</span></div><div class="sidebar-section"><h3>Executable examples</h3>${examples.map(path=>`<button class="sidebar-task" data-file="${esc(path)}">${fileIcon(path)}${esc(path.split('/').pop())}</button>`).join('')||'<p class="tree-message">No hay ejemplos en esta carpeta.</p>'}</div><div class="tree-message">La ejecución es real y no está aislada. La depuración paso a paso y la conexión con Unity no están incluidas en esta edición.</div>`;
+    $('#sidebar-content').innerHTML=`<div class="sidebar-section"><h3>Current file</h3><button class="sidebar-task" data-action="run">${icon('play')} Run active file <kbd>F5</kbd></button><button class="sidebar-task" data-action="check-file">${icon('check')} Check syntax</button><button class="sidebar-task" data-action="workspace-check">${icon('files')} Check workspace</button><span class="sidebar-badge">${icon('shield')}${service.trusted?'Trusted on this device':'Workspace protected'}</span></div><div class="sidebar-section"><h3>Executable examples</h3>${examples.map(path=>`<button class="sidebar-task" data-file="${esc(path)}">${fileIcon(path)}${esc(path.split('/').pop())}</button>`).join('')||'<p class="tree-message">No hay ejemplos en esta carpeta.</p>'}</div><div class="tree-message">La ejecución es real y no está aislada. La depuración paso a paso y la conexión con Unity no están incluidas en esta edición.</div>`;
   }
 }
 
@@ -313,8 +313,9 @@ async function renderTerminalContent(){
 async function checkWorkspace(reveal=true){if(reveal)showTerminal('terminal',{forceConsole:true});const data=await api('/console',{command:'check'});termWrite('❯ check\n','term-command');termWrite(data.output,'term-success');}
 async function ensureTrust(){
   if(service.trusted)return true;
-  const yes=await confirmDialog('¿Confías en este proyecto?','El código podrá leer y modificar archivos, acceder a la red y ejecutar procesos con tus permisos. Esto no es una sandbox. Solo autoriza una carpeta cuyo contenido conoces. La confianza se revoca al cambiar de proyecto o reiniciar Zénit.','Confiar y continuar');
-  if(yes){await api('/trust',{trusted:true});service.trusted=true;if(activeView==='run')setView('run');}
+  const current=await api('/state');service.trusted=current.trusted;service.trustSource=current.trustSource;if(service.trusted)return true;
+  const yes=await confirmDialog('¿Confías en este proyecto?','El código podrá leer y modificar archivos, acceder a la red y ejecutar procesos con tus permisos. Esto no es una sandbox. Solo autoriza una carpeta cuyo contenido conoces. Zénit recordará esta carpeta en este equipo. Puedes revocar la confianza en Ajustes → Seguridad.','Confiar y continuar');
+  if(yes){const state=await api('/trust',{trusted:true});service.trusted=state.trusted;service.trustSource=state.source||state.trustSource;if(activeView==='run')setView('run');}
   return yes;
 }
 async function runCurrent(check=false){
@@ -382,7 +383,7 @@ async function sendAI(question){
   if(platformUI)return platformUI.sendAI(question);
   if(aiBusy||!question.trim())return;
   if(!service.ai?.connected){aiSettingsDialog();return;}
-  if(!aiConsent){const yes=await confirmDialog('Contexto para el modelo local','Se enviará esta pregunta junto con la selección de código, o con el archivo activo si no hay selección, al servidor Ollama local que has conectado. Las respuestas proponen cambios; nunca modifican archivos automáticamente.','Enviar al modelo');if(!yes)return;aiConsent=true;}
+  if(!aiConsent&&platformUI?.prefs['security.confirmRoutineActions']!==false){const yes=await confirmDialog('Contexto para el modelo local','Se enviará esta pregunta junto con la selección de código, o con el archivo activo si no hay selección, al servidor Ollama local que has conectado. Las respuestas proponen cambios; nunca modifican archivos automáticamente.','Enviar al modelo');if(!yes)return;aiConsent=true;}
   aiBusy=true;$('.send-button').disabled=true;
   appendChat(question,'user');$('#ai-input').value='';
   const waiting=appendChat('El modelo local está generando la respuesta...','assistant',service.ai.model);
@@ -588,7 +589,7 @@ async function start(){
     await checkWorkspace(false);
     renderTerminalContent();
     platformUI=new LumenPlatform({api,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
-      isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
+      isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},setTrustSource:value=>{service.trustSource=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
         settings.formatOnType=p['editor.formatOnType'];settings.motion=p['appearance.motion'];settings.density=p['appearance.density'];applySettings();if(!p['appearance.extensionTheme'])applyTheme(p['appearance.theme'],false);
@@ -604,7 +605,7 @@ async function start(){
     desktopUI=new DesktopWorkflows({api,editor,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
-    installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
+    installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
     installDiagnostics();
     document.documentElement.removeAttribute('data-booting');

@@ -1,0 +1,773 @@
+{
+  "method": "Edge browser device-scale emulation; not a Windows DPI switch.",
+  "results": [
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 1,
+      "css": [
+        1280,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 1.25,
+      "css": [
+        1024,
+        576
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 1.5,
+      "css": [
+        853,
+        480
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 2,
+      "css": [
+        640,
+        360
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 1,
+      "css": [
+        1366,
+        768
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 1.25,
+      "css": [
+        1093,
+        614
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 1.5,
+      "css": [
+        911,
+        512
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 2,
+      "css": [
+        683,
+        384
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 1,
+      "css": [
+        1440,
+        900
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 1.25,
+      "css": [
+        1152,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 1.5,
+      "css": [
+        960,
+        600
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 2,
+      "css": [
+        720,
+        450
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "css": [
+        1920,
+        1080
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 1.25,
+      "css": [
+        1536,
+        864
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 1.5,
+      "css": [
+        1280,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 2,
+      "css": [
+        960,
+        540
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 1,
+      "css": [
+        2560,
+        1440
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 1.25,
+      "css": [
+        2048,
+        1152
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 1.5,
+      "css": [
+        1707,
+        960
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 2,
+      "css": [
+        1280,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 1,
+      "css": [
+        3840,
+        2160
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 1.25,
+      "css": [
+        3072,
+        1728
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 1.5,
+      "css": [
+        2560,
+        1440
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 2,
+      "css": [
+        1920,
+        1080
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    }
+  ]
+}

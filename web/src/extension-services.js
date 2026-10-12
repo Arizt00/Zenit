@@ -7,6 +7,7 @@ export class ExtensionServicesUI {
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.trust.changed'){p.host.setTrusted(event.trusted);p.host.setTrustSource?.(event.source);if(!event.trusted)p.workspaceChanged();return;}
     if(event.command==='zenit.preferences.changed'){await p.syncPreferences();return;}
     if(event.command==='zenit.contributions.changed'){await p.loadContributions();return;}
     if(event.command==='zenit.files.changed'){await p.melodyFiles.reload(event.paths||[]);return;}
@@ -28,7 +29,8 @@ export class ExtensionServicesUI {
         // owns these global controls and may acknowledge the same request.
         if(new URLSearchParams(location.search).has('panel'))return;
         let result={ok:true};try{
-          if(event.id==='workbench.action.selectTheme'){p.themePicker.open();if(!document.querySelector('.theme-picker')?.getClientRects().length)throw Error('No hay temas instalados para abrir el selector.');}
+          if(event.id==='workbench.action.selectIconTheme'){p.iconThemePicker.open();if(!document.querySelector('.icon-theme-picker')?.getClientRects().length)throw Error('No se pudo abrir el selector de iconos.');}
+          else if(event.id==='workbench.action.selectTheme'){p.themePicker.open();if(!document.querySelector('.theme-picker')?.getClientRects().length)throw Error('No hay temas instalados para abrir el selector.');}
           else if(event.id==='workbench.action.showCommands')h.studio.host.palette('>');
           else if(event.id==='workbench.action.quickOpen')h.studio.host.palette(typeof event.arguments?.[0]==='string'?event.arguments[0]:'');
           else if(event.id==='workbench.action.openSettings')await p.settings();

@@ -14,7 +14,7 @@
 .platform-title {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-6);
 }
 
 .platform-title h2 {
@@ -159,14 +159,14 @@
   border: 1px solid var(--border);
   background: var(--surface);
   border-radius: 16px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text);
 }
 
 .search-filters>button {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-6);
 }
 
 .search-filters>button.active {
@@ -187,7 +187,7 @@
 
 .search-filters .glass-select-trigger {
   width: 100%;
-  gap: 20px;
+  gap: var(--space-6);
 }
 
 .search-filters>input {
@@ -288,7 +288,7 @@
 }
 
 .search-hit strong {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -340,8 +340,8 @@
 .settings-overlay>.platform-page {
   position: relative;
   inset: auto;
-  width: min(1012px,100%);
-  height: min(792px,calc(100dvh - 90px));
+  width: min(960px,100%);
+  height: min(740px,calc(100dvh - 80px));
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
@@ -353,22 +353,22 @@
 }
 
 .settings-overlay .platform-header {
-  padding: 24px 14px 18px;
-  height: 103px;
-  min-height: 103px;
+  padding: var(--space-8) var(--space-6);
+  height: 88px;
+  min-height: 88px;
 }
 
 .settings-overlay .platform-mark {
-  width: 62px;
-  height: 62px;
+  width: 48px;
+  height: 48px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
 }
 
 .settings-overlay .platform-mark .icon {
-  width: 31px;
-  height: 31px;
+  width: 25px;
+  height: 25px;
 }
 
 .settings-overlay .platform-title {
@@ -383,17 +383,17 @@
 .settings-overlay .platform-title:after {
   content: "Personaliza tu entorno de desarrollo.";
   position: absolute;
-  top: 72px;
-  left: 114px;
+  top: 61px;
+  left: 97px;
   color: var(--secondary);
   font-size: 13px;
 }
 
 .settings-toolbar {
   position: absolute;
-  top: 33px;
+  top: 24px;
   right: 88px;
-  width: 355px;
+  width: 310px;
   z-index: 1;
 }
 
@@ -433,7 +433,7 @@
 
 .settings-layout {
   display: grid;
-  grid-template-columns: 269px minmax(0,1fr);
+  grid-template-columns: 226px minmax(0,1fr);
   gap: 14px;
   flex: 1;
   min-height: 0;
@@ -455,13 +455,13 @@
 .settings-navigation>button {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: var(--space-6);
   text-align: left;
-  min-height: 43px;
+  min-height: 38px;
   flex: none;
   border-radius: 12px;
   padding: 0 14px;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--secondary);
 }
 
@@ -547,11 +547,11 @@
   background: var(--surface);
 }
 
-.settings-section-heading+.preference-row,.settings-appearance-heading+p+.preference-row {
+.preference-row:not(.preference-row + .preference-row) {
   border-radius: 13px 13px 0 0;
 }
 
-.preference-row:has(+.settings-appearance-heading),.preference-row:has(+.settings-content-footer),.preference-row:last-child {
+.preference-row:has(+ :not(.preference-row)),.preference-row:last-child {
   border-bottom: 1px solid var(--border);
   border-radius: 0 0 13px 13px;
 }
@@ -565,7 +565,7 @@
 }
 
 .preference-label strong {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.3;
 }

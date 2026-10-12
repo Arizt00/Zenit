@@ -8,7 +8,7 @@ export function installExplorerMenu(host){
     const path=item.dataset.file||item.dataset.dir||'',parent=item.hasAttribute('data-dir')?path:path.split('/').slice(0,-1).join('/');
     const control=e.ctrlKey||e.metaKey;let action;
     if(e.key==='F2'&&path)action=()=>nameDialog('Cambiar nombre',path,'rename',path);
-    if(e.key==='Delete'&&path)action=async()=>{if(await host.confirmDialog('Eliminar del proyecto',`¿Mover ${path} a la papelera de Lumen?`,'Eliminar'))await operation('delete',path);};
+    if(e.key==='Delete'&&path)action=async()=>{if(await (host.confirmRoutine||host.confirmDialog)('Eliminar del proyecto',`¿Mover ${path} a la papelera de Lumen?`,'Eliminar'))await operation('delete',path);};
     if(control&&['c','x'].includes(e.key.toLowerCase())&&path)action=()=>{clipboard={path,cut:e.key.toLowerCase()==='x'};};
     if(control&&e.key.toLowerCase()==='v'&&clipboard)action=async()=>{await operation(clipboard.cut?'move':'copy',clipboard.path,(parent?parent+'/':'')+clipboard.path.split('/').pop());if(clipboard.cut)clipboard=null;};
     if(action){e.preventDefault();e.stopPropagation();safe(action);}
@@ -39,7 +39,7 @@ export function installExplorerMenu(host){
       {separator:true},
       ...(path?[{label:'Cortar',icon:'code',shortcut:'Ctrl X',run:()=>{clipboard={path,cut:true};}},{label:'Copiar',icon:'copy',shortcut:'Ctrl C',run:()=>{clipboard={path,cut:false};}}]:[]),
       ...(clipboard?[{label:'Pegar',icon:'file',shortcut:'Ctrl V',run:async()=>{await operation(clipboard.cut?'move':'copy',clipboard.path,prefix+clipboard.path.split('/').pop());if(clipboard.cut)clipboard=null;}}]:[]),
-      ...(path?[{label:'Duplicar…',icon:'copy',run:()=>nameDialog('Duplicar',path,'copy',path+'.copy')},{label:'Cambiar nombre…',icon:'code',shortcut:'F2',run:()=>nameDialog('Cambiar nombre',path,'rename',path)},{label:'Eliminar',icon:'trash',shortcut:'Supr',run:async()=>{if(await host.confirmDialog('Eliminar del proyecto',`¿Mover ${path} a la papelera de Lumen? Podrás recuperarlo desde este menú.`,'Eliminar'))await operation('delete',path);}}]:[]),
+      ...(path?[{label:'Duplicar…',icon:'copy',run:()=>nameDialog('Duplicar',path,'copy',path+'.copy')},{label:'Cambiar nombre…',icon:'code',shortcut:'F2',run:()=>nameDialog('Cambiar nombre',path,'rename',path)},{label:'Eliminar',icon:'trash',shortcut:'Supr',run:async()=>{if(await (host.confirmRoutine||host.confirmDialog)('Eliminar del proyecto',`¿Mover ${path} a la papelera de Lumen? Podrás recuperarlo desde este menú.`,'Eliminar'))await operation('delete',path);}}]:[]),
       ...(lastTrash?[{label:'Deshacer eliminación',icon:'refresh',run:async()=>{await host.api('/platform/files/operation',{operation:'restore',ticket:lastTrash});lastTrash=null;await host.refreshTree();}}]:[]),
       {separator:true},{label:'Actualizar explorador',icon:'refresh',run:host.refreshTree}
     ];host.showMenu({getBoundingClientRect:()=>({left:e.clientX,right:e.clientX,bottom:e.clientY})},items,path.split('/').pop()||'Proyecto');

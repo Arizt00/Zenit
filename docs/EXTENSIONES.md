@@ -41,3 +41,8 @@ El proceso Node separado protege la respuesta de la interfaz; no es una sandbox 
 Historial: [0.5.3 R6](PREVIEW_053_R6.md), [0.5.3 R5](PREVIEW_053_R5.md), [0.5.3 R4](PREVIEW_053_R4.md), [0.5.3 R3](PREVIEW_053_R3.md), [0.5.3 R2](PREVIEW_053_R2.md), [0.5.3 R1](PREVIEW_053_R1.md). Los límites históricos de R7–R9 describen aquellas versiones, no el estado actual de los servicios ya conectados.
 
 En R5 el plan recorre también dependencias ya instaladas. Actualizar, desactivar o quitar un paquete detiene los grupos afectados. La restauración comprueba hashes, versiones y relaciones autorizadas antes de ejecutar de nuevo.
+
+
+## 0.5.4 R1 · temas de iconos
+
+File Icon Themes cargan imágenes/fuentes locales, asociaciones por nombre/extensión/lenguaje, carpetas/raíces y variantes. El selector en Apariencia y en la tarjeta guarda appearance.iconTheme. workbench.iconTheme global y selectIconTheme están conectados a estado y UI reales. Product Icon Themes y toda la herencia de iconos de lenguaje siguen pendientes. Véase [paridad 0.5.4 R1](VSCODE_PARITY_054_R1.md).

@@ -92,7 +92,7 @@ export class MelodyCompanion {
     const p=this.platform;if(this.session.enabled){this.session.stop();return;}
     if(!p.prefs['ai.model']){await p.settings('ai');p.host.notify('Configura un proveedor y un modelo antes de activar la ayuda.');return;}
     const provider=p.prefs['ai.provider'],model=p.prefs['ai.model'];
-    const grant=await p.host.confirmDialog('Ayuda de Melody en tiempo real',`Destino: ${provider} · ${model}. Al activar esta sesión se enviará el búfer activo tras una pausa al escribir: hasta 12 consultas, como máximo tres por minuto. Puedes detenerla en cualquier momento. Los consejos son propuestas y pueden contener errores. No se modifican ni guardan archivos.`, 'Activar ayuda');if(!grant)return;
+    const grant=await p.confirmRoutine('Ayuda de Melody en tiempo real',`Destino: ${provider} · ${model}. Al activar esta sesión se enviará el búfer activo tras una pausa al escribir: hasta 12 consultas, como máximo tres por minuto. Puedes detenerla en cualquier momento. Los consejos son propuestas y pueden contener errores. No se modifican ni guardan archivos.`, 'Activar ayuda');if(!grant)return;
     if(provider!==p.prefs['ai.provider']||model!==p.prefs['ai.model'])throw Error('El destino cambió. Activa de nuevo la ayuda con el proveedor actual.');
     this.workspace=await p.host.workspace?.();this.session.begin(this.session.snapshot());
   }

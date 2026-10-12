@@ -7,9 +7,9 @@
 .extension-hero {
   flex: none;
   position: relative;
-  min-height: 164px;
-  margin: 0 22px;
-  padding: var(--space-9) var(--space-9) var(--space-8);
+  min-height: 136px;
+  margin: 0 var(--space-8);
+  padding: var(--space-8) var(--space-9);
   border-radius: var(--radius-panel);
   background: radial-gradient(ellipse at 90% 20%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 65%),linear-gradient(115deg,color-mix(in srgb,var(--accent-soft) 60%,var(--surface)),var(--surface));
   border:1px solid color-mix(in srgb,var(--border) 65%,transparent);
@@ -22,8 +22,8 @@
 
 .extension-hero h3 {
   position: relative;
-  font-size: 27px;
-  font-weight: 650;
+  font-size: 24px;
+  font-weight: 550;
   letter-spacing: -.7px;
   margin: 0 0 7px;
   z-index: 1;
@@ -33,7 +33,7 @@
 .extension-hero>p {
   position: relative;
   color: var(--secondary);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   margin: 0;
   z-index: 1;
@@ -44,7 +44,7 @@
   display: flex;
   gap: var(--space-7);
   align-items: center;
-  margin-top: var(--space-7);
+  margin-top: var(--space-6);
   position: relative;
   z-index: 1;
   color: var(--secondary);
@@ -87,7 +87,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 22px;
-  margin: 20px 22px 16px;
+  margin: var(--space-7) var(--space-8);
   flex: none;
 }
 
@@ -167,7 +167,7 @@
   align-items: center;
   justify-content: space-between;
   flex: none;
-  margin: 0 22px 12px;
+  margin: 0 var(--space-8) var(--space-6);
   min-height: 18px;
   color: var(--secondary);
   font-size: 12px;
@@ -178,7 +178,7 @@
   min-height: 0;
   overflow: auto;
   scrollbar-width: none;
-  padding: 0 22px 18px;
+  padding: 0 var(--space-8) var(--space-8);
 }
 
 .extension-grid {
@@ -194,7 +194,7 @@
   column-gap: 14px;
   row-gap: 2px;
   align-items: center;
-  min-height: 98px;
+  min-height: 92px;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   padding: 10px 16px;
@@ -250,7 +250,7 @@
 }
 
 .extension-card h4 {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.3;
   font-weight: 600;
   letter-spacing: -.2px;
@@ -431,7 +431,7 @@
 
   .extension-hero {
     padding: var(--space-8);
-    min-height: 154px;
+    min-height: 136px;
   }
 
   .extension-hero h3 {
@@ -479,7 +479,7 @@
 
   .extension-hero {
     margin-inline: 14px;
-    min-height: 140px;
+    min-height: 130px;
   }
 
   .extension-hero h3 {
@@ -557,8 +557,8 @@
 }
 
 .extension-art img {
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
   display: block;
   object-fit: contain;
 }

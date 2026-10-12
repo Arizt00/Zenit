@@ -1,14 +1,14 @@
-# Seguridad y permisos · Preview R5
+# Seguridad y permisos · Preview 0.5.4 R1
 
 ## Modelo
 
 Servicio limitado a loopback, validación de Host/Origin/Sec-Fetch-Site, cookie de sesión HttpOnly/SameSite y token para la API. No es un servidor para exponerse a Internet. Las rutas de archivos quedan dentro del proyecto y se comprueban conflictos antes de escribir. No hay una sandbox de sistema operativo para código autorizado.
 
-Las PTY, tareas y servidores LSP exigen confianza explícita. Revocarla o cambiar de proyecto detiene los procesos administrados y cancela las respuestas activas. Las shells pueden acceder a recursos con tus permisos; cerrar el proceso principal no permite garantizar que cualquier programa malicioso haya desaparecido del sistema. Los procesos externos pueden ignorar, crear hijos o escapar de un grupo de procesos. No otorgues confianza a código desconocido.
+Las PTY, tareas y servidores LSP exigen una carpeta de confianza. En el modo normal la decisión explícita se recuerda en este equipo; en modo directo se permite la acción solicitada sin un aviso adicional. Revocar una carpeta prevalece sobre el modo directo. Revocarla o cambiar de proyecto detiene los procesos administrados y cancela las respuestas activas. Las shells pueden acceder a recursos con tus permisos; cerrar el proceso principal no permite garantizar que cualquier programa malicioso haya desaparecido del sistema. Los procesos externos pueden ignorar, crear hijos o escapar de un grupo de procesos. No otorgues confianza a código desconocido.
 
 ## IA y credenciales
 
-La nube está desactivada inicialmente. Cada envío se revisa; se envían la pregunta y el contexto aprobado, no todo el repositorio. Algunas rutas evidentes de claves (.env, .pem, id_rsa y similares) se bloquean como adjunto. Es una defensa adicional, no un clasificador infalible de secretos dentro de cualquier texto.
+La nube está desactivada inicialmente. En modo normal cada envío pide confirmación; en modo directo se autoriza al solicitarlo; se envían la pregunta y el contexto aprobado, no todo el repositorio. Algunas rutas evidentes de claves (.env, .pem, id_rsa y similares) se bloquean como adjunto. Es una defensa adicional, no un clasificador infalible de secretos dentro de cualquier texto.
 
 Credenciales en memoria, entorno existente o almacén seguro nativo admitido. Un backend keyring inseguro se rechaza. Los fallos de almacén no habilitan persistencia en texto plano. Los tokens de servicio no forman parte de las preferencias exportadas. Las variables conocidas de secretos se filtran del entorno heredado de las tareas; no se afirma aislamiento frente a un proceso ejecutado con los mismos permisos del usuario.
 

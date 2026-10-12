@@ -1,121 +1,128 @@
-# Implementación · Zénit 0.5.3 Preview R13
+# Implementación · Zénit 0.5.4 R1
 
-## Resultado y alcance
+## Resultado
 
-Esta revisión continúa las correcciones de R11/R12 y trabaja sobre las capturas
-del editor, catálogo, conversación, perfil y portada. Mantiene Monaco, terminales
-PTY, Open VSX/VSIX, proveedores de Melody, Lantern, Laboratory y depuración reales.
-No sustituye estas funciones por una maqueta. Las referencias originales quedan
-intactas; las dos últimas capturas aportadas se conservan por separado para comparar
-la evolución solicitada. No certifica el 90 % de toda la API de VS Code.
+0.5.4 R1 conecta los temas de iconos instalados con el explorador, las pestañas y las
+vistas de archivos. Refina Mi actividad, Ajustes, Extensiones, acceso a proveedores
+y Debug. Corrige la decoración de los menús que Monaco añade a un ShadowRoot ya
+existente. La confianza se recuerda por carpeta y existe un modo directo para
+evitar confirmaciones rutinarias. Monaco, PTY, proveedores, Open VSX/VSIX, DAP/LSP,
+Lantern y Laboratory siguen siendo servicios reales.
 
-## Componentes y archivos
+La revisión no acredita todavía el 90 % global de VS Code. Tampoco afirma que
+se haya entrenado un modelo nuevo o que las predicciones de Melody sean perfectas.
+Los informes y capturas distinguen ejecución real, recursos instalados y fixtures.
 
-| Cambio | Archivos funcionales | Contrato conservado |
-| --- | --- | --- |
-| Menú compacto, SVG coherentes y mismo aspecto en DOM/Shadow DOM | `web/src/monaco-overlays.js`, `web/src/icons.js`, `web/design/support.css` | Acciones y navegación de Monaco; paneles reales |
-| Respuestas y consejos con títulos, listas, tablas, enlaces y código | `web/src/assistant-markdown.js`, `web/src/app.js`, `web/src/melody-companion.js`, `web/design/assistant-markdown.css`, `web/design/melody.css` | Texto real, copia exacta, revisión de edición, referencias de línea y lectura |
-| Perfil en dos columnas | `web/src/studio.js`, `web/design/profile.css` | Arrastre, zoom, crop normalizado, WebP de 512 px, nombre y guardado local |
-| Catálogo más ligero y miniatura del tema real | `web/src/workbench.js`, `web/design/catalogue.css` | Estado/compatibilidad, filtro, dependencias, VSIX, host y selector de variantes |
-| Atmósfera de inicio por tema y refinamiento óptico | `web/design/welcome.css`, `web/src/glass.js` | Canvas persistente, Blender/Babylon/WebGL2, movimiento limitado y pausa |
-| Cuatro comandos de extensiones confirmados por la interfaz | `backend/extension_services.py`, `web/src/extension-services.js` | Node real → backend → UI → respuesta; timeout/error si no se abre |
-| Integración y metadatos R13 | `web/design.css`, `backend/version.py`, `packaging/version.txt`, `packaging/lumen.spec`, `web/src/setup.js`, `package.json` | Build e instalador identifican la revisión correcta |
+## Iconos y paridad
 
-Se retiran los estilos de perfil duplicados de `support.css`; el perfil tiene una
-única hoja específica. El menú de Monaco inyecta una única definición tanto en el
-documento como en los ShadowRoots; los glifos son decorativos y no sustituyen los
-handlers del editor. El observer actúa al aparecer menús, sin reconstruir el
-workbench en cada frame. Las animaciones respetan la preferencia global y reduced-motion.
+- `appearance.iconTheme`: automático, Zénit, sin iconos o identidad instalada.
+  Selector con búsqueda, teclado y previsualizaciones de recursos del paquete;
+  acceso desde Apariencia y desde la propia tarjeta de la extensión.
+- Asociaciones por nombre, extensión múltiple, padre directo y lenguaje;
+  carpetas, raíces, expansión, mapas específicos, light/highContrast y twisties.
+  Los cambios de iconos no crean eventos falsos de ColorThemeKind.
+- SVG y raster locales; fuentes WOFF/WOFF2/TTF/OTF con FontFace, tamaño heredado,
+  peso/estilo permitidos y liberación al cambiar de conjunto. Recursos de hasta
+  512 KB por imagen, 2 MB por fuente y 8 MB por tema; 4000 definiciones y 5 temas
+  por paquete. Los SVG pueden reutilizar geometría con referencias internas `#id`;
+  se rechazan scripts, entidades, recursos externos y rutas fuera del paquete.
+- Material Icon Theme real: 1251 definiciones cargadas y
+  0 recursos rechazados. Se comprueba expansión de carpeta con dos SVG
+  distintos, selección persistente y restauración tras recargar; no se inicia
+  el host de Material para aplicar sus contribuciones declarativas.
+- `workbench.iconTheme` global usa el id de declaración de VS Code: lectura,
+  propiedad directa, has/inspect/update, null para quitar iconos y undefined para
+  restaurar automático. Los eventos `onDidChangeConfiguration` reflejan cambios.
+- `workbench.action.selectIconTheme` abre el selector real y espera acuse del
+  renderer, como selectTheme/showCommands/quickOpen/openSettings. Se prueban
+  los cinco comandos desde una extensión Node real.
 
-## Sistema visual
+Las reglas de asociación se contrastaron con la [documentación oficial de
+File Icon Theme](https://code.visualstudio.com/api/extension-guides/file-icon-theme).
+La matriz de cobertura y pendientes está en `docs/VSCODE_PARITY_054_R1.md`.
 
-Se reutilizan `web/design/tokens.css`: espacios 2/4/6/8/10/12/16/20/24/32 px,
-radios de control/tarjeta/panel/hoja, superficies, texto, estados, bordes, sombras
-y duración rápida/normal/lenta. Perfil, tablas, bloques de código y controles del
-catálogo usan estos tokens. Las dimensiones del crop y la miniatura son geometría
-del componente. Los valores del shader representan el material, no espaciado CSS.
+## Permisos y persistencia
 
-La portada combina el fondo existente con una máscara dependiente del tema y
-campos luminosos discretos. La esfera conserva la doble pared de Blender y su
-renderizado Babylon; se ajustan el peso del color, el reflejo estrellado y la órbita.
-No se presenta un paisaje raster como terreno 3D ni el shader como óptica físicamente exacta.
+`backend/permissions.py` guarda decisiones locales con escritura atómica en
+`workspace-permissions.json`. Usa la ruta resuelta y normalizada, almacenada como
+SHA-256: una autorización solo afecta a esa carpeta exacta. No escribe decisiones
+en el proyecto. Reiniciar o volver a la carpeta conserva la elección. Revocar
+detiene los servicios y prevalece incluso sobre el modo directo.
 
-## Paridad de extensiones
+`security.confirmRoutineActions=false` evita avisos adicionales para acciones
+solicitadas: ejecución, LSP, iniciar motores, consultas/edición en vivo de Melody,
+ayuda en tiempo real, cierre de terminal y borrado a papelera/desinstalación. La
+sesión de consejos continúa desactivada al arrancar; solo comienza al solicitarla.
+La revisión de planes de archivos y los bloqueos por cambios sin guardar/conflictos
+siguen funcionando. La preferencia predeterminada del producto es confirmaciones;
+en la instalación del usuario se activa modo directo por su petición explícita.
 
-`workbench.action.selectTheme`, `workbench.action.showCommands`,
-`workbench.action.quickOpen` y `workbench.action.openSettings` abren el control real
-correspondiente. Esperan hasta 12 s a la confirmación del renderer. La ausencia de
-temas, un comando desconocido, falta de respuesta o proyecto sin confianza se
-rechazan. Abrir el selector no equivale a aplicar un tema; la selección sigue
-perteneciendo al usuario. Los controles globales pertenecen al workbench principal; las ventanas auxiliares no abren ni confirman la misma petición por duplicado. Tres tests Node adicionales verifican la propiedad de la petición y el rechazo de un control fallido. No se anuncia un resultado de compilación o depuración.
+## Interfaz y arquitectura
 
-## Melody y la voz vigente
+| Superficie | Cambio verificable |
+| --- | --- |
+| Mi actividad | Hoja de 800 px en dos columnas: identidad local, recuentos reales, Archivos/Proyectos con teclado, filtro/Ctrl+F, grupos temporales, indicador Abierto basado en los modelos reales y acceso directo al archivo/proyecto. |
+| Ajustes | Hoja máxima de 960×740, navegación compacta, grupos redondeados, tema efectivo visible y selector de iconos. Las categorías conservan nodos, foco y scroll. |
+| Extensiones | Cabecera de 136 px, tarjetas finas y acción Elegir iconos solo en paquetes que aportan iconThemes. Mantiene búsqueda, revisión, estados reales, VSIX y gestión de hosts. |
+| Debug | Título funcional de 26 px y zona de estado vacía delimitada. Mantiene controles, breakpoints, variables, pila, salida y estado real del debugger. |
+| Acceso a proveedores | Cabecera identificada, estado separado, botones compactos y detalles plegables. El acceso continúa mediante el cliente oficial; no se inventa un login propio ni se inicia sesión durante las pruebas. |
+| Monaco | Observador por ShadowRoot, decoración de inserciones tardías y liberación de observadores al retirar el host; misma familia SVG. |
+| Inicio | Acción Abrir proyecto con icono coherente y jerarquía más definida; permanece a pantalla completa, con el mismo paisaje, geometría Blender y material Babylon/WebGL2. |
+| Melody | Conserva Markdown, selección real, planes/undo, revisión vinculada a versión/cursor, sugerencias aceptadas explícitamente y la voz nueva Qwen de Emma. |
 
-El renderer usa nodos de texto y elementos DOM; no ejecuta HTML del proveedor ni
-carga imágenes. Solo admite enlaces http/https con noopener. El código conserva
-sus espacios al copiarse. Las tablas pueden desplazarse dentro del panel. Los
-consejos estructurados usan el mismo renderer; las predicciones siguen limitadas
-a ocho líneas y a la revisión/cursor actuales, con aceptación explícita y Deshacer.
+Se reutilizan los tokens centrales `space-*`, radius-control/card/sheet, border,
+surface/field/glass, accent/text/secondary, motion-fast y focus. No hay opacity
+aplicada al texto ni transition:all nueva. Se editan las hojas canónicas;
+`icon-themes.css` y `accounts.css` agrupan los estilos de sus componentes.
 
-Se mantiene la nueva voz Qwen de Emma seleccionada en R12 mediante
-`assistantVoice('emma')`, con verificación de identidad y sin fallback silencioso
-a la antigua MOSS. La generación real de R12 produjo 4,24 s de audio en 37,28 s;
-R13 vuelve a verificar el player con ese WAV, sin recargar el modelo ni copiar las
-referencias privadas. La voz online de OpenAI no se activa en esta entrega.
+Archivos principales: `backend/permissions.py`, `preferences.py`, `server.py`,
+`platform_services.py`, `extensions.py`, `extension_services.py`,
+`extension_runtime.py`, `extension_api.cjs`; `web/src/file-icon-theme.js`,
+`icons.js`, `theme-picker.js`, `workbench.js`, `extension-services.js`, `app.js`,
+`studio.js`, `accounts.js`, `monaco-overlays.js`, `debug-workspace.js`,
+`melody-companion.js`, `preview.js`, `explorer-menu.js`; `web/design/` y
+`design.css`; pruebas `test_workspace_permissions.py`, `test_extension_icon_theme.py`,
+`test_file_icon_theme.mjs`, `test_ui_icons_permissions_r14.py` y el recorrido
+de comandos existente. Versiones y empaquetado se incrementan a 0.5.4 R1.
 
 ## Validación
 
-297 tests Python ejecutados: 292 pasan y 5 se omiten explícitamente. Pasan los
-91 tests Node y los 62 controles de sintaxis. `tests/test_assistant_markdown.mjs`
-comprueba preservación de contenido y fences; `tests/test_ui_command_ack.py`
-verifica confirmación, error, timeout y confianza. El test nuevo de interfaz
-`tests/test_ui_refinement_r13.py` utiliza una extensión Node real, un tema instalado,
-un avatar QA generado y texto de prueba identificado; no mide calidad de IA externa.
+- 304 pruebas Python: 299 pasan y 5 omisiones explícitas. 95 pruebas JavaScript,
+  63 comprobaciones de sintaxis. Nuevas verificaciones de recursos locales,
+  prioridad de asociaciones, fuentes, configuración Node y confianza duradera.
+- 94 comprobaciones UI: {"icons-ui": 12, "refinement": 11, "correction": 21, "voice-ui": 14, "themes": 10, "files": 7, "debug": 12, "textmate": 7}.
+- Se prueban 89 variantes de color, persistencia, split, ventanas auxiliares,
+  foco y selección, además de Material y una TTF local real.
+- Tres terminales CMD ConPTY siguen recibiendo teclado; la separación de Proyecto
+  conserva encabezado y árbol; los planes de Melody crean/borran/recuperan archivos
+  reales con un transporte de modelo explícitamente identificado como fixture.
+- Debug Python calcula `answer = 42` al avanzar; la salida y niveles de logs
+  pertenecen a una extensión Node real. Inactivo/pausado: cero mutaciones en las
+  muestras. No se sustituyen diagnósticos ni salidas por texto de demo.
+- 13 vistas nativas WebView2 y 24 combinaciones de resolución/escala emulada,
+  72 capturas. Sin overflow global ni errores JS. Los pilares de composición
+  conservan la tolerancia de 2 px; los ocho goldens originales no se modifican.
+- Se reproducen los 4.24 s del WAV generado por la identidad nueva Emma/Qwen en
+  R12. Esto comprueba controles y reproducción, no una nueva generación ni la
+  calidad de otros proveedores. No se conecta una suscripción ChatGPT a una API.
 
-- refinement: 11 comprobaciones, sin errores JS no controlados.
-- correction: 21 comprobaciones, sin errores JS no controlados.
-- voice-ui: 14 comprobaciones, sin errores JS no controlados.
-- themes: 10 comprobaciones, sin errores JS no controlados.
-- files-ui: 7 comprobaciones, sin errores JS no controlados.
-- debug-output: 12 comprobaciones, sin errores JS no controlados.
-- textmate: 7 comprobaciones, sin errores JS no controlados.
-
-Las 13 vistas nativas usan WebView2 y DesktopAPI reales. Las cinco regiones de
-geometría mayor quedan dentro de 2 px de tolerancia. La matriz repite seis tamaños
-de 1280×720 a 3840×2160 y escalas 100/125/150/200 %: 24 casos, 72 capturas, sin
-overflow global. Es emulación de escala de Edge, no un cambio del DPI del sistema.
-Las pruebas de terminales usan tres sesiones ConPTY reales; las de Debug ejecutan
-Python real y comprueban cero mutaciones DOM en estados idle/paused sin cambios.
+Los fallos encontrados durante esta iteración se corrigieron y volvieron a
+comprobar: borde doble del buscador de actividad, grupos sin esquinas en Apariencia,
+decoración tardía de menús y SVG de Material que reutilizaban paths locales.
 
 ## Rendimiento medido
 
-WebView2 nativo, ventana QA: 101 muestras en 3.00 s; intervalo mediano 29.10 ms, p95 45.80 ms, máximo 75.10 ms. CPU del render Babylon: mediana 0.60 ms, p95 0.90 ms. No se registran long tasks ni eventos de pérdida de contexto en esa muestra. No es una garantía de 60 FPS.
+Muestra nativa de inicio: 3001.1 ms, 225
+intervalos rAF, mediana 12.5 ms, p95
+16.8 ms, máximo 33.3 ms.
+CPU de render WebGL p95 0.60 ms; sin long tasks
+observadas. Un loop visible y cero loops para la esfera oculta. En la muestra
+inactiva de 2 s no hay mutaciones ni dibujo. Estos valores no equivalen a tiempo
+GPU o a una garantía de 60 FPS en cada equipo; no se reclama animación perfecta.
 
-El muestreo inactivo de dos segundos registra cero mutaciones, cero render loops
-activos y cero long tasks. Los modelos, canvas y número de motores se conservan
-al recorrer las vistas. El efecto se pausa al quedar oculto o reducir el movimiento.
-Más detalle: `tests/visual/current/performance*.json`, `stability.json` y los recibos
-de `tests/visual/evidence/r13-*.json`. Los diffs son diagnósticos de imagen, no una
-puntuación de fidelidad o cobertura API.
+## Distribución
 
-
-## Distribución verificada de R13
-
-El build procede de `8f0718fab37b35ee7b3ce3a1c87da315ea0506c2` y está publicado en
-[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.13).
-Instalador: 113086288 bytes; portable:
-70854556 bytes. Los cinco assets tienen SHA-256
-confirmado por GitHub; no se sustituyen releases anteriores.
-
-Se superan 15 comprobaciones del paquete nativo y 12 del helper instalado.
-Los 104 archivos de frontend/assets/bridges coinciden byte por byte con el
-build. La comprobación instalada usa un Vira real en perfil QA aislado:
-contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
-Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
-de archivos. El consentimiento de IA sigue desactivado al iniciar.
-
-`app-0.5.3-R13` conserva el payload anterior, los cuatro archivos de perfil
-comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
-La respuesta real de GitHub permite al actualizador R12 seleccionar R13 con
-el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
-Se conserva la conexión `ai.voiceDirectory` configurada en R12, sin modificar preferencias. No se copian referencias ni se carga el modelo al configurar. Los recibos completos están en `tests/visual/evidence/windows-r13-*.json`.
+Se prepara build Windows 0.5.4 R1 con manifiesto/SHA-256, validación del runtime
+congelado e instalación junto al payload anterior. El recibo de distribución
+verificada se añade después de publicar e instalar. No se reconstruyen aquí
+Linux/macOS. Límites completos: `KNOWN_LIMITATIONS.md`.

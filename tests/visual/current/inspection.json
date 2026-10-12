@@ -935,9 +935,9 @@
     },
     ".search-filters": {
       "bounds": [
-        604.5833740234375,
+        616.7708740234375,
         402.26043701171875,
-        809.8229370117188,
+        785.4583740234375,
         46
       ],
       "font": [
@@ -1292,10 +1292,10 @@
     ".search-empty": null,
     ".settings-overlay>.platform-page": {
       "bounds": [
-        330,
-        72.66667175292969,
-        1012,
-        792
+        356,
+        98.66667175292969,
+        960,
+        740
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1315,10 +1315,10 @@
     },
     ".settings-layout": {
       "bounds": [
-        346.66668701171875,
-        176.33334350585938,
-        978.6666870117188,
-        671.6666870117188
+        372.66668701171875,
+        187.33334350585938,
+        926.6666870117188,
+        634.6666870117188
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1338,10 +1338,10 @@
     },
     ".settings-navigation": {
       "bounds": [
-        346.66668701171875,
-        176.33334350585938,
-        269,
-        671.6666870117188
+        372.66668701171875,
+        187.33334350585938,
+        226,
+        634.6666870117188
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1361,10 +1361,10 @@
     },
     ".settings-content": {
       "bounds": [
-        629.6666870117188,
-        176.33334350585938,
-        695.6666870117188,
-        671.6666870117188
+        612.6666870117188,
+        187.33334350585938,
+        686.6666870117188,
+        634.6666870117188
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1384,10 +1384,10 @@
     },
     ".preference-row": {
       "bounds": [
-        648.3333740234375,
-        272.4895935058594,
-        658.3333740234375,
-        71.0625
+        631.3333740234375,
+        283.4895935058594,
+        649.3333740234375,
+        70
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1696,10 +1696,10 @@
     ".preference-row": null,
     ".extension-hero": {
       "bounds": [
-        365.66668701171875,
+        363.66668701171875,
         135.6666717529297,
-        841.34375,
-        164
+        845.34375,
+        136
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1707,7 +1707,7 @@
         "400",
         "18.85px"
       ],
-      "padding": "24px 24px 20px",
+      "padding": "20px 24px",
       "gap": "normal",
       "radius": "16px",
       "border": "0.666667px solid color(srgb 0.913726 0.917647 0.980392 / 0.65)",
@@ -1719,10 +1719,10 @@
     },
     ".extension-card": {
       "bounds": [
-        365.66668701171875,
-        408.66668701171875,
-        841.34375,
-        98
+        363.66668701171875,
+        376.66668701171875,
+        845.34375,
+        93.83333587646484
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -2484,7 +2484,7 @@
         387.66668701171875,
         91.66667175292969,
         1243.666748046875,
-        105.23958587646484
+        93.64583587646484
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -2508,7 +2508,7 @@
     ".debug-controls": {
       "bounds": [
         387.66668701171875,
-        218.90625,
+        203.3125,
         1243.666748046875,
         40
       ],

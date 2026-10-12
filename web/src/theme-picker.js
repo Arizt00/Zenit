@@ -1,6 +1,7 @@
 import {themePalette} from './extension-theme.js';
 import {monacoThemeRules} from './theme-tokens.js';
 import {icon,escapeHTML as esc} from './icons.js';
+import {themeIcon} from './file-icon-theme.js';
 
 /** Palette previews come from the actual installed theme, with no extra renderer. */
 export class ThemePicker{
@@ -8,7 +9,7 @@ export class ThemePicker{
   open(owner=''){
     const p=this.platform,themes=(p.extensionThemes||[]).filter(t=>!owner||t.owner===owner),active=p.prefs['appearance.extensionTheme'];
     if(!themes.length){p.host.notify('Esta extensión no aporta temas activos.');return;}
-    p.host.modal(p.t('Elegir tema','Choose a theme'),`<section class="theme-picker"><p>${p.t('Explora los colores de tus temas instalados y elige una variante.','Explore the colours of your installed themes and choose a variant.')}</p><label class="theme-picker-search">${icon('search')}<input autofocus aria-label="${p.t('Buscar un tema','Search themes')}" placeholder="${p.t('Buscar tema o extensión…','Search theme or extension…')}"></label><div class="theme-picker-grid"></div><p class="error-message" role="alert"></p></section>`,{wide:true});
+    p.host.modal(p.t('Elegir tema','Choose a theme'),`<section class="theme-picker"><p>${p.t('Explora los colores de tus temas instalados y elige una variante.','Explore the colours of your installed themes and choose a variant.')}</p><label class="theme-picker-search">${icon('search')}<input data-composed-field autofocus aria-label="${p.t('Buscar un tema','Search themes')}" placeholder="${p.t('Buscar tema o extensión…','Search theme or extension…')}"></label><div class="theme-picker-grid"></div><p class="error-message" role="alert"></p></section>`,{wide:true});
     const root=document.querySelector('.theme-picker'),grid=root.querySelector('.theme-picker-grid'),filters=document.createElement('div');filters.className='theme-picker-filters';filters.setAttribute('role','group');filters.setAttribute('aria-label',p.t('Tipo de tema','Theme type'));grid.before(filters);
     const count=document.createElement('small');count.className='theme-picker-count';count.setAttribute('role','status');grid.before(count);let kind='all';
     const filter=()=>{const query=root.querySelector('input').value.toLocaleLowerCase().trim();for(const button of grid.children)button.hidden=!button.dataset.search.includes(query)||(kind!=='all'&&button.dataset.themeKind!==kind);const visible=[...grid.children].filter(b=>!b.hidden).length;count.textContent=visible?`${visible} ${p.t('variantes','variants')}`:p.t('No se encontraron temas. Cambia los filtros o la búsqueda.','No themes found. Change the filters or search.');};
@@ -22,5 +23,19 @@ export class ThemePicker{
     }
     const input=root.querySelector('input');input.oninput=filter;filter();input.onkeydown=e=>{if(e.key==='ArrowDown'){e.preventDefault();grid.querySelector('button:not([hidden])')?.focus();}};
     grid.onkeydown=e=>{const buttons=[...grid.children].filter(b=>!b.hidden&&!b.disabled),index=buttons.indexOf(document.activeElement),columns=getComputedStyle(grid).gridTemplateColumns.split(' ').length,step={ArrowRight:1,ArrowLeft:-1,ArrowDown:columns,ArrowUp:-columns}[e.key];if(step!==undefined){e.preventDefault();buttons[(index+step+buttons.length)%buttons.length]?.focus();}if(e.key==='Home'||e.key==='End'){e.preventDefault();buttons[e.key==='Home'?0:buttons.length-1]?.focus();}};input.focus();
+  }
+}
+
+export class IconThemePicker{
+  constructor(platform){this.platform=platform;}
+  open(owner=''){
+    const p=this.platform,installed=(p.extensionContributions.iconThemes||[]).filter(t=>!owner||t.owner===owner),choices=[...(!owner?[{id:'auto',label:p.t('Automático','Automatic'),hint:p.t('Primera extensión activa; Zénit como alternativa','First enabled extension; Zénit as fallback')},{id:'zenit',label:'Zénit',hint:p.t('Iconos integrados','Built-in icons')},{id:'none',label:p.t('Sin iconos','No file icons'),hint:p.t('Solo nombres de archivos','File names only')}]:[]),...installed];
+    p.host.modal(p.t('Iconos del explorador','Explorer icons'),`<section class="icon-theme-picker"><p>${p.t('Archivos, carpetas y lenguajes. Elige una identidad para tu proyecto.','Files, folders and languages. Choose an identity for your project.')}</p><label class="theme-picker-search">${icon('search')}<input data-composed-field autofocus aria-label="${p.t('Buscar iconos','Search icon themes')}" placeholder="${p.t('Buscar tema de iconos…','Search icon themes…')}"></label><div class="icon-theme-options"></div><p role="alert" class="error-message"></p></section>`);
+    const root=document.querySelector('.icon-theme-picker'),list=root.querySelector('.icon-theme-options'),kind=p.host.editor.extensionTheme?.uiTheme?.startsWith('hc-')?'contrast':document.documentElement.dataset.theme==='day'?'light':'dark';
+    for(const choice of choices){const button=document.createElement('button');button.className='icon-theme-option';button.dataset.iconThemeId=choice.id;button.dataset.search=(choice.label+' '+(choice.owner||'')).toLocaleLowerCase();button.setAttribute('aria-pressed',String((p.prefs['appearance.iconTheme']||'auto')===choice.id));const preview=choice.definitions?[['src',true,true],['src/main.py'],['src/App.java'],['src/index.ts'],['package.json']].map(([path,folder,expanded])=>themeIcon(choice,path,{folder,expanded,kind})||icon(folder?'folder':'file')).join(''):icon(choice.id==='none'?'minus':choice.id==='auto'?'refresh':'files');button.innerHTML=`<span class="icon-theme-copy"><strong>${esc(choice.label)}</strong><small>${esc(choice.hint||choice.owner)}</small></span><span class="icon-theme-preview" aria-hidden="true">${preview}</span><span class="theme-selected">${icon('check')}</span>`;
+      button.onclick=()=>p.safe(async()=>{for(const node of list.children)node.disabled=true;try{await p.savePreference('appearance.iconTheme',choice.id);if(root.isConnected)p.host.closeModal();}catch(e){root.querySelector('[role=alert]').textContent=e.message;for(const node of list.children)node.disabled=false;}});list.append(button);
+    }
+    const input=root.querySelector('input');input.oninput=()=>{const query=input.value.toLocaleLowerCase().trim();for(const button of list.children)button.hidden=!button.dataset.search.includes(query);};input.onkeydown=e=>{if(e.key==='ArrowDown'){e.preventDefault();list.querySelector('button:not([hidden])')?.focus();}};
+    list.onkeydown=e=>{const buttons=[...list.children].filter(b=>!b.hidden&&!b.disabled),index=buttons.indexOf(document.activeElement),step={ArrowDown:1,ArrowUp:-1}[e.key];if(step!==undefined&&buttons.length){e.preventDefault();buttons[(index+step+buttons.length)%buttons.length]?.focus();}};input.focus();
   }
 }

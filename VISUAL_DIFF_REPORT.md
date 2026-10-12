@@ -1,32 +1,49 @@
-# Comparación visual · Zénit 0.5.3 R13
+# Comparación visual · 0.5.4 R1
 
-Se conserva la matriz histórica de referencia/componente y se añaden las últimas
-capturas solicitadas, sin estirarlas ni convertir resultados en nuevos goldens.
+Se conserva cada referencia original. La portada a pantalla completa y las
+mejoras de actividad/ajustes/debug siguen las instrucciones posteriores del
+usuario. No se mide esta evolución como una copia de una composición antigua.
 
-| Captura señalada | Corrección real | Verificación |
-| --- | --- | --- |
-| Editor con menú grande | Menú DOM/Shadow DOM de 360×337 px en la prueba, filas ≤30 px, SVG temáticos | Captura y acciones reales de Monaco |
-| Extensiones | Hero de menor altura, iconos y tarjeta más ligera, miniatura del tema instalado, VSIX visible | Catálogo, variante One Dark Pro Darker, inspector real |
-| Consejos y conversación | Tablas, encabezados, listas, código y enlaces con jerarquía tipográfica | Texto QA delimitado, copia exacta, rechazo de HTML ejecutable |
-| Perfil | Dos columnas; diálogo 680×452 px en 1672×917 | Zoom, crop WebP real, nombre y persistencia |
-| Inicio oscuro | Color por tema, profundidad/iluminación y órbita refinada | Canvas de Blender/Babylon retenido; reduced-motion y pausa |
+## Ciclo realizado
 
-Las dos capturas QA que el usuario volvió a adjuntar se guardan en
-`tests/visual/issue-references/r13`. Su comparación overlay/diff contra R13 está
-en `tests/visual/comparisons/r13`; se pide evolución respecto a esas imágenes,
-por lo que una diferencia menor no significa automáticamente mejor diseño.
+Auditar contratos y CSS → implementar → ejecutar el producto → capturar → revisar
+→ corregir → volver a capturar. Se detectaron el campo de búsqueda con dos bordes
+y los grupos de Apariencia cuadrados; se corrigieron sus selectores sin recrear
+la ventana. La prueba de inserciones tardías cubre el menú de Monaco dentro de
+su ShadowRoot. La captura nativa se hizo con WebView2 y ANGLE/Intel; las pruebas
+de contexto perdido usan Edge/SwiftShader.
 
-Los siete overlays/diffs de las referencias originales están en
-`tests/visual/comparisons`. La portada de la referencia inicial fue sustituida
-por el encargo posterior de inicio minimalista a pantalla completa. Las imágenes
-originales permanecen intactas. El catálogo y el perfil se compactan por la petición
-posterior; no se presenta ese cambio de proporción como coincidencia píxel a píxel.
+## Resultados y límites
 
-13 vistas nativas y 72 capturas de escala/resolución están verificadas. Sin errores
-JS no controlados ni overflow global en estos recorridos; los cinco límites de
-composición principales cumplen 2 px. Persisten diferencias de material, tipografía,
-contenido de proyectos y datos reales. No se certifica fidelidad perfecta ni 90 %
-de paridad VS Code. Consulta `KNOWN_LIMITATIONS.md`.
+Hay 13 vistas nativas, más capturas de Material, selector, actividad, cuenta,
+temas, terminales y Markdown. Se validan 24 casos de viewport/DPI emulado (72
+capturas) sin overflow global. Los cinco pilares geométricos conservan la
+tolerancia de 2 px. No se alteran `tests/visual/references` ni se deforman capturas
+para mejorar una cifra. Las capturas privadas de los proyectos del usuario no
+se añaden al repositorio.
 
-La muestra de animación nativa presenta intervalos de frame variables y no garantiza
-60 FPS. Los datos medidos figuran en `IMPLEMENTATION_REPORT.md`.
+Las comparaciones de evolución se guardan en `tests/visual/comparisons/054-r1`.
+Actividad usa la última captura aportada por el usuario, con el perfil y archivos
+QA; las otras vistas usan capturas QA de R13. MAE es error medio de canal en 0–255;
+SSIM representa bloques de luminancia. Fechas, contenido y distribución pueden
+variar; la nueva actividad es una evolución solicitada. Ninguna
+métrica equivale a un porcentaje de acabado o de paridad.
+
+| Vista | MAE | SSIM por bloques |
+| --- | ---: | ---: |
+| extensions | 6.377 | 0.6981 |
+| activity | 2.795 | 0.8328 |
+| debug | 1.554 | 0.9205 |
+| welcome | 0.053 | 0.9985 |
+
+Extensiones mantiene la identidad de la hoja y reduce su cabecera. Ajustes usa
+el tema efectivo y un tamaño menor. Actividad elimina rutas dominantes y añade
+filtro y agrupación. Debug conserva sus nodos y reorganiza el espacio vacío.
+Inicio conserva el shader vivo y mejora el control principal; no se presenta
+como un nuevo paisaje tridimensional. Existen diferencias de contenido, óptica,
+iconos oficiales, tipografía y estados respecto a las referencias originales.
+No se certifica todavía correspondencia visual perfecta.
+
+Evidencia: `tests/visual/evidence/054-r1-tests.json`, `054-r1-icons-ui.json`,
+`054-r1-geometry.json`, `054-r1-matrix.json` y `tests/visual/current`.
+Los frame times están en IMPLEMENTATION_REPORT.md; no se declaran 60 FPS constantes.

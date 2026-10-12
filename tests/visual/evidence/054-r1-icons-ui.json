@@ -1,0 +1,27 @@
+{
+  "checks": [
+    "Installed Material Icon Theme styles real files and expanded folders without running its host",
+    "The icon selector persists the installed identity and colour themes retain the icons",
+    "Settings reports the effective theme, keeps category nodes, and restores colour and icon selection after reload",
+    "Direct mode skips routine prompts; explicit revocation still requires one grant, remembered for that folder",
+    "Activity projects come from the latest real history; keyboard tabs and Ctrl+F work with one search border",
+    "The compact activity sheet filters real recent files and reopens the selected buffer",
+    "The installed catalogue exposes actual icon contributions in a compact picker",
+    "The official account access sheet has a separate status and expandable connection details; no login was initiated",
+    "Late menu items inside an existing Monaco shadow root receive the same SVG decoration",
+    "A real local TTF icon theme loads its glyphs, inherits font size, and releases font faces when switched away",
+    "Settings, catalogue and activity remain within four desktop sizes and three small/scaled viewports",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "metrics": {
+    "iconResources": [
+      {
+        "id": "PKief.material-icon-theme:material-icon-theme",
+        "definitions": 1251,
+        "rejected": 0
+      }
+    ]
+  },
+  "fixture": "Isolated QA project and profile; real installed icon/colour extensions. Account sheet rendered without signing in; no external AI quality benchmark."
+}

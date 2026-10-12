@@ -1,0 +1,54 @@
+{
+  "screens": {
+    "extensions": {
+      "channelMAE": [
+        5.868553453376675,
+        6.105577528136789,
+        7.156001993185601
+      ],
+      "meanMAE": 6.376710991566355,
+      "lowFrequencyMAE": 6.011358435614729,
+      "lumaBlockSSIM": 0.6980815573238016,
+      "overlay": "extensions-overlay.png",
+      "diff": "extensions-diff.png"
+    },
+    "activity": {
+      "channelMAE": [
+        2.4622436121532143,
+        2.4892637996796294,
+        3.432717593776252
+      ],
+      "meanMAE": 2.7947416685363655,
+      "lowFrequencyMAE": 2.642951251646904,
+      "lumaBlockSSIM": 0.8328209833899708,
+      "overlay": "activity-overlay.png",
+      "diff": "activity-diff.png"
+    },
+    "debug": {
+      "channelMAE": [
+        1.7857162423755433,
+        1.8832525449640758,
+        0.9919111623611423
+      ],
+      "meanMAE": 1.5536266499002538,
+      "lowFrequencyMAE": 1.4202759864087096,
+      "lumaBlockSSIM": 0.9205087905268184,
+      "overlay": "debug-overlay.png",
+      "diff": "debug-diff.png"
+    },
+    "welcome": {
+      "channelMAE": [
+        0.05562005290812041,
+        0.053624258425383375,
+        0.04978202793590499
+      ],
+      "meanMAE": 0.053008779756469594,
+      "lowFrequencyMAE": 0.03431107412800777,
+      "lumaBlockSSIM": 0.99851677556407,
+      "overlay": "welcome-overlay.png",
+      "diff": "welcome-diff.png"
+    }
+  },
+  "reference": "Activity uses the latest user-attached synthetic QA capture; other views use disposable R13 QA captures. Private project screenshots stay outside the repository. Geometry is not scaled or stretched to improve a score.",
+  "interpretation": "Requested evolution, not a fidelity percentage."
+}

@@ -1,11 +1,11 @@
 {
-  "commit": "cc581e363ced911ec2ffb1e2eb795e459c7504e7",
-  "trackedFiles": 748,
-  "sourceFiles": 282,
+  "commit": "5e9b5feb307d345df05638677d28d56925d0bf33",
+  "trackedFiles": 785,
+  "sourceFiles": 289,
   "stylesheets": [
     "/design.css"
   ],
-  "cssBytes": 721,
+  "cssBytes": 799,
   "importantDeclarations": 0,
   "transitionAll": 0,
   "sources": [
@@ -96,6 +96,7 @@
     "tests/fixtures/lsp_server.py",
     "tests/native_smoke_worker.py",
     "tests/test_assembly_language.mjs",
+    "tests/test_assistant_markdown.mjs",
     "tests/test_backend.py",
     "tests/test_checkpoint_io.py",
     "tests/test_continuity.py",
@@ -114,6 +115,7 @@
     "tests/test_extension_r5.py",
     "tests/test_extension_r9.py",
     "tests/test_extension_theme.mjs",
+    "tests/test_extension_ui_commands.mjs",
     "tests/test_floating_r5.py",
     "tests/test_foundation.py",
     "tests/test_languages052.py",
@@ -154,6 +156,7 @@
     "tests/test_ui052.py",
     "tests/test_ui_053.py",
     "tests/test_ui_ai_contract.py",
+    "tests/test_ui_command_ack.py",
     "tests/test_ui_foundation.py",
     "tests/test_ui_r3.py",
     "tests/test_ui_r4.py",
@@ -163,6 +166,7 @@
     "tests/test_ui_r8.py",
     "tests/test_ui_r9.py",
     "tests/test_ui_refinement.py",
+    "tests/test_ui_refinement_r13.py",
     "tests/test_ui_textmate.py",
     "tests/test_ui_zenit_r2.py",
     "tests/test_ui_zenit_r3.py",
@@ -207,6 +211,7 @@
     "web/continuity.css",
     "web/controls.css",
     "web/design.css",
+    "web/design/assistant-markdown.css",
     "web/design/catalogue.css",
     "web/design/debug-workspace.css",
     "web/design/debug.css",
@@ -217,6 +222,7 @@
     "web/design/melody-voice.css",
     "web/design/melody.css",
     "web/design/pages.css",
+    "web/design/profile.css",
     "web/design/shell.css",
     "web/design/support.css",
     "web/design/themes.css",
@@ -239,6 +245,7 @@
     "web/src/app.js",
     "web/src/assembly-language.js",
     "web/src/assembly-workbench.js",
+    "web/src/assistant-markdown.js",
     "web/src/babylon-scene.js",
     "web/src/controls.js",
     "web/src/debug-workspace.js",
@@ -295,7 +302,7 @@
   "references": [
     {
       "screen": "editor",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\editor.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\editor.png",
       "size": [
         1672,
         941
@@ -304,7 +311,7 @@
     },
     {
       "screen": "welcome",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\welcome.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\welcome.png",
       "size": [
         1672,
         941
@@ -313,7 +320,7 @@
     },
     {
       "screen": "search",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\search.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\search.png",
       "size": [
         1672,
         941
@@ -322,7 +329,7 @@
     },
     {
       "screen": "settings",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\settings.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\settings.png",
       "size": [
         1672,
         941
@@ -331,7 +338,7 @@
     },
     {
       "screen": "forge",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\forge.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\forge.png",
       "size": [
         1672,
         941
@@ -340,7 +347,7 @@
     },
     {
       "screen": "laboratory",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\laboratory.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\laboratory.png",
       "size": [
         1672,
         941
@@ -349,7 +356,7 @@
     },
     {
       "screen": "debug",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\debug.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\debug.png",
       "size": [
         1672,
         941
@@ -358,7 +365,7 @@
     },
     {
       "screen": "extensions",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r13\\native\\references\\extensions.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r14\\native\\references\\extensions.png",
       "size": [
         1672,
         941

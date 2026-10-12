@@ -1,4 +1,5 @@
-/** Lumen Line. Original 24-unit vector family; local, theme-aware and font-free. */
+import {themeIcon,installIconFonts} from './file-icon-theme.js';
+/** Lumen Line. Original 24-unit vector family; local and theme-aware. */
 export const ICON_NAMES=Object.freeze(["speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
 const paths = {
   "cut": '<circle cx="5" cy="6" r="3"/><circle cx="5" cy="18" r="3"/><path d="m8 8 12 12M8 16 20 4"/>',
@@ -92,15 +93,12 @@ export function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 let activeFileIcons=null;
-export function setFileIcons(theme){activeFileIcons=theme||null;}
+let iconKind='dark',iconLanguage=()=>'';
+export function setFileIcons(theme,kind='dark',language=()=> ''){if(activeFileIcons!==theme)installIconFonts(theme);activeFileIcons=theme||null;iconKind=kind;iconLanguage=language;if(typeof document!=='undefined')document.documentElement.dataset.iconArrows=theme?.hidesExplorerArrows?'hidden':'visible';}
+export function folderIcon(path,expanded=false,root=false){if(activeFileIcons==='none')return '';return activeFileIcons?themeIcon(activeFileIcons,path,{folder:true,expanded,root,kind:iconKind}):icon(expanded?'folder-open':'folder');}
 export function fileIcon(path) {
-  if(activeFileIcons){
-    const name=path.split('/').pop().toLowerCase(),parts=name.split('.');
-    let id=activeFileIcons.fileNames?.[name];
-    for(let i=1;!id&&i<parts.length;i++)id=activeFileIcons.fileExtensions?.[parts.slice(i).join('.')];
-    const src=activeFileIcons.definitions?.[id||activeFileIcons.file];
-    if(typeof src==='string'&&src.startsWith('data:image/svg+xml;base64,'))return `<span class="file-type extension-file-icon"><img src="${escapeHTML(src)}" alt=""></span>`;
-  }
+  if(activeFileIcons==='none')return '';
+  const themed=themeIcon(activeFileIcons,path,{language:iconLanguage(path),kind:iconKind});if(themed)return themed;
   const ext = path.split('.').pop().toLowerCase();
   if(['html','htm'].includes(ext))return `<span class="file-type file-type-html">${icon('html')}</span>`;
   if(ext==='class')return `<span class="file-type file-type-class">${icon('java')}</span>`;

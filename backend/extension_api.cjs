@@ -37,7 +37,7 @@ module.exports=function createAPI(host,options){
   const storage=options.storage;fs.mkdirSync(storage,{recursive:true});
   const read=name=>{try{return JSON.parse(fs.readFileSync(path.join(storage,name),'utf8'));}catch{return {};}};
   const save=(name,value)=>{const target=path.join(storage,name),tmp=target+'.tmp';fs.writeFileSync(tmp,JSON.stringify(value));fs.renameSync(tmp,target);};
-  const settings=read('configuration.json'),defaults={};let themeLabel=options.themeLabel||'Zénit Día';
+  const settings=read('configuration.json'),defaults={};let themeLabel=options.themeLabel||'Zénit Día',iconTheme=options.iconTheme===null?null:options.iconTheme||'zenit';
   const config=options.manifest.contributes?.configuration;
   for(const section of (Array.isArray(config)?config:[config]).filter(Boolean))for(const [key,value] of Object.entries(section.properties||{}))defaults[key]=value.default;
   const configuration=(section='')=>{
@@ -45,14 +45,16 @@ module.exports=function createAPI(host,options){
     return Object.assign(values,{get:(key,fallback)=>settings[prefix+key]??defaults[prefix+key]??fallback,has:key=>prefix+key in settings||prefix+key in defaults,inspect:key=>({key:prefix+key,defaultValue:defaults[prefix+key],globalValue:settings[prefix+key]}),update:async(key,value)=>{const full=prefix+key;if(value===undefined)delete settings[full];else settings[full]=value;save('configuration.json',settings);event('configuration').fire({affectsConfiguration:s=>full===s||full.startsWith(s+'.')});}});
   };
   const themeConfiguration=(section='')=>{
-    const original=configuration(section),key=section==='workbench'?'colorTheme':section===''?'workbench.colorTheme':null;
-    if(!key)return original;
-    Object.defineProperty(original,key,{enumerable:true,get:()=>themeLabel});
-    return Object.assign(original,{get:(k,f)=>k===key?themeLabel:configuration(section).get(k,f),has:k=>k===key||configuration(section).has(k),inspect:k=>k===key?{key:'workbench.colorTheme',defaultValue:'Zénit Día',globalValue:themeLabel}:configuration(section).inspect(k),update:async(k,value,target)=>{
-      if(k!==key)return configuration(section).update(k,value,target);
-      if(target!==undefined&&target!==true&&target!==1)throw Error('Zénit solo admite workbench.colorTheme en el perfil global.');
+    const original=configuration(section),prefix=section==='workbench'?'':section===''?'workbench.':null;
+    if(prefix===null)return original;
+    const keys={[prefix+'colorTheme']:()=>themeLabel,[prefix+'iconTheme']:()=>iconTheme};
+    for(const [key,get] of Object.entries(keys))Object.defineProperty(original,key,{enumerable:true,get,configurable:true});
+    return Object.assign(original,{get:(k,f)=>keys[k]?keys[k]():configuration(section).get(k,f),has:k=>!!keys[k]||configuration(section).has(k),inspect:k=>keys[k]?{key:'workbench.'+k.replace(/^workbench\./,''),defaultValue:k.endsWith('iconTheme')?'zenit':'Zénit Día',globalValue:keys[k]()}:configuration(section).inspect(k),update:async(k,value,target)=>{
+      if(!keys[k])return configuration(section).update(k,value,target);
+      if(target!==undefined&&target!==true&&target!==1)throw Error('Zénit solo admite '+k+' en el perfil global.');
       if(!host.service)throw Error('Servicios de temas no conectados.');
-      const state=await host.service('configuration.theme',{value});themeLabel=state.label;
+      if(k.endsWith('iconTheme')){const state=await host.service('configuration.icons',{value,reset:value===undefined});iconTheme=state.configurationId;}
+      else{const state=await host.service('configuration.theme',{value});themeLabel=state.label;}
     }});
   };
   const makeDocument=data=>{
@@ -228,7 +230,7 @@ module.exports=function createAPI(host,options){
   let activeTheme=Object.freeze({kind:[1,2,3,4].includes(options.themeKind)?options.themeKind:1});
   Object.defineProperty(vscode.window,'activeColorTheme',{get:()=>activeTheme,configurable:false});
   const updateEditors=require('./extension_editors.cjs')(vscode,options,event,makeDocument,documents,doc=>{current=doc;});
-  const serviceEvent=services.event;services.event=(name,value)=>{if(name==='theme.changed'){if(typeof value.label==='string'&&themeLabel!==value.label){themeLabel=value.label;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.colorTheme'});}if([1,2,3,4].includes(value.kind)){activeTheme=Object.freeze({kind:value.kind});event('theme').fire(activeTheme);}return;}if(name==='editor.state'){updateEditors(value);return;}if(name==='document.saved'){const uri=Uri.file(value.uri),old=documents.get(uri.toString());if(old&&old.getText()===value.text){old._revision=value.revision;old.isDirty=false;event('save').fire(old);}return;}return serviceEvent(name,value);};
+  const serviceEvent=services.event;services.event=(name,value)=>{if(name==='icons.changed'){if(iconTheme!==value.configurationId){iconTheme=value.configurationId;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.iconTheme'});}return;}if(name==='theme.changed'){if(typeof value.label==='string'&&themeLabel!==value.label){themeLabel=value.label;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.colorTheme'});}if([1,2,3,4].includes(value.kind)){activeTheme=Object.freeze({kind:value.kind});event('theme').fire(activeTheme);}return;}if(name==='editor.state'){updateEditors(value);return;}if(name==='document.saved'){const uri=Uri.file(value.uri),old=documents.get(uri.toString());if(old&&old.getText()===value.text){old._revision=value.revision;old.isDirty=false;event('save').fire(old);}return;}return serviceEvent(name,value);};
   function didSave(){if(current){if(current.uri.scheme==='file')try{current._revision=require('node:crypto').createHash('sha256').update(fs.readFileSync(current.uri.fsPath)).digest('hex');}catch{}current.isDirty=false;event('save').fire(current);}}
   return {vscode,context,services,uiEvent:ui.event,syncDocument,willSave,didSave,treeViews,fileDecorations,portAttributes,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme)||fileSystems.has(value),readVirtual:async value=>{if(fileSystems.has(value))return fileSystems.read(value);const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
 };

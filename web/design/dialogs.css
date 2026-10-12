@@ -79,7 +79,7 @@
   margin: 14px 0 7px;
 }
 
-.modal input:not([type=checkbox]):not([type=file]):not([type=range]),.modal textarea,.modal .glass-select-trigger {
+.modal input:not([type=checkbox]):not([type=file]):not([type=range]):not([data-composed-field]),.modal textarea,.modal .glass-select-trigger {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 10px;

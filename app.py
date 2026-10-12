@@ -10,6 +10,7 @@ import threading
 import webbrowser
 from pathlib import Path
 from backend.server import Application, LumenServer
+from backend.version import VERSION,REVISION
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 
@@ -125,8 +126,8 @@ def main():
     application.features.updates.start()
     import os
     from backend.preferences import atomic_json
-    atomic_json(application.features.prefs.directory/'instance.json', {'url':url,'pid':os.getpid(),'version':'0.5.3'})
-    print(f"\n  ZÉNIT  0.5.3\n  {url}\n  Proyecto: {application.workspace.root}\n  Núcleo: {application.native.name}\n", flush=True)
+    atomic_json(application.features.prefs.directory/'instance.json', {'url':url,'pid':os.getpid(),'version':VERSION,'revision':REVISION})
+    print(f"\n  ZÉNIT  {VERSION} · R{REVISION}\n  {url}\n  Proyecto: {application.workspace.root}\n  Núcleo: {application.native.name}\n", flush=True)
     if args.allow_shell:
         print("  ATENCIÓN: consola sin restricciones habilitada; el código se ejecuta con tus permisos.\n", flush=True)
     state = application.state()

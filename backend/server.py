@@ -16,6 +16,7 @@ from .workspace import Workspace, ConflictError
 from .runner import Runner
 from .ai import LocalAssistant
 from .platform_services import PlatformServices
+from .version import VERSION,REVISION
 
 
 class Application:
@@ -27,13 +28,14 @@ class Application:
         self.assistant = LocalAssistant()
         self.token = secrets.token_urlsafe(32)
         self.features = PlatformServices(self, data_dir)
+        self.features.restore_trust()
         from .session import remember_workspace
         remember_workspace(self.workspace.root, self.features.prefs.directory)
 
     def state(self):
-        return {"version": "0.5.3", "startup":getattr(self,'startup',{}), "workspace": str(self.workspace.root), "name": self.workspace.root.name,
+        return {"version": VERSION, "revision":REVISION, "startup":getattr(self,'startup',{}), "workspace": str(self.workspace.root), "name": self.workspace.root.name,
                 "python": platform.python_version(), "platform": platform.system(), "native": self.native.name,
-                "trusted": self.workspace.trusted, "shell": self.runner.allow_shell,
+                "trusted": self.workspace.trusted, "trustSource":self.features.permissions.state(self.workspace.root,direct=not self.features.prefs.get('security.confirmRoutineActions'))['source'],"shell": self.runner.allow_shell,
                 "monaco": (self.project / "web/vendor/monaco/vs/loader.js").is_file(),
                 "babylon": (self.project / "web/vendor/babylon/babylon.js").is_file(),
                 "ai": {"connected": self.assistant.connected, "model": self.assistant.model, "base": self.assistant.base}}
@@ -48,7 +50,7 @@ class LumenServer(ThreadingHTTPServer):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Zénit/0.5.3"
+    server_version = "Zénit/"+VERSION
     sys_version = ""
 
     @property
@@ -199,13 +201,12 @@ class Handler(BaseHTTPRequestHandler):
                 next_workspace = Workspace(Path(body["path"]), self.app.native)
                 self.app.features.workspace_changed()
                 self.app.workspace = next_workspace
+                self.app.features.restore_trust()
                 from .session import remember_workspace
                 remember_workspace(next_workspace.root, self.app.features.prefs.directory)
                 return self.reply({**self.app.state(), "tree": self.app.workspace.tree()})
             if path == "/api/trust":
-                ws.trusted = body.get("trusted") is True
-                if not ws.trusted: self.app.features.workspace_changed()
-                return self.reply({"trusted": ws.trusted})
+                return self.reply(self.app.features.trust(body.get('trusted')))
             if path == "/api/console":
                 import shlex
                 parts=shlex.split(body.get('command',''))

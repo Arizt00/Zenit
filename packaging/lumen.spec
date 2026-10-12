@@ -50,4 +50,4 @@ exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='zenit',debug=False,bootload
 python_exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='zenit-python',debug=False,bootloader_ignore_signals=False,strip=False,version=str(ROOT/'packaging/version.txt') if sys.platform=='win32' else None,upx=False,console=True)
 collection=COLLECT(exe,python_exe,a.binaries,a.datas,strip=False,upx=False,name='Zenit')
 if sys.platform=='darwin':
-    app=BUNDLE(collection,name='Zenit.app',icon=str(icon) if icon.exists() else None,bundle_identifier='studio.lumen.ide',info_plist={'CFBundleShortVersionString':'0.5.3','CFBundleVersion':'0.5.3.13','NSHighResolutionCapable':True,'LSMinimumSystemVersion':'14.0','NSHumanReadableCopyright':'Zénit. Licencia propietaria de preview.'})
+    app=BUNDLE(collection,name='Zenit.app',icon=str(icon) if icon.exists() else None,bundle_identifier='studio.lumen.ide',info_plist={'CFBundleShortVersionString':'0.5.4','CFBundleVersion':'0.5.4.1','NSHighResolutionCapable':True,'LSMinimumSystemVersion':'14.0','NSHumanReadableCopyright':'Zénit. Licencia propietaria de preview.'})

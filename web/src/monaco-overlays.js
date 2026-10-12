@@ -24,7 +24,8 @@ export function installMonacoOverlays(){
     const node=document.createElement('span');node.className='zenit-menu-glyph';node.setAttribute('aria-hidden','true');if(glyph)node.innerHTML=icon(glyph);row.prepend(node);
   }};
   const sheet=document.createElement('style');sheet.textContent=css;sheet.dataset.zenitEditorMenus='';document.head.append(sheet);
-  const apply=()=>{decorate(document);for(const host of document.querySelectorAll('.shadow-root-host')){const root=host.shadowRoot;if(root&&!root.querySelector('[data-lumen-menu-style]')){const style=document.createElement('style');style.dataset.lumenMenuStyle='';style.textContent=css;root.append(style);}if(root)decorate(root);}};
-  const observer=new MutationObserver(records=>{if(records.some(r=>Array.from(r.addedNodes).some(n=>n.nodeType===1&&!n.matches('.zenit-menu-glyph')&&(n.matches('.shadow-root-host,.monaco-menu,.action-item')||n.querySelector('.shadow-root-host,.monaco-menu,.action-item')))))apply();});observer.observe(document.body,{childList:true,subtree:true});apply();
-  return {dispose(){observer.disconnect();sheet.remove();}};
+  const shadows=new Map(),relevant=records=>records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&!n.matches('.zenit-menu-glyph')&&(n.matches('.shadow-root-host,.monaco-menu,.action-item,.action-menu-item')||n.querySelector('.shadow-root-host,.monaco-menu,.action-item,.action-menu-item'))));
+  const apply=()=>{decorate(document);for(const [host,observer] of shadows)if(!host.isConnected){observer.disconnect();shadows.delete(host);}for(const host of document.querySelectorAll('.shadow-root-host')){const root=host.shadowRoot;if(!root)continue;if(!root.querySelector('[data-lumen-menu-style]')){const style=document.createElement('style');style.dataset.lumenMenuStyle='';style.textContent=css;root.append(style);}if(!shadows.has(host)){const observer=new MutationObserver(records=>{if(relevant(records))decorate(root);});observer.observe(root,{childList:true,subtree:true});shadows.set(host,observer);}decorate(root);}};
+  const observer=new MutationObserver(records=>{if(relevant(records)||[...shadows.keys()].some(host=>!host.isConnected))apply();});observer.observe(document.body,{childList:true,subtree:true});apply();
+  return {dispose(){observer.disconnect();for(const observer of shadows.values())observer.disconnect();shadows.clear();sheet.remove();}};
 }

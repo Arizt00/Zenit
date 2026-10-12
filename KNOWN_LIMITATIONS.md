@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R13
+# Límites reales · Zénit 0.5.4 R1
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -137,3 +137,30 @@ OpenAI no se activa en esta revisión. Se mantienen los demás límites de R11.
   emulación de escalas no sustituye pruebas de cada monitor/driver/DPI del sistema.
 - La voz vigente sigue siendo Qwen de Emma, con sus dependencias locales y latencia
   de generación de R12. No se conecta una suscripción de ChatGPT a su API de audio.
+
+
+## 0.5.4 R1 · alcance añadido
+
+- Un intento de recarga en la herramienta de captura WebView2 agotó los 45 s
+  de espera de ready. Se añadió diagnóstico de errores/estado y se repitió la
+  captura completa con éxito, sin cambiar delays del producto. No se pudo
+  atribuir una causa a ese intento; las muestras exitosas no prueban ausencia
+  universal de fallos de arranque o recarga en todos los equipos.
+
+- Los temas de archivos funcionan con asociaciones y recursos locales; Product
+  Icon Themes para toda la iconografía del workbench no están implementados.
+  Falta la herencia completa de iconos aportados por lenguajes y showLanguageModeIcons.
+  Los SVG no cargan recursos externos; fuentes/definiciones grandes se limitan.
+- workbench.iconTheme admite el perfil global. No hay override por carpeta o
+  workspace; una selección ausente conserva la preferencia y usa un fallback
+  visible. Los cinco comandos UI no equivalen al inventario completo de VS Code.
+- El modo directo evita permisos rutinarios solicitados, no bypasses de
+  credenciales, conflictos, búferes sin guardar o revisiones de planes de archivos.
+  La revocación explícita siempre tiene prioridad. Nuevas instalaciones conservan
+  confirmaciones por defecto; se activa directo en este equipo por petición del usuario.
+- La hoja de acceso usa el cliente oficial de cada proveedor, no un servicio
+  propio de autenticación de Zénit. Se revisa el diseño sin iniciar sesión ni
+  probar las prestaciones de cuentas externas durante la regresión visual.
+- La nueva voz Qwen de Emma, los consejos y predicciones conservan los límites
+  documentados de R12/R13. No se implementa aquí voz de ChatGPT por suscripción
+  ni un nuevo motor predictivo. No se certifica 90 % global de VS Code.

@@ -1,0 +1,23 @@
+/* Declarative icon contributions use the same local resources in every file view. */
+.extension-file-icon img {width:100%;height:100%;object-fit:contain;display:block;}
+.folder-icon {display:grid;place-items:center;width:20px;height:20px;flex:none;}
+.folder-icon .file-type,.tree-root>.file-type {width:18px;height:18px;flex:none;}
+.extension-font-icon {display:grid;place-items:center;line-height:1;}
+:root[data-icon-arrows=hidden] :is(.tree-chevron,.tree-root>.icon:first-child) {visibility:hidden;width:0;}
+.icon-theme-options {display:grid;gap:var(--space-5);margin-top:var(--space-7);max-height:min(380px,50dvh);overflow:auto;scrollbar-width:thin;}
+.icon-theme-option {display:flex;align-items:center;gap:var(--space-6);border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-control);padding:var(--space-6);text-align:left;transition:background-color var(--motion-fast),border-color var(--motion-fast);min-width:0;}
+.icon-theme-option:hover {background:var(--hover);}
+.icon-theme-option[aria-pressed=true] {border-color:var(--accent);background:var(--accent-soft);}
+.icon-theme-copy {flex:1;min-width:0;}
+.icon-theme-copy strong,.icon-theme-copy small {display:block;overflow:hidden;text-overflow:ellipsis;}
+.icon-theme-copy strong {font-size:13px;font-weight:500;}
+.icon-theme-copy small {font-size:10px;color:var(--secondary);margin-top:var(--space-2);}
+.icon-theme-preview {display:flex;align-items:center;gap:var(--space-5);flex:none;}
+.icon-theme-preview :is(.file-type,.icon) {width:20px;height:20px;font-size:18px;}
+.icon-theme-option .theme-selected {width:16px;height:16px;color:var(--accent);visibility:hidden;}
+.icon-theme-option[aria-pressed=true] .theme-selected {visibility:visible;}
+.effective-theme-control {max-width:100%;font-size:12px;min-height:36px;}
+.effective-theme-control>span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.effective-theme-control>.icon {width:15px;height:15px;flex:none;}
+.debug-intro h1>.icon {width:24px;height:24px;color:var(--accent);}
+@media(max-width:560px) {.icon-theme-preview {max-width:70px;overflow:hidden;}}

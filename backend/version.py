@@ -1,6 +1,6 @@
 """Version shared by native packages and the update service."""
 PRODUCT_NAME = 'Zénit'
 REPOSITORY = 'Arizt00/Zenit'
-VERSION = '0.5.3'
-REVISION = 13
+VERSION = '0.5.4'
+REVISION = 1
 RELEASE_TAG = f'v{VERSION}-preview.{REVISION}'

@@ -131,6 +131,28 @@ class ExtensionServices:
     def __init__(self,platform):
         self.platform=platform;self.lock=threading.RLock();self.terminals={};self.tasks={};self.panels={};self.debuggers={};self.contexts={};self.prompts={};self.documents={};self.file_workspaces={};self.quickinputs={};self.editor_snapshot=None;self.outputs={};self.status_items={}
         state=self.theme_state();self.theme_signature=(state['identity'],state['kind'])
+        self.icon_signature=self.icon_state()['identity']
+    def icon_state(self):
+        prefs=self.platform.prefs;selected=prefs.get('appearance.iconTheme');store=self.platform.extensions
+        if selected not in ('none','zenit') and prefs.get('extensions.loadContributions'):
+            from .extensions import localized_manifest
+            for eid,info in store.installed.items():
+                if not info.get('enabled',True):continue
+                try:declarations=localized_manifest(store.root/info['directory']/'extension',prefs.get('general.locale')).get('contributes',{}).get('iconThemes',[])
+                except (ValueError,OSError,TypeError,AttributeError):continue
+                if not isinstance(declarations,list):continue
+                for item in declarations[:5]:
+                    if not isinstance(item,dict) or not isinstance(item.get('id'),str):continue
+                    identity=eid+':'+item['id']
+                    if selected in ('auto',identity):return {'identity':identity,'configurationId':item['id'],'label':str(item.get('label',item['id']))}
+        return {'identity':'none' if selected=='none' else 'zenit','configurationId':None if selected=='none' else 'zenit','label':'Sin iconos' if selected=='none' else 'Zénit'}
+    def icons_changed(self):
+        state=self.icon_state()
+        if self.icon_signature==state['identity']:return
+        self.icon_signature=state['identity'];runtime=self.platform.extension_runtime
+        with runtime.lock:hosts=list(runtime.hosts.values())
+        for host in hosts:
+            if getattr(host,'event',None):host.event('icons.changed',state)
     def theme_state(self):
         store=self.platform.extensions;prefs=self.platform.prefs;ident=prefs.get('appearance.extensionTheme')
         if ident and prefs.get('extensions.loadContributions'):
@@ -357,6 +379,18 @@ class ExtensionServices:
     def call(self,host,method,p):
         ws=host.workspace
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
+        if method=='configuration.icons':
+            value=p.get('value')
+            if p.get('reset') is True:ident='auto'
+            elif value is None:ident='none'
+            elif value=='zenit':ident='zenit'
+            elif isinstance(value,str):
+                themes=self.platform.extensions.contributions().get('iconThemes',[])
+                matches=[t for t in themes if value in (t['id'],t['configurationId'])]
+                if len(matches)!=1:raise ValueError('El tema de iconos debe estar instalado y activo; usa su identificador completo si es ambiguo.')
+                ident=matches[0]['id']
+            else:raise ValueError('Tema de iconos inválido.')
+            self.platform.prefs.update({'appearance.iconTheme':ident});self.icons_changed();self.emit('zenit.preferences.changed');return self.icon_state()
         if method=='configuration.theme':
             value=p.get('value');native={'Zénit Día':'day','Zénit Oscuro':'dark','Zénit Bosque':'forest'}
             if value is None:changes={'appearance.extensionTheme':''}
@@ -432,7 +466,7 @@ class ExtensionServices:
             self.emit('zenit.quickinput',id=p['id'],visible=False);return {'ok':True}
         if method=='context.set':self.contexts[p['key']]=p.get('value');return None
         if method=='command.execute':
-            if p['id'] in ('workbench.action.selectTheme','workbench.action.showCommands','workbench.action.quickOpen','workbench.action.openSettings'):
+            if p['id'] in ('workbench.action.selectTheme','workbench.action.selectIconTheme','workbench.action.showCommands','workbench.action.quickOpen','workbench.action.openSettings'):
                 ident=uuid.uuid4().hex;reply=threading.Event();prompt={'reply':reply,'result':None}
                 with self.lock:self.prompts[ident]=prompt
                 self.emit('zenit.command',id=p['id'],arguments=p.get('args',[]),request=ident)
