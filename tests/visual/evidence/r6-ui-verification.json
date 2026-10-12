@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Spanish editor menu fits viewport and stays above the assistant without clipping",
+    "Installed theme inheritance colors the shell, editor and terminal and survives reload",
+    "Selecting a built-in theme clears every extension override",
+    "Executable extension formats before save and receives did-save only after the Unicode buffer is saved",
+    "Java try-without-catch is reported at the source line and the inline monitor never overlays Debug",
+    "Natural-language live writing requires permission and completes in the original background buffer without saving",
+    "Explanation following live editing remains read-only even when the model returns code",
+    "No uncaught browser errors"
+  ],
+  "errors": []
+}

@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Fresh local profile has no invented recent files",
+    "File chips, groups and tab controls fit at 1050, 1366 and 1920 pixels",
+    "Assistant composer stays visible and sphere never overlaps the greeting",
+    "Three themes apply to editor, grouped files, live search and settings categories",
+    "Popup transitions respect reduced motion",
+    "Graphical uninstaller review and actual removal leave unrelated projects intact",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": []
+}

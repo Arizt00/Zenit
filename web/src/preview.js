@@ -9,7 +9,7 @@ const $=s=>document.querySelector(s);
 export function installPreview(host){return new Preview(host);}
 class Preview{
   constructor(host){
-    this.host=host;host.editor.mount.append(document.getElementById('editor-empty'));this.grouped=true;this.group=null;this.providers=[];
+    this.host=host;host.editor.mount.append(document.getElementById('editor-empty'));this.grouped=false;this.group=null;this.providers=[];
     this.services=new ExtensionServicesUI(host);host.platform.extensionServices=this.services;
     const group=document.createElement('button');group.className='icon-button';group.dataset.action='group-tabs';group.title='Agrupar pestañas por carpeta';group.setAttribute('aria-label',group.title);group.innerHTML=icon('folder');$('.new-tab').after(group);
     this.groups=document.createElement('div');this.groups.className='file-groups';this.groups.setAttribute('aria-label','Grupos de archivos');$('#file-tabs').before(this.groups);
@@ -42,7 +42,7 @@ class Preview{
         {label:'Cerrar todos',icon:'close',run:()=>close(paths)},
       ],path.split('/').at(-1));});
     document.addEventListener('click',e=>{const exec=e.target.closest('[data-extension-execute]');if(exec)this.safe(()=>this.startExtension(exec.dataset.extensionExecute));});
-    this.extensionObserver=new MutationObserver(()=>this.extensionButtons());this.extensionObserver.observe(document.body,{childList:true,subtree:true});
+    this.extensionObserver=new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches('.extension-card')||n.querySelector('.extension-card')))))this.extensionButtons();});this.extensionObserver.observe(document.body,{childList:true,subtree:true});
     const viewButton=document.createElement('button');viewButton.className='icon-button';viewButton.title='Vistas de extensiones';viewButton.setAttribute('aria-label',viewButton.title);viewButton.innerHTML=icon('extensions');$('.editor-tabbar').append(viewButton);viewButton.onclick=()=>this.safe(()=>this.extensionViews());
     const load=host.platform.loadContributions.bind(host.platform);host.platform.loadContributions=async(...args)=>{const result=await load(...args);const status=await host.platform.api('/extensions/runtime');this.registerExtensions(status.hosts);return result;};
     host.platform.beforeSave=(path,automatic)=>this.documentSaveEvent(path,'willSave',automatic);

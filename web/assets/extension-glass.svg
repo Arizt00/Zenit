@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+ <defs>
+  <linearGradient id="glass" x1="30" y1="25" x2="156" y2="180" gradientUnits="userSpaceOnUse"><stop stop-color="#efe9ff" stop-opacity=".95"/><stop offset=".46" stop-color="#d1bef8" stop-opacity=".84"/><stop offset="1" stop-color="#aa8fdf" stop-opacity=".7"/></linearGradient>
+  <linearGradient id="edge" x1="40" y1="20" x2="135" y2="170" gradientUnits="userSpaceOnUse"><stop stop-color="white"/><stop offset="1" stop-color="#b09bdc"/></linearGradient>
+  <filter id="depth" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="-3" dy="13" stdDeviation="8" flood-color="#a18acb" flood-opacity=".18"/></filter>
+ </defs>
+ <g transform="translate(26 20) rotate(13 74 75) skewY(-9)" filter="url(#depth)" fill="url(#glass)" stroke="url(#edge)" stroke-width="1.2">
+  <path d="M12 23H66V42C83 28 94 39 87 52C82 61 73 61 66 55V78H44C55 65 42 54 30 61C24 65 25 73 29 78H8L12 23Z"/>
+  <path d="M74 21H99C94 13 97 5 106 4C122 2 128 17 118 21H151L147 77H126C139 88 128 101 116 96C108 94 105 87 110 77H73V55C92 63 100 46 89 40C84 37 78 40 73 44L74 21Z"/>
+  <path d="M7 86H31C20 68 38 60 46 70C51 78 46 83 42 86H64V108C80 96 94 110 84 124C77 131 70 126 63 121L61 148H4L7 86Z"/>
+  <path d="M72 84H106C101 96 112 106 123 103C137 101 139 92 135 84H147L143 146H121C134 155 125 171 113 168C101 166 99 155 104 146H69L71 125C86 138 101 122 93 108C88 101 79 102 72 109V84Z"/>
+ </g>
+ <path d="m163 23 3-7 3 7 7 3-7 3-3 7-3-7-7-3Z" stroke="#d7c9ff" stroke-width="1.4"/>
+ <path d="m18 153 2-5 2 5 5 2-5 2-2 5-2-5-5-2Z" stroke="#e0d5ff" stroke-width="1.2"/>
+</svg>

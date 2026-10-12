@@ -72,6 +72,12 @@ const paths = {
   "arrow-up-right": "<path d=\"M7 17 17 7M7 7h10v10\"/>",
   "pin": "<path d=\"m9 3 6 0-1 6 4 4v2H6v-2l4-4Zm3 12v6\"/>"
 };
+paths.java='<path fill="currentColor" stroke="none" d="M1 3h17v12a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3ZM19 4h4v8h-4V10h2V6h-2Z"/><path d="M1 21h18"/>';
+paths.html='<path fill="currentColor" stroke="none" d="m3 2 1.7 18L12 22l7.3-2L21 2Z"/><path stroke="#fff" stroke-width="2" stroke-linecap="square" d="M16 6H8l.4 5h7.2l-.5 5-3.1.8-3.2-.8-.2-2"/>';
+paths.more='<circle cx="5" cy="12" r=".8"/><circle cx="12" cy="12" r=".8"/><circle cx="19" cy="12" r=".8"/>';
+paths.flask='<path d="M9 3h6M10 3v7L5 19a1 1 0 0 0 1 2h12a1 1 0 0 0 1-2l-5-9V3M8 15h8"/>';
+paths.context='<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9ZM4 7.5l8 4.5 8-4.5M12 12v9"/>';
+paths.assembly='<path d="M5 3H3v18h2M19 3h2v18h-2M8 5v4m0 4v4m0 2v1M12 5v4m0 4v4m0 2v1M16 5v4m0 4v4m0 2v1"/>';
 export function icon(name, className='') {
   return `<svg class="icon ${className}" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-glyph="${escapeHTML(name)}">${paths[name] || paths.file}</svg>`;
 }
@@ -92,6 +98,9 @@ export function fileIcon(path) {
     if(typeof src==='string'&&src.startsWith('data:image/svg+xml;base64,'))return `<span class="file-type extension-file-icon"><img src="${escapeHTML(src)}" alt=""></span>`;
   }
   const ext = path.split('.').pop().toLowerCase();
+  if(['html','htm'].includes(ext))return `<span class="file-type file-type-html">${icon('html')}</span>`;
+  if(ext==='class')return `<span class="file-type file-type-class">${icon('java')}</span>`;
+  if(['asm','s'].includes(ext))return `<span class="file-type file-type-${ext}">${icon('assembly')}</span>`;
   if(ext==='java')return `<span class="file-type file-type-java">${icon('java')}</span>`;
   const label = {cs:'C#',js:'JS',mjs:'JS',cjs:'JS',jsx:'JS',ts:'TS',tsx:'TS',py:'Py',cpp:'C++',cc:'C++',c:'C',h:'H',hpp:'H',rs:'Rs',go:'Go',kt:'Kt',kts:'Kt',swift:'Sw',rb:'Rb',php:'Ph',html:'<>',xml:'<>',sql:'DB',s:'ASM',asm:'ASM',n:'nC',nm:'nC',ncp:'nC',nb:'nC',nbb:'nC',json:'{}',css:'#',scss:'#'}[ext];
   if (label) return `<span class="file-type file-type-${ext} ${ext==='py'?'python':''}">${label}</span>`;

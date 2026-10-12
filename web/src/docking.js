@@ -2,7 +2,7 @@ import {icon,escapeHTML} from './icons.js';
 import {outsideViewport} from './document-drag.js';
 import {defaultLayout,normalizeLayout,layoutPreset,movePanel,setCollapsed,sideOf,SIDES,LAYOUT_KEY,PRESET_NAMES} from './layout-state.js';
 
-const PANEL_LABELS={project:'Proyecto',assistant:'Asistente',console:'Consola'};
+const PANEL_LABELS={project:'Proyecto',assistant:'Melody',console:'Consola'};
 const PANEL_ICONS={project:'files',assistant:'sparkles',console:'terminal'};
 const SIDE_LABELS={left:'izquierda',right:'derecha',bottom:'abajo'};
 const PANEL_SELECTORS={project:'#project-panel',assistant:'#assistant-panel',console:'#terminal-panel'};
@@ -41,7 +41,7 @@ export class DockManager {
   save(){if(new URLSearchParams(location.search).has('panel'))return;try{localStorage.setItem(LAYOUT_KEY,JSON.stringify({...this.state,hidden:this.state.hidden.filter(id=>!this.nativeDetached.has(id))}));}catch(_){/* Session remains usable in storage-restricted webviews. */}}
   snapshot(){return JSON.parse(JSON.stringify(this.state));}
   visibleIds(side){return this.state.groups[side].filter(id=>!this.state.hidden.includes(id)&&!this.state.floating[id]);}
-  isVisible(id){const side=sideOf(this.state,id);return !this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!this.state.collapsed.includes(side)&&this.state.active[side]===id));}
+  isVisible(id){const side=sideOf(this.state,id),drawerClosed=side==='right'&&matchMedia('(max-width:1099px)').matches&&!this.compactOpen;return !this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!drawerClosed&&!this.state.collapsed.includes(side)&&this.state.active[side]===id));}
   announce(message){document.querySelector('#layout-announcement').textContent=message;}
   transition(change,animate=true){
     const apply=()=>{change();this.state=normalizeLayout(this.state);this.save();this.render();};
@@ -144,6 +144,7 @@ export class DockManager {
         this.root.appendChild(frame);this.floats[id]=frame;this.raiseFloat(id);
       }
       const content=frame.querySelector('.floating-content');if(panel.parentElement!==content)content.appendChild(panel);
+      const forge=panel.querySelector('.forge-dashboard'),caption=id==='console'&&forge&&!forge.hidden?'Zénit · Forge':PANEL_LABELS[id],title=frame.querySelector('.floating-title>span');if(title.dataset.caption!==caption){title.dataset.caption=caption;title.innerHTML=icon(PANEL_ICONS[id])+escapeHTML(caption);}
       frame.hidden=this.state.hidden.includes(id);panel.hidden=frame.hidden;panel.inert=frame.hidden;panel.removeAttribute('role');panel.removeAttribute('aria-labelledby');this.placeFloat(id);if(created&&!frame.hidden)this.motion.enter(frame,4);
     }
   }
@@ -155,7 +156,7 @@ export class DockManager {
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);window.addEventListener('blur',end);
   }
   render(){
-    const compact=false; // Side panels stay in the grid at every supported desktop size.
+    const compact=innerWidth<1100; // The existing right drawer preserves editor space at high DPI.
     this.root.classList.toggle('rail-compact',this.state.railCompact);
     document.querySelector('[data-action="toggle-rail"]')?.setAttribute('aria-expanded',String(!this.state.railCompact));
     const limits=this.limits();
@@ -191,7 +192,7 @@ export class DockManager {
       const requested=this.state.sizes[side]??limits[side].preferred;
       const size=Math.max(limits[side].min,Math.min(limits[side].max,requested));
       this.root.style.setProperty(`--dock-${side}-size`,size+'px');
-      this.root.style.setProperty(`--dock-${side}-track`,available&&!(side==='right'&&compact)?((collapsed?44:size)+10)+'px':'0px');
+      this.root.style.setProperty(`--dock-${side}-track`,available&&!(side==='right'&&compact)?((collapsed?44:size)+(side==='bottom'?8:10))+'px':'0px');
       const handle=slot.querySelector('.resize-handle');
       if(handle){handle.setAttribute('aria-valuenow',String(Math.round(size)));handle.setAttribute('aria-valuemin',String(limits[side].min));handle.setAttribute('aria-valuemax',String(limits[side].max));}
     }
@@ -219,9 +220,9 @@ export class DockManager {
   limits(){
     const small=innerWidth<=1450;
     return {
-      left:{min:200,max:Math.max(210,Math.min(430,innerWidth*.24)),preferred:innerWidth<1180?230:small?250:Math.min(320,innerWidth*.1796)},
-      right:{min:280,max:Math.max(290,Math.min(560,innerWidth*.32)),preferred:innerWidth<1180?300:small?350:Math.min(460,innerWidth*.256)},
-      bottom:{min:110,max:Math.max(130,Math.round((innerHeight-100)*.65)),preferred:innerHeight<800?158:180}
+      left:{min:200,max:Math.max(210,Math.min(430,innerWidth*.24)),preferred:innerWidth<900?200:Math.min(330,Math.max(220,innerWidth*.1573))},
+      right:{min:280,max:Math.max(290,Math.min(560,innerWidth*.32)),preferred:innerWidth<1180?320:Math.min(500,Math.max(320,innerWidth*.249))},
+      bottom:{min:110,max:Math.max(130,Math.round((innerHeight-100)*.65)),preferred:Math.max(140,Math.min(300,Math.round(innerHeight*.2323)))}
     };
   }
   setSize(side,value,persist=true){

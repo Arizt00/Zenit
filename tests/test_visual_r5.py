@@ -20,7 +20,9 @@ def main():
             with sync_playwright() as pw:
                 browser=pw.chromium.launch(channel='msedge',headless=True,args=['--use-angle=swiftshader','--enable-unsafe-swiftshader'])
                 page=browser.new_page(viewport={'width':1672,'height':1000});page.on('pageerror',lambda e:errors.append(str(e)))
-                page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='networkidle');page.wait_for_function('window.lumen?.ready')
+                # The live IDE polls services. Network-idle is not a startup contract.
+                page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='domcontentloaded');page.wait_for_function('window.lumen?.ready')
+                page.wait_for_function('Array.from(document.querySelectorAll("canvas[data-glass]")).every(c=>c.parentElement.classList.contains("gpu-ready")||c.dataset.graphicsError)')
                 page.locator('.brand').click();expect(page.locator('#lumen-home')).to_be_visible();assert app.features.studio.export()['recent']==[]
                 page.screenshot(path=str(out/'r5-inicio.png'));passed('Fresh local profile has no invented recent files')
                 page.locator('.home-enter').click()

@@ -34,7 +34,7 @@ export class WorkspaceProfiles{
   changed(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.paint(),350);}
   paint(){
     if(this.disposed||this.detached)return;const path=this.host.editor.current||'',text=this.host.editor.getValue?.()||'';
-    this.tools.setAttribute('aria-label',styles[this.style][1]+' · '+(path||'sin archivo'));
+    const label=styles[this.style][1]+' · '+(path||'sin archivo');if(this.tools.getAttribute('aria-label')!==label)this.tools.setAttribute('aria-label',label);
     if(this.style==='general')return;
     if(this.style==='assembly'){this.assembly??=new AssemblyWorkbench(this);this.assembly.paint();return;}
     if(this.style==='web'){

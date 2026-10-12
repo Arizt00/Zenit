@@ -1,3 +1,5 @@
+import {installProductUI} from './product-ui.js';
+import {installDiagnostics} from './diagnostics.js';
 import {installExplorerMenu} from './explorer-menu.js';
 import './controls.js';
 import {installPreview} from './preview.js';
@@ -15,7 +17,7 @@ import {WorkspaceProfiles} from './workspace-profiles.js';
 import {FoundationUI} from './foundation-ui.js';
 
 const motion=new LumenMotion();
-let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,tabsSignature='';
+let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,productUI=null,tabsSignature='';
 
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
@@ -59,6 +61,7 @@ function closePopover(){$('#popover').classList.add('hidden');popoverAnchor=null
 function applyTheme(theme,persistTheme=true) {
   if(persistTheme&&platformUI&&(platformUI.prefs['appearance.theme']!==theme||platformUI.prefs['appearance.extensionTheme']))return guard(()=>platformUI.savePreference('appearance.theme',theme))();
   if(!['day','dark','forest'].includes(theme))return;
+  if(applyTheme.last===theme)return;applyTheme.last=theme;
   const changed=document.documentElement.dataset.theme!==theme;
   if(changed)motion.theme();document.documentElement.dataset.theme=theme;
   if(persistTheme){try{localStorage.setItem('lumen.theme',theme);}catch(_){}}
@@ -69,13 +72,13 @@ function applyTheme(theme,persistTheme=true) {
   $('#landscape-caption').innerHTML=theme==='day'?'Build something<br>brighter.':'A little space<br>to think.';
   $('#theme-trigger').innerHTML=icon({day:'sun',dark:'moon',forest:'leaf'}[theme]);
   $('#theme-trigger').setAttribute('aria-label','Tema: '+{day:'día',dark:'oscuro',forest:'bosque'}[theme]);
-  scene?.setTheme(theme);if(changed)editor?.changedTheme();
+  scene?.setTheme(theme);
   try{localStorage.setItem('lumen.theme',theme);}catch(_){}
   $$('.theme-card').forEach(card=>card.classList.toggle('selected',card.dataset.theme===theme));
 }
 function applySettings(){
   persist();editor?.applySettings(settings);
-  document.documentElement.dataset.motion=settings.motion?'on':'off';document.documentElement.dataset.density=settings.density==='compact'?'compact':'comfortable';if(!motion.enabled)motion.cancelAll();scene?.setMotion(settings.motion);
+  const root=document.documentElement,animation=settings.motion?'on':'off',density=settings.density==='compact'?'compact':'comfortable';if(root.dataset.motion!==animation)root.dataset.motion=animation;if(root.dataset.density!==density)root.dataset.density=density;if(!motion.enabled)motion.cancelAll();scene?.setMotion(settings.motion);
 }
 
 function treeMarkup(nodes,depth=0){
@@ -134,9 +137,10 @@ function updateDocumentStatus(){
   if(!item){$('#breadcrumbs').replaceChildren();$('#breadcrumbs').hidden=true;$('#language-status').textContent='';$('#target-label').textContent='';$('#cursor-status').textContent='';return;}
   $('#breadcrumbs').hidden=false;
   const parts=item.path.replaceAll('\\','/').split('/').filter(Boolean);
-  $('#breadcrumbs').innerHTML=parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
+  $('#breadcrumbs').innerHTML=(/^(?:[A-Za-z]:[\\/]|\/)/.test(item.path)?'':`<span>${esc(service?.name||'')}</span>${icon('chevron-right')}`)+parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
   $('#newline-status').textContent=item.newline||'LF';$('#language-status').textContent=languageLabel(item.path);
   $('#target-label').textContent=languageLabel(item.path);
+  document.dispatchEvent(new Event('zenit:breadcrumbs'));
   updateDiagnostics(editor.diagnostics());platformUI?.documentChanged();
 }
 async function saveFile(path=editor.current,{automatic=false}={}){
@@ -162,7 +166,7 @@ async function closeFile(path){
 }
 function updateDiagnostics(items=[]){
   const errors=items.filter(i=>i.severity==='error').length,warnings=items.length-errors;
-  $('#error-count').textContent=errors;$('#warning-count').textContent=warnings;$('#problem-count').textContent=items.length;
+  for(const [selector,value] of [['#error-count',errors],['#warning-count',warnings],['#problem-count',items.length]]){const node=$(selector);if(node.textContent!==String(value))node.textContent=value;}
   if(terminalMode==='problems')renderTerminalContent();
 }
 
@@ -235,10 +239,10 @@ function sessionDialog(){
 }
 function showMenu(anchor,items,label=''){
   closePopover();popoverAnchor=anchor;
-  const pop=$('#popover');pop.innerHTML=(label?`<div class="menu-label">${esc(label)}</div>`:'')+items.map((item,i)=>item.separator?'<div class="menu-separator"></div>':`<button class="menu-item" data-menu-index="${i}" role="menuitem" aria-label="${esc(item.label)}">${item.theme?`<span class="theme-swatch swatch-${item.theme}"></span>`:icon(item.icon||'code')}<span>${esc(item.label)}</span>${item.shortcut?`<span class="menu-shortcut" aria-hidden="true">${esc(item.shortcut)}</span>`:''}</button>`).join('');
+  const pop=$('#popover');pop.innerHTML=(label?`<div class="menu-label">${esc(label)}</div>`:'')+items.map((item,i)=>item.separator?'<div class="menu-separator"></div>':`<button class="menu-item" data-menu-index="${i}" role="menuitem" ${item.disabled?'disabled':''} aria-disabled="${!!item.disabled}" aria-label="${esc(item.label)}">${item.theme?`<span class="theme-swatch swatch-${item.theme}"></span>`:icon(item.icon||'code')}<span>${esc(item.label)}</span>${item.shortcut?`<span class="menu-shortcut" aria-hidden="true">${esc(item.shortcut)}</span>`:''}</button>`).join('');
   pop.classList.remove('hidden');motion.enter(pop,-4);const rect=anchor?.getBoundingClientRect?.()||{right:innerWidth/2,left:innerWidth/2,bottom:80};
   const box=pop.getBoundingClientRect();pop.style.left=Math.max(12,Math.min(innerWidth-box.width-12,Math.max(12,rect.right-box.width)))+'px';pop.style.top=Math.max(12,Math.min(innerHeight-box.height-12,rect.bottom+8))+'px';
-  pop.onkeydown=event=>{const items=[...pop.querySelectorAll('[role=menuitem]')],index=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const n=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[n]?.focus();}if(event.key==='Escape'){event.preventDefault();closePopover();anchor?.focus();}};
+  pop.onkeydown=event=>{const items=[...pop.querySelectorAll('[role=menuitem]:not(:disabled)')],index=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const n=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[n]?.focus();}if(event.key==='Escape'){event.preventDefault();closePopover();anchor?.focus();}};
   requestAnimationFrame(()=>pop.querySelector('[role=menuitem]')?.focus());
   pop.querySelectorAll('[data-menu-index]').forEach(button=>button.onclick=guard(async()=>{const item=items[+button.dataset.menuIndex];closePopover();if(item.run)await item.run();else if(item.action)await perform(item.action,anchor);}));
 }
@@ -272,7 +276,7 @@ function termWrite(text,cls=''){
   const scroll=$('#terminal-scroll');scroll.scrollTop=scroll.scrollHeight;
 }
 function termClear(){$('#terminal-log').textContent='';}
-function updatePrompt(){$('#prompt-path').textContent=`~/Projects/${service.name}${cwd&&cwd!=='.'?'/'+cwd:''}`;$('#console-label').textContent=service.shell?'shell':'local';}
+function updatePrompt(){const path=String(service.workspace||service.name)+(cwd&&cwd!=='.'?'/'+cwd:'');$('#prompt-path').textContent=path;$('#prompt-path').title=path;$('#console-label').textContent=service.shell?'shell':'local';}
 function showTerminal(mode='terminal'){studio?.enter();if(platformUI?.page&&platformUI.page!=='settings')platformUI.closePage();if(platformUI){platformUI.showingPTY=false;platformUI.renderActiveTerminal();}dock?.show('console');terminalMode=mode;renderTerminalContent();}
 async function renderTerminalContent(){
   $$('.terminal-tab').forEach(button=>{button.classList.toggle('active',button.dataset.terminal===terminalMode);button.setAttribute('aria-selected',String(button.dataset.terminal===terminalMode));button.tabIndex=button.dataset.terminal===terminalMode?0:-1;button.id='terminal-tab-'+button.dataset.terminal;button.setAttribute('aria-controls',button.dataset.terminal==='terminal'?'terminal-scroll':'terminal-content');});
@@ -566,7 +570,7 @@ async function start(){
     sceneStatus=service.babylon?'Babylon.js + Three.js · Lenon Glass':'Cristal CSS';
     await checkWorkspace(false);
     renderTerminalContent();
-    platformUI=new LumenPlatform({api,notify,editor,motion,dock,modal,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshFileViews:()=>{renderTree();renderTabs();},
+    platformUI=new LumenPlatform({api,notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshFileViews:()=>{renderTree();renderTabs();},
       isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},showConsole:()=>showTerminal(),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
@@ -583,13 +587,15 @@ async function start(){
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
+    productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
+    installDiagnostics();
     document.documentElement.removeAttribute('data-booting');
     $('#engine-label').textContent='Local workspace';
     // Explicitly expose state for repeatable UI smoke tests; no secrets are exposed here.
     window.lumen={get theme(){return document.documentElement.dataset.theme;},get editorKind(){return editor.kind;},get graphicsKind(){return [...(studio?.scenes.values()||[])].some(s=>s.kind==='babylon')?'babylon':'css';},get graphicsAPI(){return document.querySelector('canvas[data-engine]')?.dataset.engine||'CSS';},get activeFile(){return editor.current;},get ready(){return true;},get platformReady(){return !!platformUI?.state;},get platformPage(){return platformUI?.page;},get languageServers(){return platformUI?.lspSessions.size||0;},get layout(){return dock.snapshot();},get motionEnabled(){return motion.enabled;}};
   }catch(error){document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
-window.addEventListener('pagehide',event=>{if(!event.persisted){workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
+window.addEventListener('pagehide',event=>{if(!event.persisted){productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='\\'){event.preventDefault();guard(()=>perform('split-editor'))();}});
 $('#retry-connection').onclick=()=>location.reload();
 start();

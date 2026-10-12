@@ -1,0 +1,63 @@
+"""Build a review document from actual comparisons, without a pass-by-similarity gate."""
+import argparse
+import html
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DETAILS = {
+    'welcome': ('studio/glass + welcome.css', 'Caústicas, reflexión, forma de facetas y brillo no idénticos. Fechas reales y acción de sesión dependen del host.'),
+    'editor': ('app/editor/docking/product-ui + shell.css', 'Orden del árbol/tabs, minimapa, rama Git y runtime dependen del proyecto. Antialiasing e iconos tienen diferencias.'),
+    'search': ('studio + pages.css', 'Ilustración local y filtros funcionales tienen diferencias menores de iconos/tipo. El estado vacío se conserva.'),
+    'settings': ('workbench/controls + pages.css', 'Texto de seguridad y categorías avanzadas conservan información real. Blur y rasterizado varían por host.'),
+    'extensions': ('workbench/preview + catalogue/dialogs.css', 'Paquetes, versiones, estados y compatibilidad son reales. No se copia la insignia Compatible del golden si no corresponde.'),
+    'laboratory': ('foundation-ui + catalogue.css', 'Ilustración local, algunas marcas y detalles inferiores difieren. Las rutas son reales; Ruta local no se sustituye por Incluido.'),
+    'debug': ('studio/lantern + debug.css', 'Se preservan Live, Lens y Multi-Language. Estado/stack/variables dependen del motor; no se rellenan para imitar la imagen.'),
+    'forge': ('desktop-workflows/docking + windows.css', 'Marco y controles de acoplamiento difieren de la decoración OS. Contexto, ruta, herramientas y salida pertenecen al proyecto real.'),
+}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--comparisons', type=Path, default=ROOT / 'tests/visual/comparisons')
+    args = parser.parse_args()
+    data = json.loads((args.comparisons / 'comparison.json').read_text(encoding='utf-8'))
+    lines = ['# Comparación visual · Zénit', '',
+             'Referencias originales: 1672 × 941. Resultado: WebView2 real, área cliente',
+             '1672 × 917, host Windows al 150 %, viewport fijado por CDP. Solo se recortan',
+             'los 24 px de título de la referencia. No hay estirado de la captura.', '',
+             'La revisión combina bounds, overlay 50 %, diff de píxeles y revisión humana.',
+             'MAE usa la escala de canales 0–255. SSIM es una comparación de luminancia',
+             'reducida por bloques. Ninguna de estas cifras es un porcentaje de fidelidad',
+             'ni produce automáticamente una marca de pantalla terminada.', '',
+             '| Vista | Referencia / resultado | MAE | SSIM por bloques | Componentes / diferencias conocidas |',
+             '| --- | --- | ---: | ---: | --- |']
+    cards = []
+    for screen, (components, limitations) in DETAILS.items():
+        value = data['screens'][screen]
+        links = f'[Golden](tests/visual/references/{screen}.png) · [Resultado](tests/visual/current/{screen}.png) · [Overlay](tests/visual/comparisons/{screen}-overlay.png) · [Diff](tests/visual/comparisons/{screen}-diff.png)'
+        lines.append(f'| {screen} | {links} | {value["meanMAE"]:.2f} | {value["lumaBlockSSIM"]:.3f} | {components}. {limitations} |')
+        cards.append(f'<section><h2>{html.escape(screen)}</h2><p>{html.escape(limitations)}</p><div class="comparison"><img class="reference" src="references/{screen}.png" alt="Referencia original"><img class="actual" src="current/{screen}.png" alt="Captura real"><i></i></div><label>Referencia / resultado <input type="range" min="0" max="100" value="50" aria-label="Superposición {screen}"></label><p><a href="comparisons/{screen}-overlay.png">Overlay 50 %</a> · <a href="comparisons/{screen}-diff.png">Diferencias</a></p></section>')
+    lines += ['', 'Los siete bounds principales de Welcome/Editor pasan con desviación máxima',
+              'de 1,333 px. No se extrapola ese resultado a todos los detalles de las otras',
+              'vistas. Los materiales y assets mantienen las diferencias descritas arriba.', '',
+              'Regresiones sin golden independiente: [ASM](tests/visual/current/asm.png),',
+              '[Melody](tests/visual/current/melody.png), [paleta](tests/visual/current/palette.png),',
+              '[Proyecto flotante](tests/visual/current/floating-project.png).',
+              'También se incluye [Forge desacoplado](tests/visual/current/forge-detached.png).', '',
+              'Las inspecciones geométricas y de estilo están en `tests/visual/current/inspection.json`.',
+              'El estado de conservación de campos/canvas/modelos, los errores JS y el resultado',
+              'ASM real están en los JSON de esa carpeta. Las 312 capturas de la matriz de escala',
+              'se generaron en la carpeta de auditoría local; se incluyen el resumen JSON y',
+              'muestras seleccionadas en `tests/visual/responsive`.', '',
+              'Este informe registra resultados y diferencias; no certifica equivalencia total',
+              'con las ocho imágenes ni paridad total con VS Code.']
+    (ROOT / 'VISUAL_DIFF_REPORT.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    review = '''<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Zénit · revisión visual</title><style>
+    body{font:15px/1.5 system-ui;color:#10133c;background:#f8f9ff;margin:32px auto;padding:0 24px;max-width:1440px}section{margin:32px 0;padding:24px;background:white;border:1px solid #e9eafa;border-radius:16px}p{color:#6473a9}h1,h2{font-weight:600}.comparison{position:relative;aspect-ratio:1672/917;overflow:hidden;border:1px solid #dedbfc}.comparison img{position:absolute;width:100%;height:auto;left:0;top:0}.comparison .reference{top:-2.61723%}.actual{clip-path:inset(0 0 0 50%)}.comparison i{position:absolute;left:50%;height:100%;width:1px;background:#6b43f5}input{width:280px;max-width:60%;vertical-align:middle}a{color:#6b43f5}</style><h1>Referencia ↔ Zénit ejecutándose</h1><p>Capturas reales. El deslizador revela el resultado sin modificar las referencias. Las diferencias por datos y materiales se describen por vista.</p>'''
+    review += ''.join(cards) + '<script>document.querySelectorAll("input").forEach(input=>input.oninput=()=>{const section=input.closest("section");section.querySelector(".actual").style.clipPath="inset(0 0 0 "+input.value+"%)";section.querySelector("i").style.left=input.value+"%";});</script></html>'
+    (ROOT / 'tests/visual/review.html').write_text(review, encoding='utf-8')
+
+
+if __name__ == '__main__':
+    main()

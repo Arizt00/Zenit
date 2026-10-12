@@ -1,0 +1,88 @@
+{
+  "source": "Canonical screenshots supplied by the user; never replace with generated UI captures.",
+  "clientPixels": [
+    1672,
+    917
+  ],
+  "nativeTitlePixels": 24,
+  "references": [
+    {
+      "view": "debug",
+      "file": "references/debug.png",
+      "sha256": "290550a9ca7790f2ca6e826a147d3d81267d7036e1ede84a6789ecc1f16fea60",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "editor",
+      "file": "references/editor.png",
+      "sha256": "74a00d29c5dfff76b8366924b48b2301ce5da6301fc6458e20699be0187b9751",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "extensions",
+      "file": "references/extensions.png",
+      "sha256": "ccf7e90b84e51a56aa36760dd962190fde559a827afb45e86dae0744fbca880c",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "forge",
+      "file": "references/forge.png",
+      "sha256": "2b8a54d53b189f8c228cdf39b61869e6f95383a9bc273f771721ff08867b9ff7",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "laboratory",
+      "file": "references/laboratory.png",
+      "sha256": "ed6d05eb577dca9ca09387fa1512745d0eedc9d872f00a082bf9f1bfdf20eee2",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "search",
+      "file": "references/search.png",
+      "sha256": "c38169f28cb8bf910926c6ddfa902ca1f7a3b895812e6729ac780db4ddb2d90e",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "settings",
+      "file": "references/settings.png",
+      "sha256": "ce32a065724aedd68bf2e7bee16bc08ae1ab6a8c1bff92b7f09913e934130dc3",
+      "pixels": [
+        1672,
+        941
+      ]
+    },
+    {
+      "view": "welcome",
+      "file": "references/welcome.png",
+      "sha256": "f83f04c7d12bf5a117fee73147952395dd70f455a510a277d4e735a0043794ed",
+      "pixels": [
+        1672,
+        941
+      ]
+    }
+  ],
+  "withoutIndependentGolden": [
+    "asm",
+    "melody",
+    "floating-project",
+    "palette"
+  ]
+}

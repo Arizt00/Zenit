@@ -1,0 +1,116 @@
+{
+  "context": {
+    "alpha": true,
+    "antialias": true,
+    "depth": true,
+    "desynchronized": false,
+    "failIfMajorPerformanceCaveat": false,
+    "powerPreference": "default",
+    "premultipliedAlpha": true,
+    "preserveDrawingBuffer": false,
+    "stencil": false,
+    "xrCompatible": false
+  },
+  "rect": {
+    "x": 911.3333740234375,
+    "y": 73.66667175292969,
+    "w": 730,
+    "h": 476.66668701171875
+  },
+  "meshes": [
+    {
+      "name": "melody",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "pearl-contact",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "ambient-star",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "ambient-star",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "ambient-star",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "ambient-star",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "ambient-star",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "crystal-0",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "crystal-1",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "crystal-2",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "crystal-3",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "crystal-4",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "crystal-5",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "liquid-ribbon",
+      "alpha": 0.55,
+      "emissive": [
+        1,
+        0.99,
+        1
+      ],
+      "type": "StandardMaterial"
+    },
+    {
+      "name": "light-field",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    }
+  ]
+}

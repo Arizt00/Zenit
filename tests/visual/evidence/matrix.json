@@ -1,0 +1,2213 @@
+{
+  "method": "Edge browser device-scale emulation; not a Windows DPI switch.",
+  "results": [
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 1,
+      "css": [
+        1280,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 952
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 666
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 982
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 952
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 852
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 1.25,
+      "css": [
+        1024,
+        576
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 716
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 726
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 926
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 696
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 1.5,
+      "css": [
+        853,
+        480
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 565
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 575
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 755
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 545
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1280,
+        720
+      ],
+      "scale": 2,
+      "css": [
+        640,
+        360
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 376
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 386
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 566
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 356
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 1,
+      "css": [
+        1366,
+        768
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1038
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 732
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1068
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1038
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 918
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 688
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 1.25,
+      "css": [
+        1093,
+        614
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 785
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 795
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 995
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 765
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 1.5,
+      "css": [
+        911,
+        512
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 604
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 614
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 813
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 584
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1366,
+        768
+      ],
+      "scale": 2,
+      "css": [
+        683,
+        384
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 419
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 429
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 609
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 399
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 1,
+      "css": [
+        1440,
+        900
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1106
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 781
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1136
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1106
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 973
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 737
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 1.25,
+      "css": [
+        1152,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 824
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 538
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 854
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 824
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 724
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 494
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 1.5,
+      "css": [
+        960,
+        600
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 652
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 662
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 862
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1440,
+        900
+      ],
+      "scale": 2,
+      "css": [
+        720,
+        450
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 456
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 466
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 646
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 436
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "css": [
+        1920,
+        1080
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1500
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1032
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1530
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1515
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1324
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 1.25,
+      "css": [
+        1536,
+        864
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1186
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 838
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1216
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1186
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1046
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 794
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 1.5,
+      "css": [
+        1280,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 952
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 666
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 982
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 952
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 852
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        1920,
+        1080
+      ],
+      "scale": 2,
+      "css": [
+        960,
+        540
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 652
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 662
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 862
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 632
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 1,
+      "css": [
+        2560,
+        1440
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2112
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1622
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2142
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2127
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1942
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 1.25,
+      "css": [
+        2048,
+        1152
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1608
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1118
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1638
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1623
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1430
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1098
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 1.5,
+      "css": [
+        1707,
+        960
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1321
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 905
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1351
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1336
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1164
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 885
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        2560,
+        1440
+      ],
+      "scale": 2,
+      "css": [
+        1280,
+        720
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 952
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 666
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 982
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 952
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 852
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 622
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 1,
+      "css": [
+        3840,
+        2160
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 3392
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2902
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 3422
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 3407
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 3222
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2882
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 1.25,
+      "css": [
+        3072,
+        1728
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2624
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2134
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2654
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2639
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2454
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2114
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 1.5,
+      "css": [
+        2560,
+        1440
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2112
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1622
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2142
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 2127
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1942
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1602
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    },
+    {
+      "physical": [
+        3840,
+        2160
+      ],
+      "scale": 2,
+      "css": [
+        1920,
+        1080
+      ],
+      "errors": [],
+      "overflow": {
+        "editor": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "melody": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "welcome": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        },
+        "search": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1500
+        },
+        "settings": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "extensions": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1032
+        },
+        "laboratory": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1530
+        },
+        "asm": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "debug": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1515
+        },
+        "floating-project": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1324
+        },
+        "palette": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "forge": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 1012
+        },
+        "forge-detached": {
+          "html": false,
+          "body": false,
+          "topbar": false,
+          "editorWidth": 0
+        }
+      }
+    }
+  ]
+}

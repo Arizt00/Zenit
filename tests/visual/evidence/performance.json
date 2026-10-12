@@ -1,0 +1,104 @@
+{
+  "duration": 2008.5,
+  "frameInterval": {
+    "samples": 0,
+    "median": null,
+    "p95": null,
+    "max": null
+  },
+  "longTasks": [],
+  "mutations": {},
+  "webgl": {
+    "renderSamples": 0,
+    "medianCpuMs": null,
+    "p95CpuMs": null,
+    "contextEvents": [],
+    "engines": 2,
+    "surfaces": [
+      {
+        "kind": "orb",
+        "renderLoops": 0,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      },
+      {
+        "kind": "hero",
+        "renderLoops": 0,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      }
+    ]
+  },
+  "memory": {
+    "used": 55101193,
+    "total": 87247317
+  },
+  "canvases": [
+    {
+      "kind": "decorationsOverviewRuler",
+      "width": 0,
+      "height": 0,
+      "visible": false
+    },
+    {
+      "kind": "",
+      "width": 79,
+      "height": 745,
+      "visible": true
+    },
+    {
+      "kind": "minimap-decorations-layer",
+      "width": 79,
+      "height": 745,
+      "visible": true
+    },
+    {
+      "kind": "orb",
+      "width": 300,
+      "height": 267,
+      "visible": true
+    },
+    {
+      "kind": "",
+      "width": 96,
+      "height": 96,
+      "visible": false
+    },
+    {
+      "kind": "hero",
+      "width": 300,
+      "height": 150,
+      "visible": false
+    }
+  ],
+  "editors": 1,
+  "animations": [],
+  "cdp": {
+    "LayoutCount": 0,
+    "RecalcStyleCount": 0,
+    "LayoutDuration": 0,
+    "RecalcStyleDuration": 0,
+    "ScriptDuration": 0.009478,
+    "TaskDuration": 0.027845
+  },
+  "timeline": {
+    "Layout": {
+      "events": 0,
+      "totalMs": 0.0
+    },
+    "Paint": {
+      "events": 0,
+      "totalMs": 0.0
+    },
+    "UpdateLayoutTree": {
+      "events": 0,
+      "totalMs": 0.0
+    },
+    "CompositeLayers": {
+      "events": 0,
+      "totalMs": 0.0
+    }
+  }
+}

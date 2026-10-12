@@ -14,6 +14,6 @@ const css = `body>.monaco-menu-container{z-index:140!important}
 @media(prefers-reduced-motion:no-preference){:host-context(:root:not([data-motion=off])) .monaco-menu{animation:zenit-menu-in 120ms ease-out}}@keyframes zenit-menu-in{from{opacity:0;translate:0 3px}to{opacity:1;translate:0 0}}`;
 export function installMonacoOverlays(){
   const apply=()=>{for(const host of document.querySelectorAll('.shadow-root-host')){const root=host.shadowRoot;if(root&&!root.querySelector('[data-lumen-menu-style]')){const style=document.createElement('style');style.dataset.lumenMenuStyle='';style.textContent=css;root.append(style);}}};
-  const observer=new MutationObserver(apply);observer.observe(document.body,{childList:true,subtree:true});apply();
+  const observer=new MutationObserver(records=>{if(records.some(r=>Array.from(r.addedNodes).some(n=>n.nodeType===1&&(n.matches('.shadow-root-host')||n.querySelector('.shadow-root-host')))))apply();});observer.observe(document.body,{childList:true,subtree:true});apply();
   return {dispose(){observer.disconnect();}};
 }

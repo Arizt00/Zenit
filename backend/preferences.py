@@ -72,7 +72,7 @@ SCHEMA = {
  'lantern.autoSave': ('editor',False,'Compatibilidad: autoguardado Lantern antiguo (sin efecto)','Legacy Lantern autosave (unused)','bool'),
  'editor.fontSize': ('editor',14,'Tamaño de letra','Font size',[11,28]),
  'editor.fontFamily': ('editor','Consolas, "Cascadia Code", "Liberation Mono", monospace','Fuente del editor','Editor font','font'),
- 'editor.lineHeight': ('editor',1.45,'Interlineado','Line height',[1.15,2.0]),
+ 'editor.lineHeight': ('editor',1.35,'Interlineado','Line height',[1.15,2.0]),
  'editor.tabSize': ('editor',4,'Espacios por tabulación','Tab size',[2,4,8]),
  'editor.insertSpaces': ('editor',True,'Insertar espacios','Insert spaces','bool'),
  'editor.minimap': ('editor',True,'Minimapa','Minimap','bool'),

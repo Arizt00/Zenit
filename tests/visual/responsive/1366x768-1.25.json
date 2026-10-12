@@ -1,0 +1,1938 @@
+{
+  "geometry": {
+    "editor": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 316,
+        "y": 425,
+        "width": 767,
+        "height": 143,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 346,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 317,
+        "y": 426,
+        "width": 765,
+        "height": 141,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "melody": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 757,
+        "y": 72,
+        "width": 320,
+        "height": 486,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 316,
+        "y": 425,
+        "width": 767,
+        "height": 143,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 346,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 758,
+        "y": 73,
+        "width": 318,
+        "height": 484,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 317,
+        "y": 426,
+        "width": 765,
+        "height": 141,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 836,
+        "y": 162.390625,
+        "width": 162,
+        "height": 138,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 776,
+        "y": 304.390625,
+        "width": 282,
+        "height": 24,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "welcome": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 12,
+        "y": 73,
+        "width": 1069,
+        "height": 529,
+        "display": "grid"
+      },
+      ".home-sidebar": {
+        "x": 12,
+        "y": 73,
+        "width": 280,
+        "height": 529,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 306,
+        "y": 73,
+        "width": 775,
+        "height": 370,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 306,
+        "y": 457,
+        "width": 775,
+        "height": 210,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 333,
+        "y": 160.84375,
+        "width": 482,
+        "height": 95.03125,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 629,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 0
+      }
+    },
+    "search": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 497,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 495,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "settings": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 316,
+        "y": 425,
+        "width": 767,
+        "height": 143,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 346,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 317,
+        "y": 426,
+        "width": 765,
+        "height": 141,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 40.5,
+        "y": 24,
+        "width": 1012,
+        "height": 566,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "extensions": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 200,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 198,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 296,
+        "y": 71,
+        "width": 787,
+        "height": 497,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 297,
+        "y": 72,
+        "width": 785,
+        "height": 495,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 297,
+        "y": 72,
+        "width": 785,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 297,
+        "y": 121,
+        "width": 785,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 785
+      }
+    },
+    "laboratory": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 190,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 188,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 286,
+        "y": 71,
+        "width": 797,
+        "height": 497,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 287,
+        "y": 72,
+        "width": 795,
+        "height": 495,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 287,
+        "y": 72,
+        "width": 795,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 287,
+        "y": 121,
+        "width": 795,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 795
+      }
+    },
+    "asm": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 316,
+        "y": 425,
+        "width": 767,
+        "height": 143,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 346,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 317,
+        "y": 426,
+        "width": 765,
+        "height": 141,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "debug": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 497,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 495,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "floating-project": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 86,
+        "y": 425,
+        "width": 997,
+        "height": 143,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 382.5,
+        "y": 129,
+        "width": 328,
+        "height": 440,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 86,
+        "y": 71,
+        "width": 997,
+        "height": 346,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 87,
+        "y": 426,
+        "width": 995,
+        "height": 141,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 87,
+        "y": 72,
+        "width": 995,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 87,
+        "y": 121,
+        "width": 995,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 995
+      }
+    },
+    "palette": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 316,
+        "y": 425,
+        "width": 767,
+        "height": 143,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 346,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 317,
+        "y": 426,
+        "width": 765,
+        "height": 141,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "forge": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1093,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 10,
+        "y": 71,
+        "width": 66,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 86,
+        "y": 71,
+        "width": 220,
+        "height": 497,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 87,
+        "y": 72,
+        "width": 218,
+        "height": 495,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 316,
+        "y": 71,
+        "width": 767,
+        "height": 497,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 106,
+        "y": 113,
+        "width": 978,
+        "height": 456,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 216,
+        "y": 16,
+        "width": 583,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 317,
+        "y": 72,
+        "width": 765,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 317,
+        "y": 121,
+        "width": 765,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 765
+      }
+    },
+    "forge-detached": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".activity-rail": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 16,
+        "y": 16,
+        "width": 1061,
+        "height": 582,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".home-sidebar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".home-hero": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".recent-section": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".hero-copy h2": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 0
+      }
+    }
+  },
+  "settings": {
+    "contentRetained": true,
+    "navigationRetained": true,
+    "mutations": 60,
+    "scrollRestored": true,
+    "focusRestored": true
+  },
+  "errors": [],
+  "realRuntime": true,
+  "fixture": "Isolated generated source project; no simulated tool results or AI responses."
+}

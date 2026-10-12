@@ -1,0 +1,62 @@
+{
+  "inputs": [
+    {
+      "file": "style.css",
+      "sha256": "220b1408da23ea0effea1dd8af4522c8fae2a35f189dd87651d00f929c964340"
+    },
+    {
+      "file": "refinement.css",
+      "sha256": "72f813b6cab3df86b28c8ae31e049d078dd6a32a7d22f925b107fbb37f93cdc0"
+    },
+    {
+      "file": "atelier.css",
+      "sha256": "7790acb40fb918cb392ad3d7e94cf1a67693b46064d90c5dedd4c9330334dfad"
+    },
+    {
+      "file": "platform.css",
+      "sha256": "d28e091c8164afe8244252271c2c2c3ec6ded22ad81df52dfedfcd6b970df031"
+    },
+    {
+      "file": "lenon.css",
+      "sha256": "6c06f6b2c8bc14b244933a1b0fabe8314aa22e9bf3d274d73ff4337cf4dc220e"
+    },
+    {
+      "file": "controls.css",
+      "sha256": "4cb40267cee80863973f00db38a1d4a9aa8c6cf20e1c3de2bfa02c25e0e64777"
+    },
+    {
+      "file": "continuity.css",
+      "sha256": "974e57066e6ce65e3c74e97cce16c39233de779e9196d61a3838a096be6dfc01"
+    },
+    {
+      "file": "preview.css",
+      "sha256": "90cf39f923a462400db4e359df2ea4ae861869fa31b6c77cc86ac0f0531ef61b"
+    },
+    {
+      "file": "finish.css",
+      "sha256": "ae02e4fc29646b1e05542139e8a7fcf3c7c6462040547a9ab88ca26e6f1f85a4"
+    },
+    {
+      "file": "desktop-workflows.css",
+      "sha256": "41b79f3cfcd29c1d1bf720f1435c2d0ea12021080582dbf808f2bee5101f51ad"
+    },
+    {
+      "file": "workspace-profiles.css",
+      "sha256": "8d1283de6653744384297fd336317da6f51ead36ae526ed2ade74ad9421af279"
+    },
+    {
+      "file": "workbench-polish.css",
+      "sha256": "d6ef95250354d177a1ea0f7ec77749f09053fa6c60fced984fbf8a1f475dde62"
+    },
+    {
+      "file": "zenit.css",
+      "sha256": "2c831d7fdcb101f2059476336dd244b8fbe7b771e499a14ad2d8a5e110056d12"
+    },
+    {
+      "file": "laboratory.css",
+      "sha256": "8d5b3f5f2c5c95de323b34fcb9368befe7298b6a78f4757b52aa75278228f20e"
+    }
+  ],
+  "replacedComponents": "shell, welcome, explorer, editor chrome, Melody, terminal chrome, Lantern, search, settings, extensions, Laboratory, Debug, Forge, ASM, modals",
+  "retained": "Ancillary controls and advanced feature presentation; progressively replaced per view."
+}

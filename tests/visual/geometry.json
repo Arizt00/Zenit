@@ -1,0 +1,56 @@
+{
+  "viewport": [
+    1672,
+    917
+  ],
+  "cropTitlebar": 24,
+  "tolerance": 2,
+  "screens": {
+    "editor": {
+      "#dock-left": [
+        90,
+        71,
+        263,
+        800
+      ],
+      "#editor-panel": [
+        363,
+        71,
+        867,
+        578
+      ],
+      "#dock-right": [
+        1241,
+        71,
+        417,
+        800
+      ],
+      "#dock-bottom": [
+        363,
+        657,
+        867,
+        214
+      ]
+    },
+    "welcome": {
+      ".home-sidebar": [
+        18,
+        73,
+        405,
+        824
+      ],
+      ".home-hero": [
+        436,
+        73,
+        1218,
+        478
+      ],
+      ".recent-section": [
+        436,
+        565,
+        1218,
+        332
+      ]
+    }
+  }
+}

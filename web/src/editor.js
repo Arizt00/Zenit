@@ -96,15 +96,15 @@ export class LumenEditor {
     this.view=monaco.editor.create(primary.content,{
       value:'',language:'csharp',theme:'lumen-theme',fontFamily:'Consolas, "Cascadia Code", "Liberation Mono", monospace',
       fontSize:this.settings.fontSize,lineHeight:Math.round(this.settings.fontSize*1.31),
-      automaticLayout:true,renderLineHighlight:'none',lineNumbersMinChars:3,glyphMargin:true,
-      lineDecorationsWidth:15,scrollBeyondLastLine:false,roundedSelection:false,contextmenu:true,
-      minimap:{enabled:this.settings.minimap,renderCharacters:false,maxColumn:95,scale:1},
-      padding:{top:5,bottom:40},tabSize:this.settings.tabSize,insertSpaces:true,wordWrap:this.settings.wordWrap?'on':'off',
+      automaticLayout:true,renderLineHighlight:'line',lineNumbersMinChars:4,glyphMargin:true,
+      lineDecorationsWidth:20,scrollBeyondLastLine:false,roundedSelection:false,contextmenu:true,
+      minimap:{enabled:this.settings.minimap,renderCharacters:false,maxColumn:80,scale:1},
+      padding:{top:3,bottom:24},tabSize:this.settings.tabSize,insertSpaces:true,wordWrap:this.settings.wordWrap?'on':'off',
       guides:{indentation:true,highlightActiveIndentation:false,bracketPairs:false},
       bracketPairColorization:{enabled:false},folding:true,showFoldingControls:'mouseover',
       overviewRulerLanes:0,hideCursorInOverviewRuler:true,overviewRulerBorder:false,
       scrollbar:{vertical:'hidden',horizontal:'hidden',verticalScrollbarSize:0,horizontalScrollbarSize:0,useShadows:false},
-      fixedOverflowWidgets:true,overflowWidgetsDomNode:document.body,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Lumen code editor',
+      fixedOverflowWidgets:true,overflowWidgetsDomNode:document.body,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Editor de código de Zénit',
       quickSuggestions:{other:true,comments:false,strings:false},suggest:{preview:true},inlineSuggest:{enabled:true},
       tabCompletion:'on',wordBasedSuggestions:'currentDocument',
     });
@@ -353,6 +353,9 @@ export class LumenEditor {
   changedTheme(){this.defineMonacoTheme();if(this.kind==='base')this.schedulePaint();}
   applySettings(settings) {
     Object.assign(this.settings,settings);
+    const signature=JSON.stringify(Object.fromEntries(Object.entries(this.settings).filter(([key])=>!['motion','density'].includes(key))));
+    if(this.appliedSettings===signature&&this.appliedView===this.view&&this.appliedPaneCount===(this.panes?.length||0))return;
+    this.appliedSettings=signature;this.appliedView=this.view;this.appliedPaneCount=this.panes?.length||0;
     this.view?.updateOptions({quickSuggestions:this.settings.completion!==false,suggestOnTriggerCharacters:this.settings.completion!==false,inlineSuggest:{enabled:this.settings.prediction!==false},renderValidationDecorations:this.settings.diagnostics===false?'off':'on'});
     const size=this.settings.fontSize;
     document.documentElement.style.setProperty('--editor-font',size+'px');

@@ -1,0 +1,85 @@
+{
+  "toleranceCssPixels": 2,
+  "checks": [
+    {
+      "view": "editor",
+      "selector": "#dock-left",
+      "delta": [
+        0,
+        0,
+        0,
+        0.333
+      ],
+      "withinTolerance": true
+    },
+    {
+      "view": "editor",
+      "selector": "#editor-panel",
+      "delta": [
+        0,
+        0,
+        -0.323,
+        1.333
+      ],
+      "withinTolerance": true
+    },
+    {
+      "view": "editor",
+      "selector": "#dock-right",
+      "delta": [
+        -1.323,
+        0,
+        -0.677,
+        0.333
+      ],
+      "withinTolerance": true
+    },
+    {
+      "view": "editor",
+      "selector": "#dock-bottom",
+      "delta": [
+        0,
+        1.333,
+        -0.323,
+        -1
+      ],
+      "withinTolerance": true
+    },
+    {
+      "view": "welcome",
+      "selector": ".home-sidebar",
+      "delta": [
+        0,
+        0,
+        0,
+        0.333
+      ],
+      "withinTolerance": true
+    },
+    {
+      "view": "welcome",
+      "selector": ".home-hero",
+      "delta": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "withinTolerance": true
+    },
+    {
+      "view": "welcome",
+      "selector": ".recent-section",
+      "delta": [
+        0,
+        0,
+        0,
+        0.333
+      ],
+      "withinTolerance": true
+    }
+  ],
+  "failures": [],
+  "status": "pass",
+  "interpretation": "Only major composition bounds. Not a pixel fidelity certificate."
+}

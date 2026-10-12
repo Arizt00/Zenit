@@ -1,0 +1,610 @@
+{
+  "architecture": "x86_64",
+  "instructions": [
+    {
+      "address": "0x100000",
+      "bytes": "48 31 c0",
+      "text": "xor rax, rax"
+    },
+    {
+      "address": "0x100003",
+      "bytes": "48 c7 c1 0a 00 00 00",
+      "text": "mov rcx, 0xa"
+    },
+    {
+      "address": "0x10000a",
+      "bytes": "48 01 c8",
+      "text": "add rax, rcx"
+    },
+    {
+      "address": "0x10000d",
+      "bytes": "48 ff c9",
+      "text": "dec rcx"
+    },
+    {
+      "address": "0x100010",
+      "bytes": "75 f8",
+      "text": "jne 0x10000a"
+    },
+    {
+      "address": "0x100012",
+      "bytes": "50",
+      "text": "push rax"
+    },
+    {
+      "address": "0x100013",
+      "bytes": "5b",
+      "text": "pop rbx"
+    },
+    {
+      "address": "0x100014",
+      "bytes": "48 89 c2",
+      "text": "mov rdx, rax"
+    },
+    {
+      "address": "0x100017",
+      "bytes": "48 6b d2 02",
+      "text": "imul rdx, rdx, 2"
+    }
+  ],
+  "trace": [
+    {
+      "address": "0x100000",
+      "registers": {
+        "rax": "0x0",
+        "rbx": "0x0",
+        "rcx": "0x0",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100003",
+      "registers": {
+        "rax": "0x0",
+        "rbx": "0x0",
+        "rcx": "0x0",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x0",
+        "rbx": "0x0",
+        "rcx": "0xa",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0xa",
+        "rbx": "0x0",
+        "rcx": "0xa",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0xa",
+        "rbx": "0x0",
+        "rcx": "0x9",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0xa",
+        "rbx": "0x0",
+        "rcx": "0x9",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x13",
+        "rbx": "0x0",
+        "rcx": "0x9",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x13",
+        "rbx": "0x0",
+        "rcx": "0x8",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x13",
+        "rbx": "0x0",
+        "rcx": "0x8",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x1b",
+        "rbx": "0x0",
+        "rcx": "0x8",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x1b",
+        "rbx": "0x0",
+        "rcx": "0x7",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x1b",
+        "rbx": "0x0",
+        "rcx": "0x7",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x22",
+        "rbx": "0x0",
+        "rcx": "0x7",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x22",
+        "rbx": "0x0",
+        "rcx": "0x6",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x22",
+        "rbx": "0x0",
+        "rcx": "0x6",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x28",
+        "rbx": "0x0",
+        "rcx": "0x6",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x28",
+        "rbx": "0x0",
+        "rcx": "0x5",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x28",
+        "rbx": "0x0",
+        "rcx": "0x5",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x2d",
+        "rbx": "0x0",
+        "rcx": "0x5",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x2d",
+        "rbx": "0x0",
+        "rcx": "0x4",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x2d",
+        "rbx": "0x0",
+        "rcx": "0x4",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x31",
+        "rbx": "0x0",
+        "rcx": "0x4",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x31",
+        "rbx": "0x0",
+        "rcx": "0x3",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x31",
+        "rbx": "0x0",
+        "rcx": "0x3",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x34",
+        "rbx": "0x0",
+        "rcx": "0x3",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x34",
+        "rbx": "0x0",
+        "rcx": "0x2",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x34",
+        "rbx": "0x0",
+        "rcx": "0x2",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x36",
+        "rbx": "0x0",
+        "rcx": "0x2",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x36",
+        "rbx": "0x0",
+        "rcx": "0x1",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000a",
+      "registers": {
+        "rax": "0x36",
+        "rbx": "0x0",
+        "rcx": "0x1",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x10000d",
+      "registers": {
+        "rax": "0x37",
+        "rbx": "0x0",
+        "rcx": "0x1",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100010",
+      "registers": {
+        "rax": "0x37",
+        "rbx": "0x0",
+        "rcx": "0x0",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100012",
+      "registers": {
+        "rax": "0x37",
+        "rbx": "0x0",
+        "rcx": "0x0",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100013",
+      "registers": {
+        "rax": "0x37",
+        "rbx": "0x0",
+        "rcx": "0x0",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20ffe8",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100014",
+      "registers": {
+        "rax": "0x37",
+        "rbx": "0x37",
+        "rcx": "0x0",
+        "rdx": "0x0",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    },
+    {
+      "address": "0x100017",
+      "registers": {
+        "rax": "0x37",
+        "rbx": "0x37",
+        "rcx": "0x0",
+        "rdx": "0x37",
+        "rsi": "0x0",
+        "rdi": "0x0",
+        "rsp": "0x20fff0",
+        "rbp": "0x0",
+        "r8": "0x0",
+        "r9": "0x0"
+      }
+    }
+  ],
+  "executed": 36,
+  "pc": "0x10001b",
+  "registers": {
+    "rax": "0x37",
+    "rbx": "0x37",
+    "rcx": "0x0",
+    "rdx": "0x6e",
+    "rsi": "0x0",
+    "rdi": "0x0",
+    "rsp": "0x20fff0",
+    "rbp": "0x0",
+    "r8": "0x0",
+    "r9": "0x0"
+  },
+  "memory": "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 37 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
+  "status": "complete",
+  "error": "",
+  "note": "CPU y memoria emuladas. Sin sistema operativo ni llamadas al sistema del anfitri\u00f3n."
+}
