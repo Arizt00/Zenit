@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R7
+# Límites reales · Zénit 0.5.3 R9
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -51,7 +51,7 @@
     agotó el tiempo al compartir carga con otras pruebas; recorridos posteriores
     secuenciales completaron. La causa no está demostrada y no se considera cerrada
     solo porque las repeticiones pasan. Se conserva instrumentación de recursos.
-15. **Distribución:** R8 prepara un instalador y portable Windows con revisión
+15. **Distribución:** R9 prepara un instalador y portable Windows con revisión
     propia, manifiesto y SHA-256. No reconstruye aquí Linux/macOS ni firma/notariza
     los paquetes. Las releases anteriores se conservan. El actualizador reconoce
     la nueva revisión; la instalación se elige después de guardar el trabajo.
@@ -74,3 +74,12 @@ datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inven
 - Depuración conserva los nodos al cerrar/reabrir y al cambiar inspector. Los muestreos inactivo y pausado sin cambios producen cero mutaciones; no certifican ausencia de flicker en cada motor, GPU o recorrido.
 - El error de selección/entrada se verifica con tres sesiones CMD ConPTY y teclado real del navegador. No cubre todos los programas TUI, shells WSL ni todos los IME.
 - No se declara 90 % global de VS Code. Las áreas pendientes 1–8 conservan sus límites; cada avance se acredita con contratos y pruebas concretos.
+
+
+## Límites específicos de R9
+
+- Se prueban 89 variantes de tres paquetes y los pares de color de los controles definidos. No se garantiza que cada tema de Open VSX o toda textura/transparencia mantenga contraste sin ajuste. La interfaz corrige colores ilegibles; Monaco conserva la configuración original del tema.
+- La carga admite 128 variantes por paquete y 256 temas activos en total. Si se exceden estos límites aparece un error de contribución; no se anuncia que todas las variantes estén cargadas. La previsualización representa la paleta resuelta, no una captura completa de cada motor de editor.
+- ColorThemeKind/eventos cubren los cuatro tipos y cambios reales de identidad, incluso entre dos temas del mismo tipo. No equivalen a toda la configuración, semántica TextMate, altas definiciones de contraste ni todas las API de temas de VS Code.
+- Los enlaces de Melody se extraen de referencias a líneas válidas del texto devuelto, hasta seis por consejo. No verifican la corrección técnica del consejo. Caducan al cambiar el modelo/revisión; no editan ni borran archivos.
+- La bienvenida nocturna usa la misma imagen y canvas, con composición CSS adaptada. Las muestras WebView2 de render CPU, frames y long tasks no certifican 60 FPS, tiempo GPU ni ausencia universal de flicker. Las ventanas del usuario no se reinician automáticamente.

@@ -538,7 +538,11 @@ class ExtensionStore(ExtensionInstallPlans):
                         if len(body)>50000: continue
                         prefix=value.get('prefix',name);prefix=prefix[0] if isinstance(prefix,list) and prefix else prefix
                         output['snippets'].append({'name':str(name)[:160],'prefix':str(prefix)[:120],'body':body,'language':str(declaration.get('language','plaintext'))[:80],'owner':info['id']})
-                for declaration in c.get('themes',[])[:30]:
+                if len(c.get('themes',[]))>128:
+                    output['errors'].append({'id':info['id'],'error':'Límite de 128 variantes por paquete. Algunas no se han cargado.'})
+                for declaration in c.get('themes',[])[:128]:
+                    if len(output['themes'])>=256:
+                        output['errors'].append({'id':info['id'],'error':'Límite de 256 temas activos. Desactiva otro paquete para cargar más.'});break
                     data=color_theme(root,declaration.get('path'))
                     if isinstance(data,dict): output['themes'].append({'id':info['id']+':'+str(declaration.get('id',declaration.get('label','theme'))),'label':str(declaration.get('label','Theme'))[:160],'uiTheme':declaration.get('uiTheme','vs-dark'),'data':data,'owner':info['id']})
                 custom=manifest.get('lumen',{})

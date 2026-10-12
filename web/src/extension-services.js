@@ -7,6 +7,8 @@ export class ExtensionServicesUI {
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.preferences.changed'){await p.syncPreferences();return;}
+    if(event.command==='zenit.contributions.changed'){await p.loadContributions();return;}
     if(event.command==='zenit.files.changed'){await p.melodyFiles.reload(event.paths||[]);return;}
     if(event.command==='zenit.output'){this.outputUI.event(event);return;}
     if(event.command==='zenit.pick')return this.pick(event);

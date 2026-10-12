@@ -7,7 +7,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: #e6e7f44d;
+  background: var(--overlay);
   backdrop-filter: blur(var(--modal-blur));
 }
 

@@ -156,7 +156,7 @@ class ExtensionRuntime:
                 try:extensions.append({'id':item['id'],'root':str(other),'manifest':localized_manifest(other,self.store.prefs.get('general.locale'))})
                 except (OSError,ValueError):pass
             profiles=terminal_profiles()
-            options={'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None}
+            options={'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None,'themeKind':self.services.theme_state()['kind'] if self.services else 1}
             self.stop(eid);self.hosts[eid]=Host(node,root,entry,workspace,options,self.services)
             self.approve(workspace,eid,graph)
             self.store.prefs.audit('extension.execute',extension=eid)

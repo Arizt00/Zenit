@@ -130,6 +130,35 @@ class ExtensionDebugger(ProtocolDebugger):
 class ExtensionServices:
     def __init__(self,platform):
         self.platform=platform;self.lock=threading.RLock();self.terminals={};self.tasks={};self.panels={};self.debuggers={};self.contexts={};self.prompts={};self.documents={};self.file_workspaces={};self.quickinputs={};self.editor_snapshot=None;self.outputs={};self.status_items={}
+        state=self.theme_state();self.theme_signature=(state['identity'],state['kind'])
+    def theme_state(self):
+        store=self.platform.extensions;prefs=self.platform.prefs;ident=prefs.get('appearance.extensionTheme')
+        if ident and prefs.get('extensions.loadContributions'):
+            from .extensions import localized_manifest,color_theme
+            for eid,info in store.installed.items():
+                if not info.get('enabled',True) or not ident.startswith(eid+':'):continue
+                root=store.root/info['directory']/'extension'
+                try:declarations=localized_manifest(root,prefs.get('general.locale')).get('contributes',{}).get('themes',[])
+                except (ValueError,OSError,TypeError,AttributeError):continue
+                if not isinstance(declarations,list):continue
+                for declaration in declarations[:128]:
+                    if not isinstance(declaration,dict):continue
+                    theme_id=eid+':'+str(declaration.get('id',declaration.get('label','theme')))
+                    if ident==theme_id:
+                        try:data=color_theme(root,declaration.get('path'))
+                        except (ValueError,OSError,TypeError,AttributeError):break
+                        if isinstance(data,dict):return {'kind':{'vs':1,'vs-dark':2,'hc-black':3,'hc-light':4}.get(declaration.get('uiTheme'),2),'identity':theme_id}
+                        break
+        return {'kind':1 if prefs.get('appearance.theme')=='day' else 2,'identity':'zenit:'+prefs.get('appearance.theme')}
+    def theme_changed(self):
+        state=self.theme_state();signature=(state['identity'],state['kind'])
+        if self.theme_signature==signature:return
+        self.theme_signature=signature
+        runtime=self.platform.extension_runtime
+        with runtime.lock:hosts=list(runtime.hosts.values())
+        for host in hosts:
+            event=getattr(host,'event',None)
+            if event:event('theme.changed',{'kind':state['kind']})
     def editor_state(self,ws,body):
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
         items=body.get('editors')

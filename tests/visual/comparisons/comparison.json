@@ -2,85 +2,85 @@
   "screens": {
     "editor": {
       "channelMAE": [
-        7.878263710977652,
-        8.147075704528497,
-        5.433902026057511
+        7.926143864171184,
+        8.222394118537148,
+        5.463904165340485
       ],
-      "meanMAE": 7.153080480521219,
-      "lowFrequencyMAE": 4.252811871576173,
-      "lumaBlockSSIM": 0.7439567760503946,
+      "meanMAE": 7.204147382682939,
+      "lowFrequencyMAE": 4.288343388114555,
+      "lumaBlockSSIM": 0.7424906793047225,
       "overlay": "editor-overlay.png",
       "diff": "editor-diff.png"
     },
     "search": {
       "channelMAE": [
-        6.672775797926461,
-        7.0608410773637775,
-        3.973394624660193
+        6.720111999290384,
+        7.132486838191941,
+        4.033443906435068
       ],
-      "meanMAE": 5.9023371666501445,
-      "lowFrequencyMAE": 4.258359337077873,
-      "lumaBlockSSIM": 0.7579750815317484,
+      "meanMAE": 5.962014247972465,
+      "lowFrequencyMAE": 4.301047084113446,
+      "lumaBlockSSIM": 0.757223550651997,
       "overlay": "search-overlay.png",
       "diff": "search-diff.png"
     },
     "settings": {
       "channelMAE": [
-        12.336369636791494,
-        11.143843952351386,
-        5.819733450559084
+        12.335118025807057,
+        11.141422910155333,
+        5.823659165262218
       ],
-      "meanMAE": 9.766649013233987,
-      "lowFrequencyMAE": 8.652520629637335,
-      "lumaBlockSSIM": 0.6083685578087056,
+      "meanMAE": 9.766733367074869,
+      "lowFrequencyMAE": 8.651258581235698,
+      "lumaBlockSSIM": 0.6089807780262182,
       "overlay": "settings-overlay.png",
       "diff": "settings-diff.png"
     },
     "forge": {
       "channelMAE": [
-        11.930923987623466,
-        11.106407152510005,
-        5.711348765738078
+        11.981171700938676,
+        11.173346490793257,
+        5.764056654474493
       ],
-      "meanMAE": 9.582893301957183,
-      "lowFrequencyMAE": 8.582761250953471,
-      "lumaBlockSSIM": 0.48150999684270873,
+      "meanMAE": 9.639524948735476,
+      "lowFrequencyMAE": 8.6300395256917,
+      "lumaBlockSSIM": 0.4800467312973943,
       "overlay": "forge-overlay.png",
       "diff": "forge-diff.png"
     },
     "laboratory": {
       "channelMAE": [
-        13.287454409792698,
-        12.581747350680658,
-        6.675131618080593
+        13.34350231929581,
+        12.653757050502731,
+        6.7278329846128155
       ],
-      "meanMAE": 10.84811112618465,
-      "lowFrequencyMAE": 10.0989390472228,
-      "lumaBlockSSIM": 0.3740766959355291,
+      "meanMAE": 10.90836411813712,
+      "lowFrequencyMAE": 10.143915123777823,
+      "lumaBlockSSIM": 0.3729606858023998,
       "overlay": "laboratory-overlay.png",
       "diff": "laboratory-diff.png"
     },
     "debug": {
       "channelMAE": [
-        10.793785513401826,
-        11.008409730085102,
-        5.120780133887807
+        10.85238490918483,
+        11.094536088660234,
+        5.19104970963147
       ],
-      "meanMAE": 8.974325125791578,
-      "lowFrequencyMAE": 8.33854795090493,
-      "lumaBlockSSIM": 0.49818740870633976,
+      "meanMAE": 9.045990235825512,
+      "lowFrequencyMAE": 8.402316066846959,
+      "lumaBlockSSIM": 0.4971057805462947,
       "overlay": "debug-overlay.png",
       "diff": "debug-diff.png"
     },
     "extensions": {
       "channelMAE": [
-        11.216256724392522,
-        11.285367304451274,
-        6.771986350331067
+        11.153415287003073,
+        11.27268096507751,
+        6.760952085279124
       ],
-      "meanMAE": 9.757870126391621,
-      "lowFrequencyMAE": 7.6551834130781495,
-      "lumaBlockSSIM": 0.5362811190616602,
+      "meanMAE": 9.729016112453236,
+      "lowFrequencyMAE": 7.591623327092435,
+      "lumaBlockSSIM": 0.5462821205442339,
       "overlay": "extensions-overlay.png",
       "diff": "extensions-diff.png"
     }

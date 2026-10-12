@@ -1,5 +1,10 @@
 import {icon} from './icons.js';
 
+export function adviceLines(text,lineCount){
+  const lines=new Set();for(const match of String(text).matchAll(/(?:\bl(?:í|i)neas?|\blines?|\bL)\s*:?\s*(\d+)(?:\s*[-–—]\s*L?(\d+))?/gi))for(const value of match.slice(1)){const n=Number(value);if(Number.isInteger(n)&&n>=1&&n<=lineCount)lines.add(n);}
+  return [...lines].slice(0,6);
+}
+
 /** A bounded, opt-in session. Advice owns a buffer revision, never a file write. */
 export class CompanionSession {
   constructor({snapshot,api,onState,busy=()=>false,clock=()=>Date.now(),delay=(f,ms)=>setTimeout(f,ms),clear=id=>clearTimeout(id),idleMs=1500,minInterval=20000,maxRequests=12}){
@@ -65,6 +70,7 @@ export class MelodyCompanion {
     this.button=document.createElement('button');this.button.className='melody-companion-toggle text-button';this.button.innerHTML=icon('bulb')+'Ayuda en tiempo real';this.button.setAttribute('aria-pressed','false');document.querySelector('.ai-current-document').before(this.button);this.button.onclick=()=>p.safe(()=>this.toggle());
     this.panel=document.createElement('section');this.panel.className='melody-companion-card';this.panel.hidden=true;this.panel.innerHTML=`<header>${icon('bulb')}<strong>Melody contigo</strong><button class="icon-button" aria-label="Detener ayuda en tiempo real">${icon('stop')}</button></header><div class="companion-focus" role="group" aria-label="Enfoque de la ayuda"><button data-companion-focus="review" aria-pressed="true">Revisar</button><button data-companion-focus="explain" aria-pressed="false">Explicar</button><button data-companion-focus="next" aria-pressed="false">Próximo paso</button></div><small role="status"></small><pre></pre><div class="companion-budget"></div><footer><button class="text-button" data-companion="review">Revisar ahora</button><button class="text-button" data-companion="predict">Sugerir siguiente código</button></footer>`;document.querySelector('#chat-messages').before(this.panel);
     this.panel.querySelector('.companion-focus').after(this.panel.querySelector('footer'));
+    this.references=document.createElement('div');this.references.className='companion-references';this.references.hidden=true;this.references.setAttribute('aria-label','Líneas citadas por Melody');this.panel.querySelector('pre').before(this.references);
     this.panel.querySelector('header button').onclick=()=>this.session.stop();this.panel.querySelector('[data-companion=review]').onclick=()=>p.safe(()=>{this.session.lastKey=null;return this.session.review();});this.panel.querySelector('[data-companion=predict]').onclick=()=>p.safe(()=>this.session.review(true));
     this.panel.querySelectorAll('[data-companion-focus]').forEach(button=>button.onclick=()=>{this.focus=button.dataset.companionFocus;this.panel.querySelectorAll('[data-companion-focus]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.session.changed();});
     this.session=new CompanionSession({snapshot:()=>({path:ed.current||'',content:ed.getValue(),version:ed.view?.getModel()?.getVersionId(),position:ed.view?.getPosition(),selection:ed.view?.getModel()?.getValueInRange(ed.view.getSelection()),focus:this.focus,workspace:p.state.workspace||p.host.workspace?.()||this.workspace,provider:p.prefs['ai.provider'],model:p.prefs['ai.model'],diagnostics:ed.diagnostics().slice(0,12)}),api:(...args)=>p.api(...args),onState:state=>this.render(state),busy:()=>p.disposed||p.aiStarting||!!p.aiJob||document.hidden||document.documentElement.dataset.screen==='home'});
@@ -79,7 +85,7 @@ export class MelodyCompanion {
     if(provider!==p.prefs['ai.provider']||model!==p.prefs['ai.model'])throw Error('El destino cambió. Activa de nuevo la ayuda con el proveedor actual.');
     this.workspace=await p.host.workspace?.();this.session.begin(this.session.snapshot());
   }
-  clearAdvice(){if(this.advice){if(!this.advice.model.isDisposed())this.advice.model.deltaDecorations(this.advice.ids,[]);this.advice=null;}}
+  clearAdvice(){if(this.advice){if(!this.advice.model.isDisposed())this.advice.model.deltaDecorations(this.advice.ids,[]);this.advice=null;}if(this.references?.childElementCount)this.references.replaceChildren();if(this.references)this.references.hidden=true;}
   changed(){const view=this.platform.host.editor.view,position=view?.getPosition();if(this.advice&&(view?.getModel()!==this.advice.model||this.advice.model.getVersionId()!==this.advice.version))this.clearAdvice();if(this.prediction&&(view?.getModel()!==this.prediction.model||this.prediction.model.getVersionId()!==this.prediction.version||position?.lineNumber!==this.prediction.position.lineNumber||position?.column!==this.prediction.position.column)){this.prediction=null;view?.trigger('melody','editor.action.inlineSuggest.hide',{});}this.session.changed();}
   render(state){
     const enabled=this.session?.enabled||false;this.button.setAttribute('aria-pressed',String(enabled));this.button.innerHTML=icon('bulb')+(enabled?'Ayuda activa · detener':'Ayuda en tiempo real');
@@ -91,9 +97,11 @@ export class MelodyCompanion {
     if(state.text!==undefined)this.panel.querySelector('pre').textContent=state.text||'El proveedor no ha devuelto una sugerencia.';
     this.panel.querySelector('pre').classList.toggle('is-code',!!state.prediction);
     if(state.status==='waiting')this.panel.querySelector('pre').textContent='Los consejos aparecerán aquí. Se comprobará la revisión antes de mostrarlos.';
+    if(['waiting','analyzing','error','limit'].includes(state.status))this.clearAdvice();
     if(state.status==='ready'&&!state.prediction&&state.text?.trim()){
-      this.clearAdvice();const model=this.platform.host.editor.view?.getModel(),line=state.snapshot?.position?.lineNumber;
+      this.clearAdvice();const ed=this.platform.host.editor,model=ed.view?.getModel(),lines=model?adviceLines(state.text,model.getLineCount()):[],line=lines[0]||state.snapshot?.position?.lineNumber;
       if(model&&model.getVersionId()===state.snapshot.version&&line>=1&&line<=model.getLineCount())this.advice={model,version:model.getVersionId(),ids:model.deltaDecorations([],[{range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,linesDecorationsClassName:'melody-advice-mark',hoverMessage:{value:'**Melody · propuesta para esta revisión**\n\n'+state.text.slice(0,1800),isTrusted:false}}}])};
+      if(this.advice)for(const target of lines){const button=document.createElement('button');button.className='text-button';button.textContent='Línea '+target;button.onclick=()=>{if(this.advice?.model===ed.view?.getModel()&&this.advice.model.getVersionId()===this.advice.version)ed.showLine(target);};this.references.append(button);this.references.hidden=false;}
     }
     if(state.prediction){
       const code=state.text.match(/```[^\n]*\n([\s\S]*?)```/)?.[1];if(!code?.trim()||code.trimEnd().split('\n').length>8)return;

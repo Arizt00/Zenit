@@ -42,11 +42,11 @@ async function api(path,body) {
   if(!response.ok){const error=new Error(data.error||`Request failed (${response.status})`);error.status=response.status;throw error;}
   return data;
 }
-function notify(message,type='info',duration=5000){
-  const duplicate=[...$('#toasts').children].find(t=>t.dataset.message===message&&t.dataset.type===type);
-  if(duplicate){clearTimeout(duplicate.dismissTimer);duplicate.dismissTimer=setTimeout(()=>duplicate.remove(),duration);return;}
+function notify(message,type='info',duration=5000,key=''){
+  const duplicate=[...$('#toasts').children].find(t=>(key?t.dataset.noticeKey===key:t.dataset.message===message)&&t.dataset.type===type);
+  if(duplicate){if(duplicate.dataset.message!==message){duplicate.dataset.message=message;duplicate.querySelector('span').textContent=message;notifications.unshift({message,type,time:new Date().toLocaleTimeString()});notifications=notifications.slice(0,25);}clearTimeout(duplicate.dismissTimer);duplicate.dismissTimer=setTimeout(()=>duplicate.remove(),duration);return;}
   const toast=document.createElement('div');toast.className='toast'+(type==='error'?' error':'');
-  toast.dataset.message=message;toast.dataset.type=type;toast.setAttribute('role',type==='error'?'alert':'status');
+  toast.dataset.message=message;toast.dataset.type=type;if(key)toast.dataset.noticeKey=key;toast.setAttribute('role',type==='error'?'alert':'status');
   toast.innerHTML=icon(type==='error'?'warning':'info')+`<span>${esc(message)}</span><button class="toast-dismiss icon-button" aria-label="Cerrar aviso">${icon('close')}</button>`;$('#toasts').appendChild(toast);motion.enter(toast,6);
   toast.querySelector('button').onclick=()=>toast.remove();
   while($('#toasts').children.length>3)$('#toasts').firstElementChild.remove();

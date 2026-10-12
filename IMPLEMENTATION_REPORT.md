@@ -1,108 +1,101 @@
-# Zénit 0.5.3 R8 · depuración, ventanas, terminales y Melody
+# Zénit 0.5.3 R9 · temas legibles, selección y sincronización
 
-Esta revisión parte de `dab665d` (R7). Responde a la petición de simplificar
-Depuración, mejorar inicio/Melody, continuar la compatibilidad de extensiones,
-añadir proyectos/archivos a Melody y corregir Proyecto desacoplado y la entrada
-al alternar terminales. Los servicios existentes y goldens originales se conservan.
+Esta revisión parte de `ec1b980` (R8). Corrige el error de los temas mostrado
+en las capturas del usuario, la fila de variantes que desbordaba las tarjetas
+y la aplicación de colores en ventanas desacopladas. Continúa las mejoras de
+inicio/Melody y acredita nuevos contratos de extensiones con pruebas reales.
 
-## Cambios y arquitectura
+## Arquitectura y archivos
 
-| Área | Archivos principales | Resultado real |
+| Área | Archivos | Comportamiento |
 | --- | --- | --- |
-| Depuración | `debug-workspace.js`, `debug-workspace.css`, `studio.js`, `lantern.js` | Un inspector seleccionado; controles compactos; puntos de interrupción por archivo; input solo en estados compatibles. Reapertura mantiene el nodo. |
-| Lantern | `lantern.js`, `debug.css` | Vista compacta en el inspector; conserva Live, Lens y adaptadores. Retirado el layout anterior y sus reglas muertas. |
-| Proyecto fuera de Zénit | `desktop-workflows.js`, `shell.css`, `windows.css` | El contenedor nativo usa columna, cabecera arriba y árbol debajo. Acciones originales se trasladan a la cabecera. |
-| Terminales | `app.js`, `workbench.js`, `product-ui.js` | Terminal vuelve a la PTY seleccionada; tareas usan consola explícita. Foco inmediato sin temporizador de 80 ms; ajuste de geometría en un frame con comprobación de sesión. Sesiones repetidas se distinguen por número. |
-| Melody activo | `melody-companion.js`, `melody.css` | Oculta la bienvenida mientras hay ayuda, conserva nodos; consejo real en margen de Monaco, retirado al cambiar versión/modelo. Predicciones siguen requiriendo aceptación. |
-| Melody archivos/proyectos | `melody_files.py`, `providers.py`, `platform_services.py`, `melody-files.js/css`, `ai-intent.js` | Plan JSON validado, revisión por ruta/contenido, batch a disco con recuperación, rollback y Deshacer. La petición sin archivo activo ya no se rechaza por comparar null con cadena vacía. |
-| Inicio | `studio.js`, `welcome.css` | Escena proporcional a altura, paisaje con luz/composición CSS y profundidad por puntero limitada a ±4/±3 px. No hay un loop permanente para seguir el puntero. |
-| Salida de extensiones | `extension_ui.cjs`, `extension_api.cjs`, `extension_host.cjs`, `extension_services.py`, `extension-output.js/css`, `extension-services.js` | Selector, texto real, clear/show/hide, copia, LogLevel y evento real. IDs independientes por bridge de dependencia. Off suprime los cinco métodos de log. |
+| Resolución de temas | `web/src/extension-theme.js` | Solo acepta colores hex. Compone alpha sobre la superficie, elige un acento visible y normaliza los pares que fallan contraste. Mantiene el tema original de Monaco. Retirar el tema limpia sus tokens y restaura el ambiente elegido. |
+| Sistema de diseño | `web/design/tokens.css`, `shell.css`, `catalogue.css`, `dialogs.css`, `welcome.css` | Pares de cabecera, rail, campo, botón, selección y chips; halo de cabecera/selección sin blanco fijo; overlay acorde al tema. Layout de tarjetas acotado con acciones que pueden envolver. |
+| Selector | `web/src/theme-picker.js`, `web/design/themes.css`, `workbench.js` | Una acción por paquete, búsqueda, muestras de la paleta resuelta, teclado y tema efectivo marcado. No crea canvas ni carga otro editor. |
+| Sincronización | `platform_services.py`, `extension-services.js`, `workbench.js` | Eventos de preferencias/contribuciones actualizan otras ventanas. Escrituras serializadas y epochs evitan aplicar una respuesta anterior. Ajustes actualiza controles y texto existentes, conserva nodos/foco y no reconstruye una búsqueda por un evento repetido. |
+| API de color | `extension_services.py`, `extension_runtime.py`, `extension_api.cjs` | Estado inicial real, cuatro ColorThemeKind y evento al cambiar identidad/tipo. Un recurso inválido, paquete desactivado o contribuciones desactivadas informa del tema nativo efectivo. |
+| Variantes | `extensions.py` | Hasta 128 por paquete y 256 activas con aviso al exceder límites. Bearded Theme carga sus 64 variantes; el antiguo límite silencioso de 30 queda eliminado. |
+| Avisos | `web/src/app.js`, `workbench.js` | Reutiliza una notificación al cambiar rápidamente de tema; otros avisos mantienen su contrato. |
+| Consejos | `melody-companion.js`, `melody.css` | Hasta seis referencias de línea válidas, navegación a Monaco y marca ligada a revisión/modelo. Al analizar, cambiar archivo o recibir un error retira el consejo anterior. |
+| Bienvenida | `welcome.css` | Paisaje más tenue en Noche/Bosque, colores legibles y botones de su paleta. Conserva la esfera Blender/Babylon/WebGL2, su canvas y las reglas de pausa/reducir movimiento. |
+| Distribución | `version.py`, `version.txt`, `setup.js`, `package.json` | Revisión R9 y comprobación sintáctica del nuevo selector. Instalador, desinstalador y producto mantienen la marca Zénit. |
 
-Depuración usa `/platform/debug` y los motores existentes Python/Node/Java/DAP.
-Su polling cesa al ocultarla y no reescribe elementos cuyo valor sigue igual.
-Limpiar la salida borra el visor, no el transcript real del motor. Un error de
-puntos de interrupción permanece junto al formulario.
+ColorThemeKind respeta los tipos declarados por la extensión, no una inferencia
+del nombre comercial. Vira llama a algunas variantes «High Contrast» pero las
+declara `vs-dark`: el host informa Dark. Se prueban además temas de fixture
+`hc-black` y `hc-light` con un host Node real. El contrato de referencia es el
+[archivo oficial de API de VS Code](https://github.com/microsoft/vscode/blob/main/src/vscode-dts/vscode.d.ts).
 
-Melody archivos separa petición, propuesta y aplicación. El job está ligado a la
-carpeta; revisión produce un ticket de diez minutos y hashes del contenido previo.
-Aplicar comprueba todo el plan antes de escribir. Se conservan backups y manifiesto
-en `.lumen/melody`, se crean las carpetas necesarias, y las escrituras usan temp
-y reemplazo en el mismo directorio. Un fallo revierte las operaciones ya hechas.
-Deshacer verifica hashes posteriores y búferes compartidos para no pisar trabajo
-nuevo. Los eventos actualizan vistas limpias de otras ventanas; un búfer modificado
-se conserva. No hay ejecución de instrucciones del modelo como código de shell.
+## Tokens y causa del fallo
 
-Los planes son relativos al workspace y solo texto UTF-8. Se bloquean rutas
-externas, symlinks/junctions, secretos, repositorio interno y dependencias. Crear
-no sobrescribe. Borrar no acepta carpetas. El proveedor/modelo existente y sus
-permisos siguen siendo los de Melody; no se añade un modelo ni nuevas credenciales.
+Vira declara `focusBorder` con alpha cero. El código anterior lo reutilizaba
+como acento y ocultaba iconos. One Dark Pro aporta bordes oscuros/translúcidos,
+tampoco adecuados para texto de botones. El foco y el acento ahora se resuelven
+por separado; los foreground se verifican sobre su fondo efectivo.
 
-## Diseño y revisión visual
+Los nuevos roles son `button-start/end/text`, `field-text/muted`,
+`chrome-text/secondary/accent`, `rail-text/secondary/accent`,
+`canvas-text/secondary/accent`, `soft-text/secondary`, `chrome-halo`,
+`selection-halo`, `positive-bg/text` y `overlay`. Comparten los spacing/radii/motion existentes.
+Los pares de texto/control resueltos usan mínimo 4.5:1 y foco 3:1. No se promete
+que cada píxel de cada tema cumpla estas métricas: los límites de composición,
+texturas y del editor original permanecen explícitos.
 
-Las superficies usan los tokens de `tokens.css`: escala de 2–64 px,
-`radius-control/card/panel`, border, surface/editor, text/secondary y accent.
-Nuevas hojas específicas sustituyen las antiguas reglas de Debug. La comparación
-original de esa pantalla queda documentada como composición anterior, porque el
-usuario pidió reducirla. Inicio/Editor conservan sus bounds principales.
+## Interfaz y validación visual
 
-Se incluyen capturas, overlays y diffs. La revisión nativa utiliza WebView2 real
-a 150 % con viewport CDP 1672×917. La matriz emula seis resoluciones y cuatro
-escalas; no se presenta como una prueba física de cada monitor/DPI. Las vistas
-coincidentes y diferencias están en VISUAL_DIFF_REPORT, sin porcentaje inventado.
+Se preservan los ocho goldens originales. Los cambios solicitados después para
+Inicio, Laboratory y Debug se documentan como composiciones vigentes diferentes.
+Las vistas actuales, overlays y diffs están en [VISUAL_DIFF_REPORT](VISUAL_DIFF_REPORT.md).
+Editor/Inicio conservan cinco bounds principales dentro de 2 px; la desviación
+máxima observada es 1.333 px. Ese resultado no equivale a fidelidad global.
 
-## Validación
+El selector y los temas de las capturas del error se revisan con 89 variantes
+reales: 20 Vira, 5 One Dark Pro y 64 Bearded. Los siete pares medidos pasan 4.5:1;
+las tarjetas conservan sus bounds y el mismo modelo Monaco. La ventana Proyecto
+recibe el tema y Ajustes retiene campos/foco. No se compara directamente por
+píxeles una captura del proyecto del usuario a otro viewport/proyecto de QA.
 
-- Python: 285 pruebas, 280 pasan y 5 se omiten por capacidades/dependencias.
-- Node: 71 pruebas pasan; incluye cuatro contratos nuevos de OutputChannel.
-- Debug/output: 12 comprobaciones con Python y extensión Node reales. Pausa,
-  pasos y resultado 42; cero mutaciones en muestras inactiva/pausada sin cambios.
-- Archivos/panel/terminal: 7 comprobaciones. Tres CMD ConPTY reciben teclado;
-  alternar y pulsar Terminal mantiene entrada. Proyecto desacoplado corregido.
-  Un plan crea tres archivos, borra uno solicitado y restaura todo al deshacer.
-- Transacciones: ocho pruebas de recuperación, límites, permisos, stale hashes,
-  búferes sin guardar, excepciones de escritura y cambios posteriores.
-- Interfaz/companion: 17 comprobaciones, incluida pausa de render, contexto WebGL,
-  marca de consejo, revisión de Monaco y aceptación de predicción.
-- Prettier real: 13 pruebas de integración de extensiones pasan; se mantiene
-  formato de búfer sin guardar y contrato ESM/CJS.
-- Visual: 13 vistas nativas, cinco bounds principales dentro de 2 px y 72
-  capturas de Editor/Melody/Inicio en 24 combinaciones sin overflow global/errores JS.
+## Pruebas de R9
 
-El transporte de IA de las pruebas UI es una fixture identificada. No acredita
-que un proveedor externo genere proyectos correctos. Las terminales y archivos
-de estas pruebas son reales en un workspace y perfil aislados.
+- Python: 288 pruebas, 283 correctas y 5 omisiones explícitas.
+- Node: 75 pasan; JavaScript: 57 archivos comprobados.
+- Temas: 9 comprobaciones UI con los tres paquetes reales, persistencia,
+  teclado, contraste, ventanas y ausencia de errores JS.
+- ColorThemeKind: 3 pruebas con extensión Node real; estado inicial, tipos,
+  identidad, evento/objeto actual y fallback al desactivar o invalidar recursos.
+- Debug/output: 12 comprobaciones; Python real calcula 42 al avanzar, canales
+  Node reales, nivel de registro y cero mutaciones en muestras inactiva/pausada.
+- Archivos/panel/terminal: 7 comprobaciones; tres CMD ConPTY reciben teclado,
+  Proyecto se distribuye en columna y los archivos creados/borrados se restauran.
+- Inicio/Melody: 19 comprobaciones, shader vivo, pausa/contexto WebGL, ambientes,
+  referencias de líneas, revisiones, selección real y aceptación de predicción.
+- 13 vistas WebView2 nativas; 72 capturas en 24 combinaciones de resolución/escala
+  emulada. Sin overflow global ni errores JS en esos recorridos. No representa
+  una prueba física de cada monitor/DPI o de Linux/macOS.
 
-## Rendimiento y límites
+La generación y los consejos UI usan transporte determinista identificado.
+No se acredita calidad de modelos externos ni predicciones siempre correctas.
+Se conservan terminales, Monaco, proveedores, planes revisados de archivos,
+Lantern Live/Lens/adaptadores y los motores reales de Debug de R8.
 
-En la captura nativa, la bienvenida animada registra CPU de render WebGL mediana
-0.4 ms y p95 0.6 ms. El intervalo observado de frames es 29.2 ms mediana y
-54.1 ms p95; no son 60 FPS garantizados ni tiempo GPU. No se observan long tasks
-en esa muestra. Las superficies ocultas no tienen loops de render activos.
+## Rendimiento
 
-No se certifica ausencia de flicker universal ni paridad 90 %. OAuth integrado,
-filesystem virtual en todos los editores, documentos binarios, visualizadores,
-forwarding de puertos y eventos globales siguen pendientes. Las nuevas capacidades
-de salida cumplen los contratos probados, no toda la API de VS Code.
+La muestra WebView2 de bienvenida animada registra CPU de render mediana
+0.4 ms y p95 0.6 ms. Intervalo observado
+de frames: 20.8 ms mediana, 29.2 ms p95.
+No hay long tasks en esa muestra. No es tiempo GPU ni una garantía de 60 FPS.
+El canvas oculto tiene cero render loops; cambiar ambientes conserva el mismo
+canvas. Repetir preferencias no reaplica el tema ni crea más engines.
 
-Distribución nativa, publicación e instalación se registran con sus recibos en
-`tests/visual/evidence/windows-r8-*.json` una vez verificadas. Los límites de
-paquetes, firma y plataformas están en KNOWN_LIMITATIONS.
+## Límites y distribución
 
-## Distribución verificada de R8
+La paridad de VS Code sigue siendo parcial. No hay una matriz global suficiente
+para acreditar 90 %. Los contratos añadidos cumplen los escenarios probados;
+OAuth integrado, filesystem virtual completo, documentos binarios, visualizadores
+y forwarding de puertos siguen pendientes. [KNOWN_LIMITATIONS](KNOWN_LIMITATIONS.md)
+conserva esos límites y los de las revisiones anteriores.
 
-El build procede de `91357f2a22a7ef0ebc52b72f2b97d172d85827ba` y está publicado
-en [GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.8).
-Instalador Windows: 112964092 bytes; portable: 70750040 bytes. Los cinco assets
-conservan el digest SHA-256 confirmado por GitHub, sin reemplazar releases anteriores.
-
-El paquete supera 15 comprobaciones nativas. Instalado en `app-0.5.3-R8`, los
-92 archivos de frontend/assets/bridges coinciden byte por byte con el source del
-build. Siete comprobaciones del helper congelado validan render, pausa de escenas,
-Laboratory, Debug y creación/borrado/recuperación de archivos reales. No hay
-peticiones de IA al iniciar la ayuda desactivada.
-
-La instalación conserva R7, los cuatro archivos de perfil comprobados y el índice
-del SDK compartido, sin reinstalar Java/C++/Python. La ventana R7 del usuario
-permanece abierta. El actualizador R7 selecciona R8 y el SHA correcto de la
-respuesta real de GitHub; no se repite la descarga durante esta comprobación.
-Estos resultados y sus límites están en `tests/visual/evidence/windows-r8-*.json`.
+Los recibos del build, publicación, instalación y verificación del helper
+congelado se incorporan en `tests/visual/evidence/windows-r9-*.json` después
+de ejecutar cada paso. R9 prepara instalador/portable Windows con SHA-256.
+Esta entrega no reconstruye Linux/macOS ni añade firma/notarización.

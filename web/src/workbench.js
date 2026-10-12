@@ -6,6 +6,7 @@ import {LiveEditSession} from './live-edit.js';
 import {applyShellTheme} from './extension-theme.js';
 import {requestsLiveEdit,requestsRealtimeHelp,requestsFileChanges} from './ai-intent.js';
 import {MelodyFilesUI} from './melody-files.js';
+import {ThemePicker} from './theme-picker.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
 
 const PLATFORM_CATEGORIES=[
@@ -22,6 +23,7 @@ export class LumenPlatform {
   constructor(host){
     this.host=host;this.api=(path,body)=>host.api('/platform'+path,body);this.prefs={};this.schema=[];this.providers=[];
     this.melodyFiles=new MelodyFilesUI(this);
+    this.themePicker=new ThemePicker(this);
     this.page=null;this.activeCategory='general';this.disposed=false;this.timers=[];this.extensionContributions={};this.contributionDisposables=[];
     this.terminals=new Map();this.activeTerminal=null;this.showingPTY=false;this.aiJob=null;this.aiGeneration=0;this.conversation=crypto.randomUUID?.()||String(Date.now());
     this.lspSessions=new Map();this.diagnosticMap=new Map();this.development={tasks:[],servers:[],associations:{}};
@@ -53,7 +55,7 @@ export class LumenPlatform {
     if(has('appearance.errorColor'))root.style.setProperty('--error-color',({red:'#e33655',rose:'#df458f',amber:'#bb7109',mint:'#16885e'})[p['appearance.errorColor']]||'#e33655');
     const external=this.extensionThemes?.find(t=>t.id===p['appearance.extensionTheme']);
     const themeSignature=JSON.stringify([p['appearance.theme'],external||null]),themeChanged=this.appliedTheme!==themeSignature;
-    if(themeChanged){this.appliedTheme=themeSignature;applyShellTheme(external);this.host.editor.extensionTheme=external||null;this.host.editor.changedTheme();}
+    if(themeChanged){this.appliedTheme=themeSignature;applyShellTheme(external,document.documentElement,p['appearance.theme']);this.host.editor.extensionTheme=external||null;this.host.editor.changedTheme();}
     if(changed.some(key=>key.startsWith('lantern.')||key==='appearance.lanternMonitor'))this.lantern?.render();
     if(has('general.locale'))this.translateShell();
     for(const terminal of this.terminals.values())if(terminal.xterm){if(has('terminal.fontSize'))terminal.xterm.options.fontSize=p['terminal.fontSize'];if(has('terminal.cursorBlink'))terminal.xterm.options.cursorBlink=p['terminal.cursorBlink'];if(has('terminal.scrollback'))terminal.xterm.options.scrollback=p['terminal.scrollback'];if(themeChanged)this.themeTerminal(terminal);}
@@ -61,8 +63,10 @@ export class LumenPlatform {
     if(changed.some(key=>['ai.provider','ai.model'].includes(key)))this.companion?.changed();
     if(changed.some(key=>key.startsWith('appearance.')||key.startsWith('hacker.')||key==='general.locale')||themeChanged)this.onAppearance?.();
     this.appliedPreferences={...p};
+    if(themeChanged)for(const content of this.settingPanels?.values()||[])this.refreshSettingValues(content);
   }
   async savePreference(key,value){
+    this.preferenceEpoch=(this.preferenceEpoch||0)+1;
     if(key==='appearance.theme'&&this.prefs['appearance.extensionTheme'])await this.savePreference('appearance.extensionTheme','');
     const previous=this.prefs[key];this.prefs[key]=value;this.applyPreferences();
     // Serialize writes so quickly changing a slider cannot restore an older value.
@@ -70,6 +74,13 @@ export class LumenPlatform {
     try{await this.settingsWrite;this.setSaved();}catch(e){this.prefs[key]=previous;this.applyPreferences();throw e;}
   }
   setSaved(){const el=this.workbench.querySelector('#settings-save-state');if(el){el.textContent=this.t('Guardado en este equipo','Saved on this device');el.classList.remove('pending');}}
+  async syncPreferences(){
+    await this.settingsWrite.catch(()=>{});const epoch=this.preferenceEpoch;
+    const {settings}=await this.api('/settings');if(epoch!==this.preferenceEpoch||this.disposed)return;
+    const previous=this.prefs,changed=Object.keys(settings).filter(key=>settings[key]!==previous[key]);this.prefs=settings;
+    if(changed.some(key=>['extensions.loadContributions','general.locale'].includes(key))||settings['appearance.extensionTheme']&&!this.extensionThemes?.some(t=>t.id===settings['appearance.extensionTheme']))await this.loadContributions();else this.applyPreferences();
+    if(this.page==='settings'&&changed.length){if(changed.some(key=>['general.locale','ai.provider'].includes(key)))await this.settings(this.activeCategory);else for(const content of this.settingPanels?.values()||[])this.refreshSettingValues(content);}
+  }
   translateShell(){
     const labels=[['[data-view="explorer"].rail-item','Explorador','Explorer'],['[data-view="search"].rail-item','Buscar','Search'],['[data-view="git"].rail-item','Control','Source Control'],['[data-view="run"].rail-item','Ejecutar','Run & Debug'],['[data-action="extensions"].rail-item','Extensiones','Extensions'],['[data-action="toggle-ai"].rail-item','Melody','Melody']];
     for(const [selector,es,en] of labels){const el=document.querySelector(selector);if(el){const span=el.lastElementChild;if(span)span.textContent=this.t(es,en);}}
@@ -145,8 +156,7 @@ export class LumenPlatform {
     for(const [id,node] of this.settingPanels)node.hidden=id!==key;
     if(this.visibleSettingPanel!==key){shell.scrollTop=content._scrollTop||0;this.visibleSettingPanel=key;if(content._focus?.isConnected)content._focus.focus({preventScroll:true});}
     if(!query&&content.dataset.built&&!(key==='ai'&&content.dataset.provider!==this.prefs['ai.provider'])){
-      for(const input of content.querySelectorAll('[data-preference]')){const value=this.prefs[input.dataset.preference];if(input.type==='checkbox'){if(input.checked!==!!value)input.checked=!!value;}else if(input.value!==String(value))input.value=String(value??'');}
-      for(const card of content.querySelectorAll('[data-platform-theme]'))card.classList.toggle('active',card.dataset.platformTheme===this.prefs['appearance.theme']);document.dispatchEvent(new Event('lumen:controls'));return;
+      this.refreshSettingValues(content);return;
     }
     content.dataset.built='true';content.dataset.provider=this.prefs['ai.provider'];
     const words=query.toLocaleLowerCase();const entries=this.schema.filter(s=>words?`${s.key} ${s.label.es} ${s.label.en}`.toLocaleLowerCase().includes(words):s.category===this.activeCategory||(this.activeCategory==='general'&&['appearance.theme','appearance.motion','appearance.decorations'].includes(s.key)));
@@ -163,6 +173,13 @@ export class LumenPlatform {
     }));
     if(!query&&this.activeCategory==='ai')this.bindProviders();
     if(!query&&this.activeCategory==='hardware')this.safe(async()=>{this.hardwareState=await this.api('/hardware');const target=document.getElementById('settings-hardware-state');if(target)target.innerHTML=this.hardwareMarkup();});
+  }
+  refreshSettingValues(content){
+    for(const input of content.querySelectorAll('[data-preference]')){const value=this.prefs[input.dataset.preference];if(input.type==='checkbox'){if(input.checked!==!!value)input.checked=!!value;}else if(input.value!==String(value))input.value=String(value??'');}
+    const themes=this.extensionThemes||[],selected=themes.find(t=>t.id===this.prefs['appearance.extensionTheme']);
+    for(const card of content.querySelectorAll('[data-platform-theme]'))card.classList.toggle('active',!selected&&card.dataset.platformTheme===this.prefs['appearance.theme']);
+    const summary=content.querySelector('.extension-theme-summary p'),label=(selected?.label||this.t('Tema de Zénit','Zénit theme'))+' · '+themes.length+' '+this.t('disponibles','available');if(summary&&summary.textContent!==label)summary.textContent=label;
+    document.dispatchEvent(new Event('lumen:controls'));
   }
   categoryHint(){
     const hints={general:['Configuración base de Zénit. Estos ajustes afectan a toda la aplicación.','Zénit base configuration. These settings affect the whole application.'],appearance:['Una misma composición, tres ambientes. El movimiento reducido del sistema siempre tiene prioridad.','One composition, three environments. System reduced motion always takes priority.'],editor:['Los controles marcados Monaco necesitan ese motor. El resto también funciona en el editor integrado.','Controls marked Monaco require that engine. The others also work in the base editor.'],files:['Autoguardado con control de conflictos y copia previa. Nunca sobrescribe un cambio externo sin avisarte.','Autosave retains conflict checks and backups. External changes are never silently overwritten.'],security:['La confianza de proyecto es obligatoria para ejecutar código. No hay una sandbox de sistema operativo.','Workspace trust is required to execute code. This is not an operating-system sandbox.'],ai:['Credenciales en memoria o en el almacén seguro del sistema. Nunca en los archivos del proyecto.','Credentials stay in memory or the native secure store, never in project files.'],extensions:['Open VSX y paquetes VSIX locales. La compatibilidad se revisa antes de instalar.','Open VSX and local VSIX packages. Compatibility is reviewed before installation.'],terminal:['Sesiones interactivas reales. CMD y WSL pertenecen a Windows; Bash depende de su instalación.','Real interactive sessions. CMD and WSL belong to Windows; Bash must be installed.'],hardware:['Lecturas del sistema operativo, solo cuando las activas. No se instalan drivers ni se cambian voltajes.','Operating-system readings, only when enabled. No drivers are installed or voltages changed.']};
@@ -187,8 +204,8 @@ export class LumenPlatform {
     const hint=hints[s.key]?this.t(...hints[s.key]):'';
     return `<div class="preference-row ${disabled?'unavailable':''}"><label class="preference-label" for="${id}"><strong>${this.e(label)}</strong><small>${this.e(hint)}${disabled?' · '+(copilotLimit?this.t('no aplicado por Copilot SDK','not applied by Copilot SDK'):this.t('motor no instalado','engine not installed')):''}</small></label><div class="preference-control">${control}</div></div>`;
   }
-  themePreviews(){return `<div class="platform-theme-previews">${['day','dark','forest'].map(id=>`<button class="platform-theme-card ${this.prefs['appearance.theme']===id?'active':''}" data-platform-theme="${id}"><span class="preview-window ${id}"><i></i><i></i><i></i></span><strong>${this.t(...PLATFORM_OPTION_NAMES[id])}</strong><small>${this.t('Composición Zénit','Zénit composition')}</small></button>`).join('')}</div>`;}
-  externalThemeOptions(){const themes=this.extensionThemes||[];return themes.length?`<div class="extension-theme-options"><h4>${this.t('Temas instalados · todo Zénit','Installed themes · all of Zénit')}</h4>${themes.map((x,i)=>`<button class="secondary-button" data-external-theme="${i}">${this.e(x.label||x.id)}</button>`).join('')}</div>`:'';}
+  themePreviews(){return `<div class="platform-theme-previews">${['day','dark','forest'].map(id=>`<button class="platform-theme-card ${this.prefs['appearance.theme']===id&&!this.extensionThemes?.some(t=>t.id===this.prefs['appearance.extensionTheme'])?'active':''}" data-platform-theme="${id}"><span class="preview-window ${id}"><i></i><i></i><i></i></span><strong>${this.t(...PLATFORM_OPTION_NAMES[id])}</strong><small>${this.t('Composición Zénit','Zénit composition')}</small></button>`).join('')}</div>`;}
+  externalThemeOptions(){const themes=this.extensionThemes||[],selected=themes.find(t=>t.id===this.prefs['appearance.extensionTheme']);return themes.length?`<section class="extension-theme-summary"><div><h4>${this.t('Temas de extensiones','Extension themes')}</h4><p>${this.e(selected?.label||this.t('Tema de Zénit','Zénit theme'))} · ${themes.length} ${this.t('disponibles','available')}</p></div><button class="secondary-button" data-theme-picker="">${this.glyph('palette')}${this.t('Elegir tema','Choose theme')}</button></section>`:'';}
   securitySummary(){return `<div class="platform-notice"><span>${this.glyph('shield')}</span><div><strong>${this.t('Sin permisos invisibles','No hidden permissions')}</strong><p>${this.t('Las extensiones ejecutables requieren autorización y acceso de usuario al equipo. La IA solo edita en vivo al permitir esa petición. La confirmación de confianza no puede desactivarse.','Executable extensions require permission and run with user access to this device. Live AI editing requires permission for that request. Workspace trust cannot be disabled.')}</p><button class="text-button" data-platform="audit">${this.t('Ver registro local','View local audit')}</button><button class="text-button" data-platform="revoke-trust">${this.t('Revocar confianza del proyecto','Revoke workspace trust')}</button></div></div>`;}
   keybindings(){return `<h3>${this.t('Acciones directas','Direct actions')}</h3><div class="shortcut-table">${[['Ctrl / Cmd + Shift + N','Nueva ventana','New window'],['Ctrl / Cmd + N','Nuevo archivo','New file'],['Ctrl / Cmd + O / S','Guardar archivo','Save file'],['Ctrl / Cmd + Shift + O / S','Guardar como','Save as'],['Ctrl / Cmd + Alt + L','Lantern en el archivo activo','Lantern on active file'],['F12','Ir a definición','Go to definition'],['Ctrl / Cmd + ,','Abrir ajustes','Open settings'],['Ctrl / Cmd + Shift + P','Paleta de comandos','Command palette'],['Ctrl / Cmd + B','Contraer lateral izquierdo','Collapse left panel'],['Ctrl / Cmd + Alt + B','Contraer lateral derecho','Collapse right panel'],['Ctrl / Cmd + Alt + F','Alternar concentración','Toggle focus'],['Ctrl / Cmd + Alt + T','Nueva terminal interactiva','New interactive terminal'],['Ctrl / Cmd + Alt + E','Extensiones','Extensions'],['Ctrl / Cmd + Space','Completado LSP (si hay servidor)','LSP completion (server required)'],['Ctrl / Cmd + Alt + 1 / 2 / 3','Día / oscuro / bosque','Day / dark / forest'],['F5 / Shift + F5','Ejecutar / detener tarea','Run / stop task']].map(([key,es,en])=>`<div><span>${this.t(es,en)}</span><kbd>${key}</kbd></div>`).join('')}</div><div class="platform-notice"><code>lumen focus</code><p>${this.t('El mismo comando entra y sale del modo concentración. En la consola de Zénit: focus, /focus o concentracion.','The same command enters and exits focus mode. In the Zénit console: focus, /focus or concentracion.')}</p></div>`;}
   async extensions(mode='installed',query=''){
@@ -238,7 +255,7 @@ export class LumenPlatform {
     const container=document.getElementById('extension-results');if(!container)return;
     this.extensionItems=items;
     if(!items.length){container.innerHTML=`<div class="platform-empty">${this.glyph('extensions')}<h3>${this.t('Un espacio para tus herramientas.','A space for your tools.')}</h3><p>${this.t('Todavía no hay extensiones aquí. Explora el registro o importa el paquete de ejemplo incluido.','No extensions here yet. Explore the registry or import the included sample package.')}</p><button class="primary-button" data-extension-mode="browse">${this.t('Explorar Open VSX','Explore Open VSX')}</button></div>`;return;}
-    container.innerHTML=`<div class="extension-grid">${items.map(item=>`<article class="extension-card"><div class="extension-card-top"><div class="extension-logo">${this.extensionLogo(item)}</div><div><h4>${this.e(item.displayName||item.name)}</h4><span>${this.e(item.publisher||item.namespace||item.id?.split('.')[0])} · ${this.e(item.version)}</span></div></div><p>${this.e(item.description||this.t('Sin descripción.','No description.'))}</p><div class="extension-card-tags"><span>${mode==='installed'?this.e(item.compatibility==='partial'?this.t('Compatibilidad parcial','Partial compatibility'):this.t('Declarativa','Declarative')):this.t('Pendiente de revisión','Needs review')}</span>${mode==='installed'?`<span class="${item.enabled?'status-positive':''}">${item.enabled?this.t('Activa','Enabled'):this.t('Inactiva','Disabled')}</span>`:''}</div><div class="extension-card-actions">${mode==='installed'?`<button class="secondary-button small-button" data-extension-inspect="${this.e(item.id)}">${this.t('Reinstalar paquete','Reinstall package')}</button>${(this.extensionThemes||[]).map((theme,index)=>theme.owner===item.id?`<button class="secondary-button small-button" data-external-theme="${index}">${this.t('Aplicar tema','Apply theme')} · ${this.e(theme.label)}</button>`:'').join('')}<button class="secondary-button small-button" data-extension-toggle="${this.e(item.id)}" data-enabled="${!item.enabled}">${item.enabled?this.t('Desactivar','Disable'):this.t('Activar','Enable')}</button><button class="icon-button" data-extension-remove="${this.e(item.id)}" aria-label="${this.t('Desinstalar','Uninstall')}">${this.glyph('trash')}</button>`:`<button class="primary-button small-button" data-extension-inspect="${this.e(item.id)}">${this.t('Revisar','Review')} ${this.glyph('arrow-right')}</button>`}</div></article>`).join('')}</div>`;
+    container.innerHTML=`<div class="extension-grid">${items.map(item=>`<article class="extension-card" data-package-id="${this.e(item.id)}"><div class="extension-card-top"><div class="extension-logo">${this.extensionLogo(item)}</div><div><h4>${this.e(item.displayName||item.name)}</h4><span>${this.e(item.publisher||item.namespace||item.id?.split('.')[0])} · ${this.e(item.version)}</span></div></div><p>${this.e(item.description||this.t('Sin descripción.','No description.'))}</p><div class="extension-card-tags"><span>${mode==='installed'?this.e(item.compatibility==='partial'?this.t('Compatibilidad parcial','Partial compatibility'):this.t('Declarativa','Declarative')):this.t('Pendiente de revisión','Needs review')}</span>${mode==='installed'?`<span class="${item.enabled?'status-positive':''}">${item.enabled?this.t('Activa','Enabled'):this.t('Inactiva','Disabled')}</span>`:''}</div><div class="extension-card-actions">${mode==='installed'?`<button class="secondary-button small-button" data-extension-inspect="${this.e(item.id)}">${this.t('Reinstalar','Reinstall')}</button>${(this.extensionThemes||[]).some(t=>t.owner===item.id)?`<button class="secondary-button small-button" data-theme-picker="${this.e(item.id)}">${this.glyph('palette')}${this.t('Elegir tema','Choose theme')}</button>`:''}<button class="secondary-button small-button" data-extension-toggle="${this.e(item.id)}" data-enabled="${!item.enabled}">${item.enabled?this.t('Desactivar','Disable'):this.t('Activar','Enable')}</button><button class="icon-button" data-extension-remove="${this.e(item.id)}" aria-label="${this.t('Desinstalar','Uninstall')}">${this.glyph('trash')}</button>`:`<button class="primary-button small-button" data-extension-inspect="${this.e(item.id)}">${this.t('Revisar','Review')} ${this.glyph('arrow-right')}</button>`}</div></article>`).join('')}</div>`;
     if(mode==='installed'&&this.host.showMenu)for(const card of container.querySelectorAll('.extension-card')){
       const actions=card.querySelector('.extension-card-actions'),hidden=[...actions.querySelectorAll('[data-extension-toggle],[data-extension-remove]')];hidden.forEach(button=>button.classList.add('zenit-overflow-action'));
       const menu=document.createElement('button');menu.className='icon-button';menu.setAttribute('aria-label',this.t('Gestionar esta extensión','Manage this extension'));menu.innerHTML=this.glyph('more');actions.append(menu);menu.onclick=()=>this.host.showMenu(menu,hidden.map(button=>({label:button.getAttribute('aria-label')||button.textContent,icon:button.querySelector('[data-glyph]')?.dataset.glyph||'extensions',run:()=>button.click()})),card.querySelector('h4').textContent);
@@ -315,7 +332,7 @@ export class LumenPlatform {
   async applyExtensionTheme(index){
     const theme=this.extensionThemes[index];if(!theme)return;
     await this.savePreference('appearance.extensionTheme',theme.id);
-    this.host.notify(this.t('Tema aplicado a todo Zénit: ','Theme applied throughout Zénit: ')+theme.label);
+    this.host.notify(this.t('Tema aplicado a todo Zénit: ','Theme applied throughout Zénit: ')+theme.label,'info',1800,'theme-change');
   }
   async pluginCommand(id){const command=this.extensionContributions.commands?.find(c=>c.id===id);if(!command)return;if(command.kind==='openSettings')return this.settings(command.category);return this.reviewCode(command.body);}
   async snippets(){
@@ -707,6 +724,7 @@ export class LumenPlatform {
     return this.safe(async()=>{
       if(d.settingCategory)return this.settings(d.settingCategory);
       if(d.provider){await this.savePreference('ai.provider',d.provider);await this.savePreference('ai.model','');this.conversation=crypto.randomUUID?.()||String(Date.now());return this.renderSettingsContent();}
+      if(d.themePicker!==undefined)return this.themePicker.open(d.themePicker);
       if(d.externalTheme!=null)return this.applyExtensionTheme(Number(d.externalTheme));
       if(d.platformTheme){await this.savePreference('appearance.theme',d.platformTheme);return this.renderSettingsContent();}
       if(d.extensionMode)return this.extensions(d.extensionMode);

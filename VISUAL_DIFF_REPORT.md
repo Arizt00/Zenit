@@ -11,13 +11,13 @@ ni produce automáticamente una marca de pantalla terminada.
 
 | Vista | Referencia / resultado | MAE | SSIM por bloques | Componentes / diferencias conocidas |
 | --- | --- | ---: | ---: | --- |
-| editor | [Golden](tests/visual/references/editor.png) · [Resultado](tests/visual/current/editor.png) · [Overlay](tests/visual/comparisons/editor-overlay.png) · [Diff](tests/visual/comparisons/editor-diff.png) | 7.15 | 0.744 | app/editor/docking/product-ui + shell.css. Orden del árbol/tabs, minimapa, rama Git y runtime dependen del proyecto. Antialiasing e iconos tienen diferencias. |
-| search | [Golden](tests/visual/references/search.png) · [Resultado](tests/visual/current/search.png) · [Overlay](tests/visual/comparisons/search-overlay.png) · [Diff](tests/visual/comparisons/search-diff.png) | 5.90 | 0.758 | studio + pages.css. Ilustración local y filtros funcionales tienen diferencias menores de iconos/tipo. El estado vacío se conserva. |
-| settings | [Golden](tests/visual/references/settings.png) · [Resultado](tests/visual/current/settings.png) · [Overlay](tests/visual/comparisons/settings-overlay.png) · [Diff](tests/visual/comparisons/settings-diff.png) | 9.77 | 0.608 | workbench/controls + pages.css. Texto de seguridad y categorías avanzadas conservan información real. Blur y rasterizado varían por host. |
-| extensions | [Golden](tests/visual/references/extensions.png) · [Resultado](tests/visual/current/extensions.png) · [Overlay](tests/visual/comparisons/extensions-overlay.png) · [Diff](tests/visual/comparisons/extensions-diff.png) | 9.76 | 0.536 | workbench/preview + catalogue/dialogs.css. Paquetes, versiones, estados y compatibilidad son reales. No se copia la insignia Compatible del golden si no corresponde. |
-| laboratory | [Golden](tests/visual/references/laboratory.png) · [Resultado](tests/visual/current/laboratory.png) · [Overlay](tests/visual/comparisons/laboratory-overlay.png) · [Diff](tests/visual/comparisons/laboratory-diff.png) | 10.85 | 0.374 | foundation-ui + laboratory.css. El usuario pidió simplificar la vista en R7: cinco secciones persistentes sustituyen el hero y la cuadrícula completa. El golden original se conserva como historial; no es el objetivo vigente de esta pantalla. Las rutas no certifican ejecuciones. |
-| debug | [Golden](tests/visual/references/debug.png) · [Resultado](tests/visual/current/debug.png) · [Overlay](tests/visual/comparisons/debug-overlay.png) · [Diff](tests/visual/comparisons/debug-diff.png) | 8.97 | 0.498 | debug-workspace/lantern + debug-workspace.css. El usuario pidió simplificar Depuración en R8: un inspector seleccionado sustituye los cuatro bloques y el hero de Lantern. Se conserva el golden anterior como historial. Live, Lens, motores y valores siguen siendo reales. |
-| forge | [Golden](tests/visual/references/forge.png) · [Resultado](tests/visual/current/forge.png) · [Overlay](tests/visual/comparisons/forge-overlay.png) · [Diff](tests/visual/comparisons/forge-diff.png) | 9.58 | 0.482 | desktop-workflows/docking + windows.css. Marco y controles de acoplamiento difieren de la decoración OS. Contexto, ruta, herramientas y salida pertenecen al proyecto real. |
+| editor | [Golden](tests/visual/references/editor.png) · [Resultado](tests/visual/current/editor.png) · [Overlay](tests/visual/comparisons/editor-overlay.png) · [Diff](tests/visual/comparisons/editor-diff.png) | 7.20 | 0.742 | app/editor/docking/product-ui + shell.css. Orden del árbol/tabs, minimapa, rama Git y runtime dependen del proyecto. Antialiasing e iconos tienen diferencias. |
+| search | [Golden](tests/visual/references/search.png) · [Resultado](tests/visual/current/search.png) · [Overlay](tests/visual/comparisons/search-overlay.png) · [Diff](tests/visual/comparisons/search-diff.png) | 5.96 | 0.757 | studio + pages.css. Ilustración local y filtros funcionales tienen diferencias menores de iconos/tipo. El estado vacío se conserva. |
+| settings | [Golden](tests/visual/references/settings.png) · [Resultado](tests/visual/current/settings.png) · [Overlay](tests/visual/comparisons/settings-overlay.png) · [Diff](tests/visual/comparisons/settings-diff.png) | 9.77 | 0.609 | workbench/controls + pages.css. Texto de seguridad y categorías avanzadas conservan información real. Blur y rasterizado varían por host. |
+| extensions | [Golden](tests/visual/references/extensions.png) · [Resultado](tests/visual/current/extensions.png) · [Overlay](tests/visual/comparisons/extensions-overlay.png) · [Diff](tests/visual/comparisons/extensions-diff.png) | 9.73 | 0.546 | workbench/preview + catalogue/dialogs.css. Paquetes, versiones, estados y compatibilidad son reales. No se copia la insignia Compatible del golden si no corresponde. |
+| laboratory | [Golden](tests/visual/references/laboratory.png) · [Resultado](tests/visual/current/laboratory.png) · [Overlay](tests/visual/comparisons/laboratory-overlay.png) · [Diff](tests/visual/comparisons/laboratory-diff.png) | 10.91 | 0.373 | foundation-ui + laboratory.css. El usuario pidió simplificar la vista en R7: cinco secciones persistentes sustituyen el hero y la cuadrícula completa. El golden original se conserva como historial; no es el objetivo vigente de esta pantalla. Las rutas no certifican ejecuciones. |
+| debug | [Golden](tests/visual/references/debug.png) · [Resultado](tests/visual/current/debug.png) · [Overlay](tests/visual/comparisons/debug-overlay.png) · [Diff](tests/visual/comparisons/debug-diff.png) | 9.05 | 0.497 | debug-workspace/lantern + debug-workspace.css. El usuario pidió simplificar Depuración en R8: un inspector seleccionado sustituye los cuatro bloques y el hero de Lantern. Se conserva el golden anterior como historial. Live, Lens, motores y valores siguen siendo reales. |
+| forge | [Golden](tests/visual/references/forge.png) · [Resultado](tests/visual/current/forge.png) · [Overlay](tests/visual/comparisons/forge-overlay.png) · [Diff](tests/visual/comparisons/forge-diff.png) | 9.64 | 0.480 | desktop-workflows/docking + windows.css. Marco y controles de acoplamiento difieren de la decoración OS. Contexto, ruta, herramientas y salida pertenecen al proyecto real. |
 
 ## Bienvenida vigente
 
@@ -31,7 +31,7 @@ la composición nueva. El objetivo vigente está en `tests/visual/welcome-brief.
 [Referencia mínima posterior](tests/visual/references/welcome-minimal.png).
 
 La geometría Blender de dos paredes, el material óptico y la órbita son
-renderizados en vivo. R8 conserva el paisaje de cristal generado y servido
+renderizados en vivo. R9 conserva el paisaje de cristal generado y servido
 localmente, con luz, movimiento CSS y profundidad de hasta 4 px al mover el puntero. El usuario pidió mejorar
 el fondo y simplificar Laboratory. No se declara reproducción óptica perfecta.
 
@@ -39,7 +39,7 @@ Los 5 bounds de Editor/Bienvenida pasan con desviación máxima
 de 1.333 px. No se extrapola ese resultado a todos los detalles de las otras
 vistas. Los materiales y assets mantienen las diferencias descritas arriba.
 
-R8: 24 combinaciones de resolución/escala validadas sin overflow global ni errores JS. Depuración se comprueba además a 1280×720, 1366×768 y 1920×1080.
+R9: 24 combinaciones de resolución/escala validadas sin overflow global ni errores JS. Depuración se comprueba además a 1280×720, 1366×768 y 1920×1080.
 
 Regresiones sin golden independiente: [ASM](tests/visual/current/asm.png),
 [Melody](tests/visual/current/melody.png), [paleta](tests/visual/current/palette.png),
@@ -48,6 +48,14 @@ También se incluye [Forge desacoplado](tests/visual/current/forge-detached.png)
 
 Correcciones posteriores sin golden independiente: [Proyecto desacoplado](tests/visual/current/project-detached.png),
 [varias terminales reales](tests/visual/current/multiple-terminals.png) y [revisión de archivos de Melody](tests/visual/current/melody-file-review.png).
+
+## Corrección de temas de R9
+
+[Selector](tests/visual/current/theme-picker.png) · [Vira Graphene High Contrast](tests/visual/current/vira-graphene-high-contrast.png) · [One Dark Pro Mix](tests/visual/current/one-dark-pro-mix.png) · [Proyecto con tema sincronizado](tests/visual/current/detached-theme.png).
+
+Las capturas del error de R8 del usuario y el proyecto QA difieren en resolución y contenido; no se declara un pixel diff comparable entre ellas. La comprobación funcional usa 89 variantes reales, siete pares de color con contraste mínimo 4.5:1, ausencia de overflow y conservación del modelo Monaco. Los 64 temas Bearded se cargan completos. Un selector por paquete sustituye las filas de variantes.
+
+[Inicio Noche](tests/visual/current/welcome-dark.png) · [Inicio Bosque](tests/visual/current/welcome-forest.png). Se conserva el mismo canvas animado. El cambio de ambiente y sus botones son comprobados por la UI, no por un nuevo golden inventado.
 
 Las inspecciones geométricas y de estilo están en `tests/visual/current/inspection.json`.
 El estado de conservación de campos/canvas/modelos, los errores JS y el resultado

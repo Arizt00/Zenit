@@ -1,0 +1,23 @@
+{
+  "baseCommit": "ec1b980044d1788b6e86ad749f135b2dd712dc0e",
+  "captureState": "R9 before product commit; original reference files unchanged",
+  "python": {
+    "executed": 288,
+    "passed": 283,
+    "skipped": 5
+  },
+  "node": {
+    "passed": 75
+  },
+  "syntaxFiles": 57,
+  "realThemeVariants": 89,
+  "themePackages": 3,
+  "themeUiChecks": 9,
+  "debugOutputChecks": 12,
+  "filesPanelsTerminalChecks": 7,
+  "correctionChecks": 19,
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "aiTransport": "Explicit deterministic fixture; not an external model quality evaluation."
+}

@@ -161,6 +161,9 @@ class PlatformServices:
         if path=='/debug/input':self._trusted();return self.debugger.input(body.get('text'))
         if path=='/settings':
             result=self.prefs.update(body.get('settings',{}),body.get('reset') is True)
+            if body.get('reset') is True or any(key.startswith(('appearance.','editor.','terminal.')) or key in ('general.locale','extensions.loadContributions') for key in body.get('settings',{})):
+                self.extension_services.theme_changed()
+                self.extension_services.emit('zenit.preferences.changed')
             if not self.prefs.get('security.terminals'):self.terminals.shutdown()
             if not self.prefs.get('security.cloudAI'):
                 for j in list(self.ai.jobs.values()):
@@ -175,20 +178,21 @@ class PlatformServices:
             if body.get('plan'):
                 result=self.extensions.install_plan(body['plan'],body.get('consent'))
                 self.extension_runtime.invalidate([x['id'] for x in result['installed']])
+                self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed')
                 return result
             result=self.extensions.install(body.get('ticket',''),body.get('consent'))
-            self.extension_runtime.invalidate([result['id']]);return result
+            self.extension_runtime.invalidate([result['id']]);self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed');return result
         if path=='/extensions/discard':
             if body.get('plan'):self.extensions.discard_plan(body['plan'])
             else:self.extensions.discard(body.get('ticket',''))
             return {'discarded':True}
         if path=='/extensions/toggle':
             self.extension_runtime.invalidate([body.get('id')],'Una extensión se activó o desactivó. Revisa e inicia de nuevo los motores afectados.')
-            return self.extensions.update_state(body.get('id'),body.get('enabled'))
+            result=self.extensions.update_state(body.get('id'),body.get('enabled'));self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed');return result
         if path=='/extensions/remove':
             if body.get('consent') is not True:raise PermissionError('Confirma la desinstalación.')
             self.extension_runtime.invalidate([body.get('id')],'Se desinstaló una dependencia. Revisa los paquetes del motor.')
-            return self.extensions.update_state(body.get('id'),remove=True)
+            result=self.extensions.update_state(body.get('id'),remove=True);self.extension_services.theme_changed();self.extension_services.emit('zenit.contributions.changed');return result
         if path=='/extensions/updates':return self.extensions.updates()
         if path=='/extensions/export':return self.extensions.export_package(body.get('id'))
         if path=='/terminals/create':return self.terminals.create(ws,body.get('profile'),body.get('consent'),body.get('cols',100),body.get('rows',26),environment=self.extension_services.environment(ws.root))

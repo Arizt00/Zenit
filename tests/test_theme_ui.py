@@ -1,0 +1,47 @@
+"""Installed theme packages, actual Monaco, native-panel layout and theme chooser."""
+import argparse,json,shutil,sys,tempfile,threading
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
+from backend.server import Application,LumenServer
+from playwright.sync_api import sync_playwright,expect
+
+def main():
+ parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True);parser.add_argument('--installed-from',type=Path,required=True);parser.add_argument('--vira-vsix',type=Path);args=parser.parse_args();out=args.output;out.mkdir(parents=True,exist_ok=True);checks=[];errors=[];results=[]
+ def passed(name):checks.append(name);print('PASS',name,flush=True)
+ with tempfile.TemporaryDirectory(prefix='zenit-theme-') as tmp:
+  base=Path(tmp);ws=base/'project';ws.mkdir();(ws/'main.py').write_text('value=41\nprint(value+1)\n');profile=base/'profile';dest=profile/'extensions';dest.mkdir(parents=True)
+  source=args.installed_from.resolve();index=json.loads((source/'installed.json').read_text(encoding='utf-8-sig'));selected={k:v for k,v in index.items() if k in ('vira.vsc-vira-theme','zhuangtongfa.material-theme','BeardedBear.beardedtheme')};assert 'zhuangtongfa.material-theme' in selected
+  for item in selected.values():
+   path=(source/item['directory']).resolve();assert path.parent==source and not path.is_symlink();shutil.copytree(path,dest/item['directory'])
+  (dest/'installed.json').write_text(json.dumps(selected),encoding='utf-8');app=Application(ROOT,ws,data_dir=profile);app.workspace.trusted=True;app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.showWelcome':False,'appearance.motion':False,'updates.automatic':False,'extensions.checkUpdatesOnOpen':False})
+  if 'vira.vsc-vira-theme' not in selected:
+   assert args.vira_vsix,'Pass the explicit QA Vira VSIX when it is no longer installed.';store=app.features.extensions;store.install(store.inspect_local(str(args.vira_vsix.resolve()))['ticket'],True)
+  server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
+  try:
+   with sync_playwright() as pw:
+    browser=pw.chromium.launch(channel='msedge',headless=True);context=browser.new_context(viewport={'width':1672,'height':917});page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
+    def inject(route):
+     response=route.fetch();route.fulfill(response=response,body=response.text()+'\nwindow.__qa={get studio(){return studio},get editor(){return editor},get platform(){return platformUI},get dock(){return dock},openFile};')
+    context.route('**/src/app.js',inject);url=f'http://127.0.0.1:{server.server_port}';page.goto(url);page.wait_for_function('window.lumen?.ready');page.evaluate('async()=>{await __qa.openFile("main.py");window.__originalModel=__qa.editor.view.getModel();await __qa.platform.extensions();}');themes=page.evaluate('__qa.platform.extensionThemes.map(t=>({id:t.id,label:t.label}))');assert len(themes)>=25
+    if 'BeardedBear.beardedtheme' in selected:assert page.evaluate('__qa.platform.extensionThemes.filter(t=>t.owner==="BeardedBear.beardedtheme").length')==64
+    expect(page.locator('.extension-card[data-package-id="vira.vsc-vira-theme"] [data-theme-picker]')).to_have_count(1);expect(page.locator('.extension-card [data-external-theme]')).to_have_count(0);passed(f'{len(themes)} real themes occupy one chooser per package, without a variant button row')
+    page.locator('[data-theme-picker="vira.vsc-vira-theme"]').click();expect(page.locator('.theme-picker-option')).to_have_count(20);page.locator('.theme-picker-search input').fill('Graphene High');expect(page.locator('.theme-picker-option:visible')).to_have_count(1);page.keyboard.press('ArrowDown');page.keyboard.press('Enter');page.wait_for_function('document.documentElement.dataset.extensionTheme?.endsWith("Vira Graphene High Contrast")');passed('Theme picker filters real variants and supports keyboard selection')
+    inspect='''async()=>{const {contrastRatio}=await import('/src/extension-theme.js'),css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim(),pairs=[['accent','surface'],['soft-text','accent-soft'],['field-text','field'],['button-text','button-end'],['selected-text','selection-halo'],['chrome-accent','header'],['positive-text','positive-bg']];return {ratios:Object.fromEntries(pairs.map(([a,b])=>[a,contrastRatio(get(a),get(b))])),selection:getComputedStyle(document.querySelector('.tree-row.active')).backgroundImage,modelSame:__originalModel===__qa.editor.view.getModel(),overflow:document.documentElement.scrollWidth>innerWidth||document.getElementById('extension-results').scrollWidth>document.getElementById('extension-results').clientWidth+1,buttons:[...document.querySelectorAll('.top-actions button:not(:disabled)')].filter(b=>b.offsetParent).map(b=>({label:b.textContent,color:getComputedStyle(b).color})),accent:get('accent'),primary:get('button-text')};}'''
+    for theme in themes:
+     page.evaluate('async id=>{const p=__qa.platform;await p.applyExtensionTheme(p.extensionThemes.findIndex(t=>t.id===id));}',theme['id']);state=page.evaluate(inspect)
+     assert all(value>=4.5 for value in state['ratios'].values()),(theme,state);assert not state['overflow'],(theme,state);assert state['modelSame'];assert '#f5f0ff' not in state['selection'];results.append({'theme':theme,**state})
+     if theme['label'] in ('Vira Graphene High Contrast','One Dark Pro Mix','One Dark Pro Night Flat'):page.screenshot(path=str(out/(theme['label'].lower().replace(' ','-')+'.png')))
+    assert page.locator('.toast[data-notice-key=theme-change]').count()<=1;passed(f'All {len(themes)} variants retain actual contrast, card bounds and the same Monaco model; one theme notice')
+    child=context.new_page();child.on('pageerror',lambda e:errors.append(str(e)));child.goto(url+'?panel=project');child.wait_for_function('window.lumen?.ready');page.evaluate('async()=>await __qa.platform.applyExtensionTheme(__qa.platform.extensionThemes.findIndex(t=>t.label==="Vira Teal"))');child.wait_for_function('document.documentElement.dataset.extensionTheme?.endsWith("Vira Teal")');child.screenshot(path=str(out/'detached-theme.png'));passed('A separated Project window receives the same theme through real preference events')
+    page.evaluate('async()=>{await __qa.platform.settings("appearance");window.__settingNode=document.querySelector(".settings-category:not([hidden]) input[type=checkbox][data-preference]");__settingNode.focus()}')
+    child.evaluate('async()=>await __qa.platform.applyExtensionTheme(__qa.platform.extensionThemes.findIndex(t=>t.label==="One Dark Pro"))');page.wait_for_function('document.querySelector(".extension-theme-summary p")?.textContent.startsWith("One Dark Pro ·")');assert page.evaluate('__settingNode===document.querySelector(".settings-category:not([hidden]) input[type=checkbox][data-preference]")&&document.activeElement===__settingNode');expect(page.locator('.platform-theme-card.active')).to_have_count(0);passed('Theme changes from a separated window retain Settings fields and focus, and show only the effective theme as active')
+    page.locator('[data-theme-picker=""]').click();expect(page.locator('.theme-picker-option')).to_have_count(len(themes));page.evaluate('async()=>await Promise.all(document.querySelector("#modal").getAnimations().map(a=>a.finished.catch(()=>{})))');page.screenshot(path=str(out/'theme-picker.png'));page.keyboard.press('Escape');page.evaluate('async()=>{__qa.platform.closePage();await __qa.platform.extensions()}')
+    for width,height in ((1280,720),(1366,768),(1920,1080)):
+     page.set_viewport_size({'width':width,'height':height});assert not page.evaluate(inspect)['overflow'];page.screenshot(path=str(out/f'extensions-{width}.png'))
+    passed('Theme package cards fit 1280x720, 1366x768 and 1920x1080')
+    page.evaluate('async()=>{await __qa.platform.savePreference("appearance.extensionTheme","");await __qa.platform.savePreference("appearance.theme","forest");}');child.wait_for_function('document.documentElement.dataset.theme==="forest"&&!document.documentElement.dataset.extensionTheme');assert page.evaluate('document.documentElement.dataset.theme==="forest"&&!document.documentElement.dataset.extensionTheme');passed('Removing an extension theme restores the chosen Zénit theme in both windows')
+    page.reload();page.wait_for_function('window.lumen?.ready');assert page.evaluate('document.documentElement.dataset.theme==="forest"&&!document.documentElement.dataset.extensionTheme');passed('Theme state persists after reload without residual extension tokens')
+    assert not errors,errors;passed('No uncaught JavaScript errors');child.close();browser.close()
+  finally:server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()
+ (out/'verification.json').write_text(json.dumps({'checks':checks,'errors':errors,'themes':results,'packages':'Read-only installed One Dark Pro/Bearded copies; Vira 2026.9.4 from installed copy or explicit QA VSIX. User profile untouched.'},indent=2),encoding='utf-8')
+if __name__=='__main__':main()

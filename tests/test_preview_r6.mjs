@@ -14,7 +14,7 @@ test('Only explicit writing requests propose live editing',()=>{
 test('External theme maps the shell and terminal, rejects CSS payloads and clears cleanly',()=>{
   const theme={id:'qa:ocean',uiTheme:'vs-dark',data:{colors:{'editor.background':'#102030','editor.foreground':'#f0f1f2','terminal.foreground':'#abcdef','sideBar.background':'#182838','focusBorder':'url(https://bad.example)','input.background':'#abc'},tokenColors:[{scope:'keyword',settings:{foreground:'#eeccaa'}}]}};
   const {palette,colors}=themePalette(theme);assert.equal(palette.surface,'#182838');assert.equal(palette.field,'#aabbcc');assert.equal(palette['terminal-text'],'#abcdef');assert.equal(palette['syntax-keyword'],'#eeccaa');assert.equal(colors.focusBorder,undefined);
-  const props=new Map(),root={dataset:{},style:{setProperty:(k,v)=>props.set(k,v),removeProperty:k=>props.delete(k)}};
+  const props=new Map(),root={dataset:{},style:{getPropertyValue:k=>props.get(k)||'',setProperty:(k,v)=>props.set(k,v),removeProperty:k=>props.delete(k)}};
   applyShellTheme(theme,root);assert.equal(root.dataset.theme,'dark');assert.equal(props.get('--editor'),'#102030');applyShellTheme(null,root);assert.equal(props.size,0);assert.equal(root.dataset.extensionTheme,undefined);
 });
 test('Will-save edits wait asynchronously and did-save fires after persistence',async()=>{

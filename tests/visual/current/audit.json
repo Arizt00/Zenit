@@ -1,11 +1,11 @@
 {
-  "commit": "dab665d24ef0b79d8490b40342462dd2cee16376",
-  "trackedFiles": 571,
-  "sourceFiles": 250,
+  "commit": "ec1b980044d1788b6e86ad749f135b2dd712dc0e",
+  "trackedFiles": 614,
+  "sourceFiles": 262,
   "stylesheets": [
     "/design.css"
   ],
-  "cssBytes": 562,
+  "cssBytes": 597,
   "importantDeclarations": 0,
   "transitionAll": 0,
   "sources": [
@@ -57,6 +57,7 @@
     "backend/lantern_memory.py",
     "backend/lsp.py",
     "backend/machines.py",
+    "backend/melody_files.py",
     "backend/native.py",
     "backend/package_sizes.py",
     "backend/platform_services.py",
@@ -96,12 +97,14 @@
     "tests/test_checkpoint_io.py",
     "tests/test_continuity.py",
     "tests/test_crystal_asset.py",
+    "tests/test_debug_output_ui.py",
     "tests/test_distribution.py",
     "tests/test_extension_053.py",
     "tests/test_extension_auth.mjs",
     "tests/test_extension_editors.py",
     "tests/test_extension_esm.py",
     "tests/test_extension_install_plan.py",
+    "tests/test_extension_output.mjs",
     "tests/test_extension_quickinput.py",
     "tests/test_extension_r5.py",
     "tests/test_extension_r9.py",
@@ -115,6 +118,9 @@
     "tests/test_lens_flush_r9.py",
     "tests/test_live_r5.py",
     "tests/test_melody_companion.mjs",
+    "tests/test_melody_files.py",
+    "tests/test_melody_files_intent.mjs",
+    "tests/test_melody_files_ui.py",
     "tests/test_native_ready.mjs",
     "tests/test_platform.py",
     "tests/test_preview_r4.py",
@@ -188,9 +194,12 @@
     "web/controls.css",
     "web/design.css",
     "web/design/catalogue.css",
+    "web/design/debug-workspace.css",
     "web/design/debug.css",
     "web/design/dialogs.css",
+    "web/design/extension-output.css",
     "web/design/laboratory.css",
+    "web/design/melody-files.css",
     "web/design/melody.css",
     "web/design/pages.css",
     "web/design/shell.css",
@@ -216,6 +225,7 @@
     "web/src/assembly-workbench.js",
     "web/src/babylon-scene.js",
     "web/src/controls.js",
+    "web/src/debug-workspace.js",
     "web/src/desktop-workflows.js",
     "web/src/diagnostics.js",
     "web/src/docking.js",
@@ -225,6 +235,7 @@
     "web/src/extension-decorations.js",
     "web/src/extension-editing.js",
     "web/src/extension-installer.js",
+    "web/src/extension-output.js",
     "web/src/extension-quickinput.js",
     "web/src/extension-services.js",
     "web/src/extension-theme.js",
@@ -236,6 +247,7 @@
     "web/src/layout-state.js",
     "web/src/live-edit.js",
     "web/src/melody-companion.js",
+    "web/src/melody-files.js",
     "web/src/monaco-overlays.js",
     "web/src/motion.js",
     "web/src/native-ready.js",
@@ -263,7 +275,7 @@
   "references": [
     {
       "screen": "editor",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\editor.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\editor.png",
       "size": [
         1672,
         941
@@ -272,7 +284,7 @@
     },
     {
       "screen": "welcome",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\welcome.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\welcome.png",
       "size": [
         1672,
         941
@@ -281,7 +293,7 @@
     },
     {
       "screen": "search",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\search.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\search.png",
       "size": [
         1672,
         941
@@ -290,7 +302,7 @@
     },
     {
       "screen": "settings",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\settings.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\settings.png",
       "size": [
         1672,
         941
@@ -299,7 +311,7 @@
     },
     {
       "screen": "forge",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\forge.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\forge.png",
       "size": [
         1672,
         941
@@ -308,7 +320,7 @@
     },
     {
       "screen": "laboratory",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\laboratory.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\laboratory.png",
       "size": [
         1672,
         941
@@ -317,7 +329,7 @@
     },
     {
       "screen": "debug",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\debug.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\debug.png",
       "size": [
         1672,
         941
@@ -326,7 +338,7 @@
     },
     {
       "screen": "extensions",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\extensions.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\extensions.png",
       "size": [
         1672,
         941
