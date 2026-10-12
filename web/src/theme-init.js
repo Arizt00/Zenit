@@ -3,6 +3,7 @@ try {
     const saved = localStorage.getItem('lumen.theme');
     const theme = requested || saved || 'day';
     document.documentElement.dataset.theme = ['day', 'dark', 'forest'].includes(theme) ? theme : 'day';
+    if(!requested)globalThis.ZenitThemeAppearance.restore(document.documentElement,localStorage);
 } catch (_) {
     document.documentElement.dataset.theme = 'day';
 }

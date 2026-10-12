@@ -147,9 +147,9 @@ class ExtensionServices:
                     if ident==theme_id:
                         try:data=color_theme(root,declaration.get('path'))
                         except (ValueError,OSError,TypeError,AttributeError):break
-                        if isinstance(data,dict):return {'kind':{'vs':1,'vs-dark':2,'hc-black':3,'hc-light':4}.get(declaration.get('uiTheme'),2),'identity':theme_id}
+                        if isinstance(data,dict):return {'kind':{'vs':1,'vs-dark':2,'hc-black':3,'hc-light':4}.get(declaration.get('uiTheme'),2),'identity':theme_id,'label':str(declaration.get('label',declaration.get('id','theme')))}
                         break
-        return {'kind':1 if prefs.get('appearance.theme')=='day' else 2,'identity':'zenit:'+prefs.get('appearance.theme')}
+        native=prefs.get('appearance.theme');return {'kind':1 if native=='day' else 2,'identity':'zenit:'+native,'label':{'day':'Zénit Día','dark':'Zénit Oscuro','forest':'Zénit Bosque'}.get(native,'Zénit Día')}
     def theme_changed(self):
         state=self.theme_state();signature=(state['identity'],state['kind'])
         if self.theme_signature==signature:return
@@ -158,7 +158,7 @@ class ExtensionServices:
         with runtime.lock:hosts=list(runtime.hosts.values())
         for host in hosts:
             event=getattr(host,'event',None)
-            if event:event('theme.changed',{'kind':state['kind']})
+            if event:event('theme.changed',{'kind':state['kind'],'label':state['label']})
     def editor_state(self,ws,body):
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
         items=body.get('editors')
@@ -357,6 +357,17 @@ class ExtensionServices:
     def call(self,host,method,p):
         ws=host.workspace
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
+        if method=='configuration.theme':
+            value=p.get('value');native={'Zénit Día':'day','Zénit Oscuro':'dark','Zénit Bosque':'forest'}
+            if value is None:changes={'appearance.extensionTheme':''}
+            elif isinstance(value,str) and value in native:changes={'appearance.theme':native[value],'appearance.extensionTheme':''}
+            elif isinstance(value,str):
+                themes=self.platform.extensions.contributions().get('themes',[])
+                matches=[t for t in themes if value in (t['id'],t['label'])]
+                if len(matches)!=1:raise ValueError('El tema debe estar instalado y activo; usa su identificador si el nombre es ambiguo.')
+                changes={'appearance.extensionTheme':matches[0]['id']}
+            else:raise ValueError('Nombre de tema inválido.')
+            self.platform.prefs.update(changes);self.theme_changed();self.emit('zenit.preferences.changed');return self.theme_state()
         if method=='environment.update':
             if not isinstance(p.get('collections'),list) or len(json.dumps(p))>64000:raise ValueError('Colección de entorno inválida.')
             with self.lock:

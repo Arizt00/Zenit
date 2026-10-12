@@ -79,6 +79,7 @@ export class MelodyCompanion {
     this.panel.querySelector('.companion-focus').after(this.panel.querySelector('footer'));
     this.references=document.createElement('div');this.references.className='companion-references';this.references.hidden=true;this.references.setAttribute('aria-label','Líneas citadas por Melody');this.panel.querySelector('pre').before(this.references);
     this.answer=document.createElement('div');this.answer.className='companion-answer';this.answer.hidden=true;this.panel.querySelector('pre').after(this.answer);
+    this.listen=document.createElement('button');this.listen.className='text-button melody-listen';this.listen.type='button';this.listen.innerHTML=icon('speaker')+'<span>Escuchar consejo</span>';this.listen.hidden=true;this.answer.after(this.listen);this.listen.onclick=()=>p.safe(()=>p.voice.speak(this.spokenAdvice,this));
     this.accept=document.createElement('button');this.accept.className='secondary-button small-button companion-accept';this.accept.innerHTML=icon('code')+'<span>Insertar sugerencia</span>';this.accept.title='Insertar en el búfer actual · se puede deshacer';this.accept.hidden=true;this.panel.querySelector('pre').after(this.accept);this.accept.onclick=()=>p.safe(()=>this.acceptPrediction());
     this.panel.querySelector('header button').onclick=()=>this.session.stop();this.panel.querySelector('[data-companion=review]').onclick=()=>p.safe(()=>{this.session.lastKey=null;return this.session.review();});this.panel.querySelector('[data-companion=predict]').onclick=()=>p.safe(()=>this.session.review(true));
     this.panel.querySelectorAll('[data-companion-focus]').forEach(button=>button.onclick=()=>{this.focus=button.dataset.companionFocus;this.panel.querySelectorAll('[data-companion-focus]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.session.changed();});
@@ -113,6 +114,7 @@ export class MelodyCompanion {
     this.panel.querySelector('pre').classList.toggle('is-code',!!state.prediction);
     const sections=state.status==='ready'&&!state.prediction?adviceSections(state.text):[];this.panel.querySelector('pre').hidden=!!sections.length;this.answer.hidden=!sections.length;this.accept.hidden=true;
     if(sections.length){this.answer.replaceChildren();for(const section of sections){const block=document.createElement('section'),heading=document.createElement('strong'),body=document.createElement('p');heading.textContent=section.title;body.textContent=section.body;if(section.title)block.append(heading);block.append(body);this.answer.append(block);}}
+    this.spokenAdvice=state.status==='ready'&&!state.prediction?state.text:'';this.listen.hidden=!this.spokenAdvice;if(!this.spokenAdvice)this.platform.voice?.stop(this).catch(()=>{});
     if(state.status==='waiting')this.panel.querySelector('pre').textContent='Los consejos aparecerán aquí. Se comprobará la revisión antes de mostrarlos.';
     if(['waiting','analyzing','error','limit'].includes(state.status)){this.clearAdvice();this.clearPrediction();}
     if(state.status==='ready'&&!state.prediction&&state.text?.trim()){

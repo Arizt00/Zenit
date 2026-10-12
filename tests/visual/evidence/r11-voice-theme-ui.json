@@ -1,0 +1,27 @@
+{
+  "checks": [
+    "All four Melody actions fit the reference desktop height with the compact tool row",
+    "Toolbar shows the actual selected One Dark Pro variant",
+    "One Dark Pro survives real split, settings and contribution refresh without replacing the buffer",
+    "Reload restores the effective shell colours before extension contributions arrive",
+    "Switching to a native theme commits base and extension selection atomically",
+    "Completed answers offer Listen; speech never starts automatically",
+    "Authenticated WAV playback uses the real 24 kHz Emma sample",
+    "Pause and Resume control the same audio without regenerating speech",
+    "Audio requires the session token, not merely a loopback URL",
+    "Stop removes the source and releases session audio",
+    "The selection button sends only the actual selected text",
+    "Clearing the conversation stops its voice player",
+    "Speech controls fit three desktop sizes without global overflow",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "theme": {
+    "id": "zhuangtongfa.material-theme:One Dark Pro Darker",
+    "theme": "lumen-extension-theme",
+    "label": "Tema: One Dark Pro Darker",
+    "background": "#23272e"
+  },
+  "audioDuration": 6.88,
+  "audioFixture": "Replay of separately verified actual Emma MOSS generation; AI transport fixture, no external model evaluation."
+}

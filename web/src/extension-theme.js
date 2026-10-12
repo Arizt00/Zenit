@@ -1,3 +1,4 @@
+import './theme-cache.js';
 import {themeEntries} from './theme-tokens.js';
 // Only color values from an extension may enter the shell; never arbitrary CSS.
 const rgb=hex=>[1,3,5].map(n=>parseInt(hex.slice(n,n+2),16));
@@ -53,10 +54,12 @@ export function themePalette(theme) {
   for(const key of Object.keys(palette).filter(k=>k.startsWith('syntax-')))palette[key]=readable(palette[key],palette.editor);
   return {palette,colors,dark};
 }
+export function restoreShellAppearance(root=document.documentElement,storage=localStorage){return globalThis.ZenitThemeAppearance.restore(root,storage);}
 export function applyShellTheme(theme,root=document.documentElement,baseTheme='day'){
   const resolved=theme?themePalette(theme):null,palette=resolved?.palette||{};if(theme)palette.glass=palette.surface.slice(0,7)+'f0';
   for(const key of (root.dataset.extensionTokens||'').split(' ').filter(Boolean))if(!(key in palette))root.style.removeProperty('--'+key);
   for(const [key,value] of Object.entries(palette))if(root.style.getPropertyValue('--'+key)!==value)root.style.setProperty('--'+key,value);
   if(theme){root.dataset.extensionTokens=Object.keys(palette).join(' ');root.dataset.extensionTheme=theme.id;root.dataset.theme=resolved.dark?'dark':'day';}
   else{delete root.dataset.extensionTheme;delete root.dataset.extensionTokens;root.dataset.theme=baseTheme;}
+  try{if(theme)localStorage.setItem('zenit.themeAppearance',JSON.stringify({id:theme.id,base:root.dataset.theme,palette}));else localStorage.removeItem('zenit.themeAppearance');}catch{}
 }

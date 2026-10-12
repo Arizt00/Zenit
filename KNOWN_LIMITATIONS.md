@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R10
+# Límites reales · Zénit 0.5.3 R11
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -93,3 +93,19 @@ datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inven
 - Los scopes contextuales completos necesitan una gramática TextMate. El tokenizador lexical integrado de Monaco solamente traduce alias de categorías comunes. La capa semántica cubre selectores simples de tipo/modificador; lenguaje, comodines y todas las permutaciones de modificadores siguen pendientes.
 - Los apartados de Melody solo organizan texto recibido. No verifican sus conclusiones ni inventan apartados ausentes. Insertar sugerencia exige el mismo modelo, versión y posición; se aplica al búfer y es deshacible, no guarda ni ejecuta. La calidad del modelo externo no se evalúa con las fixtures.
 - La luz del fondo de inicio sigue siendo composición CSS sobre un asset local. Render/perfilado son muestras del host; no certifican 60 FPS en todos los equipos ni ausencia universal de flicker.
+
+
+## R11 · voz y temas
+
+- Voz de Melody: requiere la instalación local original de Emma con la identidad
+  MOSS aprobada. No se redistribuyen modelos ni referencias privadas; no hay
+  fallback silencioso a una voz de sistema. Español, 2500 caracteres de prosa,
+  bloques de código omitidos, una generación simultánea. La prueba real tardó
+  61 s para 6,88 s de voz. La calidad no se extrapola a todos los textos.
+- La configuración `workbench.colorTheme` está integrada para Global. Los targets
+  Workspace/WorkspaceFolder se rechazan; el resto de getConfiguration conserva
+  sus límites existentes. Nombres ambiguos requieren un identificador instalado.
+- El cache de colores evita el fallback visible al recargar un tema ya renderizado.
+  Al iniciar por primera vez no existe cache: se espera la contribución real.
+- Análisis y predicciones de Melody conservan contexto y control de revisión,
+  pero no han pasado un benchmark de calidad de todos los proveedores externos.

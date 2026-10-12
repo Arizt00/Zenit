@@ -26,6 +26,7 @@ from .version import VERSION, REVISION
 from .simulation import Simulation
 from .machines import Machines
 from .melody_files import MelodyFiles
+from .melody_voice import MelodyVoice
 
 
 class PlatformServices:
@@ -43,6 +44,7 @@ class PlatformServices:
         self.buffers=Buffers()
         self.extension_services=ExtensionServices(self);self.extension_runtime.services=self.extension_services
         self.melody_files=MelodyFiles(self)
+        self.voice=MelodyVoice(self.prefs)
     def state(self):
         web=self.app.project/'web/vendor'
         return {'version':VERSION,'revision':REVISION,'preferences':self.prefs.export(),'providers':self.ai.vault.state(),
@@ -94,6 +96,8 @@ class PlatformServices:
         if path=='/tools':return self.tools.detect(q('refresh')=='1')
         if path=='/hardware':return self.hardware.sample()
         if path=='/ai/providers':return {'providers':self.ai.vault.state()}
+        if path=='/ai/voice':return self.voice.status()
+        if path=='/ai/voice/job':return self.voice.snapshot(q('id'))
         if path=='/ai/account':return self.ai.accounts.status(q('provider'))
         if path=='/ai/job':return self.ai.get(q('id')).state(int(q('offset','0')))
         if path=='/lsp/events':self._trusted();return self.lsp.get(q('id')).poll(int(q('after','0')))
@@ -106,6 +110,8 @@ class PlatformServices:
         raise FileNotFoundError('Ruta de plataforma desconocida.')
     def post(self,path,body):
         ws=self.app.workspace
+        if path=='/ai/voice/start':return self.voice.start(body.get('text'))
+        if path=='/ai/voice/cancel':return self.voice.cancel(body.get('id'))
         if path=='/simulation/run':return self.simulation.run(ws,body)
         if path=='/foundation/action':
             from .foundation_actions import action
@@ -244,6 +250,7 @@ class PlatformServices:
             return {'queued':True,'sequence':self.command_seq,'command':command}
         raise FileNotFoundError('Operación de plataforma desconocida.')
     def workspace_changed(self):
+        self.voice.stop()
         self.buffers.clear()
         self.extension_runtime.shutdown()
         self.lantern.stop();self.debugger.stop();self.preview.stop()
@@ -252,6 +259,7 @@ class PlatformServices:
             if not job.done:job.cancel()
         self.ai.clear_history()
     def shutdown(self):
+        self.voice.shutdown()
         self.updates.shutdown()
         self.workspace_changed();self.ai.shutdown();self.extensions.shutdown();self.downloads.shutdown()
         self.hacker.shutdown()

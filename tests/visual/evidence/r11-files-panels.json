@@ -1,0 +1,37 @@
+{
+  "checks": [
+    "Three separate real CMD/ConPTY terminals accept keyboard input",
+    "Switching terminals and clicking Terminal preserve input, selected PTY and separate buffers",
+    "Detached Project has a top header and a full-width tree below it",
+    "Melody returns a complete reviewable plan without changing disk (fixture transport)",
+    "Applying the reviewed project creates three real files and backs up the explicitly requested deletion",
+    "Undo restores deleted content and removes unmodified created project files",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "projectGeometry": {
+    "direction": "column",
+    "heading": {
+      "x": 13,
+      "y": 13,
+      "width": 1894,
+      "height": 49,
+      "top": 13,
+      "right": 1907,
+      "bottom": 62,
+      "left": 13
+    },
+    "tree": {
+      "x": 13,
+      "y": 62,
+      "width": 1894,
+      "height": 752,
+      "top": 62,
+      "right": 1907,
+      "bottom": 814,
+      "left": 13
+    },
+    "overflow": false
+  },
+  "aiTransport": "Explicit deterministic fixture; generation quality not measured."
+}

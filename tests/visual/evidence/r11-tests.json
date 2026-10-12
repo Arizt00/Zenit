@@ -1,0 +1,33 @@
+{
+  "baseCommit": "27f3067a927f0ced1ef93198f6d0ef10a077fb8d",
+  "python": {
+    "executed": 294,
+    "passed": 289,
+    "skipped": 5
+  },
+  "nodePassed": 82,
+  "syntaxFiles": 61,
+  "checks": {
+    "correction": 21,
+    "voice-theme-ui": 14,
+    "debug-output": 12,
+    "files-panels": 7,
+    "theme-ui": 10,
+    "textmate": 7
+  },
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "voice": {
+    "voice": "Emma",
+    "engine": "moss",
+    "sampleRate": 24000,
+    "durationSeconds": 6.88,
+    "generationSeconds": 61.03199999999924,
+    "peak": 0.72869873046875,
+    "clippedSamples": 0,
+    "continuousDecode": true
+  },
+  "originalReferencesUnchanged": true,
+  "ai": "Explicit transport fixture; no model quality benchmark."
+}

@@ -93,12 +93,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(raw)))
-        self.send_header("Cache-Control", "no-store" if content_type.startswith("application/json") or session else "no-cache")
+        self.send_header("Cache-Control", "no-store" if content_type.startswith(("application/json","audio/")) or session else "no-cache")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN" if webview else "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Cross-Origin-Resource-Policy", "same-origin")
-        policy="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'unsafe-inline' blob: https:; img-src blob: data: https:; font-src blob: data: https:; connect-src https:; media-src blob: data: https:; frame-ancestors 'self'; base-uri 'none'; object-src 'none'" if webview else "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; frame-src http://127.0.0.1:*; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        policy="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'unsafe-inline' blob: https:; img-src blob: data: https:; font-src blob: data: https:; connect-src https:; media-src blob: data: https:; frame-ancestors 'self'; base-uri 'none'; object-src 'none'" if webview else "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; media-src 'self' blob:; frame-src http://127.0.0.1:*; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"
         self.send_header("Content-Security-Policy",policy)
         if session:
             self.send_header("Set-Cookie", f"lumen_session={self.app.token}; HttpOnly; SameSite=Strict; Path=/")
@@ -135,6 +135,8 @@ class Handler(BaseHTTPRequestHandler):
                 ws = self.app.workspace
                 if path == "/api/bootstrap":
                     return self.reply({**self.app.state(), "token": self.app.token, "tree": ws.tree()})
+                if path == '/api/platform/ai/voice/audio':
+                    return self.reply(self.app.features.voice.audio(query.get('id',[''])[0]),content_type='audio/wav')
                 if path.startswith("/api/platform/"):
                     return self.reply(self.app.features.get(path[len("/api/platform"):], query))
                 if path == "/api/state":

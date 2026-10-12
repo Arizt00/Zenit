@@ -107,6 +107,7 @@ SCHEMA = {
  'ai.maxOutputTokens': ('ai',4096,'Límite de salida en tokens','Output token limit',[256,32768]),
  'ai.timeout': ('ai',120,'Tiempo máximo de respuesta (s)','Response timeout (s)',[15,300]),
  'ai.emmaDirectory': ('ai','','Carpeta de Emma · motor local','Emma folder · local engine','string'),
+ 'ai.voiceDirectory': ('ai','','Voz de Melody · carpeta de Emma','Melody voice · Emma folder','string'),
  'ai.ollamaBase': ('ai','http://127.0.0.1:11434','Servidor Ollama local','Local Ollama server','localurl'),
  'hardware.enabled': ('hardware',False,'Métricas locales de CPU y memoria','Local CPU and memory metrics','bool'),
  'hardware.interval': ('hardware',2500,'Intervalo de muestreo (ms)','Sampling interval (ms)',[1000,10000]),

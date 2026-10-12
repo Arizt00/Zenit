@@ -1,125 +1,92 @@
-# Zénit 0.5.3 R10 · tema persistente y coloreado coherente
+# Implementación · Zénit 0.5.3 Preview R11
 
-R10 parte de `335bbcc` (R9) y responde al fallo descrito por el usuario: el
-editor vuelve al tema original y el coloreado queda incorrecto. La auditoría
-reproduce el fallo con el paquete real Bearded Theme Solarized Light antes de
-modificar su ruta de render. También continúa la mejora de interfaz/Melody y
-la integración de formatos de temas de extensiones.
+## Cambios y causas verificadas
 
-## Fallo reproducido y solución
+R11 continúa sobre `27f3067a927f0ced1ef93198f6d0ef10a077fb8d` (R10).
+La ventana del usuario comprobada al empezar era R10 y tenía One Dark Pro Darker.
+R10 había corregido el reinicio global de Monaco al copiar `theme` en un editor
+dividido. R11 comprueba esa corrección con One Dark Pro y Bearded Solarized Light.
+No se atribuye al usuario una causa que no se haya reproducido.
 
-Crear una división propagaba `theme: lumen-theme` desde las opciones iniciales
-de la primera vista. Monaco comparte el servicio de temas: crear la segunda
-vista cambiaba el tema de ambas. Actualizar fuentes/word wrap volvía a propagar
-ese valor antiguo. R10 excluye el tema de las opciones que se transfieren entre
-vistas y conserva los modelos y búferes. Un cambio de preferencias del editor
-tampoco llama al tema nativo si hay una extensión seleccionada.
-
-La prueba anterior registra `selected → lumen-extension-theme`,
-`split/font/wrap → lumen-theme`. La prueba posterior conserva
-`lumen-extension-theme` en selección, división, fuente, contribuciones, ajuste
-de líneas y recarga. Verifica el mismo modelo y el color real de comentarios.
-La auditoría anterior no se presenta como una prueba que pasaba.
+Se corrigen tres problemas adicionales: la barra mostraba el tema base en lugar
+del efectivo; el arranque/reload podía mostrar colores nativos hasta recibir las
+contribuciones; pasar a un tema nativo guardaba primero el borrado del tema de
+extensión, creando un estado intermedio. Ahora se restaura una instantánea de
+colores validada antes del CSS, se esperan las contribuciones antes de resolver
+el tema y ambos ajustes se guardan en una única operación. Respuestas antiguas
+de contribuciones no reemplazan el estado de una petición más reciente.
+Un tema ausente se comunica con un error explícito y fallback nativo.
 
 ## Arquitectura y archivos
 
-| Área | Archivos | Resultado |
-| --- | --- | --- |
-| División/preferencias | `editor.js`, `app.js` | Las opciones locales de vista no sobrescriben el tema global. La preferencia externa y los modelos permanecen. |
-| Sintaxis | `theme-tokens.js`, `textmate.js`, `editor.js`, `extension-theme.js` | Normaliza RGB corto/RGBA; compone alpha sobre el editor; conserva estilos sin foreground. TextMate y Monaco usan el mismo color efectivo. |
-| Semántica/contraste | `theme-tokens.js`, `editor.js`, `preview.js` | Reglas simples de tipo/modificador y semanticHighlighting explícito; respeta las cuatro bases de Monaco, incluido hc-light/hc-black. |
-| Recursos de tema | `backend/extensions.py` | Resuelve tokenColors en archivos .tmTheme/JSON locales, valida tipo/ruta/tamaño, conserva colores y semántica heredados. |
-| Terminal | `theme-tokens.js`, `workbench.js` | Colores ANSI normales/brillantes y cursor/selección aportados por el tema; mantiene PTY, teclado y búfer. |
-| Selector | `theme-picker.js`, `themes.css` | Filtra por tipo declarado; cuenta resultados reales, estado vacío y muestra la sintaxis efectiva con transparencia. |
-| Melody | `melody-companion.js`, `melody.css` | Apartados basados en texto real; inserción explícita con chequeo de modelo/versión/cursor, Undo y sin guardar. Predicciones caducadas se retiran. |
-| Inicio | `welcome.css` | Luz suave basada en el acento, animación CSS de 48 s y reglas existentes de pausa/reducir movimiento. Sin nuevo renderer. |
-| Versión/build | `version.py`, `version.txt`, `setup.js`, `package.json` | Preview R10, nuevo módulo incluido y 58 comprobaciones sintácticas. |
+- `web/src/theme-cache.js`, `theme-init.js`, `extension-theme.js`, `web/index.html`:
+  bootstrap clásico previo al CSS, whitelist de tokens y colores hex; no URLs,
+  CSS arbitrario, credenciales ni datos de proyecto en la instantánea.
+- `web/src/app.js`, `workbench.js`: controles del tema efectivo y actualización
+  atómica de preferencias; modelos, foco y canvases existentes se conservan.
+- `backend/extension_api.cjs`, `extension_runtime.py`, `extension_services.py`:
+  `workspace.getConfiguration('workbench').get/has/inspect/update('colorTheme')`
+  consulta y modifica el perfil real. Eventos de configuración y color llegan al
+  host Node. Solo Global está implementado; Workspace/WorkspaceFolder se rechazan.
+- `backend/melody_voice.py`, `emma_voice_bridge.mjs`, `emma_voice_worker.py`:
+  trabajos locales limitados y cancelables, usando la voz MOSS aprobada existente
+  de Emma y decodificación continua. PCM mono de 16 bits se convierte en WAV.
+  El audio reside en memoria y se entrega por una ruta autenticada `no-store`.
+- `web/src/melody-voice.js`, `melody-companion.js`, `workbench.js`,
+  `web/design/melody-voice.css`: Escuchar respuesta/consejo/selección; pausa,
+  reanudación y parada. Un consejo invalidado detiene su lectura. No hay lectura
+  automática, envío adicional de código ni cambios de archivo al escuchar.
+- `web/src/product-ui.js`, `web/design/melody.css`, `icons.js`: una fila compacta
+  de herramientas permite ver las cuatro acciones de Melody a 1672×917. Voz y
+  pausa usan la misma cuadrícula SVG de 24 unidades. Los controles usan tokens
+  existentes de espaciado, radio, borde, superficies y texto, sin `transition:all`.
+- `preferences.py`, `server.py`, `platform_services.py`, `packaging/lumen.spec`:
+  configuración independiente de la voz y empaquetado de los bridges; la voz
+  puede usarse aunque el proveedor de análisis sea otro. No se incluyen referencias
+  privadas ni modelos de Emma en el instalador público.
 
-Las reglas completas de TextMate permanecen en la gramática real. Monaco
-lexical traduce solamente alias de categorías que puede representar; no se
-finge soporte de todos los scopes contextuales. Semántica cubre selectores
-simples de tipo/modificador, no lenguaje ni todos los comodines/ordenamientos.
-El contrato y sus diferencias se contrastan con la
-[guía oficial de temas](https://code.visualstudio.com/api/extension-guides/color-theme),
-[guía de semántica](https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide)
-y el [servicio Standalone de Monaco](https://github.com/microsoft/vscode/blob/main/src/vs/editor/standalone/browser/standaloneThemeService.ts).
+## Verificación real
 
-El loader no obtiene recursos remotos ni ejecuta el tema. Acepta hasta 3 MB por
-recurso, herencia dentro del paquete y errores explícitos para XML/rutas/tipos
-inválidos. Se conserva el límite de 128 variantes por paquete y 256 activas.
+294 tests de Python: 289 aprobados y 5 omitidos por requisitos del entorno.
+82 tests Node aprobados; 61 archivos JavaScript comprobados sintácticamente.
+Se prueban 89 variantes reales, siete pares de contraste de texto, y los seis
+pasos de estabilidad de Bearded con los 16 colores ANSI originales en xterm.
+Una extensión Node real prueba lectura/escritura de colorTheme, cuatro tipos
+de tema y rechazo de temas inexistentes o targets todavía no implementados.
 
-## Diseño y fidelidad
+14 comprobaciones nuevas de voz/tema/UI: One Dark Pro al dividir y cambiar
+preferencias; colores conservados antes de cargar contribuciones; transición
+nativa atómica; cuatro acciones visibles; reproducción, pausa, reanudación,
+parada, selección, autenticación y tamaños de escritorio. El player reutiliza
+un WAV generado en la comprobación MOSS real; el proveedor de IA es un fixture
+explícito. Esa prueba no evalúa la calidad del modelo de análisis.
 
-Se conservan spacing, radii, bordes, tipografía e iconos SVG compartidos. Los
-nuevos filtros y acciones usan tokens semánticos; no crean una segunda estética.
-El cuerpo de consejos sigue el scroll del panel y mantiene el composer visible.
-El texto no estructurado tiene fallback íntegro; no se fabrican secciones.
-Insertar usa el mismo lenguaje de botones y una acción deshacible.
+La generación real MOSS produjo 6,88 s de audio a 24 kHz, pico 0,729 y cero
+muestras saturadas. Esa generación tardó 61,03 s en este equipo. No se presenta
+como voz instantánea, ni como evaluación perceptual de todos los textos.
+Se mantuvo el mismo procesamiento continuo aprobado para el vídeo anterior.
 
-Los ocho goldens originales permanecen intactos. Editor/Inicio conservan cinco
-bounds dentro de 2 px, máximo observado 1.333 px. Las composiciones simplificadas
-de Inicio/Laboratory/Debug siguen el brief posterior del usuario. Se incluyen
-capturas, overlays y diffs actuales en [VISUAL_DIFF_REPORT](VISUAL_DIFF_REPORT.md).
-El before/after de división usa el mismo proyecto y viewport. No hay porcentaje
-inventado de fidelidad ni de paridad.
+También pasan 21 comprobaciones de bienvenida/Monaco/Melody, 12 de depuración
+y output real, 7 de archivos/paneles/ConPTY y 7 de TextMate/ASM. Se ejecutan 13
+vistas de WebView2 y 24 combinaciones de resolución/escala con 72 capturas.
+Los cinco bounds principales pasan dentro de 2 px. Las referencias originales
+se conservan; overlay/diff no equivale a fidelidad perfecta ni a paridad de API.
 
-## Validación
+Los informes y JSON están en `tests/visual/evidence/r11-*`; capturas y overlays
+en `tests/visual/current` y `tests/visual/comparisons`. `VISUAL_DIFF_REPORT.md`
+describe diferencias por pantalla. La matriz es emulación de escala en Edge;
+la captura nativa usa Windows al 150 %, sin cambiar la escala del usuario.
 
-- Python: 290 pruebas, 285 correctas y 5 omisiones explícitas.
-- Node: 80 pasan; JavaScript: 58 archivos comprobados.
-- Temas: 10 checks UI, 89 variantes reales de Vira/One Dark Pro/Bearded.
-- Estabilidad: 6 pasos con Monaco real, dos vistas, modelo preservado y RGBA;
-  xterm conserva ambos azules ANSI originales al cambiar fuente.
-- TextMate/ASM: 7 checks con Oniguruma real, scopes/inyección, estado multilinea,
-  reactivación, ejemplo x86-64 y controles en tres tamaños/tres ambientes.
-- Inicio/Melody: 21 checks; shader, pausa, contexto WebGL, consejos de revisión,
-  apartados reales y sugerencia explícita que se deshace en un paso.
-- Debug/output: 12 checks con proceso Python y extensión Node reales.
-- Archivos/panel/terminal: 7 checks, tres CMD/ConPTY, Proyecto desacoplado,
-  creación/borrado y recuperación reales en workspace aislado.
-- 13 vistas WebView2 nativas y 72 capturas en 24 combinaciones emuladas. Sin
-  overflow global ni errores JS en estos recorridos. No cubre cada monitor físico.
+## Límites
 
-El transporte de IA de QA es una fixture declarada. Se comprueba la entrega,
-revisión y aplicación al búfer, no calidad/predicciones de modelos externos.
-Las terminales, archivos, registros y valores de los motores son reales.
+No existe evidencia para certificar 90 % global de VS Code. OAuth integrado,
+esquemas virtuales, CustomDocument y otras APIs siguen pendientes según
+`KNOWN_LIMITATIONS.md`. Se amplía un contrato concreto, sin afirmar que todos
+los plugins funcionan. La mejora de análisis/predicción se prueba en su contrato
+de contexto/revisión/aceptación; no se certifica calidad de proveedores externos.
 
-## Rendimiento y límites
-
-Muestra nativa de bienvenida animada: CPU de render mediana
-0.4 ms, p95 0.7 ms. Intervalo de frames
-16.6 ms mediana, 25.0 ms p95. No hay long tasks
-en esa muestra. No es tiempo GPU ni una garantía de 60 FPS en cada dispositivo.
-Escenas ocultas tienen cero loops; modelos/canvas se conservan.
-
-La compatibilidad global de VS Code sigue siendo parcial. OAuth integrado,
-filesystem virtual completo, editores binarios, visualizadores y forwarding
-siguen pendientes. No se acredita 90 % global. [KNOWN_LIMITATIONS](KNOWN_LIMITATIONS.md)
-conserva esos límites y los de color/semántica propios de R10.
-
-Los recibos de build/publicación/instalación se incorporan en
-`tests/visual/evidence/windows-r10-*.json` después de ejecutar cada fase.
-R10 entrega instalador/portable Windows; no reconstruye Linux/macOS ni firma.
-El proceso anterior del usuario se conserva para no perder trabajo sin guardar.
-
-
-## Distribución verificada de R10
-
-El build procede de `fee78a6c338c425aa33550819579db04f08c6a5c` y está publicado en
-[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.10).
-Instalador: 113021703 bytes; portable:
-70799419 bytes. Los cinco assets tienen SHA-256
-confirmado por GitHub; no se sustituyen releases anteriores.
-
-Se superan 15 comprobaciones del paquete nativo y 11 del helper instalado.
-Los 95 archivos de frontend/assets/bridges coinciden byte por byte con el
-build. La comprobación instalada usa un Vira real en perfil QA aislado:
-contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
-Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
-de archivos. El consentimiento de IA sigue desactivado al iniciar.
-
-`app-0.5.3-R10` conserva el payload R9, los cuatro archivos de perfil
-comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
-La respuesta real de GitHub permite al actualizador R9 seleccionar R10 con
-el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
-Los recibos completos están en `tests/visual/evidence/windows-r10-*.json`.
+Voz: utiliza una instalación local existente y validada de Emma/MOSS, en español.
+No descarga modelos, referencias privadas ni voces alternativas. Sin ese motor,
+con memoria insuficiente o ante un fallo, muestra el error real. Hasta 2500
+caracteres de prosa por lectura, sin bloques de código, un trabajo de generación
+a la vez. La reproducción tiene controles explícitos y libera su blob al parar.

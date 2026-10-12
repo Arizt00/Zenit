@@ -6,6 +6,7 @@ import {LiveEditSession} from './live-edit.js';
 import {applyShellTheme} from './extension-theme.js';
 import {requestsLiveEdit,requestsRealtimeHelp,requestsFileChanges} from './ai-intent.js';
 import {MelodyFilesUI} from './melody-files.js';
+import {MelodyVoiceUI} from './melody-voice.js';
 import {ThemePicker} from './theme-picker.js';
 import {terminalTheme} from './theme-tokens.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
@@ -40,6 +41,7 @@ export class LumenPlatform {
     const [state,settings]=await Promise.all([this.api('/state'),this.api('/settings')]);this.state=state;this.commandSequence=state.commandSequence;
     this.prefs=settings.settings;this.schema=settings.schema.filter(s=>!['ai.melodyProvider','ai.melodyModel','appearance.extensionTheme'].includes(s.key));this.providers=state.providers;this.development=state.development;
     this.applyPreferences();this.createProviderBar();this.createTerminalBar();this.createStatus();this.installEvents();
+    this.voice=new MelodyVoiceUI(this);
     await this.loadContributions();
     this.scheduleCommands();this.scheduleHardware();
   }
@@ -55,8 +57,11 @@ export class LumenPlatform {
     if(has('terminal.fontSize'))root.style.setProperty('--pty-font',p['terminal.fontSize']+'px');
     if(has('appearance.errorColor'))root.style.setProperty('--error-color',({red:'#e33655',rose:'#df458f',amber:'#bb7109',mint:'#16885e'})[p['appearance.errorColor']]||'#e33655');
     const external=this.extensionThemes?.find(t=>t.id===p['appearance.extensionTheme']);
-    const themeSignature=JSON.stringify([p['appearance.theme'],external||null]),themeChanged=this.appliedTheme!==themeSignature;
+    const themePending=!!p['appearance.extensionTheme']&&!this.contributionsReady;
+    const themeSignature=JSON.stringify([p['appearance.theme'],external||null]),themeChanged=!themePending&&this.appliedTheme!==themeSignature;
     if(themeChanged){this.appliedTheme=themeSignature;applyShellTheme(external,document.documentElement,p['appearance.theme']);this.host.editor.extensionTheme=external||null;this.host.editor.changedTheme();}
+    if(themeChanged&&p['appearance.extensionTheme']&&!external)this.host.notify(this.t('El tema guardado no está disponible entre las extensiones activas. Revisa su instalación o elige otro tema.','The saved theme is unavailable in the enabled extensions. Check its installation or choose another theme.'),'error',6500,'theme-unavailable');
+    if(!themePending&&(themeChanged||has('general.locale')))this.host.themeChrome?.(root.dataset.theme,external);
     if(changed.some(key=>key.startsWith('lantern.')||key==='appearance.lanternMonitor'))this.lantern?.render();
     if(has('general.locale'))this.translateShell();
     for(const terminal of this.terminals.values())if(terminal.xterm){if(has('terminal.fontSize'))terminal.xterm.options.fontSize=p['terminal.fontSize'];if(has('terminal.cursorBlink'))terminal.xterm.options.cursorBlink=p['terminal.cursorBlink'];if(has('terminal.scrollback'))terminal.xterm.options.scrollback=p['terminal.scrollback'];if(themeChanged)this.themeTerminal(terminal);}
@@ -68,11 +73,11 @@ export class LumenPlatform {
   }
   async savePreference(key,value){
     this.preferenceEpoch=(this.preferenceEpoch||0)+1;
-    if(key==='appearance.theme'&&this.prefs['appearance.extensionTheme'])await this.savePreference('appearance.extensionTheme','');
-    const previous=this.prefs[key];this.prefs[key]=value;this.applyPreferences();
+    const updates={[key]:value};if(key==='appearance.theme')updates['appearance.extensionTheme']='';
+    const previous=Object.fromEntries(Object.keys(updates).map(k=>[k,this.prefs[k]]));Object.assign(this.prefs,updates);this.applyPreferences();
     // Serialize writes so quickly changing a slider cannot restore an older value.
-    this.settingsWrite=this.settingsWrite.catch(()=>{}).then(()=>this.api('/settings',{settings:{[key]:value}}));
-    try{await this.settingsWrite;this.setSaved();}catch(e){this.prefs[key]=previous;this.applyPreferences();throw e;}
+    this.settingsWrite=this.settingsWrite.catch(()=>{}).then(()=>this.api('/settings',{settings:updates}));
+    try{await this.settingsWrite;this.setSaved();}catch(e){for(const k of Object.keys(updates))if(this.prefs[k]===updates[k])this.prefs[k]=previous[k];this.applyPreferences();throw e;}
   }
   setSaved(){const el=this.workbench.querySelector('#settings-save-state');if(el){el.textContent=this.t('Guardado en este equipo','Saved on this device');el.classList.remove('pending');}}
   async syncPreferences(){
@@ -316,11 +321,13 @@ export class LumenPlatform {
     document.querySelectorAll('[data-review-update]').forEach(button=>button.onclick=()=>this.safe(()=>this.reviewExtension({id:button.dataset.reviewUpdate})));
   }
   async loadContributions(){
-    const data=await this.api('/extensions/contributions');this.extensionContributions=data;
+    const sequence=this.contributionSequence=(this.contributionSequence||0)+1;
+    const data=await this.api('/extensions/contributions');if(sequence!==this.contributionSequence||this.disposed)return data;this.contributionsReady=true;this.extensionContributions=data;
     setFileIcons(data.iconThemes?.[0]);this.host.refreshFileViews?.();
     this.host.editor.configureLanguages?.(data.languages,this.development.associations);this.renderExtensionThemes(data.themes||[]);
     try{data.errors.push(...await this.host.editor.configureGrammars?.(data.grammars||[])||[]);}
     catch(error){data.errors.push({id:'textmate',error:error.message});this.host.notify('No se pudo cargar el resaltado TextMate local: '+error.message,'error');}
+    if(sequence!==this.contributionSequence||this.disposed)return data;
     for(const d of this.contributionDisposables)d.dispose?.();this.contributionDisposables=[];
     if(window.monaco){
       for(const language of new Set(data.snippets.map(x=>x.language)))this.contributionDisposables.push(monaco.languages.registerCompletionItemProvider(language,{provideCompletionItems:(model,position)=>{const w=model.getWordUntilPosition(position),range={startLineNumber:position.lineNumber,endLineNumber:position.lineNumber,startColumn:w.startColumn,endColumn:w.endColumn};return {suggestions:data.snippets.filter(x=>x.language===language).map(x=>({range,label:x.prefix,detail:x.name,kind:monaco.languages.CompletionItemKind.Snippet,insertText:x.body,insertTextRules:monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet}))};}}));
@@ -431,7 +438,7 @@ export class LumenPlatform {
         if(update.done){
           completed=!update.error&&!update.cancelled;
           element.remove();
-          if(text){const answer=this.host.appendChat(filePlan?'Plan recibido. Comprobando rutas y conflictos…':text,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);if(filePlan&&completed){try{await this.melodyFiles.review(result.id,answer);}catch(error){answer.textContent=error.message;}}else if(!filePlan)this.addReviewButtons(answer,text,snapshot);}
+          if(text){const answer=this.host.appendChat(filePlan?'Plan recibido. Comprobando rutas y conflictos…':text,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);if(filePlan&&completed){try{await this.melodyFiles.review(result.id,answer);}catch(error){answer.textContent=error.message;}}else if(!filePlan){this.addReviewButtons(answer,text,snapshot);if(completed)this.voice.attach(answer,text);}}
           if(update.error)this.host.appendChat(update.error,'assistant',this.t('ERROR DEL PROVEEDOR','PROVIDER ERROR'));
           if(update.cancelled)this.host.appendChat(this.t('Generación cancelada. El proveedor puede haber procesado parte de la petición.','Generation cancelled. The provider may have processed part of the request.'),'assistant',this.t('CANCELADA','CANCELLED'));
           break;
@@ -442,7 +449,7 @@ export class LumenPlatform {
     finally{liveSession?.dispose();if(live&&completed){this.host.notify(liveSession.complete?`Edición finalizada en ${file}. Revisa el archivo antes de guardarlo; Ctrl+Z permite deshacer.`:'La respuesta no contiene un archivo completo. Revisa los cambios parciales o usa Ctrl+Z.');}this.liveEditing=false;this.liveEditingPath=null;document.querySelector('.ai-live-control').classList.remove('is-editing');document.querySelector('.ai-live-control small').textContent='Preguntar no modifica tu archivo.';this.aiJob=null;document.querySelector('.send-button').disabled=false;document.getElementById('ai-edit-file').disabled=false;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('.provider-status-dot').classList.remove('generating');}
   }
   async cancelAI(){if(this.aiJob)await this.api('/ai/cancel',{id:this.aiJob});}
-  async clearAI(){if(this.aiJob)await this.cancelAI();this.aiGeneration++;this.aiJob=null;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('#ai-form .send-button').disabled=false;await this.api('/ai/clear',{});this.conversation=crypto.randomUUID?.()||String(Date.now());}
+  async clearAI(){await this.voice?.stop();if(this.aiJob)await this.cancelAI();this.aiGeneration++;this.aiJob=null;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('#ai-form .send-button').disabled=false;await this.api('/ai/clear',{});this.conversation=crypto.randomUUID?.()||String(Date.now());}
   addReviewButtons(element,text,snapshot){
     const blocks=[...text.matchAll(/```[^\n]*\n([\s\S]*?)```/g)];
     for(const [index,pre] of [...element.querySelectorAll('pre')].entries()){
@@ -759,7 +766,7 @@ export class LumenPlatform {
   workspaceChanged(){
     this.companion?.session.stop();
     clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();t.mount.remove();}this.terminals.clear();this.activeTerminal=null;this.showingPTY=false;this.renderActiveTerminal();
-    for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.lspSessions.clear();this.diagnosticMap.clear();this.lastContent.clear();this.aiGeneration++;this.aiJob=null;this.conversation=crypto.randomUUID?.()||String(Date.now());this.closePage();this.updateSystemStatus();
+    for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.lspSessions.clear();this.diagnosticMap.clear();this.lastContent.clear();this.voice?.stop().catch(()=>{});this.aiGeneration++;this.aiJob=null;this.conversation=crypto.randomUUID?.()||String(Date.now());this.closePage();this.updateSystemStatus();
   }
-  dispose(){this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
+  dispose(){this.voice?.dispose();this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
 }

@@ -4,8 +4,17 @@ from pathlib import Path
 from backend.server import Application
 ROOT=Path(__file__).resolve().parents[1]
 PLUGIN="""'use strict';const v=require('vscode');let events=[];exports.activate=()=>{v.window.onDidChangeActiveColorTheme(theme=>events.push({kind:theme.kind,current:v.window.activeColorTheme.kind,same:theme===v.window.activeColorTheme}));v.commands.registerCommand('qa.theme',()=>({kind:v.window.activeColorTheme.kind,enum:v.ColorThemeKind,events}));};"""
+PLUGIN+="""const configurationEvents=[];v.workspace.onDidChangeConfiguration(e=>configurationEvents.push(e.affectsConfiguration('workbench.colorTheme')));v.commands.registerCommand('qa.configuration',async(value,target)=>{const config=v.workspace.getConfiguration('workbench');if(value!==null)await config.update('colorTheme',value,target);return {label:config.get('colorTheme'),has:config.has('colorTheme'),inspect:config.inspect('colorTheme'),property:config.colorTheme,events:configurationEvents};});"""
 
 class ColorThemeTest(unittest.TestCase):
+ def test_workbench_color_theme_reads_and_updates_the_actual_profile(self):
+  def request(value=None,target=None):return self.app.features.extension_runtime.request(self.app.workspace,{'id':'qa.theme','method':'command','command':'qa.configuration','arguments':[value] if target is None else [value,target]})['result']
+  state=request();self.assertEqual(state['label'],'Zénit Oscuro');self.assertEqual(state['property'],state['label']);self.assertTrue(state['has'])
+  state=request('HC Light');self.assertEqual(state['label'],'HC Light');self.assertEqual(self.app.features.prefs.get('appearance.extensionTheme'),'qa.theme:hc-light');self.assertEqual(self.wait(1)['kind'],4)
+  state=request('Zénit Bosque');self.assertEqual(state['label'],'Zénit Bosque');self.assertEqual(self.app.features.prefs.get('appearance.extensionTheme'),'');self.assertEqual(self.app.features.prefs.get('appearance.theme'),'forest');self.assertEqual(self.wait(2)['kind'],2)
+  with self.assertRaises(ValueError):request('Not installed')
+  with self.assertRaises(ValueError):request('HC Light',2)
+  self.assertEqual(self.app.features.prefs.get('appearance.theme'),'forest')
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);base=Path(self.tmp.name);ws=base/'project';ws.mkdir();self.app=Application(ROOT,ws,data_dir=base/'profile');self.app.workspace.trusted=True
   self.addCleanup(self.app.runner.shutdown);self.addCleanup(self.app.features.shutdown);store=self.app.features.extensions;raw=io.BytesIO()

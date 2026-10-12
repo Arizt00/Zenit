@@ -1,0 +1,10 @@
+{
+  "voice": "Emma",
+  "engine": "moss",
+  "sampleRate": 24000,
+  "durationSeconds": 6.88,
+  "generationSeconds": 61.03199999999924,
+  "peak": 0.72869873046875,
+  "clippedSamples": 0,
+  "continuousDecode": true
+}

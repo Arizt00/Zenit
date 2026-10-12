@@ -11,13 +11,13 @@ ni produce automáticamente una marca de pantalla terminada.
 
 | Vista | Referencia / resultado | MAE | SSIM por bloques | Componentes / diferencias conocidas |
 | --- | --- | ---: | ---: | --- |
-| editor | [Golden](tests/visual/references/editor.png) · [Resultado](tests/visual/current/editor.png) · [Overlay](tests/visual/comparisons/editor-overlay.png) · [Diff](tests/visual/comparisons/editor-diff.png) | 7.20 | 0.743 | app/editor/docking/product-ui + shell.css. Orden del árbol/tabs, minimapa, rama Git y runtime dependen del proyecto. Antialiasing e iconos tienen diferencias. |
+| editor | [Golden](tests/visual/references/editor.png) · [Resultado](tests/visual/current/editor.png) · [Overlay](tests/visual/comparisons/editor-overlay.png) · [Diff](tests/visual/comparisons/editor-diff.png) | 7.30 | 0.729 | app/editor/docking/product-ui + shell.css. Orden del árbol/tabs, minimapa, rama Git y runtime dependen del proyecto. Antialiasing e iconos tienen diferencias. |
 | search | [Golden](tests/visual/references/search.png) · [Resultado](tests/visual/current/search.png) · [Overlay](tests/visual/comparisons/search-overlay.png) · [Diff](tests/visual/comparisons/search-diff.png) | 5.96 | 0.757 | studio + pages.css. Ilustración local y filtros funcionales tienen diferencias menores de iconos/tipo. El estado vacío se conserva. |
-| settings | [Golden](tests/visual/references/settings.png) · [Resultado](tests/visual/current/settings.png) · [Overlay](tests/visual/comparisons/settings-overlay.png) · [Diff](tests/visual/comparisons/settings-diff.png) | 9.77 | 0.609 | workbench/controls + pages.css. Texto de seguridad y categorías avanzadas conservan información real. Blur y rasterizado varían por host. |
-| extensions | [Golden](tests/visual/references/extensions.png) · [Resultado](tests/visual/current/extensions.png) · [Overlay](tests/visual/comparisons/extensions-overlay.png) · [Diff](tests/visual/comparisons/extensions-diff.png) | 9.73 | 0.546 | workbench/preview + catalogue/dialogs.css. Paquetes, versiones, estados y compatibilidad son reales. No se copia la insignia Compatible del golden si no corresponde. |
+| settings | [Golden](tests/visual/references/settings.png) · [Resultado](tests/visual/current/settings.png) · [Overlay](tests/visual/comparisons/settings-overlay.png) · [Diff](tests/visual/comparisons/settings-diff.png) | 9.75 | 0.608 | workbench/controls + pages.css. Texto de seguridad y categorías avanzadas conservan información real. Blur y rasterizado varían por host. |
+| extensions | [Golden](tests/visual/references/extensions.png) · [Resultado](tests/visual/current/extensions.png) · [Overlay](tests/visual/comparisons/extensions-overlay.png) · [Diff](tests/visual/comparisons/extensions-diff.png) | 9.81 | 0.543 | workbench/preview + catalogue/dialogs.css. Paquetes, versiones, estados y compatibilidad son reales. No se copia la insignia Compatible del golden si no corresponde. |
 | laboratory | [Golden](tests/visual/references/laboratory.png) · [Resultado](tests/visual/current/laboratory.png) · [Overlay](tests/visual/comparisons/laboratory-overlay.png) · [Diff](tests/visual/comparisons/laboratory-diff.png) | 10.91 | 0.373 | foundation-ui + laboratory.css. El usuario pidió simplificar la vista en R7: cinco secciones persistentes sustituyen el hero y la cuadrícula completa. El golden original se conserva como historial; no es el objetivo vigente de esta pantalla. Las rutas no certifican ejecuciones. |
 | debug | [Golden](tests/visual/references/debug.png) · [Resultado](tests/visual/current/debug.png) · [Overlay](tests/visual/comparisons/debug-overlay.png) · [Diff](tests/visual/comparisons/debug-diff.png) | 9.05 | 0.497 | debug-workspace/lantern + debug-workspace.css. El usuario pidió simplificar Depuración en R8: un inspector seleccionado sustituye los cuatro bloques y el hero de Lantern. Se conserva el golden anterior como historial. Live, Lens, motores y valores siguen siendo reales. |
-| forge | [Golden](tests/visual/references/forge.png) · [Resultado](tests/visual/current/forge.png) · [Overlay](tests/visual/comparisons/forge-overlay.png) · [Diff](tests/visual/comparisons/forge-diff.png) | 9.64 | 0.480 | desktop-workflows/docking + windows.css. Marco y controles de acoplamiento difieren de la decoración OS. Contexto, ruta, herramientas y salida pertenecen al proyecto real. |
+| forge | [Golden](tests/visual/references/forge.png) · [Resultado](tests/visual/current/forge.png) · [Overlay](tests/visual/comparisons/forge-overlay.png) · [Diff](tests/visual/comparisons/forge-diff.png) | 9.72 | 0.476 | desktop-workflows/docking + windows.css. Marco y controles de acoplamiento difieren de la decoración OS. Contexto, ruta, herramientas y salida pertenecen al proyecto real. |
 
 ## Bienvenida vigente
 
@@ -71,3 +71,15 @@ muestras seleccionadas en `tests/visual/responsive`.
 
 Este informe registra resultados y diferencias; no certifica equivalencia total
 con las ocho imágenes ni paridad total con VS Code.
+
+## R11 · Melody y temas efectivos
+
+[One Dark Pro estable](tests/visual/current/one-dark-stable.png) · [Melody hablando](tests/visual/current/melody-speaking.png).
+
+La fila de archivos/ayuda ocupa una sola línea y las cuatro acciones caben a 1672×917. La voz utiliza iconos de la familia SVG y tokens existentes; no cambia la altura de los paneles. El player usa texto legible sobre la superficie efectiva y controles de pausa/parada.
+
+14 comprobaciones de voz/tema verifican selección, autenticación, audio real de Emma reproducido, pausa/reanudación, cancelación, persistencia del tema y cambio nativo atómico. La captura de conversación usa un fixture de IA; el WAV procede de MOSS real y esa generación se registra aparte. No se presenta el texto del fixture como respuesta de un proveedor real.
+
+R11 repite 13 vistas nativas y 24 combinaciones de escala/resolución (72 capturas). Las imágenes de referencia permanecen intactas. La restauración de colores se verifica antes de recibir las contribuciones; el control de tema muestra la variante efectiva.
+
+No se certifica equivalencia óptica perfecta ni cobertura del 90 % de VS Code. Los límites específicos del material, contenido y otras pantallas siguen descritos en las filas anteriores.

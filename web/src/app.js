@@ -66,16 +66,19 @@ function applyTheme(theme,persistTheme=true) {
   const changed=document.documentElement.dataset.theme!==theme;
   if(changed)motion.theme();document.documentElement.dataset.theme=theme;
   if(persistTheme){try{localStorage.setItem('lumen.theme',theme);}catch(_){}}
+  paintThemeChrome(theme);
+}
+function paintThemeChrome(theme,external=null){
   const landscapePath=`/assets/landscape-${theme}.png`;
   $('#landscape').src=window.LUMEN_ASSETS?.[landscapePath]||landscapePath;
   const titles={day:'Light,<br>clarity, flow.',dark:'Build<br>brighter<br>tomorrow.',forest:'Build<br>brighter<br>worlds.'};
   $('#landscape-title').innerHTML=titles[theme];
   $('#landscape-caption').innerHTML=theme==='day'?'Build something<br>brighter.':'A little space<br>to think.';
   $('#theme-trigger').innerHTML=icon({day:'sun',dark:'moon',forest:'leaf'}[theme]);
-  $('#theme-trigger').setAttribute('aria-label','Tema: '+{day:'día',dark:'oscuro',forest:'bosque'}[theme]);
+  const label=external?.label||{day:'día',dark:'oscuro',forest:'bosque'}[theme];$('#theme-trigger').setAttribute('aria-label','Tema: '+label);$('#theme-trigger').title='Tema: '+label;$('#theme-trigger').dataset.effectiveTheme=external?.id||theme;
   scene?.setTheme(theme);
   try{localStorage.setItem('lumen.theme',theme);}catch(_){}
-  $$('.theme-card').forEach(card=>card.classList.toggle('selected',card.dataset.theme===theme));
+  $$('.theme-card').forEach(card=>card.classList.toggle('selected',!external&&card.dataset.theme===theme));
 }
 function applySettings(){
   persist();editor?.applySettings(settings);
@@ -261,7 +264,7 @@ function showMenu(anchor,items,label=''){
   requestAnimationFrame(()=>pop.querySelector('[role=menuitem]')?.focus());
   pop.querySelectorAll('[data-menu-index]').forEach(button=>button.onclick=guard(async()=>{const item=items[+button.dataset.menuIndex];closePopover();if(item.run)await item.run();else if(item.action)await perform(item.action,anchor);}));
 }
-function themeMenu(anchor){showMenu(anchor,[{label:'Día',theme:'day',shortcut:'Ctrl Alt 1',run:()=>applyTheme('day')},{label:'Oscuro',theme:'dark',shortcut:'Ctrl Alt 2',run:()=>applyTheme('dark')},{label:'Bosque',theme:'forest',shortcut:'Ctrl Alt 3',run:()=>applyTheme('forest')},{separator:true},{label:'Personalizar apariencia',icon:'settings',action:'settings'}],'Ambiente Zénit');}
+function themeMenu(anchor){const external=platformUI?.extensionThemes?.find(t=>t.id===platformUI.prefs['appearance.extensionTheme']);showMenu(anchor,[...(external?[{label:external.label,icon:'check',run:()=>platformUI.themePicker.open()},{separator:true}]:[]),{label:'Elegir tema de extensión',icon:'palette',run:()=>platformUI?.themePicker.open()},{separator:true},{label:'Día',theme:'day',shortcut:'Ctrl Alt 1',run:()=>applyTheme('day')},{label:'Oscuro',theme:'dark',shortcut:'Ctrl Alt 2',run:()=>applyTheme('dark')},{label:'Bosque',theme:'forest',shortcut:'Ctrl Alt 3',run:()=>applyTheme('forest')},{separator:true},{label:'Personalizar apariencia',icon:'settings',action:'settings'}],'Ambiente Zénit');}
 
 async function setView(view){
   studio?.enter();
@@ -572,7 +575,7 @@ async function initializeDocuments(){
   renderTabs();renderTree();updateDocumentStatus();
 }
 async function start(){
-  renderIcons();applyTheme(document.documentElement.dataset.theme,false);setupEvents();
+  renderIcons();if(!document.documentElement.dataset.extensionTheme)applyTheme(document.documentElement.dataset.theme,false);else paintThemeChrome(document.documentElement.dataset.theme);setupEvents();
   dock=new DockManager($('#workspace'),motion);
   document.addEventListener('lumen:organize',event=>layoutSettingsDialog(event.detail.panel));
   polish=installInteractions({motion,reorderFile,activateFile,closeFile:guard(closeFile)});
@@ -587,7 +590,7 @@ async function start(){
     sceneStatus=service.babylon?'Babylon.js + Three.js · Lenon Glass':'Cristal CSS';
     await checkWorkspace(false);
     renderTerminalContent();
-    platformUI=new LumenPlatform({api,notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
+    platformUI=new LumenPlatform({api,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
       isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;

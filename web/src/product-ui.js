@@ -18,7 +18,7 @@ export function installProductUI(host){
     menu.onclick=()=>host.showMenu(menu,hidden.map(button=>({label:button.getAttribute('aria-label')||button.title||button.textContent.trim(),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'settings',disabled:button.disabled,run:()=>button.click()})),'Acciones');
   }
   compact(document.querySelector('#project-panel .heading-actions'),'[data-action="new-file"],[data-action="project-menu"],[data-collapse-panel],[title*="escritorio"]');
-  compact(document.querySelector('#assistant-panel .heading-actions'),'[title*="escritorio"]');
+  compact(document.querySelector('#assistant-panel .heading-actions'),'[title*="escritorio"],.melody-selection-voice');
   compact(document.querySelector('.editor-tabbar'),'.file-tab,.new-tab,.file-group');
   const crumbs=document.createElement('span');crumbs.className='breadcrumbs-actions';
   for(const [action,glyph,label] of [['run','play','Ejecutar archivo'],['debug-view','bug','Depurar archivo'],['settings','settings','Ajustes']]){
@@ -45,6 +45,10 @@ export function installProductUI(host){
   const input=document.querySelector('#ai-input');input.placeholder='Escribe un mensaje a Melody…';
   const edit=document.getElementById('ai-edit-file');if(edit){edit.classList.add('ai-edit-file');edit.title='Editar archivo con permiso';edit.setAttribute('aria-label','Editar archivo con permiso');edit.innerHTML=icon('code');document.querySelector('.ai-composer').append(edit);}
   document.querySelector('.send-button').innerHTML=icon('arrow-right');
+  const tools=document.createElement('div');tools.className='melody-tools-row';
+  const files=document.getElementById('ai-files-project'),companion=document.querySelector('.melody-companion-toggle');
+  if(files)tools.append(files);if(companion)tools.append(companion);
+  (document.querySelector('.melody-voice')||document.getElementById('ai-form')).before(tools);
   const context=document.querySelector('.composer-context>button');if(context){context.dataset.action='context-picker';context.innerHTML=icon('context')+'<span>Contexto: archivo actual</span>';context.onclick=event=>{event.stopPropagation();host.showMenu(context,[{label:'Archivo actual',icon:'file',run:()=>host.perform('ai-settings')},{label:'Refactorizar el código',icon:'refactor',run:()=>{input.value='Propón una refactorización de este código.';input.focus();}}],'Contexto y asistencia');};}
   let locale;
   const refresh=()=>{

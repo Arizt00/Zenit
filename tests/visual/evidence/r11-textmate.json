@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Real Oniguruma tokens respect parent scope theme selectors and comment injections",
+    "Multiline TextMate state is preserved",
+    "Disabling a grammar restores the built-in Python tokenizer",
+    "Grammar reactivation keeps encoded colours aligned",
+    "x86-64 sum executes 36 real instructions and displays decimal values",
+    "The shipped x86-64 example loads into the undoable unsaved editor buffer",
+    "ASM controls, registers and examples fit three widths and three themes"
+  ],
+  "errors": []
+}
