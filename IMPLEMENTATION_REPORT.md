@@ -99,3 +99,25 @@ Los recibos del build, publicación, instalación y verificación del helper
 congelado se incorporan en `tests/visual/evidence/windows-r9-*.json` después
 de ejecutar cada paso. R9 prepara instalador/portable Windows con SHA-256.
 Esta entrega no reconstruye Linux/macOS ni añade firma/notarización.
+
+
+## Distribución verificada de R9
+
+El build procede de `9f547d3247049250c57bbf3ad0046c79f8034271` y está publicado en
+[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.9).
+Instalador: 112982720 bytes; portable:
+70760881 bytes. Los cinco assets tienen SHA-256
+confirmado por GitHub; no se sustituyen releases anteriores.
+
+Se superan 15 comprobaciones del paquete nativo y 10 del helper instalado.
+Los 94 archivos de frontend/assets/bridges coinciden byte por byte con el
+build. La comprobación instalada usa un Vira real en perfil QA aislado:
+contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
+Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
+de archivos. El consentimiento de IA sigue desactivado al iniciar.
+
+`app-0.5.3-R9` conserva el payload R8, los cuatro archivos de perfil
+comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
+La respuesta real de GitHub permite al actualizador R8 seleccionar R9 con
+el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
+Los recibos completos están en `tests/visual/evidence/windows-r9-*.json`.
