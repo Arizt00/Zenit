@@ -1,0 +1,37 @@
+{
+  "checks": [
+    "Tables, headings, lists and links render real response text without executing HTML or loading images",
+    "Copy preserves exact fenced code and the voice action still attaches to the answer",
+    "The actual Monaco context menu is compact, themed and has consistent SVG icons",
+    "The selected theme and real Java highlighting survive a split and editor setting change",
+    "Four VS Code workbench commands open real Z\u00e9nit controls from a real Node extension and acknowledge completion",
+    "An empty theme catalogue rejects the extension command even when a previous hidden picker remains in the DOM",
+    "The compact two-column profile saves a real cropped WebP and restores the name",
+    "The smaller catalogue shows the actual selected theme preview and opens the real VSIX inspector",
+    "Catalogue, profile and formatted conversation stay within three desktop sizes",
+    "Welcome atmosphere follows the active theme while retaining the Blender/Babylon canvas",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "metrics": {
+    "contextMenu": {
+      "x": 604,
+      "y": 235,
+      "width": 360,
+      "height": 337
+    },
+    "profile": {
+      "x": 496,
+      "y": 232.40625,
+      "width": 680,
+      "height": 452.1875
+    },
+    "extensionHero": {
+      "x": 366,
+      "y": 136,
+      "width": 840.6875,
+      "height": 164
+    }
+  },
+  "fixture": "QA project, generated avatar and explicit model text; real installed theme and Node extension. Not an external AI quality test."
+}

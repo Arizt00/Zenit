@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R12
+# Límites reales · Zénit 0.5.3 R13
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -120,3 +120,20 @@ referencias privadas no se redistribuyen. Español, 2500 caracteres de prosa,
 bloques de código omitidos y un trabajo simultáneo. La petición real de prueba
 tardó 37,28 s para 4,24 s de voz: todavía no es instantánea. La voz online de
 OpenAI no se activa en esta revisión. Se mantienen los demás límites de R11.
+
+
+## R13 · alcance añadido
+
+- Se implementan cuatro comandos de apertura de controles con confirmación real.
+  Esto no supone equivalencia de todos los comandos del workbench, de sus argumentos
+  ni del inventario getCommands. Abrir el selector no significa que se aplique un tema.
+- Markdown cubre títulos, fences, tablas, listas simples, citas, énfasis y enlaces
+  http/https. No es un parser CommonMark completo: faltan listas anidadas, tablas con
+  todas las alineaciones y construcciones avanzadas. HTML e imágenes no se ejecutan.
+- Los checks de Melody usan fixtures UI explícitas. No se ha mejorado ni certificado
+  la calidad de todos los proveedores, predicciones ni la tasa de acierto de consejos.
+- La esfera continúa siendo un shader artístico con geometría Blender; los intervalos
+  de frame observados no son 60 FPS estables. El paisaje sigue siendo raster y la
+  emulación de escalas no sustituye pruebas de cada monitor/driver/DPI del sistema.
+- La voz vigente sigue siendo Qwen de Emma, con sus dependencias locales y latencia
+  de generación de R12. No se conecta una suscripción de ChatGPT a su API de audio.

@@ -1,4 +1,5 @@
 import {icon} from './icons.js';
+import {renderMarkdown} from './assistant-markdown.js';
 
 export function adviceLines(text,lineCount){
   const lines=new Set();for(const match of String(text).matchAll(/(?:\bl(?:í|i)neas?|\blines?|\bL)\s*:?\s*(\d+)(?:\s*[-–—]\s*L?(\d+))?/gi))for(const value of match.slice(1)){const n=Number(value);if(Number.isInteger(n)&&n>=1&&n<=lineCount)lines.add(n);}
@@ -112,8 +113,8 @@ export class MelodyCompanion {
     for(const button of this.panel.querySelectorAll('footer button'))button.disabled=state.status==='analyzing'||!enabled;
     if(state.text!==undefined)this.panel.querySelector('pre').textContent=state.text||'El proveedor no ha devuelto una sugerencia.';
     this.panel.querySelector('pre').classList.toggle('is-code',!!state.prediction);
-    const sections=state.status==='ready'&&!state.prediction?adviceSections(state.text):[];this.panel.querySelector('pre').hidden=!!sections.length;this.answer.hidden=!sections.length;this.accept.hidden=true;
-    if(sections.length){this.answer.replaceChildren();for(const section of sections){const block=document.createElement('section'),heading=document.createElement('strong'),body=document.createElement('p');heading.textContent=section.title;body.textContent=section.body;if(section.title)block.append(heading);block.append(body);this.answer.append(block);}}
+    const rich=state.status==='ready'&&!state.prediction,sections=rich?adviceSections(state.text):[];this.panel.querySelector('pre').hidden=rich;this.answer.hidden=!rich;this.accept.hidden=true;
+    if(rich){this.answer.replaceChildren();if(sections.length){for(const section of sections){const block=document.createElement('section'),heading=document.createElement('strong');heading.textContent=section.title;if(section.title)block.append(heading);block.append(renderMarkdown(section.body));this.answer.append(block);}}else this.answer.append(renderMarkdown(state.text||'El proveedor no ha devuelto una sugerencia.'));}
     this.spokenAdvice=state.status==='ready'&&!state.prediction?state.text:'';this.listen.hidden=!this.spokenAdvice;if(!this.spokenAdvice)this.platform.voice?.stop(this).catch(()=>{});
     if(state.status==='waiting')this.panel.querySelector('pre').textContent='Los consejos aparecerán aquí. Se comprobará la revisión antes de mostrarlos.';
     if(['waiting','analyzing','error','limit'].includes(state.status)){this.clearAdvice();this.clearPrediction();}

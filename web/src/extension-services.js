@@ -23,6 +23,16 @@ export class ExtensionServicesUI {
     if(event.command==='zenit.terminal.hide'){if(p.activeTerminal===event.terminal)p.useConsole();return;}
     if(event.command==='zenit.debug.show'){await h.studio.debug();return;}
     if(event.command==='zenit.command'){
+      if(event.request){
+        let result={ok:true};try{
+          if(event.id==='workbench.action.selectTheme'){p.themePicker.open();if(!document.querySelector('.theme-picker')?.getClientRects().length)throw Error('No hay temas instalados para abrir el selector.');}
+          else if(event.id==='workbench.action.showCommands')h.studio.host.palette('>');
+          else if(event.id==='workbench.action.quickOpen')h.studio.host.palette(typeof event.arguments?.[0]==='string'?event.arguments[0]:'');
+          else if(event.id==='workbench.action.openSettings')await p.settings();
+          else throw Error('Comando visual no implementado.');
+        }catch(error){result={ok:false,error:error.message};}
+        await p.api('/extensions/pick',{id:event.request,value:result});return;
+      }
       if(event.id==='workbench.action.reloadWindow')location.reload();
       if(event.id==='workbench.action.terminal.focus')h.dock.show('console');
       return;

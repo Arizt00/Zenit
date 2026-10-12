@@ -1,0 +1,29 @@
+{
+  "screens": {
+    "extensions": {
+      "channelMAE": [
+        0.9325154054463014,
+        0.9634143478056696,
+        1.1142487986099878
+      ],
+      "meanMAE": 1.0033928506206529,
+      "lowFrequencyMAE": 0.6318424519797518,
+      "lumaBlockSSIM": 0.9794915891169006,
+      "overlay": "extensions-overlay.png",
+      "diff": "extensions-diff.png"
+    },
+    "welcome": {
+      "channelMAE": [
+        17.00581911058006,
+        16.106374541489046,
+        16.050902542616083
+      ],
+      "meanMAE": 16.38769873156173,
+      "lowFrequencyMAE": 16.081977671451355,
+      "lumaBlockSSIM": 0.8312750293292235,
+      "overlay": "welcome-overlay.png",
+      "diff": "welcome-diff.png"
+    }
+  },
+  "interpretation": "Changes requested by the user relative to the supplied QA screenshots; not a fidelity percentage. All viewports retained without stretching."
+}

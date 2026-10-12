@@ -53,7 +53,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         vec2 q=uv+vec2(sin(uv.y*3.+t*.7),cos(uv.x*2.7-t*.6))*.09;
         float thickness=.45+.15*sin(q.x*2.4+q.y*1.9+t*.55)+.065*sin(q.y*4.2-q.x*2.1-t*.4);
         vec3 spectrum=.5+.5*cos(6.2831853*(thickness*(1.2+facing*.3)+vec3(.0,.32,.64)));
-        vec3 pearl=vec3(.73,.62,.96),pink=vec3(.99,.75,.91),ice=vec3(.69,.89,.99);
+        vec3 pearl=vec3(.69,.55,.98),pink=vec3(.99,.72,.90),ice=vec3(.61,.87,.99);
         vec3 mint=vec3(.83,.96,.92),gold=vec3(1.,.97,.82);
         // Advected light fields converge and separate; the shell reflection stays still.
         vec2 a=vec2(-.34+.28*sin(t*.93), .38+.22*cos(t*.73));
@@ -73,7 +73,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         vec3 film=mix(volume,mix(vec3(.90,.88,1.),spectrum,.52),fresnel*.65);
         // Clear central window and a denser curved meniscus, rather than a filled gradient.
         float band=exp(-pow((radius-(.73+.055*sin(angle*2.+t*.32)))*9.,2.));
-        float colourWeight=.38+.48*radius+.24*band+.19*fresnel;
+        float colourWeight=.32+.52*radius+.24*band+.19*fresnel;
         colourWeight+=.13*(p3+p4);
         vec3 color=mix(vec3(.967,.977,1.),film,clamp(colourWeight,0.,.97));
         #ifdef LENS
@@ -106,7 +106,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         float pinSpec=exp(-dot((uv-vec2(.36,.33))*vec2(34.,80.),(uv-vec2(.36,.33))*vec2(34.,80.)));
         color=mix(color,vec3(1.,.95,.76),lowerGlow*.64+mainGlow*.28);
         float star=exp(-dot(hr*vec2(7.,95.),hr*vec2(7.,95.)))+exp(-dot(hr*vec2(90.,7.),hr*vec2(90.,7.)));
-        float highlight=clamp(mainGlow*.40+mainSpec+star*.65+lowerSpec+upperArc*.92+lowerArc+sideSpec*.7+pinSpec*.8,0.,1.);
+        float highlight=clamp(mainGlow*.40+mainSpec+star*.32+lowerSpec+upperArc*.92+lowerArc+sideSpec*.7+pinSpec*.8,0.,1.);
         color=mix(color,vec3(1.),highlight);
         // Reflected internal sheets sharpen the pearl without rotating its shell.
         float caustic=exp(-pow((length((uv-vec2(-.16,.03))*vec2(.93,1.08))-.82)*34.,2.));
@@ -161,7 +161,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
     if(hero||welcome){
       // The compact welcome retains the glass lens and a single inclined orbit.
       const orbit=Array.from({length:181},(_,i)=>{const t=i/180*Math.PI*2,x=Math.cos(t)*(welcome?1.55:2.55);return new B.Vector3(x-(welcome?0:.25),Math.sin(t)*.38+x*.34,Math.sin(t)*.85);});
-      ribbon=B.MeshBuilder.CreateTube('liquid-ribbon',{path:orbit,radius:.015,tessellation:12},scene);
+      ribbon=B.MeshBuilder.CreateTube('liquid-ribbon',{path:orbit,radius:welcome?.009:.015,tessellation:12},scene);
       const orbitalGlass=new B.StandardMaterial('orbital-glass',scene);orbitalGlass.disableLighting=true;orbitalGlass.emissiveColor=new B.Color3(1,.99,1);orbitalGlass.alpha=.55;orbitalGlass.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;orbitalGlass.backFaceCulling=false;ribbon.material=orbitalGlass;
     }
     // An actual offscreen view of the scene behind the lens, never a screen capture.

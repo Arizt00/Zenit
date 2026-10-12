@@ -432,6 +432,17 @@ class ExtensionServices:
             self.emit('zenit.quickinput',id=p['id'],visible=False);return {'ok':True}
         if method=='context.set':self.contexts[p['key']]=p.get('value');return None
         if method=='command.execute':
+            if p['id'] in ('workbench.action.selectTheme','workbench.action.showCommands','workbench.action.quickOpen','workbench.action.openSettings'):
+                ident=uuid.uuid4().hex;reply=threading.Event();prompt={'reply':reply,'result':None}
+                with self.lock:self.prompts[ident]=prompt
+                self.emit('zenit.command',id=p['id'],arguments=p.get('args',[]),request=ident)
+                try:
+                    if not reply.wait(12):raise ValueError('Zénit no confirmó la apertura del control solicitado.')
+                    result=prompt['result']
+                    if not isinstance(result,dict) or result.get('ok') is not True:raise ValueError(str((result or {}).get('error','El control no se abrió.')) if isinstance(result,dict) else 'Respuesta del control inválida.')
+                    return None
+                finally:
+                    with self.lock:self.prompts.pop(ident,None)
             if p['id'] in ('workbench.action.reloadWindow','workbench.action.terminal.focus'):self.emit('zenit.command',id=p['id'],arguments=p.get('args',[]));return None
             raise ValueError('Comando del IDE no implementado: '+p['id'])
         if method=='terminal.create':

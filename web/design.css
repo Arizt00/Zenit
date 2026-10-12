@@ -3,6 +3,7 @@
 @import url('/design/shell.css');
 @import url('/design/welcome.css');
 @import url('/design/melody.css');
+@import url('/design/assistant-markdown.css');
 @import url('/design/pages.css');
 @import url('/design/catalogue.css');
 @import url('/design/laboratory.css');
@@ -15,3 +16,4 @@
 @import url('/design/windows.css');
 @import url('/design/workspaces.css');
 @import url('/design/dialogs.css');
+@import url('/design/profile.css');

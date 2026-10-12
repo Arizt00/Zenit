@@ -1699,7 +1699,7 @@
         365.66668701171875,
         135.6666717529297,
         841.34375,
-        202
+        164
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1707,10 +1707,10 @@
         "400",
         "18.85px"
       ],
-      "padding": "42px 30px 26px",
+      "padding": "24px 24px 20px",
       "gap": "normal",
       "radius": "16px",
-      "border": "0px none rgb(16, 19, 60)",
+      "border": "0.666667px solid color(srgb 0.913726 0.917647 0.980392 / 0.65)",
       "background": "rgba(0, 0, 0, 0)",
       "color": "rgb(16, 19, 60)",
       "opacity": "1",
@@ -1720,7 +1720,7 @@
     ".extension-card": {
       "bounds": [
         365.66668701171875,
-        446.66668701171875,
+        408.66668701171875,
         841.34375,
         98
       ],

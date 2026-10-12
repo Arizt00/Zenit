@@ -1,0 +1,23 @@
+{
+  "python": {
+    "executed": 297,
+    "passed": 292,
+    "skipped": 5
+  },
+  "nodePassed": 88,
+  "syntaxFiles": 62,
+  "uiChecks": {
+    "refinement": 11,
+    "correction": 21,
+    "voice-ui": 14,
+    "themes": 10,
+    "files-ui": 7,
+    "debug-output": 12,
+    "textmate": 7
+  },
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "originalReferencesUnchanged": true,
+  "ai": "Explicit UI text/transport fixtures; no external model benchmark. R12 actual Qwen WAV replayed, no new identity generation."
+}

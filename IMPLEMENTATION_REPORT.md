@@ -1,177 +1,99 @@
-# Implementación · Zénit 0.5.3 Preview R12
+# Implementación · Zénit 0.5.3 Preview R13
 
-## Corrección solicitada de la voz de Emma
+## Resultado y alcance
 
-R11 seleccionaba `moss-approved` mediante authorizedVoiceDirectory. La aplicación
-Emma actual selecciona su asistente mediante assistantVoice('emma'), que resuelve
-la identidad nueva preparada el 4 de octubre y elegida por el usuario con Qwen.
-R12 utiliza ese mismo selector y mantiene sus validaciones de identidad y hashes.
-No modifica Emma, sus referencias ni sus parámetros de voz.
+Esta revisión continúa las correcciones de R11/R12 y trabaja sobre las capturas
+del editor, catálogo, conversación, perfil y portada. Mantiene Monaco, terminales
+PTY, Open VSX/VSIX, proveedores de Melody, Lantern, Laboratory y depuración reales.
+No sustituye estas funciones por una maqueta. Las referencias originales quedan
+intactas; las dos últimas capturas aportadas se conservan por separado para comparar
+la evolución solicitada. No certifica el 90 % de toda la API de VS Code.
 
-Archivos funcionales: `backend/emma_voice_bridge.mjs`, `backend/melody_voice.py`.
-El bridge exige la identidad nueva de Emma, disponibilidad del motor Qwen y
-coincidencia del motor en la respuesta terminada. Falta de voz/modelo o una
-identidad distinta devuelve un error; no cae silenciosamente en MOSS ni una
-voz de sistema. El audio sigue siendo local, autenticado, no-store, cancelable
-y limitado a 2500 caracteres de prosa. Se conservan los controles de R11.
+## Componentes y archivos
 
-Se actualizan versión/instalador a R12 y el test del player para comprobar la
-duración real del WAV de entrada, sin fijarla al audio antiguo. Tres tests Node
-nuevos verifican identidad nueva, ausencia de fallback e igualdad del motor.
-Los 85 tests Node pasan. Siete tests Python relacionados con voz/configuración
-pasan; 14 comprobaciones UI de voz/tema se repiten con el nuevo audio. No se
-repite la matriz completa de R11, porque la composición de UI no cambia aquí.
+| Cambio | Archivos funcionales | Contrato conservado |
+| --- | --- | --- |
+| Menú compacto, SVG coherentes y mismo aspecto en DOM/Shadow DOM | `web/src/monaco-overlays.js`, `web/src/icons.js`, `web/design/support.css` | Acciones y navegación de Monaco; paneles reales |
+| Respuestas y consejos con títulos, listas, tablas, enlaces y código | `web/src/assistant-markdown.js`, `web/src/app.js`, `web/src/melody-companion.js`, `web/design/assistant-markdown.css`, `web/design/melody.css` | Texto real, copia exacta, revisión de edición, referencias de línea y lectura |
+| Perfil en dos columnas | `web/src/studio.js`, `web/design/profile.css` | Arrastre, zoom, crop normalizado, WebP de 512 px, nombre y guardado local |
+| Catálogo más ligero y miniatura del tema real | `web/src/workbench.js`, `web/design/catalogue.css` | Estado/compatibilidad, filtro, dependencias, VSIX, host y selector de variantes |
+| Atmósfera de inicio por tema y refinamiento óptico | `web/design/welcome.css`, `web/src/glass.js` | Canvas persistente, Blender/Babylon/WebGL2, movimiento limitado y pausa |
+| Cuatro comandos de extensiones confirmados por la interfaz | `backend/extension_services.py`, `web/src/extension-services.js` | Node real → backend → UI → respuesta; timeout/error si no se abre |
+| Integración y metadatos R13 | `web/design.css`, `backend/version.py`, `packaging/version.txt`, `packaging/lumen.spec`, `web/src/setup.js`, `package.json` | Build e instalador identifican la revisión correcta |
 
-Generación Qwen real: 4.24 s a 24000 Hz,
-pico 0.531, cero muestras saturadas. Tiempo medido de esta petición:
-37.28 s. No se declara voz instantánea ni calidad
-perceptual validada para todos los textos. Las pruebas UI reutilizan ese WAV
-real y un fixture explícito de IA; no evalúan un proveedor externo.
+Se retiran los estilos de perfil duplicados de `support.css`; el perfil tiene una
+única hoja específica. El menú de Monaco inyecta una única definición tanto en el
+documento como en los ShadowRoots; los glifos son decorativos y no sustituyen los
+handlers del editor. El observer actúa al aparecer menús, sin reconstruir el
+workbench en cada frame. Las animaciones respetan la preferencia global y reduced-motion.
 
-Se elige la voz nueva local ya preparada, como autorizó el usuario. No se activa
-una voz online ni se solicitan/copían credenciales. OpenAI ofrece integración de
-voz mediante su API de audio; no se afirma que estas voces sean idénticas a la
-selección de ChatGPT ni se conecta una cuenta sin configurar ese servicio.
+## Sistema visual
 
-Evidencia: `tests/visual/evidence/r12-*`,
-`tests/visual/current/melody-new-voice.png`. Los resultados de R11 siguientes
-son históricos y siguen describiendo la implementación conservada.
+Se reutilizan `web/design/tokens.css`: espacios 2/4/6/8/10/12/16/20/24/32 px,
+radios de control/tarjeta/panel/hoja, superficies, texto, estados, bordes, sombras
+y duración rápida/normal/lenta. Perfil, tablas, bloques de código y controles del
+catálogo usan estos tokens. Las dimensiones del crop y la miniatura son geometría
+del componente. Los valores del shader representan el material, no espaciado CSS.
 
----
+La portada combina el fondo existente con una máscara dependiente del tema y
+campos luminosos discretos. La esfera conserva la doble pared de Blender y su
+renderizado Babylon; se ajustan el peso del color, el reflejo estrellado y la órbita.
+No se presenta un paisaje raster como terreno 3D ni el shader como óptica físicamente exacta.
 
-# Implementación · Zénit 0.5.3 Preview R11
+## Paridad de extensiones
 
-## Cambios y causas verificadas
+`workbench.action.selectTheme`, `workbench.action.showCommands`,
+`workbench.action.quickOpen` y `workbench.action.openSettings` abren el control real
+correspondiente. Esperan hasta 12 s a la confirmación del renderer. La ausencia de
+temas, un comando desconocido, falta de respuesta o proyecto sin confianza se
+rechazan. Abrir el selector no equivale a aplicar un tema; la selección sigue
+perteneciendo al usuario. No se anuncia un resultado de compilación o depuración.
 
-R11 continúa sobre `27f3067a927f0ced1ef93198f6d0ef10a077fb8d` (R10).
-La ventana del usuario comprobada al empezar era R10 y tenía One Dark Pro Darker.
-R10 había corregido el reinicio global de Monaco al copiar `theme` en un editor
-dividido. R11 comprueba esa corrección con One Dark Pro y Bearded Solarized Light.
-No se atribuye al usuario una causa que no se haya reproducido.
+## Melody y la voz vigente
 
-Se corrigen tres problemas adicionales: la barra mostraba el tema base en lugar
-del efectivo; el arranque/reload podía mostrar colores nativos hasta recibir las
-contribuciones; pasar a un tema nativo guardaba primero el borrado del tema de
-extensión, creando un estado intermedio. Ahora se restaura una instantánea de
-colores validada antes del CSS, se esperan las contribuciones antes de resolver
-el tema y ambos ajustes se guardan en una única operación. Respuestas antiguas
-de contribuciones no reemplazan el estado de una petición más reciente.
-Un tema ausente se comunica con un error explícito y fallback nativo.
+El renderer usa nodos de texto y elementos DOM; no ejecuta HTML del proveedor ni
+carga imágenes. Solo admite enlaces http/https con noopener. El código conserva
+sus espacios al copiarse. Las tablas pueden desplazarse dentro del panel. Los
+consejos estructurados usan el mismo renderer; las predicciones siguen limitadas
+a ocho líneas y a la revisión/cursor actuales, con aceptación explícita y Deshacer.
 
-## Arquitectura y archivos
+Se mantiene la nueva voz Qwen de Emma seleccionada en R12 mediante
+`assistantVoice('emma')`, con verificación de identidad y sin fallback silencioso
+a la antigua MOSS. La generación real de R12 produjo 4,24 s de audio en 37,28 s;
+R13 vuelve a verificar el player con ese WAV, sin recargar el modelo ni copiar las
+referencias privadas. La voz online de OpenAI no se activa en esta entrega.
 
-- `web/src/theme-cache.js`, `theme-init.js`, `extension-theme.js`, `web/index.html`:
-  bootstrap clásico previo al CSS, whitelist de tokens y colores hex; no URLs,
-  CSS arbitrario, credenciales ni datos de proyecto en la instantánea.
-- `web/src/app.js`, `workbench.js`: controles del tema efectivo y actualización
-  atómica de preferencias; modelos, foco y canvases existentes se conservan.
-- `backend/extension_api.cjs`, `extension_runtime.py`, `extension_services.py`:
-  `workspace.getConfiguration('workbench').get/has/inspect/update('colorTheme')`
-  consulta y modifica el perfil real. Eventos de configuración y color llegan al
-  host Node. Solo Global está implementado; Workspace/WorkspaceFolder se rechazan.
-- `backend/melody_voice.py`, `emma_voice_bridge.mjs`, `emma_voice_worker.py`:
-  trabajos locales limitados y cancelables, usando la voz MOSS aprobada existente
-  de Emma y decodificación continua. PCM mono de 16 bits se convierte en WAV.
-  El audio reside en memoria y se entrega por una ruta autenticada `no-store`.
-- `web/src/melody-voice.js`, `melody-companion.js`, `workbench.js`,
-  `web/design/melody-voice.css`: Escuchar respuesta/consejo/selección; pausa,
-  reanudación y parada. Un consejo invalidado detiene su lectura. No hay lectura
-  automática, envío adicional de código ni cambios de archivo al escuchar.
-- `web/src/product-ui.js`, `web/design/melody.css`, `icons.js`: una fila compacta
-  de herramientas permite ver las cuatro acciones de Melody a 1672×917. Voz y
-  pausa usan la misma cuadrícula SVG de 24 unidades. Los controles usan tokens
-  existentes de espaciado, radio, borde, superficies y texto, sin `transition:all`.
-- `preferences.py`, `server.py`, `platform_services.py`, `packaging/lumen.spec`:
-  configuración independiente de la voz y empaquetado de los bridges; la voz
-  puede usarse aunque el proveedor de análisis sea otro. No se incluyen referencias
-  privadas ni modelos de Emma en el instalador público.
+## Validación
 
-## Verificación real
+297 tests Python ejecutados: 292 pasan y 5 se omiten explícitamente. Pasan los
+88 tests Node y los 62 controles de sintaxis. `tests/test_assistant_markdown.mjs`
+comprueba preservación de contenido y fences; `tests/test_ui_command_ack.py`
+verifica confirmación, error, timeout y confianza. El test nuevo de interfaz
+`tests/test_ui_refinement_r13.py` utiliza una extensión Node real, un tema instalado,
+un avatar QA generado y texto de prueba identificado; no mide calidad de IA externa.
 
-294 tests de Python: 289 aprobados y 5 omitidos por requisitos del entorno.
-82 tests Node aprobados; 61 archivos JavaScript comprobados sintácticamente.
-Se prueban 89 variantes reales, siete pares de contraste de texto, y los seis
-pasos de estabilidad de Bearded con los 16 colores ANSI originales en xterm.
-Una extensión Node real prueba lectura/escritura de colorTheme, cuatro tipos
-de tema y rechazo de temas inexistentes o targets todavía no implementados.
+- refinement: 11 comprobaciones, sin errores JS no controlados.
+- correction: 21 comprobaciones, sin errores JS no controlados.
+- voice-ui: 14 comprobaciones, sin errores JS no controlados.
+- themes: 10 comprobaciones, sin errores JS no controlados.
+- files-ui: 7 comprobaciones, sin errores JS no controlados.
+- debug-output: 12 comprobaciones, sin errores JS no controlados.
+- textmate: 7 comprobaciones, sin errores JS no controlados.
 
-14 comprobaciones nuevas de voz/tema/UI: One Dark Pro al dividir y cambiar
-preferencias; colores conservados antes de cargar contribuciones; transición
-nativa atómica; cuatro acciones visibles; reproducción, pausa, reanudación,
-parada, selección, autenticación y tamaños de escritorio. El player reutiliza
-un WAV generado en la comprobación MOSS real; el proveedor de IA es un fixture
-explícito. Esa prueba no evalúa la calidad del modelo de análisis.
+Las 13 vistas nativas usan WebView2 y DesktopAPI reales. Las cinco regiones de
+geometría mayor quedan dentro de 2 px de tolerancia. La matriz repite seis tamaños
+de 1280×720 a 3840×2160 y escalas 100/125/150/200 %: 24 casos, 72 capturas, sin
+overflow global. Es emulación de escala de Edge, no un cambio del DPI del sistema.
+Las pruebas de terminales usan tres sesiones ConPTY reales; las de Debug ejecutan
+Python real y comprueban cero mutaciones DOM en estados idle/paused sin cambios.
 
-La generación real MOSS produjo 6,88 s de audio a 24 kHz, pico 0,729 y cero
-muestras saturadas. Esa generación tardó 61,03 s en este equipo. No se presenta
-como voz instantánea, ni como evaluación perceptual de todos los textos.
-Se mantuvo el mismo procesamiento continuo aprobado para el vídeo anterior.
+## Rendimiento medido
 
-También pasan 21 comprobaciones de bienvenida/Monaco/Melody, 12 de depuración
-y output real, 7 de archivos/paneles/ConPTY y 7 de TextMate/ASM. Se ejecutan 13
-vistas de WebView2 y 24 combinaciones de resolución/escala con 72 capturas.
-Los cinco bounds principales pasan dentro de 2 px. Las referencias originales
-se conservan; overlay/diff no equivale a fidelidad perfecta ni a paridad de API.
+WebView2 nativo, ventana QA: 101 muestras en 3.00 s; intervalo mediano 29.10 ms, p95 45.80 ms, máximo 75.10 ms. CPU del render Babylon: mediana 0.60 ms, p95 0.90 ms. No se registran long tasks ni eventos de pérdida de contexto en esa muestra. No es una garantía de 60 FPS.
 
-Los informes y JSON están en `tests/visual/evidence/r11-*`; capturas y overlays
-en `tests/visual/current` y `tests/visual/comparisons`. `VISUAL_DIFF_REPORT.md`
-describe diferencias por pantalla. La matriz es emulación de escala en Edge;
-la captura nativa usa Windows al 150 %, sin cambiar la escala del usuario.
-
-## Límites
-
-No existe evidencia para certificar 90 % global de VS Code. OAuth integrado,
-esquemas virtuales, CustomDocument y otras APIs siguen pendientes según
-`KNOWN_LIMITATIONS.md`. Se amplía un contrato concreto, sin afirmar que todos
-los plugins funcionan. La mejora de análisis/predicción se prueba en su contrato
-de contexto/revisión/aceptación; no se certifica calidad de proveedores externos.
-
-Voz: utiliza una instalación local existente y validada de Emma/MOSS, en español.
-No descarga modelos, referencias privadas ni voces alternativas. Sin ese motor,
-con memoria insuficiente o ante un fallo, muestra el error real. Hasta 2500
-caracteres de prosa por lectura, sin bloques de código, un trabajo de generación
-a la vez. La reproducción tiene controles explícitos y libera su blob al parar.
-
-
-## Distribución verificada de R11
-
-El build procede de `2b6e6581f7163154c02d9c676a68919bb7dcfe99` y está publicado en
-[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.11).
-Instalador: 113074595 bytes; portable:
-70847109 bytes. Los cinco assets tienen SHA-256
-confirmado por GitHub; no se sustituyen releases anteriores.
-
-Se superan 15 comprobaciones del paquete nativo y 12 del helper instalado.
-Los 101 archivos de frontend/assets/bridges coinciden byte por byte con el
-build. La comprobación instalada usa un Vira real en perfil QA aislado:
-contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
-Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
-de archivos. El consentimiento de IA sigue desactivado al iniciar.
-
-`app-0.5.3-R11` conserva el payload R10, los cuatro archivos de perfil
-comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
-La respuesta real de GitHub permite al actualizador R10 seleccionar R11 con
-el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
-Después se añade únicamente `ai.voiceDirectory` para conectar la voz solicitada; las demás preferencias conservan sus valores. No se copian referencias ni se carga el modelo al configurar. Los recibos completos están en `tests/visual/evidence/windows-r11-*.json`.
-
-
-## Distribución verificada de R12
-
-El build procede de `dc61080b115167c8c117ce07dbef5085820166d0` y está publicado en
-[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.12).
-Instalador: 113074837 bytes; portable:
-70846820 bytes. Los cinco assets tienen SHA-256
-confirmado por GitHub; no se sustituyen releases anteriores.
-
-Se superan 15 comprobaciones del paquete nativo y 12 del helper instalado.
-Los 101 archivos de frontend/assets/bridges coinciden byte por byte con el
-build. La comprobación instalada usa un Vira real en perfil QA aislado:
-contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
-Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
-de archivos. El consentimiento de IA sigue desactivado al iniciar.
-
-`app-0.5.3-R12` conserva el payload R11, los cuatro archivos de perfil
-comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
-La respuesta real de GitHub permite al actualizador R11 seleccionar R12 con
-el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
-Después se añade únicamente `ai.voiceDirectory` para conectar la voz solicitada; las demás preferencias conservan sus valores. No se copian referencias ni se carga el modelo al configurar. Los recibos completos están en `tests/visual/evidence/windows-r12-*.json`.
+El muestreo inactivo de dos segundos registra cero mutaciones, cero render loops
+activos y cero long tasks. Los modelos, canvas y número de motores se conservan
+al recorrer las vistas. El efecto se pausa al quedar oculto o reducir el movimiento.
+Más detalle: `tests/visual/current/performance*.json`, `stability.json` y los recibos
+de `tests/visual/evidence/r13-*.json`. Los diffs son diagnósticos de imagen, no una
+puntuación de fidelidad o cobertura API.

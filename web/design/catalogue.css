@@ -7,11 +7,12 @@
 .extension-hero {
   flex: none;
   position: relative;
-  min-height: 202px;
+  min-height: 164px;
   margin: 0 22px;
-  padding: 42px 30px 26px;
+  padding: var(--space-9) var(--space-9) var(--space-8);
   border-radius: var(--radius-panel);
-  background: linear-gradient(115deg,var(--accent-soft),color-mix(in srgb,var(--accent-soft) 25%,var(--surface)));
+  background: radial-gradient(ellipse at 90% 20%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 65%),linear-gradient(115deg,color-mix(in srgb,var(--accent-soft) 60%,var(--surface)),var(--surface));
+  border:1px solid color-mix(in srgb,var(--border) 65%,transparent);
   overflow: hidden;
 }
 
@@ -21,9 +22,9 @@
 
 .extension-hero h3 {
   position: relative;
-  font-size: 32px;
+  font-size: 27px;
   font-weight: 650;
-  letter-spacing: -1.2px;
+  letter-spacing: -.7px;
   margin: 0 0 7px;
   z-index: 1;
   line-height: 1.15;
@@ -41,9 +42,9 @@
 
 .extension-benefits {
   display: flex;
-  gap: 24px;
+  gap: var(--space-7);
   align-items: center;
-  margin-top: 24px;
+  margin-top: var(--space-7);
   position: relative;
   z-index: 1;
   color: var(--secondary);
@@ -57,9 +58,9 @@
 }
 
 .extension-benefits .icon {
-  width: 34px;
-  height: 34px;
-  padding: 7px;
+  width: 28px;
+  height: 28px;
+  padding: 5px;
   color: var(--accent);
   background: var(--accent-soft);
   border-radius: 50%;
@@ -68,8 +69,8 @@
 .extension-art {
   position: absolute;
   right: 38px;
-  top: 28px;
-  color: #c8b4fb;
+  top: var(--space-7);
+  color: var(--accent-bright);
   opacity: .9;
   filter: drop-shadow(0 16px 10px #8b73d422);
 }
@@ -89,6 +90,10 @@
   margin: 20px 22px 16px;
   flex: none;
 }
+
+.extension-toolbar-start {display:flex;align-items:center;gap:var(--space-4);min-width:0;}
+.extension-import-shortcut {height:35px;min-height:35px;padding:0 var(--space-5);font-size:11px;}
+.extension-import-shortcut .icon {width:14px;height:14px;}
 
 .segmented-control {
   display: inline-flex;
@@ -113,7 +118,7 @@
 .segmented-control button.active {
   background: var(--accent-soft);
   color: var(--soft-text);
-  box-shadow: inset 0 0 0 1px #ffffffaa;
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .extension-toolbar .platform-search {
@@ -194,7 +199,16 @@
   border-radius: var(--radius-card);
   padding: 10px 16px;
   background: var(--surface);
+  transition:border-color var(--motion-fast),background-color var(--motion-fast);
 }
+
+.extension-card:hover {border-color:var(--border-strong);background:color-mix(in srgb,var(--hover) 45%,var(--surface));}
+.extension-theme-swatch {display:flex;align-items:center;position:relative;overflow:hidden;width:42px;height:38px;border:1px solid var(--border-strong);border-radius:6px;background:var(--swatch-bg);}
+.extension-theme-swatch>i {width:9px;height:100%;background:var(--swatch-side);border-right:1px solid var(--swatch-accent);}
+.extension-theme-swatch>span {display:grid;gap:5px;padding:5px;width:30px;}
+.extension-theme-swatch b {height:2px;border-radius:1px;background:var(--swatch-keyword);width:17px;}
+.extension-theme-swatch b:nth-child(2) {background:var(--swatch-string);width:13px;margin-left:3px;}
+.extension-theme-swatch b:nth-child(3) {background:var(--swatch-accent);width:19px;}
 
 .extension-card-top {
   grid-column: 1;
@@ -361,7 +375,7 @@
 @media (max-width:1400px) {
 
   .extension-hero h3 {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .extension-benefits {
@@ -416,8 +430,8 @@
   }
 
   .extension-hero {
-    padding: 28px 20px;
-    min-height: 180px;
+    padding: var(--space-8);
+    min-height: 154px;
   }
 
   .extension-hero h3 {
@@ -543,8 +557,8 @@
 }
 
 .extension-art img {
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   display: block;
   object-fit: contain;
 }

@@ -1,5 +1,5 @@
 {
-  "duration": 2012,
+  "duration": 2002.3000000044703,
   "frameInterval": {
     "samples": 0,
     "median": null,
@@ -32,8 +32,8 @@
     ]
   },
   "memory": {
-    "used": 55081744,
-    "total": 70579288
+    "used": 55721915,
+    "total": 69806231
   },
   "canvases": [
     {
@@ -80,8 +80,8 @@
     "RecalcStyleCount": 0,
     "LayoutDuration": 0,
     "RecalcStyleDuration": 0,
-    "ScriptDuration": 0.012238,
-    "TaskDuration": 0.036841
+    "ScriptDuration": 0.01792,
+    "TaskDuration": 0.054792999999999994
   },
   "timeline": {
     "Layout": {

@@ -1,3 +1,4 @@
+import {renderMarkdown} from './assistant-markdown.js';
 import {installProductUI} from './product-ui.js';
 import {installDiagnostics} from './diagnostics.js';
 import {installExplorerMenu} from './explorer-menu.js';
@@ -374,11 +375,7 @@ function appendChat(text,role='assistant',label=''){
   $('#assistant-hero').classList.add('hidden');$('#ai-actions').classList.add('hidden');$('#chat-messages').classList.remove('hidden');$('#assistant-body').classList.add('chatting');
   const message=document.createElement('div');message.className='chat-message '+role;
   const heading=document.createElement('small');heading.textContent=label||(role==='user'?'TÚ':'ZÉNIT · MODELO LOCAL');message.appendChild(heading);
-  const chunks=text.split(/```[^\n]*\n([\s\S]*?)```/g);
-  chunks.forEach((part,index)=>{
-    if(index%2){const pre=document.createElement('pre');pre.textContent=part;message.appendChild(pre);const copy=document.createElement('button');copy.className='copy-code';copy.textContent='Copiar código';copy.onclick=guard(async()=>{await navigator.clipboard.writeText(part);copy.textContent='Copiado';});message.appendChild(copy);}
-    else{const span=document.createElement('span');span.textContent=part;message.appendChild(span);}
-  });
+  if(role==='assistant')message.append(renderMarkdown(text,{copy:guard(async(value,button)=>{await navigator.clipboard.writeText(value);button.textContent='Copiado';})}));else{const body=document.createElement('span');body.textContent=text;message.append(body);}
   $('#chat-messages').appendChild(message);$('#chat-messages').scrollTop=$('#chat-messages').scrollHeight;return message;
 }
 async function sendAI(question){
