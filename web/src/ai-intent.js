@@ -6,3 +6,9 @@ export function requestsLiveEdit(question){
   if(/\b(explica|explicame|analiza|analizame|opina|depura|revisa|explain|analy[sz]e|review|debug)\b/.test(text)&&!/(?:y|despues|luego|and|then)\s+(?:por favor\s+)?(?:escribe|reescribe|modifica|edita|cambia|crea|genera|write|rewrite|edit|change|create)/.test(text))return false;
   return /(?:^|[.!?]\s*|\b(?:por favor|puedes|quiero que|necesito que|please|can you|and|y)\s+)(?:escribe|escribir|reescribe|reescribir|modifica|modificar|edita|editar|cambia|cambiar|crea|crear|genera|generar|anade|anadir|implementa|implementar|write|rewrite|edit|change|create|generate|implement)\b/.test(text)&&/\b(en vivo|real[ -]?time|tiempo real|live|archivo|codigo|file|code)\b/.test(text);
 }
+
+// A direct request enables a reviewable companion session, never live editing.
+export function requestsRealtimeHelp(question){
+  const text=String(question).replace(/```[\s\S]*?(?:```|$)/g,'').replace(/^\s*>.*$/gm,'').replace(/["“][^"”]*["”]/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  return /^(?:(?:por favor|puedes|please|can you)\s+)?(?:ayudame|acompaname|help me|assist me)\b/.test(text)&&/\b(?:en tiempo real|mientras (?:escribo|programo)|in real time|while (?:coding|i type))\b/.test(text)&&! /\b(?:no|sin|don't|do not|never)\b/.test(text);
+}

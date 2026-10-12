@@ -1,5 +1,5 @@
 // Preview extensions run in separate killable Node processes, not a security sandbox.
-const readline=require('node:readline'),Module=require('node:module'),{pathToFileURL}=require('node:url');
+const readline=require('node:readline'),Module=require('node:module'),{pathToFileURL,fileURLToPath}=require('node:url');
 const createAPI=require('./extension_api.cjs'),write=process.stdout.write.bind(process.stdout);
 console.log=console.info=(...args)=>process.stderr.write(args.map(String).join(' ')+'\n');
 // Helpers launched by extensions must never create incidental CMD windows.
@@ -16,6 +16,27 @@ const extensionStates=new Map(),bridges=new Map(),path=require('node:path');
 const {AsyncLocalStorage}=require('node:async_hooks'),extensionScope=new AsyncLocalStorage();
 function owner(parent){const file=parent?.filename?.toLowerCase();if(file)for(const [root,b] of bridges)if(file.startsWith(root+path.sep))return b;return extensionScope.getStore()||bridge;}
 const original=Module._load;Module._load=function(id,parent,...args){return id==='vscode'?owner(parent).vscode:id==='lumen'?api:original.call(this,id,parent,...args);};
+// ESM imports do not pass through Module._load. Resolve them to the *same*
+// per-extension API object; keep named/default imports and CJS identity intact.
+// Synchronous hooks run on this thread, preserving callbacks and scoped state.
+const esmAPIs=new Map();globalThis[Symbol.for('zenit.extension.esm')]=esmAPIs;
+if(Module.registerHooks)Module.registerHooks({
+  resolve(specifier,context,nextResolve){
+    if(specifier!=='vscode')return nextResolve(specifier,context);
+    let b;if(context.parentURL?.startsWith('file:'))b=owner({filename:fileURLToPath(context.parentURL)});
+    if(!b)throw Error('Import vscode fuera de una extensión autorizada.');
+    const key=b.context.extensionPath;esmAPIs.set(key,b.vscode);
+    return {url:'zenit-vscode:'+encodeURIComponent(key),format:'module',shortCircuit:true};
+  },
+  load(url,context,nextLoad){
+    if(!url.startsWith('zenit-vscode:'))return nextLoad(url,context);
+    const key=decodeURIComponent(url.slice('zenit-vscode:'.length)),vscode=esmAPIs.get(key);
+    if(!vscode)throw Error('La API de la extensión ya no está disponible.');
+    const names=Object.keys(vscode).filter(name=>/^[A-Za-z_$][\w$]*$/.test(name)&&name!=='default');
+    const source='const api=globalThis[Symbol.for("zenit.extension.esm")].get('+JSON.stringify(key)+');\nexport default api;\n'+names.map(name=>'export const '+name+'=api['+JSON.stringify(name)+'];').join('\n');
+    return {source,format:'module',shortCircuit:true};
+  }
+});
 async function request(message){
   if(message.method==='activate'){
     const authorised=[...(message.dependencies||[]),{id:message.extensionId,root:message.root,manifest:message.manifest,entry:message.entry}];
@@ -25,7 +46,7 @@ async function request(message){
       const item=authorised.find(x=>x.id.toLowerCase()===key);if(!item)throw Error('Dependencia no autorizada: '+id);
       if(record?.activating)throw Error('Activación circular: '+id);
       extensionStates.set(key,{activating:true});
-      const b=createAPI({...api,register,service,extensionState:id=>extensionStates.get(id.toLowerCase()),activateExtension,effect:e=>effects.push(e),commandIds:()=>[...commands.keys()],execute:async(id,args)=>{if(commands.has(id))return commands.get(id).fn(...args);if(id==='setContext')return service('context.set',{key:args[0],value:args[1]});if(id==='workbench.action.tasks.runTask')return b.services.runTask(args[0]);return service('command.execute',{id,args});}},{...message,id:item.id,root:item.root,manifest:item.manifest,storage:path.join(path.dirname(message.storage),item.id)});
+      const b=createAPI({...api,register,service,extensionState:id=>extensionStates.get(id.toLowerCase()),activateExtension,effect:e=>effects.push(e),commandIds:()=>[...commands.keys()],execute:async(id,args)=>{if(commands.has(id))return commands.get(id).fn(...args);if(id==='setContext')return service('context.set',{key:args[0],value:args[1]});if(id==='vscode.openWith')return b.services.openWith(...args);if(id==='workbench.action.tasks.runTask')return b.services.runTask(args[0]);return service('command.execute',{id,args});}},{...message,id:item.id,root:item.root,manifest:item.manifest,storage:path.join(path.dirname(message.storage),item.id)});
       bridges.set(path.resolve(item.root).toLowerCase(),b);if(key===message.extensionId.toLowerCase())bridge=b;
       const declared=item.manifest.lumen?.main||item.manifest.main;
       let entry=item.entry||path.resolve(item.root,declared||'');
@@ -46,6 +67,8 @@ async function request(message){
     return {commands:[...commands].map(([id,c])=>({id,title:c.title})),providers:capabilities,tokens,views:[...bridges.values()].flatMap(b=>b.treeViews.snapshot()),fileDecorations:[...bridges.values()].some(b=>b.hasFileDecorations()),unsupportedApis:[...new Set([...bridges.values()].flatMap(b=>[...b.unsupportedApis]))],dependencies:authorised.slice(0,-1).map(x=>x.id)};
   }
   if(!loaded)throw Error('Extensión no activada.');
+  if(message.method==='debugVisualization')return bridge.services.visualize(message.visualization);
+  if(message.method==='ports'){const items=[];for(const b of bridges.values())items.push(...(await b.portAttributes(message.ports)).items);return {items};}
   if(message.method==='webviewMessage'){for(const b of bridges.values()){const result=await b.services.message(message.panel,message.message);if(result.delivered)return result;}return {delivered:false};}
   if(message.method==='webviewDispose'){for(const b of bridges.values())b.services.disposePanel(message.panel);return {ok:true};}
   effects=[];active=message.document||active;for(const b of bridges.values())b.syncDocument(active);

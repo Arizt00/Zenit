@@ -64,7 +64,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -85,9 +85,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -134,7 +134,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -375,7 +375,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -396,9 +396,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -445,7 +445,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -686,7 +686,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -701,167 +701,13 @@
     ".ai-action-card": null,
     ".ai-composer": null,
     ".terminal-toolbar": null,
-    ".home-sidebar": {
-      "bounds": [
-        18,
-        73,
-        405,
-        824.3333740234375
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "36px 18px 20px",
-      "gap": "normal",
-      "radius": "20px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".profile-photo": {
-      "bounds": [
-        142.5,
-        109.66667175292969,
-        156,
-        156
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px",
-      "gap": "normal",
-      "radius": "0px",
-      "border": "0px none rgb(16, 19, 60)",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".home-sidebar>h1": {
-      "bounds": [
-        52.66666793823242,
-        291.66668701171875,
-        335.66668701171875,
-        49.270835876464844
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "44px",
-        "400",
-        "49.28px"
-      ],
-      "padding": "0px",
-      "gap": "normal",
-      "radius": "0px",
-      "border": "0px none rgb(16, 19, 60)",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".home-hero": {
-      "bounds": [
-        436,
-        73,
-        1218,
-        478
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px",
-      "gap": "normal",
-      "radius": "20px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".hero-copy h2": {
-      "bounds": [
-        488.66668701171875,
-        178.5104217529297,
-        576,
-        138.2291717529297
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "64px",
-        "400",
-        "69.12px"
-      ],
-      "padding": "0px",
-      "gap": "normal",
-      "radius": "0px",
-      "border": "0px none rgb(16, 19, 60)",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".recent-section": {
-      "bounds": [
-        436,
-        565,
-        1218,
-        332.3333435058594
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "16px 18px 20px",
-      "gap": "normal",
-      "radius": "20px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".recent-file": {
-      "bounds": [
-        455.3333435058594,
-        622.4271240234375,
-        1179.3333740234375,
-        55
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px 18px",
-      "gap": "20px",
-      "radius": "0px",
-      "border": "",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
+    ".home-sidebar": null,
+    ".profile-photo": null,
+    ".home-sidebar>h1": null,
+    ".home-hero": null,
+    ".hero-copy h2": null,
+    ".recent-section": null,
+    ".recent-file": null,
     ".search-intro h2": null,
     ".studio-search-field": null,
     ".search-filters": null,
@@ -953,7 +799,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -974,9 +820,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1023,7 +869,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1220,7 +1066,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1241,9 +1087,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1290,7 +1136,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1641,7 +1487,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1662,9 +1508,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1711,7 +1557,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1974,7 +1820,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -1995,9 +1841,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2044,7 +1890,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2241,7 +2087,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2262,9 +2108,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2288,7 +2134,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2311,7 +2157,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2552,7 +2398,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2573,9 +2419,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2622,7 +2468,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2863,7 +2709,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2884,9 +2730,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -2933,7 +2779,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3196,7 +3042,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3217,9 +3063,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3266,7 +3112,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3529,7 +3375,7 @@
       "radius": "10px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgba(255, 255, 255, 0.88)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3550,9 +3396,9 @@
       "padding": "8px 0px 0px",
       "gap": "normal",
       "radius": "0px",
-      "border": "0px none rgb(100, 115, 169)",
+      "border": "0px none rgb(83, 99, 142)",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(100, 115, 169)",
+      "color": "rgb(83, 99, 142)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3599,7 +3445,7 @@
       "radius": "0px",
       "border": "",
       "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(98, 113, 151)",
+      "color": "rgb(88, 104, 143)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
@@ -3721,10 +3567,10 @@
     },
     ".terminal-toolbar": {
       "bounds": [
-        357.66668701171875,
-        352.3333435058594,
-        942.6666870117188,
-        48
+        339.66668701171875,
+        203.6666717529297,
+        978.6666870117188,
+        42
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -3734,8 +3580,8 @@
       ],
       "padding": "0px 12px 0px 16px",
       "gap": "10px",
-      "radius": "13px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
+      "radius": "0px",
+      "border": "",
       "background": "rgb(253, 253, 255)",
       "color": "rgb(16, 19, 60)",
       "opacity": "1",
@@ -3770,29 +3616,7 @@
     ".lantern-question": null,
     ".debug-controls": null,
     ".debug-card": null,
-    ".forge-dashboard": {
-      "bounds": [
-        339.66668701171875,
-        203.6666717529297,
-        978.6666870117188,
-        148.6666717529297
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "18px",
-      "gap": "normal",
-      "radius": "0px",
-      "border": "",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
+    ".forge-dashboard": null,
     ".floating-panel": {
       "bounds": [
         339,
@@ -3816,29 +3640,7 @@
       "blur": "blur(18px)",
       "shadow": "rgba(39, 35, 67, 0.1) 0px 16px 40px 0px"
     },
-    ".forge-main": {
-      "bounds": [
-        357.66668701171875,
-        221.6666717529297,
-        942.6666870117188,
-        58
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px",
-      "gap": "16px",
-      "radius": "0px",
-      "border": "0px none rgb(16, 19, 60)",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
+    ".forge-main": null,
     ".command-palette": null
   },
   "forge-detached": {

@@ -1,0 +1,49 @@
+{
+  "generator": "Blender 5.0.1",
+  "coordinateSystem": "Babylon right-handed Y-up",
+  "meshes": [
+    {
+      "name": "Crystal outer wall",
+      "vertices": 6050,
+      "triangles": 12096,
+      "positions": {
+        "byteOffset": 0,
+        "count": 18150
+      },
+      "normals": {
+        "byteOffset": 72600,
+        "count": 18150
+      },
+      "indices": {
+        "byteOffset": 145200,
+        "count": 36288
+      }
+    },
+    {
+      "name": "Crystal inner wall",
+      "vertices": 6050,
+      "triangles": 12096,
+      "positions": {
+        "byteOffset": 290352,
+        "count": 18150
+      },
+      "normals": {
+        "byteOffset": 362952,
+        "count": 18150
+      },
+      "indices": {
+        "byteOffset": 435552,
+        "count": 36288
+      }
+    }
+  ],
+  "material": {
+    "ior": 1.46,
+    "roughness": 0.055,
+    "outerRadius": 1.375,
+    "innerRadius": 1.337
+  },
+  "source": "design/zenit-crystal.blend",
+  "byteLength": 580704,
+  "sha256": "f41f3182221f60d60bf7d5a38c55755e736be6772099e11554c47e14792b141c"
+}

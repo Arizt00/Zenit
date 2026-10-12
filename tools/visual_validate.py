@@ -6,7 +6,10 @@ def validate(folder):
  data=json.loads((folder/'baseline.json').read_text(encoding='utf-8'));gold=json.loads((ROOT/'tests/visual/geometry.json').read_text());checks=[];failures=[]
  for view,targets in gold['screens'].items():
   for selector,expected in targets.items():
-   actual=data['geometry'][view][selector];delta=[round(actual[key]-value,3) for key,value in zip(('x','y','width','height'),expected)]
+   actual=data['geometry'].get(view,{}).get(selector)
+   if not actual:
+    failures.append({'view':view,'selector':selector,'error':'Required region is absent'});continue
+   delta=[round(actual[key]-value,3) for key,value in zip(('x','y','width','height'),expected)]
    checks.append({'view':view,'selector':selector,'delta':delta,'withinTolerance':max(map(abs,delta))<=gold['tolerance']})
    if not checks[-1]['withinTolerance']:failures.append(checks[-1])
  if data['errors']:failures.append({'uncaughtJavaScript':data['errors']})

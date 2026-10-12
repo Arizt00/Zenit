@@ -15,6 +15,7 @@ import {LumenPlatform} from './workbench.js';
 import {DesktopWorkflows} from './desktop-workflows.js';
 import {WorkspaceProfiles} from './workspace-profiles.js';
 import {FoundationUI} from './foundation-ui.js';
+import {MelodyCompanion} from './melody-companion.js';
 
 const motion=new LumenMotion();
 let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,productUI=null,tabsSignature='';
@@ -113,11 +114,19 @@ async function openFile(path,line=null){
 function renderTabs(){
   const signature=JSON.stringify([...editor.models.keys()].map(path=>[path,path===editor.current,editor.isDirty(path)]));
   if(signature===tabsSignature)return;tabsSignature=signature;
-  const previousTabs=new Set([...$('#file-tabs').querySelectorAll('[data-tab]')].map(el=>el.dataset.tab));
-  $('#file-tabs').innerHTML=[...editor.models.values()].map(item=>`<button class="file-tab${item.path===editor.current?' active':''}" role="tab" tabindex="${item.path===editor.current?0:-1}" aria-selected="${item.path===editor.current}" draggable="true" aria-controls="editor-mount" data-tab="${esc(item.path)}" title="${esc(item.path)}">${fileIcon(item.path)}<span class="file-label">${esc(item.path.split('/').pop())}</span><span class="tab-close" data-close-file="${esc(item.path)}" aria-label="Cerrar archivo">${editor.isDirty(item.path)?'<i class="dirty-dot"></i>':icon('close')}</span></button>`).join('');
+  const container=$('#file-tabs'),previousTabs=new Map([...container.querySelectorAll('[data-tab]')].map(el=>[el.dataset.tab,el]));
+  for(const [path,tab] of previousTabs)if(!editor.models.has(path))tab.remove();
+  let index=0;
+  for(const item of editor.models.values()){
+    let tab=previousTabs.get(item.path);
+    if(!tab){tab=document.createElement('button');tab.className='file-tab';tab.setAttribute('role','tab');tab.draggable=true;tab.setAttribute('aria-controls','editor-mount');tab.dataset.tab=item.path;tab.title=item.path;tab.innerHTML=`${fileIcon(item.path)}<span class="file-label">${esc(item.path.split('/').pop())}</span><span class="tab-close" data-close-file="${esc(item.path)}" aria-label="Cerrar archivo"></span>`;}
+    const active=item.path===editor.current;tab.classList.toggle('active',active);tab.tabIndex=active?0:-1;tab.setAttribute('aria-selected',String(active));
+    const close=tab.querySelector('.tab-close'),dirty=String(editor.isDirty(item.path));if(close.dataset.dirty!==dirty){close.dataset.dirty=dirty;close.innerHTML=dirty==='true'?'<i class="dirty-dot"></i>':icon('close');}
+    if(container.children[index]!==tab)container.insertBefore(tab,container.children[index]||null);index++;
+    if(!previousTabs.has(item.path))motion.play(tab,[{opacity:0},{opacity:1}],120);
+  }
   previewUI?.renderGroups();
   previewUI?.services.restoreTabs();
-  for(const tab of $('#file-tabs').querySelectorAll('[data-tab]'))if(!previousTabs.has(tab.dataset.tab))motion.enter(tab,3);
   const empty=editor.models.size===0;$('#editor-empty').classList.toggle('hidden',!empty);
   $('#editor-mount').style.visibility='visible';
   document.title=(editor.current?editor.current.split('/').pop()+' · ':'')+'Zénit';
@@ -196,7 +205,13 @@ async function changeWorkspace(path){
   if([...editor.models.keys()].some(p=>editor.isDirty(p))){const ok=await confirmDialog('Cambios sin guardar','Cambiar de carpeta descartará los cambios no guardados. Guarda primero para conservarlos.','Descartar y abrir');if(!ok)return false;}
   const data=await api('/workspace',{path});service={...service,...data};tree=data.tree;cwd='';platformUI?.workspaceChanged();editor.reset();tabsSignature='';closeModal();activeView='explorer';
   desktopUI?.workspaceChanged();
-  await initializeDocuments();await setView('explorer');updatePrompt();termClear();await checkWorkspace();notify('Carpeta abierta.');return true;
+  await initializeDocuments();await setView('explorer');studio?.enter();updatePrompt();termClear();await checkWorkspace();notify('Carpeta abierta.');return true;
+}
+function newProjectDialog(){
+  const parent=service.workspace.replace(/[\\/][^\\/]+[\\/]?$/,'');
+  modal('Nuevo proyecto',`<p>Elige una carpeta y un nombre. Se creará un proyecto vacío sin modificar tus archivos.</p><form id="new-project-form"><label class="field-label" for="project-parent">Carpeta de destino</label><div class="project-parent-field"><input id="project-parent" value="${esc(parent)}" required autocomplete="off">${window.pywebview?.api?.choose_folder?'<button type="button" class="secondary-button" id="project-choose-parent">Elegir…</button>':''}</div><label class="field-label" for="project-name">Nombre del proyecto</label><input id="project-name" value="Mi proyecto" required maxlength="100" autocomplete="off"><div class="modal-actions"><button type="button" class="secondary-button" data-action="close-modal">Cancelar</button><button type="submit" class="primary-button">Crear proyecto</button></div></form>`);
+  $('#project-choose-parent')?.addEventListener('click',guard(async()=>{const path=await window.pywebview.api.choose_folder();if(path)$('#project-parent').value=path;}));
+  $('#project-name').select();$('#new-project-form').onsubmit=async event=>{event.preventDefault();const button=event.submitter;button.disabled=true;try{const project=await api('/projects/create',{parent:$('#project-parent').value.trim(),name:$('#project-name').value.trim()});await changeWorkspace(project.path);}catch(error){showErrorInModal(error);}finally{button.disabled=false;}};
 }
 async function openWorkspaceDialog(){
   if(window.pywebview?.api?.choose_folder){const path=await window.pywebview.api.choose_folder();if(path)await changeWorkspace(path);return;}
@@ -286,7 +301,7 @@ async function renderTerminalContent(){
   const pane=$('#terminal-content');
   if(terminalMode==='problems'){
     const items=editor.diagnostics();pane.textContent=items.length?items.map(item=>`${item.severity.toUpperCase()} · line ${item.line}: ${item.message}`).join('\n'):'Sin diagnósticos recibidos.\nEsto no equivale a una compilación correcta. Configura un servidor LSP para el análisis semántico.';
-  }else if(terminalMode==='output')pane.textContent=lastOutput||'No tasks have run in this session.';
+  }else if(terminalMode==='output'){if(!platformUI?.extensionServices?.renderOutput())pane.textContent=lastOutput||'No tasks have run in this session.';}
   else if(terminalMode==='debug')pane.innerHTML='<p>Abre Depuración para inspeccionar tu programa paso a paso.</p><button class="secondary-button" data-action="debug-view">Abrir depuración</button>';
   else if(terminalMode==='git'){pane.textContent='Reading repository...';try{const result=await api('/git?mode=status');if(terminalMode==='git')pane.textContent=result.output;}catch(error){pane.textContent=error.message;}}
 }
@@ -453,7 +468,7 @@ async function perform(action,anchor=null){
   }
   switch(action){
     case 'new-window':return previewUI?.newWindow();case 'save-as':return previewUI?.saveAs();case 'downloads':return previewUI?.downloads();case 'group-tabs':return previewUI?.toggleGroups();
-    case 'save':return saveFile();case 'new-file':return newFileDialog();case 'open-workspace':return openWorkspaceDialog();
+    case 'save':return saveFile();case 'new-file':return newFileDialog();case 'new-project':return newProjectDialog();case 'open-workspace':return openWorkspaceDialog();
     case 'settings':return appearanceDialog();case 'about':return aboutDialog();case 'extensions':return componentsDialog();case 'session':return sessionDialog();
     case 'close-modal':return closeModal();case 'palette':return openPalette();case 'find':return editor.openFind();
     case 'toggle-root':rootExpanded=!rootExpanded;return renderTree();
@@ -522,8 +537,9 @@ function setupEvents(){
   document.addEventListener('keydown',event=>{
     if($('#onboarding'))return;
     if(event.key==='Escape'){
-      closePopover();if(!$('#modal-backdrop').classList.contains('hidden')){event.preventDefault();closeModal();}
-      if(!$('#palette-backdrop').classList.contains('hidden')){event.preventDefault();closePalette();}return;
+      closePopover();if(!$('#modal-backdrop').classList.contains('hidden')){event.preventDefault();closeModal();return;}
+      if(!$('#palette-backdrop').classList.contains('hidden')){event.preventDefault();closePalette();return;}
+      if(document.documentElement.dataset.screen==='home'&&$('#modal-backdrop').classList.contains('hidden')){event.preventDefault();studio.enter();}return;
     }
     if(event.key==='Tab'&&!$('#modal-backdrop').classList.contains('hidden')){
       const list=[...$('#modal').querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])')].filter(el=>el.offsetParent!==null);
@@ -571,7 +587,7 @@ async function start(){
     await checkWorkspace(false);
     renderTerminalContent();
     platformUI=new LumenPlatform({api,notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshFileViews:()=>{renderTree();renderTabs();},
-      isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},showConsole:()=>showTerminal(),graphicsKind:()=>scene?.kind||'css',
+      isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
         settings.formatOnType=p['editor.formatOnType'];settings.motion=p['appearance.motion'];settings.density=p['appearance.density'];applySettings();applyTheme(p['appearance.theme'],false);
@@ -579,9 +595,10 @@ async function start(){
       setPluginCommands:items=>{for(let i=commandDefinitions.length-1;i>=0;i--)if(commandDefinitions[i][0].startsWith('plugin.'))commandDefinitions.splice(i,1);for(const item of items)commandDefinitions.push(['plugin.'+item.id,'extensions',item.title,'']);}
     });
     await platformUI.init();
-    studio=new LenonStudio({api,platform:platformUI,dock,editor,motion,modal,closeModal,notify,ensureTrust,openFile,saveFile,palette:openPalette,refreshTree,service:()=>service,files:allFiles});
+    studio=new LenonStudio({api,platform:platformUI,dock,editor,motion,modal,closeModal,notify,ensureTrust,openFile,saveFile,changeWorkspace,palette:openPalette,refreshTree,service:()=>service,files:allFiles});
     await studio.init();
     previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
+    platformUI.companion=new MelodyCompanion(platformUI);
     if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
     desktopUI=new DesktopWorkflows({api,editor,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();

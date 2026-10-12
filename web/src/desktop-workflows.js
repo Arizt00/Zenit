@@ -31,7 +31,7 @@ export class DesktopWorkflows{
   }
   safe(fn){return Promise.resolve().then(fn).catch(e=>this.host.notify(e.message,'error'));}
   paintHacker(){
-    const h=this.host,enabled=this.query.get('panel')==='forge'||!!h.platform.prefs['hacker.enabled'],path=this.forgeNoFile?'':h.editor.current||'',dirty=path&&h.editor.isDirty(path),tools=this.forgeTools;
+    const h=this.host,enabled=this.query.get('panel')==='forge'||this.forgeIntegrated===true,path=this.forgeNoFile?'':h.editor.current||'',dirty=path&&h.editor.isDirty(path),tools=this.forgeTools;
     this.hackerBar.hidden=!enabled;document.documentElement.classList.toggle('hacker-mode',enabled);$('.hacker-toggle')?.setAttribute('aria-pressed',String(enabled));
     const file=this.hackerBar.querySelector('.forge-file');file.textContent=path||'Abre un archivo para comenzar';file.title=path;
     const buffer=this.hackerBar.querySelector('.forge-buffer');buffer.textContent=path?(dirty?'Sin guardar':'Búfer actual'):'';buffer.dataset.dirty=String(!!dirty);buffer.hidden=!path;
@@ -61,13 +61,13 @@ export class DesktopWorkflows{
     }
   }
   async openForgeTerminal(){
-    const h=this.host;if(!h.platform.prefs['hacker.enabled'])await h.platform.savePreference('hacker.enabled',true);
+    const h=this.host;this.forgeIntegrated=true;
     h.studio.enter();this.showForgeConsole();this.paintHacker();
     if(h.service().trusted){const data=await h.platform.api('/terminals');for(const t of data.sessions)if(t.profile.kind==='hacker'&&!h.platform.terminals.has(t.id))await h.platform.attachTerminal(t);}
   }
   async openForgeWindow(){
     if(this.query.has('panel'))return;
-    if(!this.host.platform.prefs['hacker.enabled'])await this.host.platform.savePreference('hacker.enabled',true);
+    this.forgeIntegrated=false;
     this.paintHacker();const path=this.host.editor.current;if(path)await this.share(path);
     const api=window.pywebview?.api;
     if(api?.detach_panel)await api.detach_panel('forge',path||'');
@@ -91,7 +91,7 @@ export class DesktopWorkflows{
     if(action==='split-editor'){h.studio.enter();const paths=[...h.editor.models.keys()],path=paths.find(p=>p!==h.editor.current)||h.editor.current;if(!path)throw Error('Abre un archivo para dividir el editor.');h.editor.split(path);return true;}
     if(action==='close-split-editor'){h.editor.closeSplit();return true;}
     if(action==='detach-editor'){await this.detach('editor',h.editor.current);return true;}
-    if(action==='hacker'){const enabled=!h.platform.prefs['hacker.enabled'];await h.platform.savePreference('hacker.enabled',enabled);this.paintHacker();if(enabled){h.studio.enter();this.showForgeConsole();await this.refreshForgeTools();}return true;}
+    if(action==='hacker'){this.forgeIntegrated=!this.forgeIntegrated;this.paintHacker();if(this.forgeIntegrated){h.studio.enter();this.showForgeConsole();await this.refreshForgeTools();}return true;}
     if(action==='forge-window'){await this.openForgeWindow();return true;}
     if(action==='forge-terminal'){
       if(this.query.get('panel')==='forge'){this.channel.postMessage({type:'forge-terminal',workspace:h.service().workspace});if(window.pywebview?.api?.close_forge)await window.pywebview.api.close_forge();else window.close();}
@@ -107,7 +107,7 @@ export class DesktopWorkflows{
     const h=this.host,path=h.editor.current,content=h.editor.getValue();if(!path)throw Error('Abre el archivo que quieres ejecutar.');if(!await h.ensureTrust())return;
     this.forgeBusy=true;this.forgeError=false;this.forgeRun={mode,path};
     try{
-      if(!h.platform.prefs['hacker.enabled'])await h.platform.savePreference('hacker.enabled',true);
+      if(!this.query.has('panel'))this.forgeIntegrated=true;
       h.studio.enter();this.showForgeConsole();this.paintHacker();
       const result=await h.platform.api('/hacker/start',{mode,path,content});
       if(result.terminal){await h.platform.attachTerminal(result.terminal);this.forgeRun.terminal=result.terminal.id;return;}

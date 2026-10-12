@@ -129,7 +129,7 @@ class ExtensionDebugger(ProtocolDebugger):
 
 class ExtensionServices:
     def __init__(self,platform):
-        self.platform=platform;self.lock=threading.RLock();self.terminals={};self.tasks={};self.panels={};self.debuggers={};self.contexts={};self.prompts={};self.documents={};self.file_workspaces={};self.quickinputs={};self.editor_snapshot=None
+        self.platform=platform;self.lock=threading.RLock();self.terminals={};self.tasks={};self.panels={};self.debuggers={};self.contexts={};self.prompts={};self.documents={};self.file_workspaces={};self.quickinputs={};self.editor_snapshot=None;self.outputs={};self.status_items={}
     def editor_state(self,ws,body):
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
         items=body.get('editors')
@@ -190,19 +190,41 @@ class ExtensionServices:
     def key(self,ws,path):
         try:return path.relative_to(ws.root).as_posix()
         except ValueError:return str(path)
+    def environment(self,workspace,overrides=None):
+        base=child_environment();result={}
+        with self.lock:
+            for collections in getattr(self,'environments',{}).values():
+                for collection in collections:
+                    scope=collection.get('scope')
+                    if scope and Path(scope).resolve()!=Path(workspace).resolve():continue
+                    for key,mutation in collection.get('values',[]):
+                        if not isinstance(key,str) or not key or '\0' in key or '=' in key or not isinstance(mutation.get('value'),str):raise ValueError('Mutación de entorno inválida.')
+                        if mutation.get('options',{}).get('applyAtProcessCreation',True) is False:continue
+                        actual=next((k for k in base if os.name=='nt' and k.casefold()==key.casefold()),key)
+                        previous=result.get(actual,base.get(actual,''));value=mutation['value'];kind=mutation.get('type')
+                        if kind==1:result[actual]=value
+                        elif kind==2:result[actual]=previous+value
+                        elif kind==3:result[actual]=value+previous
+                        else:raise ValueError('Tipo de mutación de entorno inválido.')
+        result.update({k:str(v) for k,v in (overrides or {}).items() if v is not None});return result
     def close_host(self,host):
         for (owner,ident),terminal in list(self.terminals.items()):
             if owner is host:terminal.close()
         for (owner,ident),debugger in list(self.debuggers.items()):
             if owner is host:debugger.stop()
         with self.lock:
+            getattr(self,'environments',{}).pop(host,None)
+            for key,item in list(getattr(self,'status_items',{}).items()):
+                if item['owner'] is host:del self.status_items[key]
+            for key,item in list(getattr(self,'outputs',{}).items()):
+                if item['owner'] is host:del self.outputs[key]
             for ident,panel in list(self.panels.items()):
                 if panel['owner'] is host:self.dispose_panel(ident)
             for ident,item in list(self.quickinputs.items()):
                 if item['owner'] is host:
                     del self.quickinputs[ident];self.emit('zenit.quickinput',id=ident,visible=False)
     def snapshot(self):
-        with self.lock:return {'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()]}
+        with self.lock:return {'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()]}
     def has_interaction(self,host):
         with self.lock:return any(item['owner'] is host and item.get('visible') for item in self.quickinputs.values())
     def workspace_edit(self,ws,edit,documents=None):
@@ -296,6 +318,30 @@ class ExtensionServices:
     def call(self,host,method,p):
         ws=host.workspace
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
+        if method=='environment.update':
+            if not isinstance(p.get('collections'),list) or len(json.dumps(p))>64000:raise ValueError('Colección de entorno inválida.')
+            with self.lock:
+                if not hasattr(self,'environments'):self.environments={}
+                self.environments[host]=p['collections']
+            return {'ok':True}
+        if method in ('output.update','output.dispose'):
+            if not isinstance(p.get('key'),str) or len(json.dumps(p))>400000:raise ValueError('Canal de salida inválido.')
+            with self.lock:
+                if not hasattr(self,'outputs'):self.outputs={}
+                key=(host,p['key'])
+                if method=='output.dispose':self.outputs.pop(key,None);self.emit('zenit.output',key=p['key'],extension=host.extension_id,disposed=True)
+                else:
+                    previous=self.outputs.get(key);item={**p,'owner':host,'extension':host.extension_id};self.outputs[key]=item
+                    if item.get('visible') or previous and previous.get('visible'):self.emit('zenit.output',**{k:v for k,v in item.items() if k!='owner'})
+            return {'ok':True}
+        if method in ('status.update','status.dispose'):
+            if not isinstance(p.get('key'),str) or len(json.dumps(p))>32000:raise ValueError('Estado de extensión inválido.')
+            with self.lock:
+                if not hasattr(self,'status_items'):self.status_items={}
+                key=(host,p['key'])
+                if method=='status.dispose':self.status_items.pop(key,None)
+                else:self.status_items[key]={**p,'owner':host,'extension':host.extension_id}
+            return {'ok':True}
         if method=='workspace.applyEdit':return self.workspace_edit(ws,p['edit'],p.get('documents'))
         if method=='workspace.saveDocument':
             target=file_path(p['uri']);key=self.key(ws,target);text=p.get('text')
@@ -350,7 +396,7 @@ class ExtensionServices:
                     import shlex
                     args=shlex.split(args,posix=os.name!='nt')
                 cwd=file_path(opts['cwd']) if opts.get('cwd') else ws.root
-                env={k:str(v) for k,v in (opts.get('env') or {}).items() if v is not None}
+                env=self.environment(ws.root,opts.get('env') or {})
                 session=TerminalSession({'id':'extension:'+p['id'],'label':opts.get('name') or 'Terminal','kind':'extension','argv':[command,*args]},cwd,self.platform.app.project,environment=env)
             with self.lock:self.terminals[host,p['id']]=session;self.platform.terminals.sessions[session.id]=session
             pid=session.win.pid if getattr(session,'win',None) else session.process.pid if session.process else None

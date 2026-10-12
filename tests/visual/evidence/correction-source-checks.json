@@ -1,0 +1,80 @@
+{
+  "syntax": {
+    "files": [
+      "web/src/textmate.js",
+      "web/src/assembly-language.js",
+      "web/src/foundation-ui.js",
+      "web/src/assembly-workbench.js",
+      "backend/extension_editors.cjs",
+      "backend/extension_quickinput.cjs",
+      "web/src/extension-quickinput.js",
+      "web/src/extension-installer.js",
+      "backend/extension_services.cjs",
+      "web/src/extension-services.js",
+      "web/src/extension-editing.js",
+      "web/src/extension-decorations.js",
+      "web/src/workspace-profiles.js",
+      "web/src/workspace-data.js",
+      "web/src/document-drag.js",
+      "web/src/desktop-workflows.js",
+      "web/src/terminal-input.js",
+      "backend/extension_api.cjs",
+      "web/src/live-edit.js",
+      "web/src/uninstall.js",
+      "web/src/preview.js",
+      "backend/extension_host.cjs",
+      "backend/lantern_memory.cjs",
+      "web/src/accounts.js",
+      "web/src/lantern.js",
+      "web/src/controls.js",
+      "backend/emma_bridge.mjs",
+      "web/src/glass.js",
+      "web/src/studio.js",
+      "web/src/setup.js",
+      "web/src/app.js",
+      "web/src/babylon-scene.js",
+      "web/src/docking.js",
+      "web/src/native-ready.js",
+      "web/src/editor.js",
+      "web/src/icons.js",
+      "web/src/interactions.js",
+      "web/src/layout-state.js",
+      "web/src/motion.js",
+      "web/src/theme-init.js",
+      "web/src/workbench.js",
+      "web/src/ai-intent.js",
+      "web/src/extension-theme.js",
+      "web/src/monaco-overlays.js",
+      "web/src/product-ui.js",
+      "web/src/diagnostics.js",
+      "backend/extension_auth.cjs",
+      "backend/extension_environment.cjs",
+      "backend/extension_filesystem.cjs",
+      "backend/extension_language_tools.cjs",
+      "backend/extension_ports.cjs",
+      "backend/extension_ui.cjs",
+      "web/src/melody-companion.js"
+    ],
+    "passed": 53
+  },
+  "pythonComplete": {
+    "executed": 275,
+    "skipped": 5,
+    "passed": 270,
+    "note": "Full suite before the two subsequent asset/reference contract additions. Backend source unchanged since that run."
+  },
+  "additionalTargetedPython": {
+    "executed": 7,
+    "passed": 7,
+    "modules": [
+      "crystal_asset",
+      "visual_contract",
+      "projects"
+    ]
+  },
+  "javascript": {
+    "executed": 62,
+    "passed": 62
+  },
+  "aiEvaluation": "Explicit UI transport fixtures only, not an external model benchmark."
+}

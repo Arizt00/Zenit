@@ -1,0 +1,112 @@
+{
+  "duration": 3001.300000000745,
+  "frameInterval": {
+    "samples": 719,
+    "median": 4.199999999999818,
+    "p95": 4.300000000000182,
+    "max": 8.399999999999636
+  },
+  "longTasks": [],
+  "mutations": {
+    "cursors-layer/attributes/class": 1
+  },
+  "webgl": {
+    "renderSamples": 181,
+    "medianCpuMs": 0.4000000022351742,
+    "p95CpuMs": 0.5,
+    "contextEvents": [],
+    "engines": 2,
+    "surfaces": [
+      {
+        "kind": "orb",
+        "renderLoops": 1,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      },
+      {
+        "kind": "welcome",
+        "renderLoops": 0,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      }
+    ]
+  },
+  "memory": {
+    "used": 83362213,
+    "total": 111933657
+  },
+  "canvases": [
+    {
+      "kind": "decorationsOverviewRuler",
+      "width": 0,
+      "height": 0,
+      "visible": false
+    },
+    {
+      "kind": "",
+      "width": 79,
+      "height": 745,
+      "visible": true
+    },
+    {
+      "kind": "minimap-decorations-layer",
+      "width": 79,
+      "height": 745,
+      "visible": true
+    },
+    {
+      "kind": "orb",
+      "width": 300,
+      "height": 267,
+      "visible": true
+    },
+    {
+      "kind": "",
+      "width": 96,
+      "height": 96,
+      "visible": false
+    },
+    {
+      "kind": "welcome",
+      "width": 300,
+      "height": 150,
+      "visible": false
+    }
+  ],
+  "editors": 1,
+  "animations": [
+    {
+      "target": "cursors-layer cursor-line-style cursor-smooth",
+      "name": "monaco-cursor-smooth",
+      "state": "running"
+    }
+  ],
+  "cdp": {
+    "LayoutCount": 1,
+    "RecalcStyleCount": 737,
+    "LayoutDuration": 0.000111,
+    "RecalcStyleDuration": 0.050668,
+    "ScriptDuration": 0.152094,
+    "TaskDuration": 0.5604349999999999
+  },
+  "timeline": {
+    "Layout": {
+      "events": 1,
+      "totalMs": 0.09
+    },
+    "Paint": {
+      "events": 13,
+      "totalMs": 2.091
+    },
+    "UpdateLayoutTree": {
+      "events": 614,
+      "totalMs": 41.591
+    },
+    "CompositeLayers": {
+      "events": 0,
+      "totalMs": 0.0
+    }
+  }
+}

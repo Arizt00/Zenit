@@ -180,7 +180,7 @@ class TerminalManager:
         result=terminal_profiles()
         conpty=os.name!='nt' or importlib.util.find_spec('winpty') is not None
         return {'profiles':result,'interactiveAvailable':conpty,'platform':platform.system(),'note':'Los sistemas Linux/WSL/Kali solo se muestran cuando están instalados; CMake es una herramienta de construcción, no una shell.'}
-    def create(self,ws,profile_id,consent=False,cols=100,rows=26):
+    def create(self,ws,profile_id,consent=False,cols=100,rows=26,environment=None):
         if not ws.trusted or consent is not True:raise PermissionError('Confirma la confianza y la apertura de la terminal.')
         if not self.prefs.get('security.terminals'):raise PermissionError('Las terminales están desactivadas en Seguridad.')
         with self.lock:
@@ -189,7 +189,7 @@ class TerminalManager:
                 if self.sessions[sid].closed:del self.sessions[sid]
             profile=next((p for p in terminal_profiles() if p['id']==profile_id),None)
             if not profile:raise ValueError('Ese perfil no está disponible en este sistema.')
-            session=TerminalSession(profile,ws.root,self.project,max(20,min(int(cols),500)),max(5,min(int(rows),200)))
+            session=TerminalSession(profile,ws.root,self.project,max(20,min(int(cols),500)),max(5,min(int(rows),200)),environment=environment)
             self.sessions[session.id]=session
             self.prefs.audit('terminal.open',profile=profile_id)
             return {'id':session.id,'profile':profile,'kind':session.kind}

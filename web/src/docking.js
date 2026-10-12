@@ -229,7 +229,7 @@ export class DockManager {
     this.motion.cancelLayout();
     const limit=this.limits()[side];this.state.sizes[side]=Math.round(Math.min(limit.max,Math.max(limit.min,value)));
     const actual=this.state.sizes[side];this.root.style.setProperty(`--dock-${side}-size`,actual+'px');
-    this.root.style.setProperty(`--dock-${side}-track`,(actual+10)+'px');
+    this.root.style.setProperty(`--dock-${side}-track`,(actual+(side==='bottom'?8:10))+'px');
     this.slots[side].querySelector('.resize-handle')?.setAttribute('aria-valuenow',String(actual));
     if(persist)this.save();
   }

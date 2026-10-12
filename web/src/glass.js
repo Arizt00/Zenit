@@ -1,5 +1,14 @@
 /** Zénit Glass: persistent Babylon rendering and shared optical materials. */
 let engineScript;
+let crystalGeometry;
+function loadCrystalGeometry(){
+  return crystalGeometry ||= (async()=>{
+    const [info,response]=await Promise.all([fetch('/assets/zenit-crystal.mesh.json').then(r=>{if(!r.ok)throw Error('Metadatos del cristal no disponibles');return r.json();}),fetch('/assets/zenit-crystal.mesh.bin')]);
+    if(!response.ok)throw Error('Geometría del cristal no disponible');const buffer=await response.arrayBuffer();if(buffer.byteLength!==info.byteLength||buffer.byteLength>2_000_000)throw Error('Geometría de cristal inválida');
+    const digest=await crypto.subtle.digest('SHA-256',buffer),hash=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');if(hash!==info.sha256)throw Error('La geometría del cristal no supera la comprobación de integridad');
+    return info.meshes.map(mesh=>({name:mesh.name,positions:new Float32Array(buffer,mesh.positions.byteOffset,mesh.positions.count),normals:new Float32Array(buffer,mesh.normals.byteOffset,mesh.normals.count),indices:new Uint32Array(buffer,mesh.indices.byteOffset,mesh.indices.count)}));
+  })().catch(error=>{console.warn('Zénit Glass:',error.message);return null;});
+}
 function loadBabylon() {
   if (window.BABYLON) return Promise.resolve(window.BABYLON);
   return engineScript ||= new Promise((resolve,reject)=>{
@@ -19,17 +28,19 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
     const B=await loadBabylon();
     if(!canvas.isConnected||!B.Engine.IsSupported)return fallback;
     engine=new B.Engine(canvas,true,{alpha:true,stencil:false,preserveDrawingBuffer:false,powerPreference:'default',disableWebGL2Support:false},false);
+    // Decorative glass does not need to consume every refresh on a 240 Hz display.
+    engine.maxFPS=60;
     canvas.dataset.engine=engine.webGLVersion>=2?'WebGL2':'WebGL';
     engine.setHardwareScalingLevel(1/Math.min(devicePixelRatio||1,1.5));
     scene=new B.Scene(engine);scene.useRightHandedSystem=true;scene.skipPointerMovePicking=true;scene.clearColor=new B.Color4(0,0,0,0);
-    const hero=canvas.dataset.glass==='hero';
+    const hero=canvas.dataset.glass==='hero',welcome=canvas.dataset.glass==='welcome';
     const camera=new B.FreeCamera('glass-camera',new B.Vector3(0,0,8),scene);camera.setTarget(B.Vector3.Zero());
     camera.mode=B.Camera.ORTHOGRAPHIC_CAMERA;camera.minZ=.1;
     const vertexSource=`precision highp float;attribute vec3 position;attribute vec3 normal;
       uniform mat4 worldViewProjection;uniform mat4 world;varying vec3 n;varying vec3 p;
       void main(){n=normalize(mat3(world)*normal);p=position;gl_Position=worldViewProjection*vec4(position,1.);}`;
     const fragmentSource=`precision highp float;varying vec3 n;varying vec3 p;
-      uniform float time;uniform float crystal;
+      uniform float time;uniform float crystal;uniform float shell;
       #ifdef LENS
       uniform sampler2D refractionMap;uniform vec2 resolution;
       #endif
@@ -42,8 +53,8 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         vec2 q=uv+vec2(sin(uv.y*3.+t*.7),cos(uv.x*2.7-t*.6))*.09;
         float thickness=.45+.15*sin(q.x*2.4+q.y*1.9+t*.55)+.065*sin(q.y*4.2-q.x*2.1-t*.4);
         vec3 spectrum=.5+.5*cos(6.2831853*(thickness*(1.2+facing*.3)+vec3(.0,.32,.64)));
-        vec3 pearl=vec3(.59,.42,.99),pink=vec3(1.,.65,.91),ice=vec3(.68,.90,1.);
-        vec3 mint=vec3(.82,.97,.91),gold=vec3(1.,.96,.74);
+        vec3 pearl=vec3(.73,.62,.96),pink=vec3(.99,.75,.91),ice=vec3(.69,.89,.99);
+        vec3 mint=vec3(.83,.96,.92),gold=vec3(1.,.97,.82);
         // Advected light fields converge and separate; the shell reflection stays still.
         vec2 a=vec2(-.34+.28*sin(t*.93), .38+.22*cos(t*.73));
         vec2 b=vec2(-.38+.27*cos(t*.81),-.38+.24*sin(t*.89));
@@ -62,7 +73,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         vec3 film=mix(volume,mix(vec3(.90,.88,1.),spectrum,.52),fresnel*.65);
         // Clear central window and a denser curved meniscus, rather than a filled gradient.
         float band=exp(-pow((radius-(.73+.055*sin(angle*2.+t*.32)))*9.,2.));
-        float colourWeight=.40+.48*radius+.30*band+.22*fresnel;
+        float colourWeight=.38+.48*radius+.24*band+.19*fresnel;
         colourWeight+=.13*(p3+p4);
         vec3 color=mix(vec3(.967,.977,1.),film,clamp(colourWeight,0.,.97));
         #ifdef LENS
@@ -118,14 +129,18 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
           color=mix(color,vec3(1.),split*.52);
           alpha=.43+fresnel*.18+max(face,0.)*.15;
         }
+        if(shell>.5){color=mix(ice,vec3(1.),highlight*.7);alpha=.012+pow(1.-facing,7.)*.17+highlight*.02;}
         gl_FragColor=vec4(color*alpha,alpha);
       }`;
     const material=(name,crystal=0)=>{
-      const m=new B.ShaderMaterial(name,scene,{vertexSource,fragmentSource},{attributes:['position','normal'],uniforms:['worldViewProjection','world','time','crystal','resolution'],samplers:crystal===0?['refractionMap']:[],defines:crystal===0?['#define LENS']:[],needAlphaBlending:true});
-      m.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;m.setFloat('crystal',crystal);m.backFaceCulling=true;return m;
+      const m=new B.ShaderMaterial(name,scene,{vertexSource,fragmentSource},{attributes:['position','normal'],uniforms:['worldViewProjection','world','time','crystal','shell','resolution'],samplers:crystal===0?['refractionMap']:[],defines:crystal===0?['#define LENS']:[],needAlphaBlending:true});
+      m.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;m.setFloat('crystal',crystal);m.setFloat('shell',0);m.backFaceCulling=true;return m;
     };
-    const pearl=B.MeshBuilder.CreateSphere('melody',{diameter:2.75,segments:96},scene);const pearlMaterial=material('iridescence');pearl.material=pearlMaterial;
-    const materials=[pearlMaterial],crystals=[];let ribbon;pearl.position.set(0,0,0);
+    const geometry=await loadCrystalGeometry(),meshFrom=data=>{const mesh=new B.Mesh(data.name,scene),vertices=new B.VertexData();Object.assign(vertices,{positions:data.positions,normals:data.normals,indices:data.indices});vertices.applyToMesh(mesh);return mesh;};
+    const pearl=geometry?meshFrom(geometry[0]):B.MeshBuilder.CreateSphere('melody',{diameter:2.75,segments:96},scene);canvas.dataset.geometry=geometry?'blender-double-wall':'procedural-fallback';
+    const pearlMaterial=material('iridescence');pearl.material=pearlMaterial;pearl.alphaIndex=1;
+    const materials=[pearlMaterial],crystals=[];let ribbon,innerShell;pearl.position.set(0,0,0);
+    if(geometry?.[1]){innerShell=meshFrom(geometry[1]);innerShell.material=material('inner-glass');innerShell.material.setFloat('shell',1);innerShell.alphaIndex=0;materials.push(innerShell.material);}
     if(hero){
       // The floor carries an optical contact shadow and a reflected pool of light.
       const floor=B.MeshBuilder.CreatePlane('pearl-contact',{width:4.4,height:.56},scene);floor.position.set(.05,-1.66,-2.4);
@@ -142,8 +157,10 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         mesh.enableEdgesRendering(.98);mesh.edgesWidth=1.25;mesh.edgesColor=new B.Color4(1,1,1,.72);
         crystals.push({mesh,y,phase:i});materials.push(mesh.material);
       });
-      // A shallow inclined orbit surrounds the lens without crossing the copy.
-      const orbit=Array.from({length:181},(_,i)=>{const t=i/180*Math.PI*2,x=Math.cos(t)*2.55;return new B.Vector3(x-.25,Math.sin(t)*.58+x*.34,Math.sin(t)*.85);});
+    }
+    if(hero||welcome){
+      // The compact welcome retains the glass lens and a single inclined orbit.
+      const orbit=Array.from({length:181},(_,i)=>{const t=i/180*Math.PI*2,x=Math.cos(t)*(welcome?1.55:2.55);return new B.Vector3(x-(welcome?0:.25),Math.sin(t)*.38+x*.34,Math.sin(t)*.85);});
       ribbon=B.MeshBuilder.CreateTube('liquid-ribbon',{path:orbit,radius:.015,tessellation:12},scene);
       const orbitalGlass=new B.StandardMaterial('orbital-glass',scene);orbitalGlass.disableLighting=true;orbitalGlass.emissiveColor=new B.Color3(1,.99,1);orbitalGlass.alpha=.55;orbitalGlass.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;orbitalGlass.backFaceCulling=false;ribbon.material=orbitalGlass;
     }
@@ -151,23 +168,26 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
     const backdrop=B.MeshBuilder.CreatePlane('light-field',{width:18,height:10},scene);backdrop.position.z=-2.8;
     backdrop.material=new B.ShaderMaterial('light-field-material',scene,{vertexSource:`precision highp float;attribute vec3 position;attribute vec2 uv;uniform mat4 worldViewProjection;varying vec2 v;void main(){v=uv;gl_Position=worldViewProjection*vec4(position,1.);}`,fragmentSource:`precision highp float;varying vec2 v;void main(){float a=exp(-pow((v.y-.52-sin(v.x*8.)*.13)*45.,2.));float b=exp(-pow((v.y-.40+sin(v.x*7.)*.08)*60.,2.));gl_FragColor=vec4(mix(vec3(.88,.83,1.),vec3(.75,.92,1.),v.x),.055+a*.20+b*.13);}`},{attributes:['position','uv'],uniforms:['worldViewProjection'],needAlphaBlending:true});
     const refraction=new B.RenderTargetTexture('lens-background',{width:Math.max(1,engine.getRenderWidth()),height:Math.max(1,engine.getRenderHeight())},scene,false);
-    refraction.clearColor=new B.Color4(0,0,0,0);refraction.activeCamera=camera;refraction.renderList=scene.meshes.filter(m=>m!==pearl&&!['liquid-ribbon','orbit'].includes(m.name));refraction.ignoreCameraViewport=true;
-    if(!hero)refraction.refreshRate=0;scene.customRenderTargets.push(refraction);pearlMaterial.setTexture('refractionMap',refraction);
+    refraction.clearColor=new B.Color4(0,0,0,0);refraction.activeCamera=camera;refraction.renderList=scene.meshes.filter(m=>m!==pearl&&m!==innerShell&&!['liquid-ribbon','orbit'].includes(m.name));refraction.ignoreCameraViewport=true;
+    if(!hero)refraction.refreshRate=0;scene.customRenderTargets.push(refraction);pearlMaterial.setTexture('refractionMap',refraction);innerShell?.material.setTexture('refractionMap',refraction);
     let enabled=document.documentElement.dataset.motion!=='off',visible=false,disposed=false,ready=false,elapsed=0,last=performance.now();
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     function render(){
       if(disposed||!ready||document.hidden||!visible)return;
+      // Stop even if the host delivers its media change event after this frame.
+      if(!enabled||reduced.matches)engine.stopRenderLoop(render);
       if(!canvas.isConnected){engine.stopRenderLoop(render);return;}
       const now=performance.now();if(enabled&&!reduced.matches)elapsed+=Math.min(now-last,45)/1000;last=now;
       materials.forEach(m=>m.setFloat('time',elapsed));
-      pearl.position.y=Math.sin(elapsed*.36)*.035;pearl.scaling.setAll(1);
+      pearl.position.y=Math.sin(elapsed*.36)*.035;
+      if(innerShell)innerShell.position.y=pearl.position.y;
       for(const {mesh,y,phase} of crystals){mesh.position.y=y+Math.sin(elapsed*.22+phase)*.12;mesh.rotation.y=elapsed*.055+.35+phase*.6;}
       if(ribbon)ribbon.rotation.z=Math.sin(elapsed*.12)*.07;
       scene.render();
     }
     function schedule(){engine.stopRenderLoop(render);last=performance.now();const painted=visible&&canvas.isConnected&&canvas.getClientRects().length&&!canvas.closest('[hidden],[inert]')&&getComputedStyle(canvas).visibility!=='hidden';if(ready&&painted&&!document.hidden){render();if(enabled&&!reduced.matches)engine.runRenderLoop(render);}}
     let dimensions='';
-    function resize(){const rect=canvas.getBoundingClientRect();if(rect.width<1||rect.height<1)return;const key=rect.width+':'+rect.height+':'+devicePixelRatio;if(key===dimensions)return;dimensions=key;engine.setHardwareScalingLevel(1/Math.min(devicePixelRatio||1,1.5));engine.resize();const width=engine.getRenderWidth(),height=engine.getRenderHeight();pearlMaterial.setVector2('resolution',new B.Vector2(width,height));const textureSize=refraction.getSize();if(textureSize.width!==width||textureSize.height!==height)refraction.resize({width,height});const half=hero?2.20:1.70;camera.orthoTop=half;camera.orthoBottom=-half;camera.orthoLeft=-half*rect.width/rect.height;camera.orthoRight=half*rect.width/rect.height;render();}
+    function resize(){const rect=canvas.getBoundingClientRect();if(rect.width<1||rect.height<1)return;const key=rect.width+':'+rect.height+':'+devicePixelRatio;if(key===dimensions)return;dimensions=key;engine.setHardwareScalingLevel(1/Math.min(devicePixelRatio||1,1.5));engine.resize();const width=engine.getRenderWidth(),height=engine.getRenderHeight();pearlMaterial.setVector2('resolution',new B.Vector2(width,height));innerShell?.material.setVector2('resolution',new B.Vector2(width,height));const textureSize=refraction.getSize();if(textureSize.width!==width||textureSize.height!==height)refraction.resize({width,height});const half=hero?2.20:1.70;camera.orthoTop=half;camera.orthoBottom=-half;camera.orthoLeft=-half*rect.width/rect.height;camera.orthoRight=half*rect.width/rect.height;render();}
     const appearance=new MutationObserver(records=>{if(records.some(record=>record.target.contains(canvas)))schedule();});appearance.observe(document.documentElement,{attributes:true,attributeFilter:['data-screen','data-motion','data-editor-covered']});appearance.observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','inert']});
     const observer=new ResizeObserver(resize);observer.observe(canvas);
     const intersection=new IntersectionObserver(entries=>{visible=!!entries[0]?.isIntersecting;schedule();});intersection.observe(canvas);
@@ -176,7 +196,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
     const restored=engine.onContextRestoredObservable.add(()=>{canvas.parentElement.classList.add('gpu-ready');resize();schedule();});
     cleanup=()=>{disposed=true;appearance.disconnect();observer.disconnect();intersection.disconnect();document.removeEventListener('visibilitychange',schedule);reduced.removeEventListener('change',schedule);canvas.removeEventListener('webglcontextlost',lost);engine.onContextRestoredObservable.remove(restored);engine.stopRenderLoop(render);};
     let readyTimer;try{await Promise.race([scene.whenReadyAsync(),new Promise((_,reject)=>{readyTimer=setTimeout(()=>reject(new Error('El motor gráfico no respondió a tiempo')),12000);})]);}finally{clearTimeout(readyTimer);}if(!canvas.isConnected){cleanup();scene.dispose();engine.dispose();return fallback;}ready=true;resize();visible=canvas.getClientRects().length>0;render();
-    canvas.parentElement.classList.add('gpu-ready');schedule();onStatus('Babylon.js + Three.js · Zénit Glass');
+    canvas.parentElement.classList.add('gpu-ready');schedule();onStatus(`${geometry?'Blender + ':''}Babylon.js · ${canvas.dataset.engine} · Zénit Glass`);
     return {kind:'babylon',renderer:canvas.dataset.engine,setTheme(){render();},setMotion(value){enabled=value;schedule();},dispose(){const gl=engine._gl;cleanup();scene.dispose();engine.dispose();gl?.getExtension('WEBGL_lose_context')?.loseContext();}};
   }catch(error){cleanup();scene?.dispose();engine?.dispose();canvas.dataset.graphicsError=error.message;onStatus('Cristal CSS · '+error.message);return fallback;}
 }

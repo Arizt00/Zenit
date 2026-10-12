@@ -4,7 +4,7 @@ import {icon,escapeHTML,setFileIcons} from './icons.js';
 import {languageFor} from './editor.js';
 import {LiveEditSession} from './live-edit.js';
 import {applyShellTheme} from './extension-theme.js';
-import {requestsLiveEdit} from './ai-intent.js';
+import {requestsLiveEdit,requestsRealtimeHelp} from './ai-intent.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
 
 const PLATFORM_CATEGORIES=[
@@ -56,6 +56,7 @@ export class LumenPlatform {
     if(has('general.locale'))this.translateShell();
     for(const terminal of this.terminals.values())if(terminal.xterm){if(has('terminal.fontSize'))terminal.xterm.options.fontSize=p['terminal.fontSize'];if(has('terminal.cursorBlink'))terminal.xterm.options.cursorBlink=p['terminal.cursorBlink'];if(has('terminal.scrollback'))terminal.xterm.options.scrollback=p['terminal.scrollback'];if(themeChanged)this.themeTerminal(terminal);}
     if(changed.some(key=>['ai.provider','ai.model','general.locale'].includes(key)))this.updateProviderBar();
+    if(changed.some(key=>['ai.provider','ai.model'].includes(key)))this.companion?.changed();
     if(changed.some(key=>key.startsWith('appearance.')||key.startsWith('hacker.')||key==='general.locale')||themeChanged)this.onAppearance?.();
     this.appliedPreferences={...p};
   }
@@ -372,6 +373,8 @@ export class LumenPlatform {
   async sendAI(question,{edit=false}={}){
     if(this.aiStarting)return;
     if(this.aiJob||!question.trim())return;
+    if(requestsRealtimeHelp(question)&&this.companion){if(!this.companion.session.enabled)await this.companion.toggle();if(this.companion.session.enabled)document.getElementById('ai-input').value='';return;}
+    this.companion?.session.stop();
     if(!this.prefs['ai.model']){await this.settings('ai');this.host.notify(this.t('Selecciona el proveedor y un modelo real antes de enviar.','Choose a provider and an actual model before sending.'));return;}
     const editor=this.host.editor,provider=this.prefs['ai.provider'],model=this.prefs['ai.model'],mode=this.prefs['ai.context'];
     const live=edit===true||requestsLiveEdit(question);
@@ -644,7 +647,7 @@ export class LumenPlatform {
     this.safe(()=>this.startLSP(config.id,true));
   }
   documentChanged(){
-    if(this.disposed)return;this.autoLanguageServer();this.lantern?.changed();if(this.liveEditingPath===this.host.editor.current){clearTimeout(this.saveTimer);return;}clearTimeout(this.changeTimer);this.changeTimer=this.later(()=>{for(const s of this.lspSessions.values())this.safe(()=>this.syncLSP(s));this.refreshDiagnostics();},220);
+    if(this.disposed)return;this.autoLanguageServer();this.lantern?.changed();this.companion?.changed();if(this.liveEditingPath===this.host.editor.current){clearTimeout(this.saveTimer);return;}clearTimeout(this.changeTimer);this.changeTimer=this.later(()=>{for(const s of this.lspSessions.values())this.safe(()=>this.syncLSP(s));this.refreshDiagnostics();},220);
     clearTimeout(this.syntaxTimer);const ed=this.host.editor,path=ed.current,text=ed.getValue();
     if(path&&text.length<250000)this.syntaxTimer=this.later(async()=>{try{const result=await this.api('/diagnostics',{path,content:text});if(this.disposed||ed.models.get(path)?.value!==text)return;ed.setDiagnostics(path,result.diagnostics);}catch(_){}},700);
     clearTimeout(this.saveTimer);const live=this.lantern?.state.active;if(this.prefs['files.autoSave']&&!live&&ed.isDirty())this.saveTimer=this.later(()=>{if(this.prefs['files.autoSave']&&ed.current===path&&this.liveEditingPath!==path&&ed.isDirty())this.safe(()=>this.host.saveFile(path,{automatic:true}));},live?1100:this.prefs['files.autoSaveDelay']);
@@ -719,8 +722,9 @@ export class LumenPlatform {
     };document.addEventListener('keydown',this.keyHandler);
   }
   workspaceChanged(){
+    this.companion?.session.stop();
     clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();t.mount.remove();}this.terminals.clear();this.activeTerminal=null;this.showingPTY=false;this.renderActiveTerminal();
     for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.lspSessions.clear();this.diagnosticMap.clear();this.lastContent.clear();this.aiGeneration++;this.aiJob=null;this.conversation=crypto.randomUUID?.()||String(Date.now());this.closePage();this.updateSystemStatus();
   }
-  dispose(){this.disposed=true;this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
+  dispose(){this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
 }

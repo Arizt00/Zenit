@@ -6,7 +6,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DETAILS = {
-    'welcome': ('studio/glass + welcome.css', 'Caústicas, reflexión, forma de facetas y brillo no idénticos. Fechas reales y acción de sesión dependen del host.'),
     'editor': ('app/editor/docking/product-ui + shell.css', 'Orden del árbol/tabs, minimapa, rama Git y runtime dependen del proyecto. Antialiasing e iconos tienen diferencias.'),
     'search': ('studio + pages.css', 'Ilustración local y filtros funcionales tienen diferencias menores de iconos/tipo. El estado vacío se conserva.'),
     'settings': ('workbench/controls + pages.css', 'Texto de seguridad y categorías avanzadas conservan información real. Blur y rasterizado varían por host.'),
@@ -38,8 +37,22 @@ def main():
         links = f'[Golden](tests/visual/references/{screen}.png) · [Resultado](tests/visual/current/{screen}.png) · [Overlay](tests/visual/comparisons/{screen}-overlay.png) · [Diff](tests/visual/comparisons/{screen}-diff.png)'
         lines.append(f'| {screen} | {links} | {value["meanMAE"]:.2f} | {value["lumaBlockSSIM"]:.3f} | {components}. {limitations} |')
         cards.append(f'<section><h2>{html.escape(screen)}</h2><p>{html.escape(limitations)}</p><div class="comparison"><img class="reference" src="references/{screen}.png" alt="Referencia original"><img class="actual" src="current/{screen}.png" alt="Captura real"><i></i></div><label>Referencia / resultado <input type="range" min="0" max="100" value="50" aria-label="Superposición {screen}"></label><p><a href="comparisons/{screen}-overlay.png">Overlay 50 %</a> · <a href="comparisons/{screen}-diff.png">Diferencias</a></p></section>')
-    lines += ['', 'Los siete bounds principales de Welcome/Editor pasan con desviación máxima',
-              'de 1,333 px. No se extrapola ese resultado a todos los detalles de las otras',
+    geometry = json.loads((ROOT / 'tests/visual/current/geometry-verification.json').read_text(encoding='utf-8'))
+    max_delta = max(abs(x) for check in geometry['checks'] for x in check['delta'])
+    lines += ['', '## Bienvenida vigente', '',
+              'El usuario sustituyó la bienvenida de dos columnas por una escena mínima y',
+              'después pidió que ocupara toda la ventana. La referencia original se conserva',
+              'intacta como historial; no se utiliza para declarar un pixel diff aprobado de',
+              'la composición nueva. El objetivo vigente está en `tests/visual/welcome-brief.json`.', '',
+              '[Resultado de bienvenida](tests/visual/current/welcome.png) ·',
+              '[Perfil y recientes](tests/visual/current/profile-activity.png) ·',
+              '[Referencia mínima posterior](tests/visual/references/welcome-minimal.png).', '',
+              'La geometría Blender de dos paredes, el material óptico y la órbita son',
+              'renderizados en vivo. El fondo vectorial de montañas no es el raster de la',
+              'referencia. La iluminación, el tamaño de escena y las facetas mantienen',
+              'diferencias; no se declara una reproducción óptica perfecta.', '',
+              f"Los {len(geometry['checks'])} bounds de Editor/Bienvenida pasan con desviación máxima",
+              f'de {max_delta:.3f} px. No se extrapola ese resultado a todos los detalles de las otras',
               'vistas. Los materiales y assets mantienen las diferencias descritas arriba.', '',
               'Regresiones sin golden independiente: [ASM](tests/visual/current/asm.png),',
               '[Melody](tests/visual/current/melody.png), [paleta](tests/visual/current/palette.png),',
@@ -47,8 +60,10 @@ def main():
               'También se incluye [Forge desacoplado](tests/visual/current/forge-detached.png).', '',
               'Las inspecciones geométricas y de estilo están en `tests/visual/current/inspection.json`.',
               'El estado de conservación de campos/canvas/modelos, los errores JS y el resultado',
-              'ASM real están en los JSON de esa carpeta. Las 312 capturas de la matriz de escala',
-              'se generaron en la carpeta de auditoría local; se incluyen el resumen JSON y',
+              'ASM real están en los JSON de esa carpeta. Esta corrección generó 72 capturas',
+              'de Editor/Melody/Bienvenida en 24 combinaciones de resolución y escala.',
+              'La matriz anterior de 312 capturas no se presenta como una nueva ejecución.',
+              'Se incluyen el resumen JSON y',
               'muestras seleccionadas en `tests/visual/responsive`.', '',
               'Este informe registra resultados y diferencias; no certifica equivalencia total',
               'con las ocho imágenes ni paridad total con VS Code.']

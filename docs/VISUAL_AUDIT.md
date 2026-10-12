@@ -61,3 +61,23 @@ comparar; no se estiran capturas para hacer coincidir el viewport.
 radios, bordes, fondos, color, opacidad, blur y sombra del producto ejecutándose.
 Las ocho referencias originales y sus hashes están en `tests/visual/goldens.json`.
 El informe de diferencias separa medidas verificadas, materiales y datos reales.
+
+
+## Corrección posterior desde a5c6601
+
+La bienvenida de dos columnas queda como historial; el usuario la sustituyó por
+una escena mínima y después pidió pantalla completa y perfil con un clic.
+El target vigente se registra en tests/visual/welcome-brief.json. Se inspeccionaron
+Studio/Docking/Glass/Preview y el host de extensiones antes de aplicar la corrección.
+
+| Síntoma | Causa/contrato comprobado | Solución y prueba |
+| --- | --- | --- |
+| Terminal abre Forge | La preferencia hacker.enabled restaurada habilitaba el dashboard al entrar en la consola | Forge solo por acción explícita o ventana Forge; QA abre Terminal con la preferencia antigua activa |
+| Separadores no reciben arrastre | overflow:hidden en dock-slot recortaba el handle situado fuera del panel | overflow visible en slot y recorte en dock-content; hit test y drag de tres handles |
+| Pestañas cambian DOM al editar | innerHTML reconstruía los tabs en cada cambio de firma | Nodos por clave, cambio de estado y fade únicamente; QA conserva la identidad del botón |
+| Esfera y bienvenida insuficientes | Card restringida y geometría solo procedural | Fullscreen; dos paredes creadas en Blender, shader y órbita en Babylon; hash y recuperación de contexto |
+| Captura lavada | No se reprodujo su causa exacta en el perfil del usuario | Contraste reforzado, eliminación de saturación heredada y guardas de temas; no se afirma una causa probada |
+| Prettier no encuentra vscode | Entrada ESM fuera del interceptor require CJS | Hooks ESM reales sobre Node 24; formato real de Prettier en proyecto aislado |
+| Consejos durante escritura | Necesita grant, cancelación, versión y cuota independientes del stream de edición | CompanionSession, inline provider de Monaco y test de transporte explícitamente simulado |
+
+Las métricas, capturas y diferencias vigentes están en los informes de la raíz.

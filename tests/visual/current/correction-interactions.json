@@ -1,0 +1,25 @@
+{
+  "checks": [
+    "Welcome covers the whole viewport without a nested card",
+    "One click opens the real local profile; a fresh profile invents no activity",
+    "The actual Babylon shader advances with one render loop",
+    "The render rate is bounded and reduced-motion stops the loop",
+    "A lost WebGL context recovers on the same canvas",
+    "The welcome canvas is retained and stops rendering while hidden",
+    "File tab nodes survive edits and active-file changes without remounting",
+    "Opening Terminal does not enable Forge even with the old saved preference",
+    "All three separators receive pointer input and resize their actual panels",
+    "An active advice panel keeps the composer visible at 1280x720 and 1366x768",
+    "Melody advice remains read-only and a real Monaco inline suggestion requires explicit acceptance (fixture transport)",
+    "Recent files show real timestamps and reopen the selected buffer",
+    "New project creates and opens a real empty folder",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "animation": {
+    "before": 0.7444999999962747,
+    "after": 1.4686999999955295,
+    "loops": 1
+  },
+  "aiTransport": "Explicit fixture, not an external model evaluation."
+}

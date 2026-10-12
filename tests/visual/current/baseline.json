@@ -78,28 +78,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -226,28 +226,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -368,38 +368,38 @@
         "display": "none"
       },
       "#lumen-home": {
-        "x": 18,
-        "y": 73,
-        "width": 1636,
-        "height": 824.3333740234375,
-        "display": "grid"
-      },
-      ".home-sidebar": {
-        "x": 18,
-        "y": 73,
-        "width": 405,
-        "height": 824.3333740234375,
-        "display": "flex"
-      },
-      ".home-hero": {
-        "x": 436,
-        "y": 73,
-        "width": 1218,
-        "height": 478,
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 917.3333740234375,
         "display": "block"
       },
-      ".recent-section": {
-        "x": 436,
-        "y": 565,
-        "width": 1218,
-        "height": 332.3333435058594,
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 917.3333740234375,
         "display": "flex"
       },
-      ".hero-copy h2": {
-        "x": 488.66668701171875,
-        "y": 178.5104217529297,
-        "width": 576,
-        "height": 138.2291717529297,
+      ".welcome-scene": {
+        "x": 666,
+        "y": 182.8125,
+        "width": 340,
+        "height": 300,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 569.8229370117188,
+        "y": 490.8125,
+        "width": 532.3541870117188,
+        "height": 203.6979217529297,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 589.8229370117188,
+        "y": 490.8125,
+        "width": 492.35418701171875,
+        "height": 52.5,
         "display": "block"
       },
       ".assistant-hero>.glass-art": {
@@ -522,28 +522,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -670,28 +670,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -818,28 +818,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -966,28 +966,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -1114,28 +1114,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -1262,28 +1262,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -1410,28 +1410,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -1558,28 +1558,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -1706,28 +1706,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,
@@ -1854,28 +1854,28 @@
         "height": 0,
         "display": "none"
       },
-      ".home-sidebar": {
+      ".welcome-sheet": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "flex"
       },
-      ".home-hero": {
+      ".welcome-scene": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
         "display": "block"
       },
-      ".recent-section": {
+      ".welcome-copy": {
         "x": 0,
         "y": 0,
         "width": 0,
         "height": 0,
-        "display": "flex"
+        "display": "block"
       },
-      ".hero-copy h2": {
+      ".welcome-copy h1": {
         "x": 0,
         "y": 0,
         "width": 0,

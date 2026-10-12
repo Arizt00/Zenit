@@ -47,29 +47,7 @@
     },
     {
       "view": "welcome",
-      "selector": ".home-sidebar",
-      "delta": [
-        0,
-        0,
-        0,
-        0.333
-      ],
-      "withinTolerance": true
-    },
-    {
-      "view": "welcome",
-      "selector": ".home-hero",
-      "delta": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "withinTolerance": true
-    },
-    {
-      "view": "welcome",
-      "selector": ".recent-section",
+      "selector": ".welcome-sheet",
       "delta": [
         0,
         0,

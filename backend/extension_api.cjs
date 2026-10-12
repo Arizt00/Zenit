@@ -48,7 +48,7 @@ module.exports=function createAPI(host,options){
     const text=String(data.text||''),lines=text.split(/\r?\n/),u=data.uri||Uri.file(path.resolve(options.workspace,data.path));
     const offsetAt=p=>{let offset=0;const split=text.split('\n');for(let i=0;i<Math.min(p.line,split.length);i++)offset+=split[i].length+1;return Math.min(text.length,offset+p.character);};
     const positionAt=offset=>{const prefix=text.slice(0,offset),parts=prefix.split('\n');return new Position(parts.length-1,parts.at(-1).length);};
-    const doc={uri:u,fileName:u.fsPath,languageId:data.language||'plaintext',version:data.version||1,isDirty:!!data.dirty,isClosed:false,isUntitled:false,eol:text.includes('\r\n')?2:1,lineCount:lines.length,offsetAt,positionAt,getText:r=>r?text.slice(offsetAt(r.start),offsetAt(r.end)):text,lineAt:n=>{n=typeof n==='number'?n:n.line;const t=lines[n]||'';return {lineNumber:n,text:t,range:new Range(n,0,n,t.length),rangeIncludingLineBreak:new Range(n,0,n<lines.length-1?n+1:n,n<lines.length-1?0:t.length),firstNonWhitespaceCharacterIndex:t.search(/\S/)<0?t.length:t.search(/\S/),isEmptyOrWhitespace:!t.trim()};},getWordRangeAtPosition:(p,re=/[A-Za-z_][\w]*/g)=>{const pattern=new RegExp(re.source,re.flags.includes('g')?re.flags:re.flags+'g');for(const m of lines[p.line].matchAll(pattern))if(m.index<=p.character&&m.index+m[0].length>=p.character)return new Range(p.line,m.index,p.line,m.index+m[0].length);},validatePosition:p=>new Position(Math.max(0,Math.min(p.line,lines.length-1)),Math.max(0,Math.min(p.character,lines[Math.max(0,Math.min(p.line,lines.length-1))].length))),validateRange:r=>new Range(doc.validatePosition(r.start),doc.validatePosition(r.end)),save:()=>saveDocument(u)};
+    const doc={uri:u,fileName:u.fsPath,languageId:data.language||'plaintext',version:data.version||1,isDirty:!!data.dirty,isClosed:false,isUntitled:u.scheme==='untitled',eol:text.includes('\r\n')?2:1,lineCount:lines.length,offsetAt,positionAt,getText:r=>r?text.slice(offsetAt(r.start),offsetAt(r.end)):text,lineAt:n=>{n=typeof n==='number'?n:n.line;const t=lines[n]||'';return {lineNumber:n,text:t,range:new Range(n,0,n,t.length),rangeIncludingLineBreak:new Range(n,0,n<lines.length-1?n+1:n,n<lines.length-1?0:t.length),firstNonWhitespaceCharacterIndex:t.search(/\S/)<0?t.length:t.search(/\S/),isEmptyOrWhitespace:!t.trim()};},getWordRangeAtPosition:(p,re=/[A-Za-z_][\w]*/g)=>{const pattern=new RegExp(re.source,re.flags.includes('g')?re.flags:re.flags+'g');for(const m of lines[p.line].matchAll(pattern))if(m.index<=p.character&&m.index+m[0].length>=p.character)return new Range(p.line,m.index,p.line,m.index+m[0].length);},validatePosition:p=>new Position(Math.max(0,Math.min(p.line,lines.length-1)),Math.max(0,Math.min(p.character,lines[Math.max(0,Math.min(p.line,lines.length-1))].length))),validateRange:r=>new Range(doc.validatePosition(r.start),doc.validatePosition(r.end)),save:()=>saveDocument(u)};
     const previous=documents.get(u.toString());let raw;try{if(u.scheme==='file'&&!previous)raw=fs.readFileSync(u.fsPath);}catch(_){}
     doc._revision=data.revision??previous?._revision??(raw?require('node:crypto').createHash('sha256').update(raw).digest('hex'):null);doc._bom=previous?._bom??raw?.subarray(0,3).equals(Buffer.from([239,187,191]))??false;doc._newline=previous?._newline??(raw?.includes(Buffer.from('\r\n'))?'CRLF':'LF');return doc;
   };
@@ -120,9 +120,34 @@ module.exports=function createAPI(host,options){
   vscode.commands.registerCommand=(id,fn,ctx)=>{const bound=(...args)=>fn.apply(ctx,args);bound.vscodeCommand=true;return registerCommand(id,bound,id);};
   const treeViews=require('./extension_views.cjs')(vscode);
   const services=require('./extension_services.cjs')(vscode,host,options,event,makeDocument,documents);
+  require('./extension_ui.cjs')(vscode,host);
+  require('./extension_auth.cjs')(vscode,options.id);
+  const portAttributes=require('./extension_ports.cjs')(vscode);
+  const fileSystems=require('./extension_filesystem.cjs')(vscode,event,makeDocument,documents,globPattern);
+  require('./extension_language_tools.cjs')(vscode,options);
+  vscode.workspace.onWillCreateFiles=event('willCreateFiles').event;
+  vscode.workspace.onWillRenameFiles=event('willRenameFiles').event;
+  vscode.workspace.onWillDeleteFiles=event('willDeleteFiles').event;
+  async function resourceEdits(edit){
+    const operations=edit.operations||[],extra=[];
+    for(const [kind,name] of [['create','willCreateFiles'],['rename','willRenameFiles'],['delete','willDeleteFiles']]){
+      const matching=operations.filter(o=>o.kind===kind);if(!matching.length)continue;
+      const files=matching.map(o=>kind==='rename'?{oldUri:o.oldUri,newUri:o.newUri}:o.uri),deadline=Date.now()+1500;
+      for(const listener of event(name).listeners){
+        let dispatch=true,timer;const pending=[];
+        try{
+          const result=listener({files,waitUntil:value=>{if(!dispatch)throw Error('waitUntil debe llamarse durante el evento de archivos.');pending.push(Promise.resolve(value));}});result?.catch?.(e=>console.error(e.message));dispatch=false;
+          const edits=await Promise.race([Promise.all(pending),new Promise((_,reject)=>timer=setTimeout(()=>reject(Error('Evento de archivos agotado')),Math.max(1,deadline-Date.now())))]);
+          for(const value of edits)if(value instanceof WorkspaceEdit){if(value.operations.some(o=>o.kind!=='text'))throw Error('Un evento previo de archivos solo puede aportar ediciones de texto.');for(const operation of value.operations){if(kind==='create'&&matching.some(o=>o.uri.toString()===operation.uri.toString()))continue;extra.push(operation);}}
+        }catch(error){console.error(error.message);}finally{dispatch=false;clearTimeout(timer);}
+      }
+    }
+    return extra.length?{changes:edit.toJSON().changes,operations:[...extra,...operations]}:edit;
+  }
   vscode.workspace.applyEdit=async edit=>{
     if(!host.service)throw Error('Servicios del IDE no conectados.');
-    const result=await host.service('workspace.applyEdit',{edit,documents:[...documents.values()].map(d=>({uri:d.uri,text:d.getText(),version:d.version}))});
+    const resolved=await resourceEdits(edit);
+    const result=await host.service('workspace.applyEdit',{edit:resolved,documents:[...documents.values()].map(d=>({uri:d.uri,text:d.getText(),version:d.version}))});
     for(const resource of result.resources||[]){
       const uri=Uri.file(path.resolve(options.workspace,resource.path));
       if(resource.kind==='rename'){const oldUri=Uri.file(path.resolve(options.workspace,resource.oldPath));for(const [key,old] of [...documents])if(old.fileName===oldUri.fsPath||old.fileName.startsWith(oldUri.fsPath+path.sep)){documents.delete(key);const target=Uri.file(uri.fsPath+old.fileName.slice(oldUri.fsPath.length)),doc=makeDocument({uri:target,text:old.getText(),language:old.languageId,dirty:old.isDirty,version:old.version+1});documents.set(target.toString(),doc);if(current===old)current=doc;}event('renameFiles').fire({files:[{oldUri,newUri:uri}]});}
@@ -158,8 +183,8 @@ module.exports=function createAPI(host,options){
     return {revision:startRevision,items};
   }
   // Missing namespaces/methods fail by name, without pretending to implement them.
-  for(const name of ['workspace','window','languages','extensions','debug','tasks','env'])vscode[name]=new Proxy(vscode[name],{get(target,key){if(key in target||typeof key==='symbol'||key==='then')return target[key];const api=`vscode.${name}.${key}`;if(!unsupportedApis.has(api))console.error('API pendiente: '+api);unsupportedApis.add(api);throw Error(`La extensión necesita ${api}, aún no disponible en Zénit preview.`);}});
-  const context={subscriptions:[],extensionPath:options.root,extensionUri:Uri.file(options.root),extension:extensions.find(e=>e.id===options.id),extensionMode:1,storagePath:storage,globalStoragePath:storage,storageUri:Uri.file(storage),globalStorageUri:Uri.file(storage),logUri:Uri.file(storage),logPath:storage,asAbsolutePath:p=>path.join(options.root,p),workspaceState:memento('workspace-state.json'),globalState:memento('global-state.json'),environmentVariableCollection:{persistent:false,replace:()=>{throw Error('Configura variables del proceso desde Zénit.');}}};
+  for(const name of ['workspace','window','languages','extensions','debug','tasks','env','authentication','lm'])vscode[name]=new Proxy(vscode[name],{get(target,key){if(key in target||typeof key==='symbol'||key==='then')return target[key];const api=`vscode.${name}.${key}`;if(!unsupportedApis.has(api))console.error('API pendiente: '+api);unsupportedApis.add(api);throw Error(`La extensión necesita ${api}, aún no disponible en Zénit preview.`);}});
+  const context={subscriptions:[],extensionPath:options.root,extensionUri:Uri.file(options.root),extension:extensions.find(e=>e.id===options.id),extensionMode:1,storagePath:storage,globalStoragePath:storage,storageUri:Uri.file(storage),globalStorageUri:Uri.file(storage),logUri:Uri.file(storage),logPath:storage,asAbsolutePath:p=>path.join(options.root,p),workspaceState:memento('workspace-state.json'),globalState:memento('global-state.json'),environmentVariableCollection:require('./extension_environment.cjs')(vscode,host,storage)};
   const failures=new WeakMap();
   vscode.workspace.onWillSaveTextDocument=event('willSave').event;
   vscode.TextDocumentSaveReason={Manual:1,AfterDelay:2,FocusOut:3};
@@ -191,5 +216,5 @@ module.exports=function createAPI(host,options){
   const updateEditors=require('./extension_editors.cjs')(vscode,options,event,makeDocument,documents,doc=>{current=doc;});
   const serviceEvent=services.event;services.event=(name,value)=>{if(name==='editor.state'){updateEditors(value);return;}if(name==='document.saved'){const uri=Uri.file(value.uri),old=documents.get(uri.toString());if(old&&old.getText()===value.text){old._revision=value.revision;old.isDirty=false;event('save').fire(old);}return;}return serviceEvent(name,value);};
   function didSave(){if(current){if(current.uri.scheme==='file')try{current._revision=require('node:crypto').createHash('sha256').update(fs.readFileSync(current.uri.fsPath)).digest('hex');}catch{}current.isDirty=false;event('save').fire(current);}}
-  return {vscode,context,services,syncDocument,willSave,didSave,treeViews,fileDecorations,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme),readVirtual:async value=>{const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
+  return {vscode,context,services,syncDocument,willSave,didSave,treeViews,fileDecorations,portAttributes,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme)||fileSystems.has(value),readVirtual:async value=>{if(fileSystems.has(value))return fileSystems.read(value);const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
 };

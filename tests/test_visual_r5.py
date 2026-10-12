@@ -23,17 +23,18 @@ def main():
                 # The live IDE polls services. Network-idle is not a startup contract.
                 page.goto(f'http://127.0.0.1:{server.server_port}',wait_until='domcontentloaded');page.wait_for_function('window.lumen?.ready')
                 page.wait_for_function('Array.from(document.querySelectorAll("canvas[data-glass]")).every(c=>c.parentElement.classList.contains("gpu-ready")||c.dataset.graphicsError)')
-                page.locator('.brand').click();expect(page.locator('#lumen-home')).to_be_visible();assert app.features.studio.export()['recent']==[]
+                expect(page.locator('#lumen-home')).to_be_visible();assert app.features.studio.export()['recent']==[]
                 page.screenshot(path=str(out/'r5-inicio.png'));passed('Fresh local profile has no invented recent files')
-                page.locator('.home-enter').click()
+                page.keyboard.press('Escape')
                 for name in ('main.js','model.js','check.py'):
                     page.keyboard.press('Control+k');page.locator('#palette-input').fill(name);page.locator('.palette-result').first.click()
+                    page.wait_for_function('(name)=>window.lumen.activeFile?.endsWith(name)',arg=name)
                 for width,height in ((1050,720),(1366,768),(1920,1080)):
-                    page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(300)
+                    page.set_viewport_size({'width':width,'height':height});page.evaluate('async()=>await Promise.all(document.querySelector(".editor-tabbar").getAnimations({subtree:true}).filter(a=>a.effect.getComputedTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})))')
                     assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                     bounds=page.locator('.editor-tabbar').bounding_box()
                     for el in page.locator('.file-tab:visible,.file-group:visible,.editor-tabbar>.icon-button:visible').all():
-                        b=el.bounding_box();assert b['y']>=bounds['y'] and b['y']+b['height']<=bounds['y']+bounds['height']+1,(width,b,bounds)
+                        b=el.bounding_box();assert b['y']>=bounds['y'] and b['y']+b['height']<=bounds['y']+bounds['height']+1,(width,b,bounds,el.evaluate('e=>({html:e.outerHTML,transform:getComputedStyle(e).transform,height:getComputedStyle(e).height,padding:getComputedStyle(e).padding,animations:e.getAnimations().map(a=>({state:a.playState,timing:a.effect.getComputedTiming()}))})'))
                 passed('File chips, groups and tab controls fit at 1050, 1366 and 1920 pixels')
                 for width,height in ((1366,768),(1672,1000),(1920,1080)):
                     page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(250)

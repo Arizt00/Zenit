@@ -184,6 +184,9 @@ class Handler(BaseHTTPRequestHandler):
             ws = self.app.workspace
             if path.startswith("/api/platform/"):
                 return self.reply(self.app.features.post(path[len("/api/platform"):], body))
+            if path == "/api/projects/create":
+                from .projects import create_project
+                return self.reply(create_project(body.get('parent'), body.get('name')))
             if path == "/api/save":
                 result=ws.save(body["path"], body["content"], body.get("revision"), create=bool(body.get("create")), newline=body.get("newline", "LF"), bom=bool(body.get("bom")))
                 self.app.features.lantern.saved(ws,body['path'])

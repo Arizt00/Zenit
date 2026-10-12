@@ -29,8 +29,8 @@
   --card: #ffffff;
   --field: #ffffff;
   --text: #10133c;
-  --secondary: #6473a9;
-  --muted: #627197;
+  --secondary: #53638e;
+  --muted: #58688f;
   --text-primary: var(--text);
   --text-secondary: var(--secondary);
   --text-tertiary: var(--muted);

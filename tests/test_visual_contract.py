@@ -8,6 +8,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class GoldenReferenceTests(unittest.TestCase):
+    def test_later_minimal_welcome_reference_is_preserved(self):
+        folder = ROOT / 'tests/visual'
+        brief = json.loads((folder / 'welcome-brief.json').read_text(encoding='utf-8'))
+        self.assertEqual(hashlib.sha256((folder / brief['reference']).read_bytes()).hexdigest(), brief['sha256'])
+
     def test_active_design_contains_no_mojibake(self):
         for path in (ROOT / 'web/design').glob('*.css'):
             with self.subTest(stylesheet=path.name):

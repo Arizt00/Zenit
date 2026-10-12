@@ -1,146 +1,130 @@
-# Reconstrucción visual de Zénit · 0.5.3 R6
+# Zénit · corrección de interfaz y evolución · 0.5.3 R6
 
-Se reconstruyó la presentación del producto real sobre la revisión `2d1bffa`.
-Monaco, xterm/ConPTY, los procesos de compilación, los proveedores de Melody,
-Lantern, Open VSX/VSIX, los hosts de extensiones y los motores de depuración
-siguen conectados a sus servicios originales. No se sustituyeron por pantallas
-estáticas ni salidas inventadas. La ampliación funcional de paridad quedó pausada
-por la instrucción de corrección visual.
+Esta entrega continúa desde `a5c6601` y aplica las instrucciones posteriores al
+primer rediseño. La bienvenida anterior de dos columnas fue sustituida por la
+composición mínima solicitada y después extendida a toda la ventana. Monaco,
+terminales reales, Lantern, Laboratory, extensiones y proveedores de Melody
+siguen conectados a los servicios del producto. No son capturas dentro de HTML.
 
-## Arquitectura y archivos
+## Cambios y arquitectura
 
-- `web/index.html` carga un único punto de entrada: `web/design.css`.
-- `web/design/tokens.css` centraliza espaciado, radios, superficies, texto,
-  selección, estados, borde, sombras, cristal y duraciones.
-- `shell.css`, `welcome.css`, `melody.css`, `pages.css`, `catalogue.css`,
-  `debug.css`, `windows.css`, `workspaces.css` y `dialogs.css` poseen la
-  presentación de sus componentes. Se formatearon para poder mantenerlos.
-- `tools/migrate_visual_styles.py` analiza los catorce CSS históricos y elimina
-  las reglas de las superficies sustituidas. Genera `support.css` para controles
-  auxiliares y vistas avanzadas, con la procedencia registrada en `migration.json`.
-  Esos catorce archivos ya no se cargan en el IDE; siguen disponibles para las
-  superficies independientes y como fuentes de migración.
-- `product-ui.js` reorganiza botones existentes y sus handlers en menús compactos.
-  Añade el selector de sesiones reales de terminal, el acceso a proveedor/modelo
-  de Melody y la barra contextual de breadcrumbs. Las acciones originales siguen
-  accesibles. `app.js` instala y limpia este módulo.
-- `studio.js`, `workbench.js` y `lantern.js` conservan nodos y limitan las
-  actualizaciones a cambios de estado. Las categorías de Ajustes retienen sus
-  campos, desplazamiento y foco; sus etiquetas no comparten IDs duplicados.
-- `docking.js` conserva paneles al reparentarlos. Se corrigió la reapertura de
-  Melody en el cajón de ventanas estrechas y la capa que interceptaba clics.
-- `desktop-workflows.js` monta el editor y los estilos de trabajo desacoplados
-  en el contenedor nativo visible, conservando sus modelos. El parser de CSS
-  distingue un nombre de clase completo de prefijos como `workspace-profile-*`,
-  para no eliminar por accidente los contratos de las herramientas de datos.
-- `editor.js` mantiene Monaco, minimapa y edición dividida. El interlineado
-  predeterminado pasa a 1,35 en `backend/preferences.py`: 14 px de letra y 19 px
-  de línea. Las preferencias explícitas del usuario conservan su valor.
-- `glass.js` mantiene escenas Babylon/WebGL2, lente refractiva con render target,
-  Fresnel, doble reflejo de pared, iluminación pastel en movimiento, seis cristales
-  facetados, órbita, luz ambiental y sombra óptica. Los canvases se conservan y
-  las escenas ocultas pausan su bucle. CSS queda como fallback cuando falla WebGL.
-- `controls.js`, `preview.js` y `monaco-overlays.js` evitan rescaneos completos
-  del DOM ante mutaciones ajenas. La terminal ajusta tamaño solo si cambia.
-- `foundation-ui.js` utiliza detección real y marcas locales de lenguajes. Los
-  archivos de `assets/languages` incluyen procedencia y aviso de licencias.
-  «Ruta local» identifica detección de un ejecutable; no promete que Docker tenga
-  un daemon funcionando ni que cada SDK haya pasado una prueba completa.
+| Área | Archivos principales | Resultado |
+| --- | --- | --- |
+| Inicio | `studio.js`, `welcome.css`, `welcome-mountains.svg` | Escena a pantalla completa, dos acciones reales, perfil detrás de un clic y fondo con luz lenta. |
+| Perfil | `studio.js`, `dialogs.css` | Nombre/avatar y hasta 20 archivos recientes reales, ordenados por fecha; abre archivos de otras carpetas con control de cambios no guardados. |
+| Proyecto nuevo | `backend/projects.py`, `server.py`, `app.js` | Crea y abre una carpeta vacía real, sin sobrescribir otro proyecto; valida rutas y nombres reservados. |
+| Cristal | `tools/build_crystal.py`, `design/zenit-crystal.blend`, `glass.js`, `zenit-crystal.mesh.*` | Geometría de Blender, dos paredes, material óptico animado, órbita y carga verificada por SHA-256. |
+| Terminal / Forge | `desktop-workflows.js`, `docking.js`, `shell.css` | Abrir Terminal no activa el dashboard de Forge por una preferencia antigua. Forge conserva su ventana y su integración explícita. |
+| Redimensionado | `docking.js`, `shell.css` | El contenedor deja de recortar los separadores exteriores. Arrastrar izquierda, derecha e inferior modifica el tamaño real. |
+| Pestañas | `app.js` | Actualización por clave: conserva botones al editar/activar archivos, mantiene foco y webview tabs, y anima nuevas pestañas solo con opacity. |
+| Contraste | `tokens.css`, `extension-theme.js` | Texto secundario más legible, eliminación de saturación/blur heredados en paneles ordinarios y corrección de pares ilegibles de temas externos. |
+| Melody | `melody-companion.js`, `workbench.js`, `melody.css`, `app.js` | Ayuda opcional sobre el búfer actual y predicción solicitada expresamente dentro de Monaco. |
+| Extensiones | `extension_host.cjs`, `extension_api.cjs`, `extension_services.*`, módulos `extension_auth/environment/filesystem/language_tools/ports/ui.cjs` | Más contratos reales de VS Code, detallados abajo. |
 
-## Sistema de diseño
+### Blender, Babylon y WebGL2
 
-La escala de espacio es 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48 y 64 px.
-Los radios principales son 10/14/16/20 px. Los bordes son de 1 px. El blanco
-`#ffffff` se combina con fondo `#f8f9ff`, selección `#f0ebff`, acento `#6b43f5`,
-texto `#10133c` y secundario `#6473a9`. El cristal usa alpha 0,88 sin aplicar
-opacidad al texto. Las duraciones son 120/180/240 ms, sobre propiedades concretas.
-No se añadió `transition: all`.
+Blender 5.0.1 genera una esfera de pared exterior y otra interior: 6.050 vértices
+y 12.096 triángulos por pared, 24.192 triángulos en conjunto. Se conserva el
+archivo `.blend` editable y el generador reproducible. Un formato binario pequeño
+exporta posiciones, normales e índices; Babylon aplica esos datos mediante
+VertexData. El navegador no necesita instalar Blender.
 
-Las referencias definen la composición del perfil canónico de pruebas. La tabla
-de `VISUAL_DIFF_REPORT.md` identifica cada imagen, captura y diferencia. Los
-temas oscuro/bosque y los temas instalados conservan sus mapas reales. Las
-comparaciones de contraste verifican pares especificados de texto y sintaxis;
-no certifican accesibilidad completa de todas las extensiones o webviews.
+El material de ejecución es un ShaderMaterial propio: Fresnel, doble borde,
+reflejos, desplazamiento cromático y lente con render target. Los campos pastel
+se desplazan lentamente y la órbita cambia de inclinación sin deformar la esfera.
+No se presenta como un render Cycles ni como una reproducción física exacta del
+material Blender. El checksum, los rangos de índices, las normales y la separación
+de las paredes tienen pruebas. CSS conserva un fallback identificable.
 
-## Validación
+El motor limita su dibujo a 60 actualizaciones por segundo, conserva canvas y
+contexto, detiene el bucle al ocultarse y respeta reducir movimiento. La prueba
+fuerza una pérdida de contexto y comprueba su recuperación en el mismo canvas.
+El fondo de inicio usa transform/opacity del compositor, no timers permanentes
+ni cambios geométricos del layout. Se pausa también al ocultarse.
 
-- Auditoría y capturas de la base antes de editar, en Edge y WebView2 real.
-- Capturas sucesivas con revisión de overlays y diferencias, sin reemplazar los
-  golden masters por resultados generados.
-- Ocho referencias originales con SHA-256, 12 vistas de regresión y una captura
-  adicional de Forge desacoplado en `tests/visual`.
-- Siete regiones principales de Editor/Welcome verificadas con tolerancia de
-  2 px. La mayor desviación nativa fue 1,333 px. Este control no representa una
-  certificación de cada elemento ni de equivalencia de materiales.
-- Matriz completa: seis resoluciones físicas, escalas 100/125/150/200 %, 24 casos,
-  sin overflow horizontal global ni errores JavaScript. Se abrió Melody y se
-  verificó que su compositor quedara dentro de la ventana. Son escalas emuladas
-  de Edge; no se cambió la configuración de DPI de Windows 24 veces.
-- 257 pruebas Python previas de la base funcional: 252 pasaron, cinco omitidas.
-  Después del cambio del interlineado, 56 pruebas de plataforma: 54 pasaron,
-  dos omitidas. Tres contratos nuevos protegen hashes, tamaños y UTF-8 de los
-  golden tests. Cincuenta pruebas JavaScript y comprobaciones de sintaxis pasan.
-- Recorridos R5/R6: siete y ocho comprobaciones respectivamente, con terminales,
-  tres temas, temas instalados tras reiniciar, host de extensión real, guardado
-  Unicode, errores Java, edición en vivo con permiso y conservación del archivo
-  original. El transporte de IA de esa prueba se simula explícitamente; no se
-  presenta como una respuesta de un modelo real.
-- La captura del editor ejecuta Java realmente en ConPTY. El ejemplo x86-64
-  ejecuta 36 instrucciones en CPU emulada y termina con RAX = `0x37` (55).
+### Melody contigo
 
-## Rendimiento y flicker
+La acción «Ayuda en tiempo real», o la petición «Ayúdame en tiempo real mientras escribo», muestra el proveedor/modelo y autoriza una sesión
+acotada: hasta 12 consultas, separadas por al menos 20 segundos. Solo se envía el
+búfer activo de hasta 64.000 caracteres y diagnósticos actuales, mediante el mismo
+AIRouter y las mismas credenciales/proveedores existentes. No se envía todo el
+proyecto ni se crea una respuesta de demostración.
 
-Se eliminó un fallo de animación: desactivarla dejando duración 0,01 ms mantenía
-infinito el blink de xterm. Ahora se detiene. También se evitaron setters iguales,
-reaplicación de tema sin cambios y reconstrucciones periódicas del footer.
+El cambio de carpeta, proveedor o modelo invalida la sesión. Editar durante una
+respuesta la cancela; una respuesta que llega después de detenerse se descarta.
+La consulta normal y la edición en vivo detienen la ayuda para evitar competencia.
+Los consejos se muestran como propuestas: no escriben ni guardan archivos.
 
-En WebView2 nativo, dos segundos de reposo con movimiento desactivado produjeron
-cero mutaciones, tareas largas, layouts, recálculos de estilo y paints. Con
-movimiento activado, la escena visible sigue renderizando; la de Welcome oculta
-tiene cero bucles. Las medidas de rAF y CPU del renderer están en los JSON de
-rendimiento. No equivalen a FPS de monitor ni a tiempo GPU. No se afirma 60 FPS.
-Es un muestreo acotado, no una garantía universal de ausencia de flicker.
+«Sugerir siguiente código» solicita hasta ocho líneas. Una respuesta compatible
+se publica mediante un InlineCompletionsProvider real, ligada al modelo, revisión
+y cursor. Tab la acepta con el mecanismo de Monaco y la edición queda en el
+búfer con undo. La edición en vivo previa conserva su permiso por archivo,
+control de conflictos y suspensión de autoguardado. Las pruebas de transporte de
+esta nueva UI usan una fixture explícita: no evalúan la calidad de un modelo externo.
 
-## Reproducción
+### Contratos de extensiones ampliados
 
-Instala `requirements-visual.txt` junto al entorno normal de desarrollo y usa:
+- `import 'vscode'` en ESM utiliza los hooks síncronos de Node 24, junto con el
+  require CJS existente. Comparten la identidad de API por extensión y dependencia.
+- StatusBarItem, LanguageStatusItem, OutputChannel y LogOutputChannel publican
+  estado y salida reales, con actualización, limpieza y disposición.
+- environmentVariableCollection conserva mutaciones por extensión y ámbito;
+  se aplican al entorno real al crear terminales, incluidas las terminales normales.
+- Autenticación admite proveedores registrados por extensiones, cuentas,
+  sesiones y consentimiento por consumidor. No inventa OAuth ni access tokens.
+- CustomTextEditorProvider abre documentos en webviews reales; las operaciones
+  de webview se serializan y esperan la creación del panel antes de continuar.
+- FileSystemProvider despacha lecturas, escrituras, stat, directorios y recursos
+  virtuales; readonly y operaciones entre proveedores fallan explícitamente.
+- Varios proveedores de configuración de depuración se conservan por tipo. Hay
+  registro y despacho de visualizadores de depuración y atributos de puertos.
+- Herramientas aportadas por extensiones pueden registrarse e invocarse de forma
+  explícita, con cancelación y sus mensajes de confirmación.
+- onWillCreate/Rename/DeleteFiles del host iniciador puede aportar ediciones de
+  texto a la misma transacción WorkspaceEdit. No se anuncia difusión global completa.
 
-```powershell
-python tools/visual_capture.py --native --output build/visual
-python tools/visual_compare.py --captures build/visual --output build/visual-diffs
-python tools/visual_validate.py build/visual
-python tools/visual_capture.py --matrix --all-views --output build/visual-matrix
-python tools/visual_validate.py build/visual-matrix --matrix
-python -m unittest tests.test_visual_contract -v
-node --run check
-node --test tests/*.mjs
-```
+La auditoría de ocho paquetes instalados activa siete. Prettier 12.4.0 produce
+una edición real de formato; Maven registra 38 comandos y seis proveedores;
+Markdown Preview Enhanced, Pyrefly, Python Debugger, Container Tools y Material
+Icon Theme también activan. GitHub Pull Requests queda bloqueado por el proveedor
+GitHub no conectado. **Activación de 7/8 paquetes no significa 90 % de paridad con
+VS Code**, ni certifica cada comando. La evidencia declara capabilityCertification=false.
 
-El runner crea un proyecto y perfil temporales. `--installed-from` permite copiar
-paquetes de una instalación para revisar el catálogo, sin claves ni autorizaciones
-de ejecución. Las APIs de QA se inyectan únicamente en el runner; no se exponen
-en la aplicación distribuida. Las capturas del repositorio documentan su contexto.
+## Diseño y validación
 
-## Límites de la entrega
+Se mantienen los tokens centralizados de espaciado, radios, estados, tipografía,
+bordes y duraciones. Día usa blanco/lavanda con texto `#10133c`, secundario
+`#53638e` y acento `#6b43f5`. Los iconos de controles pertenecen a la misma familia
+SVG local; los logos de lenguajes/extensiones proceden de sus recursos reales.
+No se introdujo transition:all ni opacidad sobre el texto.
 
-El instalador y el ZIP de Windows se reconstruyeron desde el commit `0d70e10`.
-Diecinueve archivos del sistema visual incluidos en el runtime congelado coinciden
-byte a byte con los del repositorio. Dos recorridos consecutivos completaron las
-14 pruebas nativas del paquete, incluyendo ventanas de Forge/web/Lantern/datos,
-edición compartida, retorno, QuickInput, host Node y dependencias persistidas.
-Antes hubo timeouts de arranque de preview que siguen documentados como límite
-intermitente; no se esconden ni se declaran resueltos por los recorridos posteriores.
+- Suite Python completa: 275 pruebas ejecutadas, cinco omitidas por requisitos
+  del entorno. Después se verificó además el contrato del nuevo asset Blender.
+- JavaScript: 62 pruebas pasan, incluidas nueve de cancelación, revisión, cuota y
+  permisos de la ayuda; ESM, formato de Prettier, filesystem y servicios tienen
+  13 pruebas de integración nuevas dentro de la suite Python.
+- Recorrido de corrección: 14 comprobaciones con inicio, perfil, pérdida de WebGL,
+  reducir movimiento, pestañas conservadas, tres separadores, ayuda, aceptación
+  de inline suggestion, proyecto nuevo y ausencia de errores JS. Transporte de
+  IA simulado e identificado expresamente, no respuesta de un proveedor real.
+- Recorridos R5/R6 previos: siete y ocho comprobaciones de tres temas, terminales,
+  guardado Unicode, código en vivo con permiso y desinstalación sobre un destino
+  desechable. Los resultados se conservan como ejecuciones separadas.
+- Capturas de 13 vistas en WebView2 real al 150 % del host, viewport cliente
+  1672×917 fijado por CDP. Referencias originales intactas; overlays y diffs de
+  siete vistas. La bienvenida posterior se valida por su brief y geometría.
+- Matriz de seis resoluciones y cuatro escalas emuladas: 24 casos y 72 capturas
+  nuevas de Editor/Melody/Inicio. No representa 24 cambios físicos de DPI de Windows.
 
-La reconstrucción de Windows se instaló localmente como R6. El instalador conservó
-la distribución anterior como copia recuperable, cuatro archivos de perfil sin
-modificar y las selecciones de SDK Java/C++/Python. El runtime instalado detecta
-las trece herramientas del SDK compartido y ejecuta el ejemplo x86-64 hasta
-RAX/RBX = 55, RCX = 0 y RDX = 110. Los paquetes públicos anteriores de la etiqueta
-R6 no se sobrescribieron: el nuevo instalador y ZIP están disponibles localmente.
+En una muestra nativa de tres segundos del inicio animado se recogieron 182
+draws, CPU mediana 0,5 ms y p95 0,8 ms por frame del motor, sin long tasks ni
+mutaciones DOM. Son medidas locales de CPU, no tiempo GPU ni una garantía de
+60 FPS de pantalla. El perfil completo está en `tests/visual/current`.
 
-La composición principal está verificada; el material 3D, la escena decorativa
-del laboratorio y algunos detalles de iconos/tipografía mantienen diferencias
-con las imágenes. La comparación no constituye un certificado de igualdad
-píxel a píxel. `KNOWN_LIMITATIONS.md` registra estas diferencias y los límites
-funcionales conservados. La reconstrucción visual no certifica paridad total
-con VS Code ni el funcionamiento de cualquier extensión descargada.
+## Entrega y límites
+
+Los reports visuales, capturas, datos de rendimiento y contratos están incluidos
+en el repositorio. La comprobación del instalador reconstruido y de la instalación
+local se registra por separado en `tests/visual/evidence`. Los paquetes públicos
+anteriores no se presentan como builds de estos cambios. Consulte
+`KNOWN_LIMITATIONS.md` para capacidades parciales y distribución por plataforma.

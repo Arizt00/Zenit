@@ -1,0 +1,85 @@
+{
+  "method": "Isolated local package activation and selected real operations; no global parity percentage.",
+  "packages": [
+    {
+      "id": "esbenp.prettier-vscode",
+      "version": "12.4.0",
+      "activation": "activated",
+      "commands": 3,
+      "providerCount": 55,
+      "capabilityCertification": false,
+      "engine": "node",
+      "unsupportedApis": [],
+      "realFormattingEdits": 1
+    },
+    {
+      "id": "GitHub.vscode-pull-request-github",
+      "version": "0.166.1",
+      "activation": "blocked",
+      "commands": 0,
+      "providerCount": 0,
+      "capabilityCertification": false,
+      "error": "Proveedor de autenticación no conectado: github. Instala y autoriza su proveedor antes de iniciar sesión."
+    },
+    {
+      "id": "meta.pyrefly",
+      "version": "1.3.9003",
+      "activation": "activated",
+      "commands": 0,
+      "providerCount": 7,
+      "capabilityCertification": false,
+      "engine": "native-lsp",
+      "unsupportedApis": []
+    },
+    {
+      "id": "ms-azuretools.vscode-containers",
+      "version": "2.4.5",
+      "activation": "activated",
+      "commands": 106,
+      "providerCount": 3,
+      "capabilityCertification": false,
+      "engine": "node",
+      "unsupportedApis": []
+    },
+    {
+      "id": "ms-python.debugpy",
+      "version": "2026.6.0",
+      "activation": "activated",
+      "commands": 9,
+      "providerCount": 2,
+      "capabilityCertification": false,
+      "engine": "node",
+      "unsupportedApis": []
+    },
+    {
+      "id": "PKief.material-icon-theme",
+      "version": "5.39.0",
+      "activation": "activated",
+      "commands": 11,
+      "providerCount": 0,
+      "capabilityCertification": false,
+      "engine": "node",
+      "unsupportedApis": []
+    },
+    {
+      "id": "shd101wyy.markdown-preview-enhanced",
+      "version": "0.8.39",
+      "activation": "activated",
+      "commands": 76,
+      "providerCount": 18,
+      "capabilityCertification": false,
+      "engine": "node",
+      "unsupportedApis": []
+    },
+    {
+      "id": "vscjava.vscode-maven",
+      "version": "0.45.3",
+      "activation": "activated",
+      "commands": 38,
+      "providerCount": 6,
+      "capabilityCertification": false,
+      "engine": "node",
+      "unsupportedApis": []
+    }
+  ]
+}

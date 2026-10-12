@@ -12,86 +12,20 @@
     "xrCompatible": false
   },
   "rect": {
-    "x": 911.3333740234375,
-    "y": 73.66667175292969,
-    "w": 730,
-    "h": 476.66668701171875
+    "x": 666,
+    "y": 182.8125,
+    "w": 340,
+    "h": 300
   },
   "meshes": [
     {
-      "name": "melody",
+      "name": "Crystal outer wall",
       "alpha": 1,
       "emissive": null,
       "type": "ShaderMaterial"
     },
     {
-      "name": "pearl-contact",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "ambient-star",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "ambient-star",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "ambient-star",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "ambient-star",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "ambient-star",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "crystal-0",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "crystal-1",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "crystal-2",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "crystal-3",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "crystal-4",
-      "alpha": 1,
-      "emissive": null,
-      "type": "ShaderMaterial"
-    },
-    {
-      "name": "crystal-5",
+      "name": "Crystal inner wall",
       "alpha": 1,
       "emissive": null,
       "type": "ShaderMaterial"

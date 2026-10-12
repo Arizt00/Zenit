@@ -2,7 +2,7 @@
 const path=require('node:path'),crypto=require('node:crypto');
 module.exports=function install(v,host,options,event,makeDocument,documents){
   const call=(method,params)=>{if(!host.service)throw Error('Servicios del IDE no conectados.');return host.service(method,params);};
-  const terminals=new Map(),executions=new Map(),panels=new Map(),taskProviders=new Map(),debugProviders=new Map(),factories=new Map(),sessions=new Map(),trackers=new Map(),inline=new Map(),contexts=new Map();let activeTerminal;
+  const terminals=new Map(),executions=new Map(),panels=new Map(),taskProviders=new Map(),debugProviders=new Map(),factories=new Map(),sessions=new Map(),trackers=new Map(),inline=new Map(),contexts=new Map(),customEditors=new Map();let activeTerminal;
   const folder=v.workspace.workspaceFolders[0],uid=()=>crypto.randomUUID(),token={isCancellationRequested:false,onCancellationRequested:event('serviceCancellation').event};
   const terminal=(opts={},shellPath,shellArgs)=>{
     if(typeof opts==='string')opts={name:opts,shellPath,shellArgs};
@@ -46,7 +46,8 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
     let html='',disposed=false;const receive=new v.EventEmitter(),didDispose=new v.EventEmitter(),viewState=new v.EventEmitter();
     const p={_id:id,viewType,title,viewColumn:typeof column==='object'?column.viewColumn:column,active:true,visible:true,options:opts};
     const ready=call('webview.create',{id,viewType,title,column:p.viewColumn,options:opts});
-    const update=data=>ready.then(()=>call('webview.update',{id,...data})).catch(e=>host.notify(e.message));
+    let updateTail=ready;p._whenReady=()=>updateTail;
+    const update=data=>{updateTail=updateTail.then(()=>call('webview.update',{id,...data}));updateTail.catch(e=>host.notify(e.message));return updateTail;};
     const webview={cspSource:'blob: data:',onDidReceiveMessage:receive.event,
       asWebviewUri(uri){return v.Uri.parse('zenit-resource://'+id+'/'+encodeURIComponent(uri.fsPath));},
       async postMessage(message){await ready;return call('webview.post',{id,message});}
@@ -56,6 +57,24 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
     Object.defineProperty(p,'title',{get:()=>title,set:value=>{title=String(value);update({title});}});
     Object.assign(p,{webview,onDidDispose:didDispose.event,onDidChangeViewState:viewState.event,reveal(c=p.viewColumn,preserveFocus=false){p.visible=true;p.viewColumn=c;update({visible:true,column:c,preserveFocus,revealSequence:Date.now()});},dispose(){if(disposed)return;disposed=true;p.visible=p.active=false;update({disposed:true});panels.delete(id);didDispose.fire();receive.dispose();didDispose.dispose();viewState.dispose();},_receive:receive,_state:viewState});
     panels.set(id,p);return p;
+  }
+  v.window.registerCustomEditorProvider=(viewType,provider,settings={})=>{
+    if(customEditors.has(viewType))throw Error('Editor personalizado ya registrado: '+viewType);
+    const title=(options.manifest.contributes?.customEditors||[]).find(x=>x.viewType===viewType)?.displayName||viewType;
+    customEditors.set(viewType,{provider,settings,title});
+    const command=host.registerCommand('zenit.openCustomEditor.'+viewType,()=>openWith(v.window.activeTextEditor?.document.uri,viewType),'Abrir con '+title);
+    return new v.Disposable(()=>{customEditors.delete(viewType);command.dispose();});
+  };
+  async function openWith(uri,viewType,openOptions={}){
+    const editor=customEditors.get(viewType);if(!editor)throw Error('Editor personalizado no registrado: '+viewType);
+    if(!uri)throw Error('Abre el archivo que quieres mostrar con '+editor.title+'.');
+    const doc=await v.workspace.openTextDocument(uri),column=typeof openOptions==='number'?openOptions:openOptions.viewColumn||v.ViewColumn.Active;
+    const p=panel(viewType,editor.title,column,editor.settings.webviewOptions||{});
+    try{
+      if(typeof editor.provider.resolveCustomTextEditor==='function')await editor.provider.resolveCustomTextEditor(doc,p,token);
+      else throw Error('El editor usa CustomDocument binario: guardado, undo/redo y backups aún pendientes de integración.');
+      await p._whenReady();
+    }catch(error){p.dispose();throw error;}
   }
   v.ViewColumn={Active:-1,Beside:-2,One:1,Two:2,Three:3,Four:4,Five:5,Nine:9};
   v.window.createWebviewPanel=panel;
@@ -67,16 +86,40 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   v.SourceBreakpoint=class{constructor(location,enabled=true,condition,hitCondition,logMessage){Object.assign(this,{id:uid(),location,enabled,condition,hitCondition,logMessage});}};
   v.FunctionBreakpoint=class{constructor(functionName,enabled=true,condition,hitCondition,logMessage){Object.assign(this,{id:uid(),functionName,enabled,condition,hitCondition,logMessage});}};
   const breakpoints=[];
+  const visualizers=new Map(),visualTrees=new Map(),visualItems=new Map();
+  v.DebugVisualization=class{constructor(name){this.name=name;}};
+  v.debug.registerDebugVisualizationProvider=(id,provider)=>{if(visualizers.has(id))throw Error('Visualizador ya registrado: '+id);visualizers.set(id,provider);return new v.Disposable(()=>visualizers.delete(id));};
+  v.debug.registerDebugVisualizationTreeProvider=(id,provider)=>{if(visualTrees.has(id))throw Error('Árbol de visualización ya registrado: '+id);visualTrees.set(id,provider);return new v.Disposable(()=>visualTrees.delete(id));};
+  async function visualize(request){
+    const context={...request.context,session:sessions.get(request.context?.sessionId)||v.debug.activeDebugSession};
+    if(!context.session)throw Error('El visualizador requiere una sesión de depuración activa de esta extensión.');
+    const serialize=(item,tree)=>{const id=uid();visualItems.set(id,{item,tree});if(visualItems.size>500)visualItems.delete(visualItems.keys().next().value);return {id,label:item.label,description:item.description,canEdit:!!item.canEdit,collapsibleState:item.collapsibleState};};
+    if(request.kind==='list'){
+      const items=[];for(const [id,provider] of visualizers){const values=await provider.provideDebugVisualization(context,token);for(const value of values||[]){const key=uid();visualItems.set(key,{visualization:value,provider,context});items.push({id:key,provider:id,name:value.name,icon:value.iconPath?.id});}}
+      return {items};
+    }
+    const cached=visualItems.get(request.item);if(!cached)throw Error('Visualización caducada. Vuelve a solicitarla en la pausa actual.');
+    if(request.kind==='resolve'){
+      const value=await cached.provider.resolveDebugVisualization?.(cached.visualization,token)||cached.visualization,tree=visualTrees.get(value.visualization?.treeId);
+      if(tree){const item=await tree.getTreeItem(cached.context);return {items:item?[serialize(item,tree)]:[]};}
+      if(value.visualization?.command){await v.commands.executeCommand(value.visualization.command,...value.visualization.arguments||[]);return {items:[]};}
+      throw Error('La extensión no proporcionó un árbol ni un comando de visualización.');
+    }
+    if(request.kind==='children'){const children=await cached.tree?.getChildren(cached.item);return {items:(children||[]).map(x=>serialize(x,cached.tree))};}
+    if(request.kind==='edit'){if(!cached.item.canEdit||!cached.tree?.editItem)throw Error('Este valor no admite edición.');const item=await cached.tree.editItem(cached.item,String(request.value));return {items:[serialize(item||cached.item,cached.tree)]};}
+    throw Error('Acción de visualizador desconocida.');
+  }
   Object.assign(v.debug,{
-    registerDebugConfigurationProvider(type,p){debugProviders.set(type,p);return new v.Disposable(()=>debugProviders.delete(type));},
+    registerDebugConfigurationProvider(type,p,triggerKind=1){const entry={provider:p,triggerKind},entries=debugProviders.get(type)||[];entries.push(entry);debugProviders.set(type,entries);return new v.Disposable(()=>{const index=entries.indexOf(entry);if(index>=0)entries.splice(index,1);});},
     registerDebugAdapterDescriptorFactory(type,p){factories.set(type,p);return new v.Disposable(()=>factories.delete(type));},
     registerDebugAdapterTrackerFactory(type,p){trackers.set(type,p);return new v.Disposable(()=>trackers.delete(type));},
     get breakpoints(){return breakpoints;},addBreakpoints(values){breakpoints.push(...values);event('breakpoints').fire({added:values,removed:[],changed:[]});syncBreakpoints();},removeBreakpoints(values){for(const bp of values){const i=breakpoints.findIndex(x=>x.id===bp.id);if(i>=0)breakpoints.splice(i,1);}event('breakpoints').fire({added:[],removed:values,changed:[]});syncBreakpoints();},onDidChangeBreakpoints:event('breakpoints').event,
     async startDebugging(scope,configuration,opts={}){
       if(typeof configuration==='string')configuration=configurationForName(configuration);
       if(!configuration?.type)throw Error('La configuración de depuración requiere type.');
-      const p=debugProviders.get(configuration.type);if(p?.resolveDebugConfiguration)configuration=await p.resolveDebugConfiguration(folder,configuration,token);if(!configuration)return false;
-      configuration=variables(configuration);if(p?.resolveDebugConfigurationWithSubstitutedVariables)configuration=await p.resolveDebugConfigurationWithSubstitutedVariables(folder,configuration,token);if(!configuration)return false;
+      const providers=(debugProviders.get(configuration.type)||[]).map(e=>e.provider);
+      for(const p of providers){if(p.resolveDebugConfiguration)configuration=await p.resolveDebugConfiguration(folder,configuration,token);if(!configuration)return false;}
+      configuration=variables(configuration);for(const p of providers){if(p.resolveDebugConfigurationWithSubstitutedVariables)configuration=await p.resolveDebugConfigurationWithSubstitutedVariables(folder,configuration,token);if(!configuration)return false;}
       const id=uid(),session={id,type:configuration.type,name:configuration.name||configuration.type,configuration,workspaceFolder:folder,parentSession:opts.parentSession,customRequest:(command,args)=>call('debug.request',{id,command,args})};
       const contribution=(options.manifest.contributes?.debuggers||[]).find(x=>x.type===configuration.type),platform=process.platform==='win32'?'windows':process.platform==='darwin'?'osx':'linux',entry={...contribution,...contribution?.[platform]};
       let executable=entry.program?new v.DebugAdapterExecutable(entry.runtime||path.resolve(options.root,entry.program),entry.runtime?[path.resolve(options.root,entry.program),...entry.args||[]]:entry.args||[],{}):undefined;
@@ -131,7 +174,7 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
       if(name==='debug.stop'&&session){session._tracker?.onWillStopSession?.();inline.get(value.id)?.dispose();inline.delete(value.id);sessions.delete(value.id);event('debugStop').fire(session);event('activeDebug').fire(v.debug.activeDebugSession);}
   }
   return {
-    runTask,
+    runTask,openWith,visualize,
     async message(id,message){const p=panels.get(id);if(!p)return {delivered:false};p._receive.fire(message);return {delivered:true};},disposePanel(id){panels.get(id)?.dispose();return {ok:true};},
     event:serviceEvent
   };

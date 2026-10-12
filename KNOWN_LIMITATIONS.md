@@ -1,56 +1,58 @@
-# Límites reales · reconstrucción visual de Zénit
+# Límites reales · Zénit 0.5.3 R6
 
-1. **Fidelidad visual:** los siete bounds principales de Welcome/Editor cumplen
-   la tolerancia de 2 px, pero no se verifica esa tolerancia para cada detalle.
-   Las caústicas, refracción, iluminación y facetas 3D no coinciden exactamente
-   con las imágenes. La ilustración de Laboratory y algunos iconos locales
-   tampoco son los mismos assets de la referencia. Las diferencias por pantalla
-   están en `VISUAL_DIFF_REPORT.md`; no se declara igualdad total por parecido.
-2. **Datos reales:** fechas de recientes, rutas, orden del árbol, Git, modelos,
-   versiones, diagnósticos, terminales y compatibilidad pueden diferir del golden.
-   Las pruebas abren archivos reales de un proyecto temporal, compilan Java y
-   ejecutan ASM. No copian salidas de las referencias para hacer coincidir pixels.
-3. **Golden masters:** hay ocho referencias originales. ASM, paleta, Melody
-   aislada y Proyecto flotante se verifican como regresiones; no tienen una
-   referencia independiente que permita certificar comparación directa.
-4. **Rendimiento:** la ausencia de mutaciones/layout/paint en reposo se midió
-   durante dos segundos con movimiento desactivado. No prueba todos los equipos
-   ni todos los estados. Se mide CPU del renderer; el tiempo GPU no se mide.
-   Las muestras de rAF no certifican FPS de pantalla. La GPU puede caer al
-   fallback CSS si WebGL no está disponible. La recuperación tras pérdida de
-   contexto no se ha forzado en este recorrido.
-5. **Responsive:** 24 combinaciones pasan en emulación de escala de Edge. La
-   captura nativa utiliza Windows/WebView2 al 150 % con viewport cliente fijado
-   por CDP. No representa una prueba física de cuatro DPI en cada sistema,
-   monitor o combinación de GPU. El overflow interno con scroll sigue permitido.
-6. **VS Code:** continúa siendo una implementación parcial. No se garantiza
-   cualquier plugin, webview, gestor de tareas, API de terminal, depurador,
-   WorkspaceEdit o semántica de insignias de VS Code. La ampliación funcional
-   se pausó durante esta corrección visual. Los estados parciales siguen visibles.
-7. **Toolchains:** detectar una ruta no equivale a certificar todas sus funciones.
-   Docker CLI no aporta por sí solo un motor de contenedores. El adaptador ASM
-   actual no publica flags, aunque sí registros, instrucciones y memoria reales.
-   Tampoco se distribuyen «todas las dependencias posibles» de Python/Java ni
-   todas las versiones históricas de compiladores.
-8. **Máquinas y sistemas:** las limitaciones anteriores de imágenes de macOS,
-   Windows 7, firma/notarización y distribución macOS permanecen. Esta fase no
-   descargó nuevas imágenes ni añadió capacidades de virtualización.
-9. **Texto y temas:** las comparaciones se realizan con fuentes del equipo de
-   pruebas. Antialiasing y preferencias explícitas de fuente/interlineado pueden
-   cambiar el resultado. Se verificaron pares concretos de contraste de los
-   tres temas base, no todos los contenidos de webviews ni todas las extensiones.
-10. **Forge:** se comparó el panel flotante del producto con el cuerpo de la
-    ventana de referencia. Hay además captura del modo desacoplado real. Los
-    controles de acoplamiento y la decoración del sistema operativo tienen
-    diferencias; no se dibujaron botones de ventana falsos para ocultarlas.
-11. **Arranque nativo intermitente:** durante la verificación del ejecutable se
-    observaron timeouts al iniciar una ventana de vista web, antes de ejecutar
-    el bootstrap. Los dos recorridos posteriores completaron las 14 comprobaciones,
-    pero la causa de esa intermitencia no quedó identificada. La instrumentación
-    conserva URL, recursos y errores de importación cuando vuelve a producirse.
-    No se considera cerrado por haber pasado dos veces.
+1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
+   paquetes probados no mide cobertura global ni garantiza todos sus comandos.
+   No existe todavía una matriz suficiente para declarar 90 % de toda su API.
+2. **Autenticación:** se admiten proveedores aportados por extensiones; faltan
+   los brokers OAuth integrados de GitHub/Microsoft y persistencia completa de
+   grants. GitHub Pull Requests permanece bloqueado sin su proveedor conectado.
+3. **Virtual filesystem:** se despachan operaciones reales de proveedores. Falta
+   integración completa de modelos, guardado, WorkspaceEdit y ventanas auxiliares
+   para todos los esquemas virtuales. Un URI virtual no se convierte en una ruta local.
+4. **Custom editors:** CustomTextEditor usa un documento real y webview. Documentos
+   binarios CustomDocument con save/undo/backup completos no están implementados.
+5. **Debug/puertos:** existen registros y dispatch de visualizadores y atributos
+   de puertos. No hay UI automática completa de árboles de visualización, todos
+   los when clauses ni transporte universal de forwarding de puertos.
+6. **Eventos de archivos:** willCreate/Rename/Delete aplica al host iniciador de
+   WorkspaceEdit. No se difunde todavía a cada host para todas las operaciones de
+   UI, terminal o disco. El contrato no se anuncia como equivalencia global.
+7. **Entorno/output/status:** faltan applyAtShellIntegration, todos los selectores
+   glob, selector completo de canales y control UI de LogLevel. Mutaciones de
+   entorno se aplican al crear nuevos procesos, no a shells que ya estaban abiertas.
+8. **Language model API:** se registran e invocan herramientas explícitas. No hay
+   broker universal de modelos de extensiones ni acceso automático a credenciales
+   de Melody. Ninguna herramienta inventa tokens, modelos o resultados.
+9. **Melody:** la calidad de consejos/predicciones depende del proveedor conectado.
+   La nueva ayuda es opcional, hasta 12 consultas por sesión/3 por minuto, máximo
+   64.000 caracteres por búfer. Las sugerencias mayores de ocho líneas no se
+   presentan como inline completion. El transporte UI se verificó con una fixture;
+   no es un benchmark de IA externa. No se certifican predicciones correctas.
+10. **Cristal/fidelidad:** la geometría viene de Blender y el material se anima
+    en Babylon/WebGL2; no es Cycles ni una simulación óptica físicamente exacta.
+    Los campos de luz, facetas de montañas e iconos tienen diferencias descritas
+    en VISUAL_DIFF_REPORT. La bienvenida de dos columnas fue sustituida por el
+    brief posterior del usuario, conservando sus ocho goldens originales intactos.
+11. **Rendimiento:** las mediciones son muestras locales de CPU del renderer. No
+    se midió tiempo GPU ni se garantiza la misma tasa en cada equipo/monitor.
+    Recuperación de contexto y reducir movimiento se comprobaron en Edge con
+    SwiftShader; la captura nativa comprobó WebGL2 con Intel/ANGLE. No cubre toda
+    combinación de GPU, controlador o backend. No se afirma animación perfecta.
+12. **Responsive:** 24 combinaciones de resolución/escala emulada. La captura
+    WebView2 usa el host al 150 % y un viewport CDP. Faltan pruebas físicas de
+    todos los DPI en varios monitores y de la misma UI en Linux/macOS.
+13. **Toolchains/VM:** detección de ruta no certifica cada herramienta. Docker CLI
+    necesita un daemon; no se distribuyen todas las dependencias ni compiladores
+    históricos. El adaptador ASM no publica todos los flags. Los límites previos
+    de imágenes macOS/Windows 7, licencias y virtualización permanecen.
+14. **Arranque/captura nativos:** ya se habían observado timeouts antes del
+    bootstrap de ventanas web. En esta fase una captura CDP de bienvenida también
+    agotó el tiempo al compartir carga con otras pruebas; recorridos posteriores
+    secuenciales completaron. La causa no está demostrada y no se considera cerrada
+    solo porque las repeticiones pasan. Se conserva instrumentación de recursos.
+15. **Distribución:** esta entrega prepara Windows desde el código actual. No
+    reconstruye aquí Linux/macOS ni firma/notariza esos paquetes. Los binarios
+    públicos anteriores de GitHub no se sobrescriben ni se etiquetan como nuevos.
 
-Windows se reconstruyó e instaló localmente, conservando una copia de la instalación
-anterior y los datos del perfil. Su manifiesto y las verificaciones están en
-`tests/visual/evidence`. Los paquetes públicos previos R6 de GitHub no se
-sobrescribieron. Linux/macOS no se reconstruyeron en esta fase visual.
+Los estados de compatibilidad parcial siguen visibles. Las pruebas no sustituyen
+datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inventados.

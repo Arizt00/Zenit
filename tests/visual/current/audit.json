@@ -1,6 +1,6 @@
 {
-  "commit": "77d9bf868f74bb8eb3ca883a5f1da3a4bb853328",
-  "trackedFiles": 489,
+  "commit": "a5c6601cef4a4d5fcfbe6e2ad84b519659c3cf5b",
+  "trackedFiles": 494,
   "sourceFiles": 232,
   "stylesheets": [
     "/design.css"
@@ -245,7 +245,7 @@
   "references": [
     {
       "screen": "editor",
-      "file": "tests\\visual\\current\\references\\editor.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\editor.png",
       "size": [
         1672,
         941
@@ -254,7 +254,7 @@
     },
     {
       "screen": "welcome",
-      "file": "tests\\visual\\current\\references\\welcome.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\welcome.png",
       "size": [
         1672,
         941
@@ -263,7 +263,7 @@
     },
     {
       "screen": "search",
-      "file": "tests\\visual\\current\\references\\search.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\search.png",
       "size": [
         1672,
         941
@@ -272,7 +272,7 @@
     },
     {
       "screen": "settings",
-      "file": "tests\\visual\\current\\references\\settings.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\settings.png",
       "size": [
         1672,
         941
@@ -281,7 +281,7 @@
     },
     {
       "screen": "forge",
-      "file": "tests\\visual\\current\\references\\forge.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\forge.png",
       "size": [
         1672,
         941
@@ -290,7 +290,7 @@
     },
     {
       "screen": "laboratory",
-      "file": "tests\\visual\\current\\references\\laboratory.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\laboratory.png",
       "size": [
         1672,
         941
@@ -299,7 +299,7 @@
     },
     {
       "screen": "debug",
-      "file": "tests\\visual\\current\\references\\debug.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\debug.png",
       "size": [
         1672,
         941
@@ -308,7 +308,7 @@
     },
     {
       "screen": "extensions",
-      "file": "tests\\visual\\current\\references\\extensions.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\extensions.png",
       "size": [
         1672,
         941

@@ -33,24 +33,13 @@
       ]
     },
     "welcome": {
-      ".home-sidebar": [
-        18,
-        73,
-        405,
-        824
-      ],
-      ".home-hero": [
-        436,
-        73,
-        1218,
-        478
-      ],
-      ".recent-section": [
-        436,
-        565,
-        1218,
-        332
+      ".welcome-sheet": [
+        0,
+        0,
+        1672,
+        917
       ]
     }
-  }
+  },
+  "welcomeSource": "Later user brief supersedes the original busy Welcome; fullscreen bounds are an interaction contract, not a regenerated golden."
 }

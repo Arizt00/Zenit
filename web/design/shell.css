@@ -1,5 +1,9 @@
 /* Main sheet. Geometry follows the 1672 x 917 reference client area. */
 
+.extension-status-items { display:flex; align-items:center; min-width:0; gap:8px; max-width:25vw; overflow:auto; scrollbar-width:none; }
+.extension-status-item { white-space:nowrap; }
+.extension-status-item[data-severity="1"] { color:var(--warning); }
+.extension-status-item[data-severity="2"] { color:var(--danger); }
 .dock-scrim {
   position: fixed;
   inset: var(--chrome-height) 0 var(--footer-height);
@@ -332,13 +336,15 @@
   background: var(--surface);
   box-shadow: none;
   isolation: isolate;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .dock-slot {
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .dock-slot[data-dock-side=left] {
@@ -556,7 +562,7 @@
 
 .tree-row.active {
   background: linear-gradient(90deg,#f5f0ff,var(--selected));
-  color: var(--text);
+  color: var(--selected-text,var(--text));
 }
 
 .tree-row .label {
@@ -1107,6 +1113,7 @@
 
 .lantern-monitor-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
 }
@@ -1116,6 +1123,7 @@
   height: 34px;
   font-size: 11px;
   padding: 0 12px;
+  max-width: 100%;
 }
 
 .lantern-monitor[data-status=idle] [data-lantern-path] {

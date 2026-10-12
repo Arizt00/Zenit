@@ -187,7 +187,7 @@ class PlatformServices:
             return self.extensions.update_state(body.get('id'),remove=True)
         if path=='/extensions/updates':return self.extensions.updates()
         if path=='/extensions/export':return self.extensions.export_package(body.get('id'))
-        if path=='/terminals/create':return self.terminals.create(ws,body.get('profile'),body.get('consent'),body.get('cols',100),body.get('rows',26))
+        if path=='/terminals/create':return self.terminals.create(ws,body.get('profile'),body.get('consent'),body.get('cols',100),body.get('rows',26),environment=self.extension_services.environment(ws.root))
         if path=='/terminals/write':
             terminal=self._terminal(body.get('id'));written=terminal.write(body.get('data',''))
             return {'ok':written,'closed':terminal.closed}

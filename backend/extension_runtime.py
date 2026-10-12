@@ -166,7 +166,7 @@ class ExtensionRuntime:
         host=self.hosts.get(body.get('id'))
         if not host:raise ValueError('Inicia el motor de la extensión primero.')
         method=body.get('method')
-        if method not in ('command','provide','virtual','willSave','didSave','tree','resolveAction','decorations','webviewMessage','webviewDispose'):raise ValueError('Operación no válida.')
+        if method not in ('command','provide','virtual','willSave','didSave','tree','resolveAction','decorations','webviewMessage','webviewDispose','ports','debugVisualization'):raise ValueError('Operación no válida.')
         if method=='decorations':
             paths=body.get('paths')
             if not isinstance(paths,list) or len(paths)>300:raise ValueError('Lista de decoraciones no válida.')
@@ -180,7 +180,7 @@ class ExtensionRuntime:
                 from .extension_services import file_path
                 file_path(str(candidate))
             else:workspace.resolve(document['path'],must_exist=False)
-        return host.request({k:body[k] for k in ('method','command','kind','document','position','range','uri','arguments','reason','newName','view','element','context','options','character','positions','color','action','paths','revision','panel','message') if k in body})
+        return host.request({k:body[k] for k in ('method','command','kind','document','position','range','uri','arguments','reason','newName','view','element','context','options','character','positions','color','action','paths','revision','panel','message','ports','visualization') if k in body})
     def stop(self,eid,forget=False):
         with self.lock:
             if forget:

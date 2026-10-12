@@ -6,6 +6,13 @@ export class ExtensionServicesUI {
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.output'){
+      const pane=document.getElementById('terminal-content'),id=event.extension+':'+event.key;
+      this.outputs ||= new Map();const previous=this.outputs.get(id);this.outputs.set(id,event);
+      if(event.visible){this.outputId=id;if(previous?.reveal!==event.reveal&&!event.preserveFocus)h.showConsole('output');if(document.querySelector('[data-terminal=output]').classList.contains('active'))this.renderOutput();}
+      else if(this.outputId===id){delete pane.dataset.extensionOutput;this.outputId=null;pane.textContent='';}
+      return;
+    }
     if(event.command==='zenit.pick')return this.pick(event);
     if(event.command==='zenit.quickinput')return this.quickinput.update(event);
     if(event.command==='zenit.document.saved'){
@@ -56,7 +63,8 @@ export class ExtensionServicesUI {
   async poll(){
     if(this.disposed)return;
     try{
-      const {panels,quickinputs=[]}=await this.host.platform.api('/extensions/services');
+      const {panels,quickinputs=[],statusItems=[]}=await this.host.platform.api('/extensions/services');
+      this.status(statusItems);
       await this.syncEditors();
       if(!this.quickinput.root)for(const input of quickinputs)if(input.visible)this.quickinput.update(input);
       const ids=new Set(panels.filter(x=>x.visible).map(x=>x.id));
@@ -67,6 +75,24 @@ export class ExtensionServicesUI {
       }
     }catch(error){if(!this.disposed)console.warn('Extension services:',error.message);}
     this.timer=setTimeout(()=>this.poll(),500);
+  }
+  renderOutput(){
+    const output=this.outputs?.get(this.outputId);if(!output?.visible)return false;
+    const pane=document.getElementById('terminal-content');if(pane.textContent!==output.text)pane.textContent=output.text;pane.dataset.extensionOutput=this.outputId;pane.setAttribute('aria-label','Salida · '+output.name);return true;
+  }
+  status(items){
+    const ed=this.host.editor,language=ed.view?.getModel()?.getLanguageId(),path=ed.current;
+    const matches=selector=>!selector||[selector].flat().some(s=>typeof s==='string'?s==='*'||s===language:(!s.language||s.language==='*'||s.language===language)&&(!s.scheme||s.scheme==='file'));
+    const visible=items.filter(x=>x.visible&&x.text&&(x.kind!=='language'||path&&matches(x.selector))).sort((a,b)=>(b.priority||0)-(a.priority||0));
+    const signature=JSON.stringify(visible);if(signature===this.statusSignature)return;this.statusSignature=signature;
+    if(!this.statusRoot){this.statusRoot=document.createElement('div');this.statusRoot.className='extension-status-items';document.querySelector('.status-spacer').after(this.statusRoot);}
+    this.statusRoot.replaceChildren();
+    for(const item of visible){
+      const b=document.createElement('button');b.className='status-item extension-status-item';b.dataset.severity=item.severity||0;
+      b.textContent=item.text.replace(/\$\(([^)]+)\)/g,(_,name)=>({check:'✓','check-all':'✓','alert':'!','warning':'!',error:'×','sync~spin':'↻'})[name]||'');
+      b.title=[item.name||item.extension,typeof item.tooltip==='string'?item.tooltip:item.tooltip?.value,item.detail,item.busy?'En curso':''].filter(Boolean).join('\n');b.setAttribute('aria-label',b.title);
+      b.onclick=()=>{const command=item.command,id=typeof command==='string'?command:command?.command;if(id)this.host.platform.safe(()=>this.host.platform.pluginCommand(item.extension+':'+id,command?.arguments||[]));};this.statusRoot.append(b);
+    }
   }
   async syncEditors(){
     const h=this.host,ed=h.editor;if(ed.kind!=='monaco'||!document.hasFocus()||!(h.isTrusted?.()??h.service?.().trusted))return;

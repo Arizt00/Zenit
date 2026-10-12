@@ -1,0 +1,13 @@
+{
+  "reference": "references/welcome-minimal.png",
+  "sha256": "be4e57b343d607a5a0f1d9036987641b8401c1c90da01f812af574c66626260e",
+  "supersedes": "Original two-column welcome only; original eight golden masters remain immutable.",
+  "laterUserConstraints": [
+    "Occupy the whole application viewport",
+    "Animate the glass sphere in real time",
+    "One click opens the real local profile and recent files",
+    "Opening Terminal must not activate Forge",
+    "Panel separators must support pointer resizing"
+  ],
+  "validation": "Fullscreen geometry and actual interactions, not a stretched pixel comparison from the 388x282 reference."
+}

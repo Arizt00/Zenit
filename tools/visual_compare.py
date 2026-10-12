@@ -30,9 +30,11 @@ def compare(reference,actual,out):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--captures',type=Path,required=True);p.add_argument('--references',type=Path,default=ROOT/'tests/visual/references');p.add_argument('--output',type=Path,required=True);args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
     result={}
-    for name in ('editor','welcome','search','settings','forge','laboratory','debug','extensions'):
+    # The original busy Welcome is retained as history. The user superseded it
+    # with a minimal fullscreen brief, so it is not a current pixel target.
+    for name in ('editor','search','settings','forge','laboratory','debug','extensions'):
         actual=args.captures/(name+'.png');reference=args.references/(name+'.png')
         if actual.is_file() and reference.is_file():result[name]=compare(reference,actual,args.output/name)
-    (args.output/'comparison.json').write_text(json.dumps({'screens':result,'interpretation':'Colour MAE and low-frequency MAE are diagnostics, not a fidelity score. Review overlays and geometry together.'},indent=2),encoding='utf-8')
+    (args.output/'comparison.json').write_text(json.dumps({'screens':result,'superseded':{'welcome':'The later user brief requires a minimal fullscreen welcome; the original reference is preserved, not replaced by generated output.'},'interpretation':'Colour MAE and low-frequency MAE are diagnostics, not a fidelity score. Review overlays and geometry together.'},indent=2),encoding='utf-8')
     print(json.dumps({k:round(v['meanMAE'],2) for k,v in result.items()}))
 if __name__=='__main__':main()
