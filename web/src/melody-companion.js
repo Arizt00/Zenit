@@ -4,6 +4,13 @@ export function adviceLines(text,lineCount){
   const lines=new Set();for(const match of String(text).matchAll(/(?:\bl(?:í|i)neas?|\blines?|\bL)\s*:?\s*(\d+)(?:\s*[-–—]\s*L?(\d+))?/gi))for(const value of match.slice(1)){const n=Number(value);if(Number.isInteger(n)&&n>=1&&n<=lineCount)lines.add(n);}
   return [...lines].slice(0,6);
 }
+export function adviceSections(text){
+  const source=String(text),matches=[...source.matchAll(/^(?:#{1,4}\s*)?(?:[-*]\s+)?(?:\*\*)?(Observación|Observation|Razón|Reason|Próximo paso|Next step|Prueba|Test)(?:\*\*)?\s*:\s*(?:\*\*)?/gmi)];
+  if(matches.length<2)return [];
+  const sections=[],prefix=source.slice(0,matches[0].index).trim();if(prefix)sections.push({title:'',body:prefix});
+  for(let i=0;i<matches.length;i++){const match=matches[i],body=source.slice(match.index+match[0].length,matches[i+1]?.index??source.length).trim();if(body)sections.push({title:match[1],body});}
+  return sections;
+}
 
 /** A bounded, opt-in session. Advice owns a buffer revision, never a file write. */
 export class CompanionSession {
@@ -71,6 +78,8 @@ export class MelodyCompanion {
     this.panel=document.createElement('section');this.panel.className='melody-companion-card';this.panel.hidden=true;this.panel.innerHTML=`<header>${icon('bulb')}<strong>Melody contigo</strong><button class="icon-button" aria-label="Detener ayuda en tiempo real">${icon('stop')}</button></header><div class="companion-focus" role="group" aria-label="Enfoque de la ayuda"><button data-companion-focus="review" aria-pressed="true">Revisar</button><button data-companion-focus="explain" aria-pressed="false">Explicar</button><button data-companion-focus="next" aria-pressed="false">Próximo paso</button></div><small role="status"></small><pre></pre><div class="companion-budget"></div><footer><button class="text-button" data-companion="review">Revisar ahora</button><button class="text-button" data-companion="predict">Sugerir siguiente código</button></footer>`;document.querySelector('#chat-messages').before(this.panel);
     this.panel.querySelector('.companion-focus').after(this.panel.querySelector('footer'));
     this.references=document.createElement('div');this.references.className='companion-references';this.references.hidden=true;this.references.setAttribute('aria-label','Líneas citadas por Melody');this.panel.querySelector('pre').before(this.references);
+    this.answer=document.createElement('div');this.answer.className='companion-answer';this.answer.hidden=true;this.panel.querySelector('pre').after(this.answer);
+    this.accept=document.createElement('button');this.accept.className='secondary-button small-button companion-accept';this.accept.innerHTML=icon('code')+'<span>Insertar sugerencia</span>';this.accept.title='Insertar en el búfer actual · se puede deshacer';this.accept.hidden=true;this.panel.querySelector('pre').after(this.accept);this.accept.onclick=()=>p.safe(()=>this.acceptPrediction());
     this.panel.querySelector('header button').onclick=()=>this.session.stop();this.panel.querySelector('[data-companion=review]').onclick=()=>p.safe(()=>{this.session.lastKey=null;return this.session.review();});this.panel.querySelector('[data-companion=predict]').onclick=()=>p.safe(()=>this.session.review(true));
     this.panel.querySelectorAll('[data-companion-focus]').forEach(button=>button.onclick=()=>{this.focus=button.dataset.companionFocus;this.panel.querySelectorAll('[data-companion-focus]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.session.changed();});
     this.session=new CompanionSession({snapshot:()=>({path:ed.current||'',content:ed.getValue(),version:ed.view?.getModel()?.getVersionId(),position:ed.view?.getPosition(),selection:ed.view?.getModel()?.getValueInRange(ed.view.getSelection()),focus:this.focus,workspace:p.state.workspace||p.host.workspace?.()||this.workspace,provider:p.prefs['ai.provider'],model:p.prefs['ai.model'],diagnostics:ed.diagnostics().slice(0,12)}),api:(...args)=>p.api(...args),onState:state=>this.render(state),busy:()=>p.disposed||p.aiStarting||!!p.aiJob||document.hidden||document.documentElement.dataset.screen==='home'});
@@ -86,18 +95,26 @@ export class MelodyCompanion {
     this.workspace=await p.host.workspace?.();this.session.begin(this.session.snapshot());
   }
   clearAdvice(){if(this.advice){if(!this.advice.model.isDisposed())this.advice.model.deltaDecorations(this.advice.ids,[]);this.advice=null;}if(this.references?.childElementCount)this.references.replaceChildren();if(this.references)this.references.hidden=true;}
-  changed(){const view=this.platform.host.editor.view,position=view?.getPosition();if(this.advice&&(view?.getModel()!==this.advice.model||this.advice.model.getVersionId()!==this.advice.version))this.clearAdvice();if(this.prediction&&(view?.getModel()!==this.prediction.model||this.prediction.model.getVersionId()!==this.prediction.version||position?.lineNumber!==this.prediction.position.lineNumber||position?.column!==this.prediction.position.column)){this.prediction=null;view?.trigger('melody','editor.action.inlineSuggest.hide',{});}this.session.changed();}
+  clearPrediction(){this.prediction=null;this.accept.hidden=true;this.platform.host.editor.view?.trigger('melody','editor.action.inlineSuggest.hide',{});}
+  acceptPrediction(){
+    const ed=this.platform.host.editor,p=this.prediction,model=ed.view?.getModel(),position=ed.view?.getPosition();
+    if(!p||model!==p.model||model.getVersionId()!==p.version||position.lineNumber!==p.position.lineNumber||position.column!==p.position.column)throw Error('La sugerencia pertenece a una revisión anterior. Solicita otra.');
+    ed.view.pushUndoStop();ed.view.executeEdits('melody-suggestion',[{range:new monaco.Range(position.lineNumber,position.column,position.lineNumber,position.column),text:p.text,forceMoveMarkers:true}]);ed.view.pushUndoStop();this.prediction=null;this.accept.hidden=true;ed.view.trigger('melody','editor.action.inlineSuggest.hide',{});ed.view.focus();
+  }
+  changed(){const view=this.platform.host.editor.view,position=view?.getPosition();if(this.advice&&(view?.getModel()!==this.advice.model||this.advice.model.getVersionId()!==this.advice.version))this.clearAdvice();if(this.prediction&&(view?.getModel()!==this.prediction.model||this.prediction.model.getVersionId()!==this.prediction.version||position?.lineNumber!==this.prediction.position.lineNumber||position?.column!==this.prediction.position.column))this.clearPrediction();this.session.changed();}
   render(state){
     const enabled=this.session?.enabled||false;this.button.setAttribute('aria-pressed',String(enabled));this.button.innerHTML=icon('bulb')+(enabled?'Ayuda activa · detener':'Ayuda en tiempo real');
     const assistant=document.querySelector('#assistant-panel'),mode=state.status==='off'?'off':'active';if(assistant.dataset.companion!==mode)assistant.dataset.companion=mode;
-    if(state.status==='off'){this.panel.hidden=true;this.clearAdvice();this.prediction=null;this.platform.host.editor.view?.trigger('melody','editor.action.inlineSuggest.hide',{});return;}
+    if(state.status==='off'){this.panel.hidden=true;this.clearAdvice();this.clearPrediction();return;}
     const opening=this.panel.hidden;this.panel.hidden=false;this.panel.dataset.state=state.status;if(opening)this.panel.scrollIntoView({block:'nearest',behavior:'instant'});const labels={waiting:state.waitMs>this.session.idleMs?`Nueva consulta en ${Math.ceil(state.waitMs/1000)} s como mínimo`:'Esperando una pausa al escribir',analyzing:'Analizando el búfer actual',ready:(state.prediction?'Sugerencia para ':'Consejo para ')+(state.path||''),error:'Consulta no disponible',limit:'Sesión completada'};this.panel.querySelector('small').textContent=labels[state.status]||state.status;
     this.panel.querySelector('.companion-budget').textContent=enabled?`${this.session.grant?.provider} · ${this.session.grant?.model} · ${this.session.remaining}/${this.session.maxRequests} consultas disponibles`:'';
     for(const button of this.panel.querySelectorAll('footer button'))button.disabled=state.status==='analyzing'||!enabled;
     if(state.text!==undefined)this.panel.querySelector('pre').textContent=state.text||'El proveedor no ha devuelto una sugerencia.';
     this.panel.querySelector('pre').classList.toggle('is-code',!!state.prediction);
+    const sections=state.status==='ready'&&!state.prediction?adviceSections(state.text):[];this.panel.querySelector('pre').hidden=!!sections.length;this.answer.hidden=!sections.length;this.accept.hidden=true;
+    if(sections.length){this.answer.replaceChildren();for(const section of sections){const block=document.createElement('section'),heading=document.createElement('strong'),body=document.createElement('p');heading.textContent=section.title;body.textContent=section.body;if(section.title)block.append(heading);block.append(body);this.answer.append(block);}}
     if(state.status==='waiting')this.panel.querySelector('pre').textContent='Los consejos aparecerán aquí. Se comprobará la revisión antes de mostrarlos.';
-    if(['waiting','analyzing','error','limit'].includes(state.status))this.clearAdvice();
+    if(['waiting','analyzing','error','limit'].includes(state.status)){this.clearAdvice();this.clearPrediction();}
     if(state.status==='ready'&&!state.prediction&&state.text?.trim()){
       this.clearAdvice();const ed=this.platform.host.editor,model=ed.view?.getModel(),lines=model?adviceLines(state.text,model.getLineCount()):[],line=lines[0]||state.snapshot?.position?.lineNumber;
       if(model&&model.getVersionId()===state.snapshot.version&&line>=1&&line<=model.getLineCount())this.advice={model,version:model.getVersionId(),ids:model.deltaDecorations([],[{range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,linesDecorationsClassName:'melody-advice-mark',hoverMessage:{value:'**Melody · propuesta para esta revisión**\n\n'+state.text.slice(0,1800),isTrusted:false}}}])};
@@ -107,7 +124,7 @@ export class MelodyCompanion {
       const code=state.text.match(/```[^\n]*\n([\s\S]*?)```/)?.[1];if(!code?.trim()||code.trimEnd().split('\n').length>8)return;
       this.panel.querySelector('pre').textContent=code.trimEnd();
       const ed=this.platform.host.editor,model=ed.view?.getModel(),position=ed.view?.getPosition();
-      if(model&&position&&model.getVersionId()===state.snapshot.version&&position.lineNumber===state.snapshot.position?.lineNumber&&position.column===state.snapshot.position?.column){this.prediction={text:code.replace(/\n$/,''),model,version:model.getVersionId(),position};ed.view.focus();ed.view.trigger('melody','editor.action.inlineSuggest.trigger',{});}
+      if(model&&position&&model.getVersionId()===state.snapshot.version&&position.lineNumber===state.snapshot.position?.lineNumber&&position.column===state.snapshot.position?.column){this.prediction={text:code.replace(/\n$/,''),model,version:model.getVersionId(),position};this.accept.hidden=false;ed.view.focus();ed.view.trigger('melody','editor.action.inlineSuggest.trigger',{});}
     }
   }
   dispose(){this.session.dispose();this.clearAdvice();this.inline?.dispose();document.removeEventListener('visibilitychange',this.hidden);this.button.remove();this.panel.remove();}

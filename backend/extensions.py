@@ -4,6 +4,8 @@ import hashlib
 import base64
 import io
 import json
+import plistlib
+from xml.parsers.expat import ExpatError
 import os
 import platform
 import urllib.error
@@ -161,12 +163,24 @@ def color_theme(root,relative,seen=None):
     seen.add(target)
     data=json_resource(root,target.relative_to(root).as_posix())
     if not isinstance(data,dict):raise ValueError('Tema de color no válido.')
+    tokens=data.get('tokenColors',[])
+    if isinstance(tokens,str):
+        if ':' in tokens or '\\' in tokens or '\x00' in tokens or PurePosixPath(tokens).is_absolute():raise ValueError('Ruta de sintaxis no válida.')
+        syntax=(target.parent/tokens).resolve()
+        if not syntax.is_relative_to(root) or not syntax.is_file() or syntax.stat().st_size>3_000_000:raise ValueError('Recurso de sintaxis fuera del paquete o inválido.')
+        try:parsed=plistlib.loads(syntax.read_bytes()) if syntax.suffix.lower()=='.tmtheme' else json_resource(root,syntax.relative_to(root).as_posix())
+        except (ValueError,plistlib.InvalidFileException,TypeError,ExpatError) as e:raise ValueError('Tema de sintaxis no válido.') from e
+        tokens=parsed.get('settings',[]) if isinstance(parsed,dict) else parsed
+    if not isinstance(tokens,list):raise ValueError('tokenColors debe contener reglas o una ruta local de tema.')
+    if not isinstance(data.get('colors',{}),dict) or not isinstance(data.get('semanticTokenColors',{}),dict):raise ValueError('Colores de tema no válidos.')
+    data={**data,'tokenColors':[e for e in tokens if isinstance(e,dict)]}
     parent=data.get('include')
     if parent:
         if not isinstance(parent,str):raise ValueError('Herencia de tema no válida.')
         base=color_theme(root,(target.parent/parent).resolve().relative_to(root.resolve()).as_posix(),seen)
         data={**base,**data,'colors':{**base.get('colors',{}),**data.get('colors',{})},
-              'tokenColors':base.get('tokenColors',[])+data.get('tokenColors',[])}
+              'tokenColors':base.get('tokenColors',[])+data.get('tokenColors',[]),
+              'semanticTokenColors':{**base.get('semanticTokenColors',{}),**data.get('semanticTokenColors',{})}}
     return data
 
 

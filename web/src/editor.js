@@ -2,6 +2,7 @@ import {installMonacoOverlays} from './monaco-overlays.js';
 import {waitForQtBridge} from './native-ready.js';
 import {themePalette} from './extension-theme.js';
 import {TextMateLanguages,textMateTheme} from './textmate.js';
+import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
 import {assemblyCompletions,assemblySyntax} from './assembly-language.js';
 import {escapeHTML, icon} from './icons.js';
 // Monaco rejects outstanding worker requests when a model/provider is disposed.
@@ -134,7 +135,7 @@ export class LumenEditor {
   split(path,side='right'){
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
     let pane=this.panes[1];
-    if(!pane){pane=this.createPane();pane.view=monaco.editor.create(pane.content,{...this.view.getRawOptions(),model:null,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
+    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model:null,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
     this.mount.dataset.splitAxis=['top','bottom'].includes(side)?'vertical':'horizontal';
     pane.node.style.order=['left','top'].includes(side)?'-1':'1';
     pane.view.setModel(this.models.get(path||this.current)?.model||null);this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();pane.view.focus();this.callbacks.active?.(this.current);
@@ -190,7 +191,8 @@ export class LumenEditor {
     const css=getComputedStyle(document.documentElement);
     const c=name=>css.getPropertyValue('--'+name).trim();
     const syntax=Object.fromEntries(['keyword','type','number','string','comment','function'].map(key=>[key,c('syntax-'+key)]));
-    const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:c('text'),editor:c('editor'),...syntax},this.extensionTheme?.data?.tokenColors||[]));
+    const external=this.extensionTheme,themeColors=external?.data?.colors||{},editorBackground=external?themePalette(external).palette.editor:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
+    const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},themeEntries(external)));
     monaco.editor.defineTheme('lumen-theme',{
       base:document.documentElement.dataset.theme==='day'?'vs':'vs-dark',inherit:true,encodedTokensColors,
       rules:[{token:'',foreground:c('text').slice(1)},{token:'keyword',foreground:c('syntax-keyword').slice(1)},
@@ -225,11 +227,10 @@ export class LumenEditor {
         'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border')},
     });
     if(this.extensionTheme){
-      const theme=this.extensionTheme,{colors,dark}=themePalette(theme),rules=[];
-      const aliases={storage:'keyword',constant:'number','constant.numeric':'number','entity.name.function':'function','support.function':'function','entity.name.type':'type','support.type':'type'};
-      for(const entry of theme.data?.tokenColors||[])for(const scope of Array.isArray(entry.scope)?entry.scope:String(entry.scope||'').split(',')){const settings=entry.settings||{};if(/^#[0-9a-f]{6}$/i.test(settings.foreground||''))rules.push({token:aliases[scope.trim()]||scope.trim(),foreground:settings.foreground.slice(1),fontStyle:settings.fontStyle||''});}
-      monaco.editor.defineTheme('lumen-extension-theme',{base:dark?'vs-dark':'vs',inherit:true,rules,colors,encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
+      const theme=this.extensionTheme,{colors,dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
+      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors,encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
     }else monaco.editor.setTheme('lumen-theme');
+    for(const pane of this.panes||[])pane.view?.updateOptions({'semanticHighlighting.enabled':this.extensionTheme?.data?.semanticHighlighting!==false});
   }
   initBase() {
     this.kind='base';
@@ -365,7 +366,8 @@ export class LumenEditor {
     document.documentElement.style.setProperty('--editor-tab-size',this.settings.tabSize);
     if(this.kind==='monaco'&&this.view){this.view.updateOptions({fontSize:size,fontFamily:this.settings.fontFamily,lineHeight,tabSize:this.settings.tabSize,insertSpaces:this.settings.insertSpaces!==false,minimap:{enabled:this.settings.minimap},wordWrap:this.settings.wordWrap?'on':'off',lineNumbers:this.settings.lineNumbers===false?'off':'on',fontLigatures:!!this.settings.fontLigatures,bracketPairColorization:{enabled:this.settings.bracketColors!==false},renderWhitespace:this.settings.renderWhitespace||'selection',cursorBlinking:this.settings.cursorBlinking||'blink',smoothScrolling:!!this.settings.smoothScrolling,formatOnType:!!this.settings.formatOnType});for(const record of this.models.values())record.model?.updateOptions({tabSize:this.settings.tabSize,insertSpaces:this.settings.insertSpaces!==false});}
     else if(this.base){this.base.classList.toggle('no-minimap',!this.settings.minimap);this.base.classList.toggle('no-line-numbers',this.settings.lineNumbers===false);this.schedulePaint();}
-    for(const pane of this.panes||[])if(pane.view!==this.view)pane.view.updateOptions(this.view.getRawOptions());
+    const {theme,...options}=this.view?.getRawOptions?.()||{};
+    for(const pane of this.panes||[])if(pane.view!==this.view)pane.view.updateOptions(options);
   }
   schedulePaint(){cancelAnimationFrame(this.highlightFrame);this.highlightFrame=requestAnimationFrame(()=>this.paint());}
   paint() {

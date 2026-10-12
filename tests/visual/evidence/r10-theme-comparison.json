@@ -1,0 +1,12 @@
+{
+  "channelMAE": [
+    0.3597236933416122,
+    0.3534662906398543,
+    0.22955484651949096
+  ],
+  "meanMAE": 0.3142482768336525,
+  "lowFrequencyMAE": 0.3213924138409264,
+  "lumaBlockSSIM": 0.9839328003903751,
+  "overlay": "theme-split-overlay.png",
+  "diff": "theme-split-diff.png"
+}

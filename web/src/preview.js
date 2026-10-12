@@ -204,7 +204,7 @@ class Preview{
     this.editorOpener=m.editor.registerEditorOpener({openCodeEditor:async(source,resource,selection)=>{if(resource.scheme!=='file')return false;const ed=this.host.editor,path=[...ed.models].find(([,r])=>r.model?.uri.toString()===resource.toString())?.[0]||resource.path.replace(/^\/+/, '');await this.host.openFile(path);if(selection?.startLineNumber){ed.view.setSelection(selection);ed.view.revealRangeInCenter(selection);}else if(selection?.lineNumber){ed.view.setPosition(selection);ed.view.revealPositionInCenter(selection);}ed.view.focus();return true;}});
     for(const defaults of [m.languages.typescript?.typescriptDefaults,m.languages.typescript?.javascriptDefaults])defaults?.setInlayHintsOptions?.({includeInlayParameterNameHints:'all',includeInlayVariableTypeHints:true,includeInlayFunctionLikeReturnTypeHints:true,includeInlayPropertyDeclarationTypeHints:true});
     const actions=view=>{
-    view.updateOptions({inlayHints:{enabled:'on'},'semanticHighlighting.enabled':true});
+    view.updateOptions({inlayHints:{enabled:'on'},'semanticHighlighting.enabled':this.host.editor.extensionTheme?.data?.semanticHighlighting!==false});
     view.addAction({id:'lumen.goToDefinition',label:'Ir a definición · F12',keybindings:[m.KeyCode.F12],run:ed=>ed.trigger('lumen','editor.action.revealDefinition',{})});
     for(const [id,label,run] of [
       ['lantern','Lantern: ejecutar este búfer',()=>this.host.studio.lantern.action('start')],

@@ -7,6 +7,7 @@ import {applyShellTheme} from './extension-theme.js';
 import {requestsLiveEdit,requestsRealtimeHelp,requestsFileChanges} from './ai-intent.js';
 import {MelodyFilesUI} from './melody-files.js';
 import {ThemePicker} from './theme-picker.js';
+import {terminalTheme} from './theme-tokens.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
 
 const PLATFORM_CATEGORIES=[
@@ -521,7 +522,7 @@ export class LumenPlatform {
     }
     this.selectTerminal(result.id);this.pollTerminal(terminal);return result;
   }
-  themeTerminal(terminal){if(!terminal.xterm)return;const css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim();terminal.xterm.options.theme={background:get('terminal-bg'),foreground:get('terminal-text')||get('text'),cursor:get('accent'),selectionBackground:get('selection'),black:get('bg'),red:get('danger'),green:get('success'),yellow:get('syntax-string'),blue:get('syntax-function'),magenta:get('syntax-keyword'),cyan:get('syntax-type'),white:get('text')};}
+  themeTerminal(terminal){if(!terminal.xterm)return;const css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim(),theme=this.extensionThemes?.find(t=>t.id===this.prefs['appearance.extensionTheme']);terminal.xterm.options.theme=terminalTheme(theme,{background:get('terminal-bg'),foreground:get('terminal-text')||get('text'),cursor:get('accent'),selectionBackground:get('selection'),black:get('bg'),red:get('danger'),green:get('success'),yellow:get('syntax-string'),blue:get('syntax-function'),magenta:get('syntax-keyword'),cyan:get('syntax-type'),white:get('text')});}
   selectTerminal(id){
     if(!this.terminals.has(id))return;
     this.activeTerminal=id;this.showingPTY=true;this.host.dock.show('console');this.renderActiveTerminal();

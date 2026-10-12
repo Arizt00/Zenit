@@ -2,7 +2,7 @@ import './controls.js';
 import {icon,escapeHTML as esc} from './icons.js';
 import {glassArt,createLumenScene} from './glass.js';
 const root=document.querySelector('#installer');
-let api=null,info={version:'0.5.3',revision:9,target:'%LOCALAPPDATA%\\Programs\\Zenit',bytes:0,available:false,winget:false},step=0,scenes=[],poll;
+let api=null,info={version:'0.5.3',revision:10,target:'%LOCALAPPDATA%\\Programs\\Zenit',bytes:0,available:false,winget:false},step=0,scenes=[],poll;
 const options={locale:'es',packages:[],shortcuts:true,desktop:false};
 const packages=[['python','Python','Python.Python.3.12'],['javascript','JavaScript / TypeScript','OpenJS.NodeJS.LTS'],['csharp','C# / F# · .NET SDK','Microsoft.DotNet.SDK.8'],['cpp','C / C++ · LLVM','LLVM.LLVM'],['java','Java · OpenJDK','Microsoft.OpenJDK.21'],['go','Go','GoLang.Go'],['rust','Rust','Rustlang.Rustup'],['git','Git','Git.Git'],['cmake','CMake','Kitware.CMake'],['asm','ASM · NASM','NASM.NASM'],['android','Android Studio · móvil','Google.AndroidStudio'],['android-tools','Android · Platform Tools / ADB','Google.PlatformTools']];
 const text=(es,en)=>options.locale==='en'?en:es;

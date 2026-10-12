@@ -1,10 +1,10 @@
 {
-  "duration": 3003.89999999851,
+  "duration": 3001.2999999970198,
   "frameInterval": {
-    "samples": 464,
+    "samples": 636,
     "median": 4.199999999999818,
-    "p95": 16.700000000000728,
-    "max": 29.099999999999454
+    "p95": 8.300000000000182,
+    "max": 25
   },
   "longTasks": [],
   "mutations": {
@@ -12,8 +12,8 @@
   },
   "webgl": {
     "renderSamples": 179,
-    "medianCpuMs": 0.3999999985098839,
-    "p95CpuMs": 0.6000000014901161,
+    "medianCpuMs": 0.30000000447034836,
+    "p95CpuMs": 0.5999999940395355,
     "contextEvents": [],
     "engines": 2,
     "surfaces": [
@@ -34,8 +34,8 @@
     ]
   },
   "memory": {
-    "used": 45141812,
-    "total": 70529196
+    "used": 61524323,
+    "total": 75270187
   },
   "canvases": [
     {
@@ -85,24 +85,24 @@
   ],
   "cdp": {
     "LayoutCount": 1,
-    "RecalcStyleCount": 419,
-    "LayoutDuration": 0.000113,
-    "RecalcStyleDuration": 0.017648,
-    "ScriptDuration": 0.116905,
-    "TaskDuration": 0.329183
+    "RecalcStyleCount": 594,
+    "LayoutDuration": 8.2e-05,
+    "RecalcStyleDuration": 0.020078,
+    "ScriptDuration": 0.104669,
+    "TaskDuration": 0.305492
   },
   "timeline": {
     "Layout": {
       "events": 1,
-      "totalMs": 0.094
+      "totalMs": 0.067
     },
     "Paint": {
       "events": 13,
-      "totalMs": 1.523
+      "totalMs": 1.239
     },
     "UpdateLayoutTree": {
-      "events": 369,
-      "totalMs": 15.636
+      "events": 525,
+      "totalMs": 17.645
     },
     "CompositeLayers": {
       "events": 0,

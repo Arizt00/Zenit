@@ -1,3 +1,4 @@
+import {themeEntries} from './theme-tokens.js';
 // Only color values from an extension may enter the shell; never arbitrary CSS.
 const rgb=hex=>[1,3,5].map(n=>parseInt(hex.slice(n,n+2),16));
 const hex=values=>'#'+values.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
@@ -21,7 +22,7 @@ export function themePalette(theme) {
   const border=pick('panel.border|widget.border|sideBar.border',dark?'#444444':'#d4d4d4');
   const palette={bg:pick('workbench.background|editorGroup.emptyBackground',bg),surface,editor:bg,header:pick('titleBar.activeBackground',surface),rail:pick('activityBar.background',surface),card:surface,field:pick('input.background',surface),text,secondary:pick('sideBar.foreground|foreground',text),muted:pick('descriptionForeground|editorLineNumber.foreground',text),accent,'accent-bright':accent,'accent-soft':pick('list.inactiveSelectionBackground',surface),selected:pick('list.activeSelectionBackground|tab.activeBackground',surface),hover:pick('list.hoverBackground',surface),line:pick('editor.lineHighlightBackground',bg),border,'border-strong':pick('focusBorder',border),selection:pick('editor.selectionBackground',accent.slice(0,7)+'33'),'terminal-bg':pick('terminal.background',bg),'terminal-text':pick('terminal.foreground',text),folder:pick('symbolIcon.folderForeground',accent),'logo-light':accent,'logo-dark':accent,success:pick('terminal.ansiGreen','#70aa78'),danger:pick('errorForeground|editorError.foreground','#de5967'),warning:pick('editorWarning.foreground','#c9a05a'),glass:surface.slice(0,7)+'af','glass-edge':border,'inset':'inset 0 1px 0 '+border.slice(0,7)+'55'};
   for(const [token,scopes] of Object.entries({keyword:['keyword','storage'],type:['entity.name.type','support.type'],string:['string'],number:['constant.numeric'],comment:['comment'],function:['entity.name.function','support.function']})){
-    const entry=[...(theme.data?.tokenColors||[])].reverse().find(e=>(Array.isArray(e.scope)?e.scope:String(e.scope||'').split(',')).some(s=>scopes.some(x=>s.trim()===x))&&/^#[\da-f]{6}$/i.test(e.settings?.foreground||''));
+    const entry=themeEntries(theme).reverse().find(e=>(Array.isArray(e.scope)?e.scope:String(e.scope||'').split(',')).some(s=>typeof s==='string'&&scopes.some(x=>s.trim()===x))&&/^#[\da-f]{6}$/i.test(e.settings?.foreground||''));
     palette['syntax-'+token]=entry?.settings.foreground||text;
   }
   // Transparent foregrounds and barely visible theme labels must not wash out

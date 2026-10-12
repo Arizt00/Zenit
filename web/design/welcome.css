@@ -5,7 +5,7 @@
 .welcome-depth { position:absolute; inset:-1%; z-index:-2; pointer-events:none; transform:translate3d(var(--welcome-x,0px),var(--welcome-y,0px),0); transition:transform 600ms cubic-bezier(.2,.7,.2,1); }
 .welcome-landscape { position:absolute; inset:-2%; pointer-events:none; background:url('/assets/welcome-crystal-landscape.png') center/cover no-repeat; animation:welcome-horizon 48s ease-in-out infinite alternate; }
 .welcome-sheet::before { content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 50% 48%,#f7f8ffd9 0,#f7f8ff75 30%,transparent 62%),linear-gradient(180deg,#f4f5ff24,#eff3ff08 58%,#f9fbff80); }
-.welcome-sheet::after { content:""; position:absolute; inset:-10%; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 20% 46%,#d9ccff35,transparent 45%),radial-gradient(ellipse at 83% 65%,#c1ecff50,transparent 40%); animation:welcome-light 32s ease-in-out infinite alternate; }
+.welcome-sheet::after { content:""; position:absolute; inset:-10%; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 20% 46%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 45%),radial-gradient(ellipse at 83% 65%,#c1ecff32,transparent 40%); animation:welcome-light 48s ease-in-out infinite alternate; }
 :root[data-theme=dark] .welcome-sheet,:root[data-theme=forest] .welcome-sheet {background:var(--bg);}
 :root[data-theme=dark] .welcome-landscape,:root[data-theme=forest] .welcome-landscape {filter:brightness(.42) saturate(.72);}
 :root[data-theme=dark] .welcome-sheet::before {background:radial-gradient(ellipse at 50% 48%,#181a30e8,#181a3060 55%,transparent 75%),linear-gradient(180deg,#17182750,#171827aa);}

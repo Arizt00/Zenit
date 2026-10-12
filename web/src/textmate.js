@@ -1,3 +1,4 @@
+import {tokenColor} from './theme-tokens.js';
 /** Real TextMate/Oniguruma tokenization. Declarative grammars never start JS hosts. */
 export class TextMateState {
   constructor(stack,generation){this.stack=stack;this.generation=generation;}
@@ -11,7 +12,7 @@ export function textMateTheme(colors,entries=[]){
       .map(([key,scope])=>({scope,settings:{foreground:colors[key],...(key==='comment'?{fontStyle:'italic'}:{})}}))];
   for(const entry of entries){
     if(!entry||typeof entry!=='object')continue;
-    const values={};for(const name of ['foreground','background'])if(/^#[\da-f]{6}(?:[\da-f]{2})?$/i.test(entry.settings?.[name]||''))values[name]=entry.settings[name].slice(0,7);
+    const values={};for(const name of ['foreground','background']){const color=tokenColor(entry.settings?.[name],colors.editor);if(color)values[name]=color;}
     if(typeof entry.settings?.fontStyle==='string')values.fontStyle=entry.settings.fontStyle;
     if(Object.keys(values).length)settings.push({scope:entry.scope,settings:values});
   }

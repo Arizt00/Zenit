@@ -1,7 +1,7 @@
 {
-  "commit": "ec1b980044d1788b6e86ad749f135b2dd712dc0e",
-  "trackedFiles": 614,
-  "sourceFiles": 262,
+  "commit": "335bbcce0d5c9b6719996aafe645095c9f428c25",
+  "trackedFiles": 652,
+  "sourceFiles": 267,
   "stylesheets": [
     "/design.css"
   ],
@@ -101,6 +101,7 @@
     "tests/test_distribution.py",
     "tests/test_extension_053.py",
     "tests/test_extension_auth.mjs",
+    "tests/test_extension_color_theme.py",
     "tests/test_extension_editors.py",
     "tests/test_extension_esm.py",
     "tests/test_extension_install_plan.py",
@@ -117,6 +118,7 @@
     "tests/test_layout03.mjs",
     "tests/test_lens_flush_r9.py",
     "tests/test_live_r5.py",
+    "tests/test_melody_advice_lines.mjs",
     "tests/test_melody_companion.mjs",
     "tests/test_melody_files.py",
     "tests/test_melody_files_intent.mjs",
@@ -135,6 +137,7 @@
     "tests/test_terminal_input.mjs",
     "tests/test_textmate.py",
     "tests/test_theme_tokens.mjs",
+    "tests/test_theme_ui.py",
     "tests/test_ui.py",
     "tests/test_ui03.py",
     "tests/test_ui04.py",
@@ -204,6 +207,7 @@
     "web/design/pages.css",
     "web/design/shell.css",
     "web/design/support.css",
+    "web/design/themes.css",
     "web/design/tokens.css",
     "web/design/welcome.css",
     "web/design/windows.css",
@@ -258,6 +262,7 @@
     "web/src/terminal-input.js",
     "web/src/textmate.js",
     "web/src/theme-init.js",
+    "web/src/theme-picker.js",
     "web/src/uninstall.js",
     "web/src/workbench.js",
     "web/src/workspace-data.js",
@@ -275,7 +280,7 @@
   "references": [
     {
       "screen": "editor",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\editor.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\editor.png",
       "size": [
         1672,
         941
@@ -284,7 +289,7 @@
     },
     {
       "screen": "welcome",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\welcome.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\welcome.png",
       "size": [
         1672,
         941
@@ -293,7 +298,7 @@
     },
     {
       "screen": "search",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\search.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\search.png",
       "size": [
         1672,
         941
@@ -302,7 +307,7 @@
     },
     {
       "screen": "settings",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\settings.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\settings.png",
       "size": [
         1672,
         941
@@ -311,7 +316,7 @@
     },
     {
       "screen": "forge",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\forge.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\forge.png",
       "size": [
         1672,
         941
@@ -320,7 +325,7 @@
     },
     {
       "screen": "laboratory",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\laboratory.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\laboratory.png",
       "size": [
         1672,
         941
@@ -329,7 +334,7 @@
     },
     {
       "screen": "debug",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\debug.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\debug.png",
       "size": [
         1672,
         941
@@ -338,7 +343,7 @@
     },
     {
       "screen": "extensions",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r9\\native-final\\references\\extensions.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r10\\native-final\\references\\extensions.png",
       "size": [
         1672,
         941

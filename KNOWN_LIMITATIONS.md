@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R9
+# Límites reales · Zénit 0.5.3 R10
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -51,7 +51,7 @@
     agotó el tiempo al compartir carga con otras pruebas; recorridos posteriores
     secuenciales completaron. La causa no está demostrada y no se considera cerrada
     solo porque las repeticiones pasan. Se conserva instrumentación de recursos.
-15. **Distribución:** R9 prepara un instalador y portable Windows con revisión
+15. **Distribución:** R10 prepara un instalador y portable Windows con revisión
     propia, manifiesto y SHA-256. No reconstruye aquí Linux/macOS ni firma/notariza
     los paquetes. Las releases anteriores se conservan. El actualizador reconoce
     la nueva revisión; la instalación se elige después de guardar el trabajo.
@@ -83,3 +83,13 @@ datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inven
 - ColorThemeKind/eventos cubren los cuatro tipos y cambios reales de identidad, incluso entre dos temas del mismo tipo. No equivalen a toda la configuración, semántica TextMate, altas definiciones de contraste ni todas las API de temas de VS Code.
 - Los enlaces de Melody se extraen de referencias a líneas válidas del texto devuelto, hasta seis por consejo. No verifican la corrección técnica del consejo. Caducan al cambiar el modelo/revisión; no editan ni borran archivos.
 - La bienvenida nocturna usa la misma imagen y canvas, con composición CSS adaptada. Las muestras WebView2 de render CPU, frames y long tasks no certifican 60 FPS, tiempo GPU ni ausencia universal de flicker. Las ventanas del usuario no se reinician automáticamente.
+
+
+## Límites específicos de R10
+
+- El tema se conserva al crear una división y actualizar sus preferencias; seis recorridos reproducibles y las ventanas nativas probadas acreditan ese arreglo. No se garantiza que cada acción de una extensión o cada evento del sistema operativo conserve el tema.
+- Colores RGB/RGBA se normalizan y componen sobre el editor real. Monaco/TextMate mantienen el color original del tema; no se impone el ajuste de contraste de la interfaz a todos los tokens. Algunos temas eligen comentarios deliberadamente tenues.
+- .tmTheme y reglas JSON referenciadas son locales al paquete y tienen un límite de 3 MB por recurso. No se descargan archivos de sintaxis remotos. Se conserva el límite de herencia existente.
+- Los scopes contextuales completos necesitan una gramática TextMate. El tokenizador lexical integrado de Monaco solamente traduce alias de categorías comunes. La capa semántica cubre selectores simples de tipo/modificador; lenguaje, comodines y todas las permutaciones de modificadores siguen pendientes.
+- Los apartados de Melody solo organizan texto recibido. No verifican sus conclusiones ni inventan apartados ausentes. Insertar sugerencia exige el mismo modelo, versión y posición; se aplica al búfer y es deshacible, no guarda ni ejecuta. La calidad del modelo externo no se evalúa con las fixtures.
+- La luz del fondo de inicio sigue siendo composición CSS sobre un asset local. Render/perfilado son muestras del host; no certifican 60 FPS en todos los equipos ni ausencia universal de flicker.

@@ -1,6 +1,6 @@
-# Zénit 0.5.3 Preview R9
+# Zénit 0.5.3 Preview R10
 
-Última entrega: [instalador Windows R9](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.9/Zenit-0.5.3-R9-Windows-Setup.exe) · [portable](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.9/Zenit-0.5.3-R9-Windows-Portable.zip) · [cambios y límites de R9](docs/PREVIEW_053_R9.md). Los temas conservan contraste y se eligen desde un selector; se prueban 89 variantes reales. Ventanas desacopladas comparten el tema sin reconstruir Ajustes. Melody enlaza consejos con líneas del archivo y el inicio adapta su paisaje a Noche/Bosque. Consulta [implementación y pruebas](IMPLEMENTATION_REPORT.md), [comparación visual](VISUAL_DIFF_REPORT.md) y [límites reales](KNOWN_LIMITATIONS.md).
+Última entrega: [instalador Windows R10](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.10/Zenit-0.5.3-R10-Windows-Setup.exe) · [portable](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.10/Zenit-0.5.3-R10-Windows-Portable.zip) · [cambios y límites](docs/PREVIEW_053_R10.md). El editor conserva el tema al dividirlo y cambiar preferencias. Colores con transparencia, temas .tmTheme locales y ANSI de terminal se integran con los motores reales. Melody organiza consejos y permite insertar una sugerencia vigente con Deshacer. Consulta [implementación y pruebas](IMPLEMENTATION_REPORT.md), [comparación visual](VISUAL_DIFF_REPORT.md) y [límites reales](KNOWN_LIMITATIONS.md).
 
 Para activar los consejos, pulsa «Ayuda en tiempo real» o escribe «Ayúdame en tiempo real mientras escribo» en Melody y confirma el destino. «Sugerir siguiente código» muestra una propuesta en Monaco para aceptar con Tab. La edición en vivo conserva su permiso separado por archivo.
 

@@ -1,0 +1,763 @@
+{
+  "states": [
+    {
+      "step": "selected",
+      "theme": "lumen-extension-theme",
+      "base": "vs",
+      "selected": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+      "modelRetained": true,
+      "panes": 1,
+      "colors": [
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 128, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "42",
+          "color": "rgb(202, 111, 19)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(129, 149, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        }
+      ]
+    },
+    {
+      "step": "split",
+      "theme": "lumen-theme",
+      "base": "vs",
+      "selected": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+      "modelRetained": true,
+      "panes": 2,
+      "colors": [
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "42",
+          "color": "rgb(170, 94, 16)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(104, 121, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a043",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a043",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        }
+      ]
+    },
+    {
+      "step": "font",
+      "theme": "lumen-theme",
+      "base": "vs",
+      "selected": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+      "modelRetained": true,
+      "panes": 2,
+      "colors": [
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "42",
+          "color": "rgb(170, 94, 16)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(104, 121, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a043",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "43",
+          "color": "rgb(170, 94, 16)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(104, 121, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        }
+      ]
+    },
+    {
+      "step": "contributions",
+      "theme": "lumen-extension-theme",
+      "base": "vs",
+      "selected": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+      "modelRetained": true,
+      "panes": 2,
+      "colors": [
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 128, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "42",
+          "color": "rgb(202, 111, 19)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(129, 149, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 128, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a043",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "43",
+          "color": "rgb(202, 111, 19)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(26, 172, 160)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(129, 149, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        }
+      ]
+    },
+    {
+      "step": "wrap",
+      "theme": "lumen-theme",
+      "base": "vs",
+      "selected": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+      "modelRetained": true,
+      "panes": 2,
+      "colors": [
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "42",
+          "color": "rgb(170, 94, 16)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(104, 121, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a043",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "value\u00a0+",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "43",
+          "color": "rgb(170, 94, 16)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(19, 127, 118)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(4, 49, 250)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(104, 121, 1)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(4, 49, 250)"
+        }
+      ]
+    },
+    {
+      "step": "reload",
+      "theme": "lumen-extension-theme",
+      "base": "vs",
+      "selected": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+      "modelRetained": true,
+      "panes": 1,
+      "colors": [
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "#\u00a0consejo\u00a0de\u00a0prueba",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate(value):",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "def\u00a0calculate",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "value",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": ":",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "return\u00a0value\u00a0+\u00a042",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print(\"hola\")",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "print",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": "(",
+          "color": "rgb(207, 156, 1)"
+        },
+        {
+          "text": "\"hola\"",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "text": ")",
+          "color": "rgb(207, 156, 1)"
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "passed": false,
+  "package": "Read-only Bearded Theme; disposable profile."
+}

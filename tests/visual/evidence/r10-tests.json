@@ -1,0 +1,25 @@
+{
+  "baseCommit": "335bbcce0d5c9b6719996aafe645095c9f428c25",
+  "captureState": "R10 before product commit; original references unchanged",
+  "python": {
+    "executed": 290,
+    "passed": 285,
+    "skipped": 5
+  },
+  "node": {
+    "passed": 80
+  },
+  "syntaxFiles": 58,
+  "realThemeVariants": 89,
+  "themeUiChecks": 10,
+  "themeStabilitySteps": 6,
+  "actualXtermANSI": true,
+  "textmateChecks": 7,
+  "debugOutputChecks": 12,
+  "filesPanelsTerminalChecks": 7,
+  "correctionChecks": 21,
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "aiTransport": "Explicit fixture; not an external model quality benchmark."
+}

@@ -591,7 +591,7 @@ async function start(){
       isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
-        settings.formatOnType=p['editor.formatOnType'];settings.motion=p['appearance.motion'];settings.density=p['appearance.density'];applySettings();applyTheme(p['appearance.theme'],false);
+        settings.formatOnType=p['editor.formatOnType'];settings.motion=p['appearance.motion'];settings.density=p['appearance.density'];applySettings();if(!p['appearance.extensionTheme'])applyTheme(p['appearance.theme'],false);
       },
       setPluginCommands:items=>{for(let i=commandDefinitions.length-1;i>=0;i--)if(commandDefinitions[i][0].startsWith('plugin.'))commandDefinitions.splice(i,1);for(const item of items)commandDefinitions.push(['plugin.'+item.id,'extensions',item.title,'']);}
     });
