@@ -48,3 +48,5 @@ Windows se prepara como instalador `.exe` y portable con manifiesto/SHA-256.
 No se reconstruyen aquí Linux/macOS ni se añade firma/notarización.
 Consulta [implementación](../IMPLEMENTATION_REPORT.md),
 [comparación visual](../VISUAL_DIFF_REPORT.md) y [límites](../KNOWN_LIMITATIONS.md).
+
+La distribución Windows publicada supera 15 comprobaciones nativas y 11 del runtime instalado; 95 archivos coinciden con el build. El perfil y los SDK existentes se conservan.

@@ -101,3 +101,25 @@ Los recibos de build/publicación/instalación se incorporan en
 `tests/visual/evidence/windows-r10-*.json` después de ejecutar cada fase.
 R10 entrega instalador/portable Windows; no reconstruye Linux/macOS ni firma.
 El proceso anterior del usuario se conserva para no perder trabajo sin guardar.
+
+
+## Distribución verificada de R10
+
+El build procede de `fee78a6c338c425aa33550819579db04f08c6a5c` y está publicado en
+[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.10).
+Instalador: 113021703 bytes; portable:
+70799419 bytes. Los cinco assets tienen SHA-256
+confirmado por GitHub; no se sustituyen releases anteriores.
+
+Se superan 15 comprobaciones del paquete nativo y 11 del helper instalado.
+Los 95 archivos de frontend/assets/bridges coinciden byte por byte con el
+build. La comprobación instalada usa un Vira real en perfil QA aislado:
+contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
+Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
+de archivos. El consentimiento de IA sigue desactivado al iniciar.
+
+`app-0.5.3-R10` conserva el payload R9, los cuatro archivos de perfil
+comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
+La respuesta real de GitHub permite al actualizador R9 seleccionar R10 con
+el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
+Los recibos completos están en `tests/visual/evidence/windows-r10-*.json`.

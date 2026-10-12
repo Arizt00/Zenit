@@ -1,0 +1,19 @@
+{
+  "version": "v0.5.3-preview.10",
+  "platform": "win32",
+  "architecture": "x86_64",
+  "sourceCommit": "fee78a6c338c425aa33550819579db04f08c6a5c",
+  "signed": false,
+  "outputs": [
+    {
+      "name": "Zenit-0.5.3-R10-Windows-Setup.exe",
+      "bytes": 113021703,
+      "sha256": "f84b7b0bb876a509b156060bc12ff6d770849f4eaf82ae21ef4f0956e0913f6f"
+    },
+    {
+      "name": "Zenit-0.5.3-R10-Windows-Portable.zip",
+      "bytes": 70799419,
+      "sha256": "28def4904ceb0ff3ae4a799ef520a38371075cfec905f44e24c3967d53554b7e"
+    }
+  ]
+}

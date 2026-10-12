@@ -1,0 +1,13 @@
+{
+  "realGitHubResponse": true,
+  "current": "v0.5.3-preview.9",
+  "selected": {
+    "version": "v0.5.3-preview.10",
+    "name": "Zenit-0.5.3-R10-Windows-Setup.exe",
+    "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.10/Zenit-0.5.3-R10-Windows-Setup.exe",
+    "sha256": "f84b7b0bb876a509b156060bc12ff6d770849f4eaf82ae21ef4f0956e0913f6f",
+    "size": 113021703,
+    "release": "https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.10"
+  },
+  "downloadRepeated": false
+}
