@@ -126,3 +126,29 @@ Se prepara build Windows 0.5.4 R1 con manifiesto/SHA-256, validación del runtim
 congelado e instalación junto al payload anterior. El recibo de distribución
 verificada se añade después de publicar e instalar. No se reconstruyen aquí
 Linux/macOS. Límites completos: `KNOWN_LIMITATIONS.md`.
+
+
+## Distribución verificada · 0.5.4 R1
+
+El build procede de `521d4428fab46787945e544dd7af6eb1dd9bfbbf` y se publica en
+[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.1).
+Instalador: 113118365 bytes; portable:
+70878607 bytes. Los cinco assets tienen SHA-256
+confirmado por GitHub y las releases anteriores se conservan.
+
+Se superan 15 comprobaciones del paquete nativo y 15 del helper instalado.
+Los 107 archivos de frontend/assets/bridges coinciden con el build. El
+runtime instalado carga los 1251 iconos Material, conserva el tema en el
+Monaco dividido y verifica revocación persistente incluso en modo directo.
+Melody no envía consultas al arrancar; su nueva voz Emma se sigue resolviendo.
+
+`app-0.5.4-R1` conserva el payload anterior, los cuatro archivos de perfil
+comprobados y el índice/selecciones del SDK. Tras comprobar esa conservación,
+se cambian únicamente dos preferencias solicitadas: modo directo y selección
+de Material Icon Theme. El tema de color, proveedor y conexión de voz quedan
+conservados. No se cierran ventanas previas ni se descartan búferes. Esas
+ventanas seguirán usando su revisión anterior hasta abrir el nuevo runtime.
+
+La respuesta real de GitHub permite al actualizador 0.5.3 R13 seleccionar
+0.5.4 R1 con el SHA correcto. Los recibos están en
+`tests/visual/evidence/windows-054-r1-*.json`.

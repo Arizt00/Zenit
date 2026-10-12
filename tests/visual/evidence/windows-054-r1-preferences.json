@@ -1,0 +1,14 @@
+{
+  "requestedChanges": {
+    "security.confirmRoutineActions": false,
+    "appearance.iconTheme": "PKief.material-icon-theme:material-icon-theme"
+  },
+  "changedKeys": [
+    "appearance.iconTheme",
+    "security.confirmRoutineActions"
+  ],
+  "otherPreferenceValuesPreserved": true,
+  "colourThemePreserved": true,
+  "providerAndEmmaVoicePreserved": true,
+  "requiresNewRuntimeForOlderOpenWindows": true
+}

@@ -26,3 +26,5 @@ No se garantiza 60 FPS ni se reconstruyen Linux/macOS.
 Detalles: [implementación](../IMPLEMENTATION_REPORT.md),
 [comparación](../VISUAL_DIFF_REPORT.md), [límites](../KNOWN_LIMITATIONS.md),
 [matriz de paridad](VSCODE_PARITY_054_R1.md).
+
+Distribución Windows verificada: 15 checks nativos y 15 del runtime instalado; 107 archivos coinciden con el build. El tema de color y los SDK se conservan; modo directo y Material quedan seleccionados por petición del usuario.

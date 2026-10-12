@@ -1,0 +1,30 @@
+{
+  "installed": true,
+  "checks": [
+    "Installed source/assets match the verified build: 107 files",
+    "Installed Emma voice bridge resolves the existing approved new Qwen identity without loading its model",
+    "Installed runtime loads all 1251 real Material icon definitions and local SVG references",
+    "Installed direct mode honors persistent explicit revocation and reauthorization",
+    "Installed fullscreen welcome renders verified Blender geometry and advances its WebGL2 material",
+    "Installed actual Vira package retains opaque readable accents and button text",
+    "Installed Melody companion starts disabled and sends no AI requests",
+    "Installed WebView2 displays the selected real Material icons",
+    "Installed welcome stops drawing when entering the editor",
+    "Installed Laboratory has five real sections and one visible work surface",
+    "Installed split editor preserves the explicit extension theme in both real Monaco views",
+    "Installed Debug has four inspectors and one selected session surface",
+    "Installed frozen backend creates, deletes and restores actual files from a reviewed fixture plan",
+    "Installed UI uses one Vira chooser with its 20 actual variants",
+    "Installed theme fallback reaches the native UI and a real Node ColorThemeKind event"
+  ],
+  "errors": [],
+  "optical": {
+    "geometry": "blender-double-wall",
+    "engine": "WebGL2",
+    "limit": 60,
+    "loops": 1,
+    "fullscreen": true,
+    "time": 0.05029999999701976
+  },
+  "profile": "Disposable verification profile; user data untouched."
+}
