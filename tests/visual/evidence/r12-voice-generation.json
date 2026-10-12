@@ -1,0 +1,12 @@
+{
+  "voice": "Emma",
+  "engine": "qwen",
+  "selection": "Prepared Emma voice selected by the user on 2026-10-04",
+  "sampleRate": 24000,
+  "durationSeconds": 4.24,
+  "generationSeconds": 37.28100000000268,
+  "peak": 0.531219482421875,
+  "clippedSamples": 0,
+  "audioLocal": true,
+  "mossFallback": false
+}

@@ -1,3 +1,44 @@
+# Implementación · Zénit 0.5.3 Preview R12
+
+## Corrección solicitada de la voz de Emma
+
+R11 seleccionaba `moss-approved` mediante authorizedVoiceDirectory. La aplicación
+Emma actual selecciona su asistente mediante assistantVoice('emma'), que resuelve
+la identidad nueva preparada el 4 de octubre y elegida por el usuario con Qwen.
+R12 utiliza ese mismo selector y mantiene sus validaciones de identidad y hashes.
+No modifica Emma, sus referencias ni sus parámetros de voz.
+
+Archivos funcionales: `backend/emma_voice_bridge.mjs`, `backend/melody_voice.py`.
+El bridge exige la identidad nueva de Emma, disponibilidad del motor Qwen y
+coincidencia del motor en la respuesta terminada. Falta de voz/modelo o una
+identidad distinta devuelve un error; no cae silenciosamente en MOSS ni una
+voz de sistema. El audio sigue siendo local, autenticado, no-store, cancelable
+y limitado a 2500 caracteres de prosa. Se conservan los controles de R11.
+
+Se actualizan versión/instalador a R12 y el test del player para comprobar la
+duración real del WAV de entrada, sin fijarla al audio antiguo. Tres tests Node
+nuevos verifican identidad nueva, ausencia de fallback e igualdad del motor.
+Los 85 tests Node pasan. Siete tests Python relacionados con voz/configuración
+pasan; 14 comprobaciones UI de voz/tema se repiten con el nuevo audio. No se
+repite la matriz completa de R11, porque la composición de UI no cambia aquí.
+
+Generación Qwen real: 4.24 s a 24000 Hz,
+pico 0.531, cero muestras saturadas. Tiempo medido de esta petición:
+37.28 s. No se declara voz instantánea ni calidad
+perceptual validada para todos los textos. Las pruebas UI reutilizan ese WAV
+real y un fixture explícito de IA; no evalúan un proveedor externo.
+
+Se elige la voz nueva local ya preparada, como autorizó el usuario. No se activa
+una voz online ni se solicitan/copían credenciales. OpenAI ofrece integración de
+voz mediante su API de audio; no se afirma que estas voces sean idénticas a la
+selección de ChatGPT ni se conecta una cuenta sin configurar ese servicio.
+
+Evidencia: `tests/visual/evidence/r12-*`,
+`tests/visual/current/melody-new-voice.png`. Los resultados de R11 siguientes
+son históricos y siguen describiendo la implementación conservada.
+
+---
+
 # Implementación · Zénit 0.5.3 Preview R11
 
 ## Cambios y causas verificadas

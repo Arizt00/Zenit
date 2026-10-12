@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R11
+# Límites reales · Zénit 0.5.3 R12
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -95,7 +95,7 @@ datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inven
 - La luz del fondo de inicio sigue siendo composición CSS sobre un asset local. Render/perfilado son muestras del host; no certifican 60 FPS en todos los equipos ni ausencia universal de flicker.
 
 
-## R11 · voz y temas
+## R11 · voz y temas (histórico; voz sustituida en R12)
 
 - Voz de Melody: requiere la instalación local original de Emma con la identidad
   MOSS aprobada. No se redistribuyen modelos ni referencias privadas; no hay
@@ -109,3 +109,14 @@ datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inven
   Al iniciar por primera vez no existe cache: se espera la contribución real.
 - Análisis y predicciones de Melody conservan contexto y control de revisión,
   pero no han pasado un benchmark de calidad de todos los proveedores externos.
+
+
+## R12 · voz vigente
+
+La voz vigente es la nueva identidad de Emma elegida el 4 de octubre con Qwen.
+Sustituye la selección MOSS de R11; el adaptador no vuelve a la anterior si falla.
+Requiere la instalación local preparada de Emma y el modelo Qwen; los modelos y
+referencias privadas no se redistribuyen. Español, 2500 caracteres de prosa,
+bloques de código omitidos y un trabajo simultáneo. La petición real de prueba
+tardó 37,28 s para 4,24 s de voz: todavía no es instantánea. La voz online de
+OpenAI no se activa en esta revisión. Se mantienen los demás límites de R11.

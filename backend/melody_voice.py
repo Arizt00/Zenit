@@ -37,7 +37,7 @@ class MelodyVoice:
         selected=self.prefs.get('ai.voiceDirectory') or self.prefs.get('ai.emmaDirectory')
         if not selected:raise ValueError('Indica la carpeta de Emma en Ajustes → Inteligencia artificial → Voz de Melody.')
         root=Path(selected).expanduser().resolve()
-        for file in ('electron/original-voice.mjs','electron/authorized-voice-identity.mjs','electron/moss_voice_worker.py','electron/moss_streaming.py'):
+        for file in ('electron/original-voice.mjs','electron/authorized-voice-identity.mjs','electron/assistant-voices.mjs','electron/original_voice_worker.py'):
             if not (root/file).is_file():raise ValueError('La carpeta seleccionada no contiene el motor de voz original de Emma.')
         node=find_tool('node')
         if not node:raise ValueError('La voz de Emma necesita el Node.js de Zénit.')

@@ -83,3 +83,13 @@ La fila de archivos/ayuda ocupa una sola línea y las cuatro acciones caben a 16
 R11 repite 13 vistas nativas y 24 combinaciones de escala/resolución (72 capturas). Las imágenes de referencia permanecen intactas. La restauración de colores se verifica antes de recibir las contribuciones; el control de tema muestra la variante efectiva.
 
 No se certifica equivalencia óptica perfecta ni cobertura del 90 % de VS Code. Los límites específicos del material, contenido y otras pantallas siguen descritos en las filas anteriores.
+
+
+## R12 · nueva voz de Emma
+
+[Player con la voz nueva](tests/visual/current/melody-new-voice.png).
+La composición, iconos y controles siguen siendo los de R11. Se repiten las 14
+comprobaciones de voz/tema con audio generado por Qwen real. No se recapturan ni
+se anuncian nuevas mediciones de los golden originales o de la matriz completa;
+las comparaciones anteriores pertenecen a R11. La conversación de la captura
+usa un fixture de IA; la pista procede de la generación real registrada aparte.
