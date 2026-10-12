@@ -123,6 +123,21 @@ en la aplicación distribuida. Las capturas del repositorio documentan su contex
 
 ## Límites de la entrega
 
+El instalador y el ZIP de Windows se reconstruyeron desde el commit `0d70e10`.
+Diecinueve archivos del sistema visual incluidos en el runtime congelado coinciden
+byte a byte con los del repositorio. Dos recorridos consecutivos completaron las
+14 pruebas nativas del paquete, incluyendo ventanas de Forge/web/Lantern/datos,
+edición compartida, retorno, QuickInput, host Node y dependencias persistidas.
+Antes hubo timeouts de arranque de preview que siguen documentados como límite
+intermitente; no se esconden ni se declaran resueltos por los recorridos posteriores.
+
+La reconstrucción de Windows se instaló localmente como R6. El instalador conservó
+la distribución anterior como copia recuperable, cuatro archivos de perfil sin
+modificar y las selecciones de SDK Java/C++/Python. El runtime instalado detecta
+las trece herramientas del SDK compartido y ejecuta el ejemplo x86-64 hasta
+RAX/RBX = 55, RCX = 0 y RDX = 110. Los paquetes públicos anteriores de la etiqueta
+R6 no se sobrescribieron: el nuevo instalador y ZIP están disponibles localmente.
+
 La composición principal está verificada; el material 3D, la escena decorativa
 del laboratorio y algunos detalles de iconos/tipografía mantienen diferencias
 con las imágenes. La comparación no constituye un certificado de igualdad

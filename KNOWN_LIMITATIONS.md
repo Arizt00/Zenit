@@ -43,7 +43,14 @@
     ventana de referencia. Hay además captura del modo desacoplado real. Los
     controles de acoplamiento y la decoración del sistema operativo tienen
     diferencias; no se dibujaron botones de ventana falsos para ocultarlas.
+11. **Arranque nativo intermitente:** durante la verificación del ejecutable se
+    observaron timeouts al iniciar una ventana de vista web, antes de ejecutar
+    el bootstrap. Los dos recorridos posteriores completaron las 14 comprobaciones,
+    pero la causa de esa intermitencia no quedó identificada. La instrumentación
+    conserva URL, recursos y errores de importación cuando vuelve a producirse.
+    No se considera cerrado por haber pasado dos veces.
 
-Los paquetes públicos R6 previos no se consideran automáticamente reconstruidos
-por este cambio de código. Los resultados de empaquetado/instalación, cuando se
-ejecuten, se registran por separado con su procedencia.
+Windows se reconstruyó e instaló localmente, conservando una copia de la instalación
+anterior y los datos del perfil. Su manifiesto y las verificaciones están en
+`tests/visual/evidence`. Los paquetes públicos previos R6 de GitHub no se
+sobrescribieron. Linux/macOS no se reconstruyeron en esta fase visual.

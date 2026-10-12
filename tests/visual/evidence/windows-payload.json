@@ -1,0 +1,24 @@
+{
+  "sourceCommit": "0d70e109ef801f89ab6d0743e4d264172b233cca",
+  "windowsPayloadIncludesExactVisualSources": {
+    "web/index.html": true,
+    "web/design.css": true,
+    "web/src/product-ui.js": true,
+    "web/src/diagnostics.js": true,
+    "web/src/glass.js": true,
+    "web/src/workbench.js": true,
+    "web/src/desktop-workflows.js": true,
+    "web/design/catalogue.css": true,
+    "web/design/debug.css": true,
+    "web/design/dialogs.css": true,
+    "web/design/melody.css": true,
+    "web/design/migration.json": true,
+    "web/design/pages.css": true,
+    "web/design/shell.css": true,
+    "web/design/support.css": true,
+    "web/design/tokens.css": true,
+    "web/design/welcome.css": true,
+    "web/design/windows.css": true,
+    "web/design/workspaces.css": true
+  }
+}

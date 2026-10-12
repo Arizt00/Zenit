@@ -118,7 +118,14 @@ def main():
                 until(lambda:parent.evaluate_js("!!document.querySelector('.workspace-profile-tools iframe')"))
                 parent.evaluate_js("document.querySelector('[data-surface-panel=preview]').click()")
                 preview=until(lambda:api._children.get('preview'))
-                until(lambda:preview.evaluate_js('!!window.lumen?.ready'))
+                try:until(lambda:preview.evaluate_js('!!window.lumen?.ready'))
+                except Exception:
+                    preview.evaluate_js("window.__bootImportDiagnostic={pending:true};import('/src/app.js?boot-diagnostic').then(()=>window.__bootImportDiagnostic={evaluated:true}).catch(e=>window.__bootImportDiagnostic={error:String(e),stack:e.stack});")
+                    until(lambda:preview.evaluate_js('!window.__bootImportDiagnostic.pending'),timeout=10)
+                    print('IMPORT ERROR:',json.dumps(preview.evaluate_js('window.__bootImportDiagnostic'),ensure_ascii=True),flush=True)
+                    details=preview.evaluate_js("JSON.stringify({url:location.href,text:document.body.innerText.slice(-2400),boot:document.documentElement.dataset.booting,readyState:document.readyState,require:typeof window.require,overlay:document.querySelector('#connection-overlay').className,resources:performance.getEntriesByType('resource').map(r=>({url:r.name,type:r.initiatorType,ms:r.duration})),scripts:[...document.scripts].map(s=>s.src)})")
+                    print('PREVIEW BOOT:',json.dumps(details,ensure_ascii=True),flush=True)
+                    raise
                 assert preview.evaluate_js("document.querySelector('.native-auxiliary-surface').getBoundingClientRect().height>100")
                 parent.evaluate_js("monaco.editor.getModels().find(m=>m.uri.path.endsWith('Web.html')).setValue('<!doctype html><h1>NATIVE LIVE</h1>')")
                 def rendered(window,selector,marker):
