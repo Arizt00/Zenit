@@ -1,0 +1,20 @@
+{
+  "installed": true,
+  "checks": [
+    "Installed source/assets match the verified build: 86 files",
+    "Installed fullscreen welcome renders verified Blender geometry and advances its WebGL2 material",
+    "Installed Melody companion starts disabled and sends no AI requests",
+    "Installed welcome stops drawing when entering the editor",
+    "Installed Laboratory has five real sections and one visible work surface"
+  ],
+  "errors": [],
+  "optical": {
+    "geometry": "blender-double-wall",
+    "engine": "WebGL2",
+    "limit": 60,
+    "loops": 1,
+    "fullscreen": true,
+    "time": 0.06230000000447035
+  },
+  "profile": "Disposable verification profile; user data untouched."
+}

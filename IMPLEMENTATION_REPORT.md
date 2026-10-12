@@ -100,3 +100,23 @@ El paisaje es raster con movimiento de composición, no un terreno 3D simulado.
 La esfera no certifica exactitud óptica perfecta. Linux/macOS requieren su propia
 construcción y verificación; esta máquina Windows no certifica nuevos binarios
 de esas plataformas.
+
+
+## Entrega Windows verificada
+
+Producto construido desde `86ff19abb7b488d0f43b7fc3eec764f7c72fc993`. El `.exe`
+y el portable R7 se publicaron en GitHub con manifiesto, SHA-256 y quince
+comprobaciones del paquete nativo. GitHub devolvió digests idénticos a los locales.
+
+La instalación creó `app-0.5.3-R7`, mantuvo la carpeta de R6 y no interrumpió su
+proceso abierto. Cuatro archivos de perfil, índice de extensiones e índice/selecciones
+Java/C++/Python del SDK permanecieron iguales. El SDK compartido se reutilizó.
+Se comprobaron 86 archivos entre fuente, bundle y copia instalada. Cinco pruebas
+adicionales abrieron la UI instalada con perfil desechable: assets idénticos,
+esfera viva WebGL2, ayuda desactivada sin consultas IA, pausa al entrar al editor
+y cinco secciones reales de Laboratory con una sola visible.
+
+El selector de actualizaciones de R6, aplicado a la respuesta real de GitHub,
+detectó R7 y su hash correcto. No se repitió la descarga de 113 MB ni se modificaron
+los ajustes del usuario. Los recibos están en `tests/visual/evidence/windows-r7-*.json`.
+Windows es la plataforma construida/publicada para R7 en esta entrega.

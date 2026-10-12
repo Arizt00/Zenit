@@ -1,0 +1,46 @@
+{
+  "published": true,
+  "release": "https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.7",
+  "sourceCommit": "86ff19abb7b488d0f43b7fc3eec764f7c72fc993",
+  "revision": 7,
+  "signed": false,
+  "remoteDigestsVerified": true,
+  "existingAssetsRetained": true,
+  "assets": [
+    {
+      "name": "Zenit-0.5.3-R7-Windows-Setup.exe",
+      "bytes": 112920607,
+      "sha256": "77035067c0ab875c30173943e318af767c700c729471f227a64d14e47fce8b4b",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-Windows-Setup.exe",
+      "id": 633907026
+    },
+    {
+      "name": "Zenit-0.5.3-R7-Windows-Portable.zip",
+      "bytes": 70712523,
+      "sha256": "c5ee901f1cce8e32be3e3e336bf501c93e6107b132804c2e86bc0b7efc169974",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-Windows-Portable.zip",
+      "id": 633907241
+    },
+    {
+      "name": "Zenit-0.5.3-R7-win32-x86_64-manifest.json",
+      "bytes": 550,
+      "sha256": "c2357536d61714d517d7a921911a70c1dcb7f56629bc0e802b37fed92d30893d",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-win32-x86_64-manifest.json",
+      "id": 633907586
+    },
+    {
+      "name": "Zenit-0.5.3-R7-win32-x86_64-verification.json",
+      "bytes": 1298,
+      "sha256": "5e224fc207702ad0cf64835506e121155b3b84078e0d0735bb0da27c1766e492",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-win32-x86_64-verification.json",
+      "id": 633907604
+    },
+    {
+      "name": "Zenit-0.5.3-R7-win32-x86_64-SHA256.txt",
+      "bytes": 203,
+      "sha256": "c82d6597efc8b06240748309c75caea33824c0844afe72d2bab2cc4ca0f3e8f9",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-win32-x86_64-SHA256.txt",
+      "id": 633907632
+    }
+  ]
+}
