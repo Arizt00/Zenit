@@ -128,3 +128,8 @@ en el repositorio. La comprobación del instalador reconstruido y de la instalac
 local se registra por separado en `tests/visual/evidence`. Los paquetes públicos
 anteriores no se presentan como builds de estos cambios. Consulte
 `KNOWN_LIMITATIONS.md` para capacidades parciales y distribución por plataforma.
+
+`packaging/lumen.spec` incluye todos los módulos extension_*.cjs que Node carga
+dinámicamente. El recorrido del paquete comprueba sus bytes contra el código,
+la integridad de la geometría Blender y el módulo de creación de proyectos, junto
+con los catorce contratos nativos anteriores (quince comprobaciones en total).

@@ -2,6 +2,7 @@
 import argparse
 import concurrent.futures
 import io
+import hashlib
 import json
 import sys
 import tempfile
@@ -56,6 +57,15 @@ def main():
         BrowserView.WebPage.javaScriptConsoleMessage=console
     parser=argparse.ArgumentParser();parser.add_argument('--report',type=Path,required=True);args=parser.parse_args()
     root=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parents[1]));checks=[];errors=[]
+    source=Path(__file__).resolve().parents[1]
+    for file in (source/'backend').glob('extension_*.cjs'):
+        embedded=root/'backend'/file.name
+        assert embedded.is_file() and embedded.read_bytes()==file.read_bytes(),file.name
+    info=json.loads((root/'web/assets/zenit-crystal.mesh.json').read_text())
+    mesh=(root/'web/assets/zenit-crystal.mesh.bin').read_bytes()
+    assert len(mesh)==info['byteLength'] and hashlib.sha256(mesh).hexdigest()==info['sha256']
+    from backend.projects import create_project
+    checks.append('Frozen package includes every extension API module, verified Blender geometry and project creation')
     with tempfile.TemporaryDirectory(prefix='lumen-native-package-') as temp:
         base=Path(temp);workspace=base/'project';workspace.mkdir();file=workspace/'first.py';file.write_text('print("DISK")\n',encoding='utf-8')
         html='<!doctype html><html><body><h1>DISK</h1></body></html>'

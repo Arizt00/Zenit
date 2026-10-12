@@ -19,6 +19,11 @@ data.append((str(ROOT/'backend/extension_views.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_services.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_quickinput.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_editors.cjs'),'backend'))
+# Extension API modules are loaded with require at runtime, not Python imports.
+# Keep every module in the frozen app so newly added services cannot be omitted.
+already={Path(source).name for source,destination in data if destination=='backend'}
+for source in (ROOT/'backend').glob('extension_*.cjs'):
+    if source.name not in already:data.append((str(source),'backend'))
 for name in ('PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
     data.append((str(ROOT/'docs'/name),'docs'))
 # Only the shipped examples belong in the bundle, never compiler/profile caches.
