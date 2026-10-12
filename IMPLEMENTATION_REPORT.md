@@ -97,3 +97,25 @@ al recorrer las vistas. El efecto se pausa al quedar oculto o reducir el movimie
 Más detalle: `tests/visual/current/performance*.json`, `stability.json` y los recibos
 de `tests/visual/evidence/r13-*.json`. Los diffs son diagnósticos de imagen, no una
 puntuación de fidelidad o cobertura API.
+
+
+## Distribución verificada de R13
+
+El build procede de `8f0718fab37b35ee7b3ce3a1c87da315ea0506c2` y está publicado en
+[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.13).
+Instalador: 113086288 bytes; portable:
+70854556 bytes. Los cinco assets tienen SHA-256
+confirmado por GitHub; no se sustituyen releases anteriores.
+
+Se superan 15 comprobaciones del paquete nativo y 12 del helper instalado.
+Los 104 archivos de frontend/assets/bridges coinciden byte por byte con el
+build. La comprobación instalada usa un Vira real en perfil QA aislado:
+contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
+Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
+de archivos. El consentimiento de IA sigue desactivado al iniciar.
+
+`app-0.5.3-R13` conserva el payload anterior, los cuatro archivos de perfil
+comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
+La respuesta real de GitHub permite al actualizador R12 seleccionar R13 con
+el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
+Se conserva la conexión `ai.voiceDirectory` configurada en R12, sin modificar preferencias. No se copian referencias ni se carga el modelo al configurar. Los recibos completos están en `tests/visual/evidence/windows-r13-*.json`.

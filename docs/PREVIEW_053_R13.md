@@ -20,3 +20,5 @@ Esta entrega Windows no certifica builds nuevos de Linux/macOS.
 
 Detalles: [implementación](../IMPLEMENTATION_REPORT.md),
 [comparación visual](../VISUAL_DIFF_REPORT.md), [límites](../KNOWN_LIMITATIONS.md).
+
+La distribución Windows publicada supera 15 comprobaciones nativas y 12 del runtime instalado; 104 archivos coinciden con el build. El perfil y los SDK existentes se conservan.
