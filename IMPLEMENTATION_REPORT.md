@@ -87,3 +87,22 @@ de salida cumplen los contratos probados, no toda la API de VS Code.
 Distribución nativa, publicación e instalación se registran con sus recibos en
 `tests/visual/evidence/windows-r8-*.json` una vez verificadas. Los límites de
 paquetes, firma y plataformas están en KNOWN_LIMITATIONS.
+
+## Distribución verificada de R8
+
+El build procede de `91357f2a22a7ef0ebc52b72f2b97d172d85827ba` y está publicado
+en [GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.8).
+Instalador Windows: 112964092 bytes; portable: 70750040 bytes. Los cinco assets
+conservan el digest SHA-256 confirmado por GitHub, sin reemplazar releases anteriores.
+
+El paquete supera 15 comprobaciones nativas. Instalado en `app-0.5.3-R8`, los
+92 archivos de frontend/assets/bridges coinciden byte por byte con el source del
+build. Siete comprobaciones del helper congelado validan render, pausa de escenas,
+Laboratory, Debug y creación/borrado/recuperación de archivos reales. No hay
+peticiones de IA al iniciar la ayuda desactivada.
+
+La instalación conserva R7, los cuatro archivos de perfil comprobados y el índice
+del SDK compartido, sin reinstalar Java/C++/Python. La ventana R7 del usuario
+permanece abierta. El actualizador R7 selecciona R8 y el SHA correcto de la
+respuesta real de GitHub; no se repite la descarga durante esta comprobación.
+Estos resultados y sus límites están en `tests/visual/evidence/windows-r8-*.json`.
