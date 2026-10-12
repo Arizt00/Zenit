@@ -1761,7 +1761,7 @@
         0,
         0,
         1672,
-        55
+        70
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1782,7 +1782,7 @@
     ".brand-name": {
       "bounds": [
         82,
-        11.552083969116211,
+        19.05208396911621,
         97.77083587646484,
         31.89583396911621
       ],
@@ -1805,7 +1805,7 @@
     ".global-search": {
       "bounds": [
         461.2708435058594,
-        8.5,
+        16,
         604.9271240234375,
         38
       ],
@@ -1828,9 +1828,9 @@
     ".activity-rail": {
       "bounds": [
         14,
-        56,
-        54,
-        815.3333740234375
+        71,
+        66,
+        800.3333740234375
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1851,8 +1851,8 @@
     ".tree-entry": null,
     ".file-tab": {
       "bounds": [
-        347.66668701171875,
-        56.66666793823242,
+        377.66668701171875,
+        71.66667175292969,
         124,
         48.333335876464844
       ],
@@ -1874,9 +1874,9 @@
     },
     ".breadcrumbs": {
       "bounds": [
-        333.66668701171875,
-        105.66667175292969,
-        1321.666748046875,
+        363.66668701171875,
+        120.66667175292969,
+        1291.666748046875,
         32
       ],
       "font": [
@@ -1921,10 +1921,10 @@
     ".extension-card": null,
     ".lab-heading": {
       "bounds": [
-        357.66668701171875,
-        68.66667175292969,
-        1273.666748046875,
-        244.6875
+        387.66668701171875,
+        91.66667175292969,
+        1243.666748046875,
+        117.19792175292969
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1932,10 +1932,10 @@
         "400",
         "18.85px"
       ],
-      "padding": "0px 8px 20px",
-      "gap": "24px",
+      "padding": "0px 0px 20px",
+      "gap": "12px",
       "radius": "0px",
-      "border": "",
+      "border": "0px none rgb(16, 19, 60)",
       "background": "rgba(0, 0, 0, 0)",
       "color": "rgb(16, 19, 60)",
       "opacity": "1",
@@ -1944,10 +1944,10 @@
     },
     ".lab-tools": {
       "bounds": [
-        357.66668701171875,
-        386.9375,
-        1273.666748046875,
-        370.40625
+        387.66668701171875,
+        335.7708435058594,
+        1243.666748046875,
+        382.0833435058594
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1956,7 +1956,7 @@
         "18.85px"
       ],
       "padding": "0px",
-      "gap": "9px",
+      "gap": "8px",
       "radius": "0px",
       "border": "0px none rgb(16, 19, 60)",
       "background": "rgba(0, 0, 0, 0)",
@@ -1967,10 +1967,10 @@
     },
     ".lab-tool": {
       "bounds": [
-        357.66668701171875,
-        386.9375,
-        311.66668701171875,
-        117.46875
+        387.66668701171875,
+        335.7708435058594,
+        617.8333740234375,
+        89.52083587646484
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -1978,8 +1978,8 @@
         "400",
         "18.85px"
       ],
-      "padding": "15px 18px",
-      "gap": "14px",
+      "padding": "10px",
+      "gap": "8px",
       "radius": "14px",
       "border": "0.666667px solid rgb(233, 234, 250)",
       "background": "rgb(255, 255, 255)",
@@ -1988,29 +1988,7 @@
       "blur": "none",
       "shadow": "none"
     },
-    ".lab-sections": {
-      "bounds": [
-        357.66668701171875,
-        769.34375,
-        1273.666748046875,
-        280.3333435058594
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px",
-      "gap": "10px",
-      "radius": "0px",
-      "border": "0px none rgb(16, 19, 60)",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
+    ".lab-sections": null,
     ".debug-intro": null,
     ".lantern-workbench": null,
     ".lantern-features": null,

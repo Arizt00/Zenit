@@ -5,7 +5,7 @@ import {normalizeLayout} from './layout-state.js';
 
 const $=s=>document.querySelector(s);
 export class LenonStudio {
-  constructor(host){this.host=host;this.scenes=new Map();this.profile={};this.searchSequence=0;this.disposed=false;this.queue=Promise.resolve();this.lastBounce=0;}
+  constructor(host){this.host=host;this.scenes=new Map();this.profile={};this.searchSequence=0;this.disposed=false;this.queue=Promise.resolve();this.lastBounce=0;this.visibility=()=>{document.documentElement.dataset.appVisible=String(!document.hidden);};this.visibility();document.addEventListener('visibilitychange',this.visibility);}
   t(es,en){return this.host.platform.t(es,en);}
   safe(fn){return this.host.platform.safe(fn);}
   async init(){
@@ -64,7 +64,7 @@ export class LenonStudio {
     let home=$('#lumen-home');if(!home){home=document.createElement('section');home.id='lumen-home';home.setAttribute('aria-label','Inicio de Zénit');$('#app').append(home);}
     home.hidden=false;$('#workspace').inert=true;$('.statusbar').hidden=true;document.documentElement.dataset.screen='home';
     if(home.dataset.built==='true'){this.refreshHome();return;}
-    home.innerHTML=`<section class="welcome-sheet"><header class="welcome-wordmark"><span class="welcome-z">Z</span><span>ZÉNIT</span></header><button class="welcome-profile" data-studio="activity" aria-label="${this.t('Perfil y archivos recientes','Profile and recent files')}"><span class="welcome-profile-avatar"></span><span>${this.t('Mi actividad','My activity')}</span></button><div class="welcome-scene">${glassArt('welcome')}</div><div class="welcome-copy"><h1>${this.t('Un lugar para lo que viene.','A place for what comes next.')}</h1><p>${this.t('Crea. Explora. Construye. Sin límites.','Create. Explore. Build. Without limits.')}</p><div class="welcome-actions"><button class="primary-button home-enter" data-action="open-workspace">${this.t('Abrir proyecto','Open project')}</button><button class="welcome-new" data-action="new-project"><span>${this.t('Nuevo proyecto','New project')}</span>${icon('arrow-right')}</button></div></div><footer class="welcome-footer"><span>“ &nbsp; ${this.t('Ideas en movimiento.','Ideas in motion.')}</span><span>— Zénit</span></footer></section>`;
+    home.innerHTML=`<section class="welcome-sheet"><div class="welcome-landscape" aria-hidden="true"></div><header class="welcome-wordmark"><span class="welcome-z">Z</span><span>ZÉNIT</span></header><button class="welcome-profile" data-studio="activity" aria-label="${this.t('Perfil y archivos recientes','Profile and recent files')}"><span class="welcome-profile-avatar"></span><span>${this.t('Mi actividad','My activity')}</span></button><div class="welcome-scene">${glassArt('welcome')}</div><div class="welcome-copy"><h1>${this.t('Un lugar para lo que viene.','A place for what comes next.')}</h1><p>${this.t('Crea. Explora. Construye. Sin límites.','Create. Explore. Build. Without limits.')}</p><div class="welcome-actions"><button class="primary-button home-enter" data-action="open-workspace">${this.t('Abrir proyecto','Open project')}</button><button class="welcome-new" data-action="new-project"><span>${this.t('Nuevo proyecto','New project')}</span>${icon('arrow-right')}</button></div></div><footer class="welcome-footer"><span>“ &nbsp; ${this.t('Ideas en movimiento.','Ideas in motion.')}</span><span>— Zénit</span></footer></section>`;
     home.dataset.built='true';home.onclick=e=>{const b=e.target.closest('[data-studio]');if(b)this.safe(()=>this.action(b.dataset.studio));};this.hydrate(home);this.homeLocale=this.host.platform.prefs['general.locale'];this.updateProfile();
   }
   refreshHome(){
@@ -195,5 +195,5 @@ export class LenonStudio {
     this.wheel=e=>{if(!this.host.motion.enabled||Math.abs(e.deltaY)<1||performance.now()-this.lastBounce<420)return;let el=e.target instanceof Element?e.target:null;while(el&&el!==document.body){const style=getComputedStyle(el);if(/auto|scroll/.test(style.overflowY)&&el.scrollHeight>el.clientHeight+2){const edge=e.deltaY<0&&el.scrollTop<=0||e.deltaY>0&&el.scrollTop+el.clientHeight>=el.scrollHeight-1;if(edge&&!el.closest('.monaco-editor,.xterm')){this.lastBounce=performance.now();this.host.motion.play(el,[{translate:'0 0'},{translate:'0 '+(e.deltaY<0?7:-7)+'px'},{translate:'0 0'}],380);}return;}el=el.parentElement;}};
     document.addEventListener('wheel',this.wheel,{passive:true});
   }
-  dispose(){this.lantern?.dispose();this.disposed=true;clearTimeout(this.layoutTimer);clearTimeout(this.debugTimer);document.removeEventListener('wheel',this.wheel);for(const scene of this.scenes.values())scene.dispose();this.scenes.clear();}
+  dispose(){this.lantern?.dispose();this.disposed=true;clearTimeout(this.layoutTimer);clearTimeout(this.debugTimer);document.removeEventListener('wheel',this.wheel);document.removeEventListener('visibilitychange',this.visibility);for(const scene of this.scenes.values())scene.dispose();this.scenes.clear();}
 }

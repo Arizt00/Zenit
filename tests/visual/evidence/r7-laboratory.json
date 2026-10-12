@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Real SDK inventory shown in separate sections",
+    "Tool filter and tab keyboard navigation work",
+    "C standard persisted without discarding other profiles",
+    "SSH profile persisted without remounting or clearing its form",
+    "A real Laboratory Maven terminal opens without Forge",
+    "Laboratory layouts fit three widths and three themes",
+    "Step executes the unsaved editor buffer",
+    "Full simulation computes registers",
+    "Editing invalidates results; disk source remains unchanged"
+  ],
+  "errors": []
+}

@@ -20,7 +20,7 @@ def main():
         manifest=json.loads(file.read_text());key=(manifest['platform'],manifest['architecture']);assert key in expected,key;expected.remove(key)
         assert manifest['sourceCommit']==commit and manifest['version']==RELEASE_TAG,'Unexpected source/version'
         report=file.with_name(file.name.replace('-manifest.json','-verification.json'))
-        verified=json.loads(report.read_text());assert verified['revision']==REVISION and not verified['errors'] and len(verified['checks'])==12,'Native verification incomplete'
+        verified=json.loads(report.read_text());assert verified['revision']==REVISION and not verified['errors'] and len(verified['checks'])==15,'Native verification incomplete'
         for item in manifest['outputs']:
             asset=directory/item['name'];assert asset.parent==directory and asset.is_file()
             assert asset.stat().st_size==item['bytes'] and sha256(asset)==item['sha256'],'Asset integrity mismatch'

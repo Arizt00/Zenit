@@ -1,0 +1,25 @@
+{
+  "python": {
+    "executed": 277,
+    "passed": 272,
+    "skipped": 5,
+    "failures": 0
+  },
+  "javascript": {
+    "passed": 66,
+    "failures": 0
+  },
+  "syntaxFiles": 53,
+  "uiCorrection": 15,
+  "laboratory": 9,
+  "matrix": {
+    "cases": 24,
+    "views": [
+      "editor",
+      "melody",
+      "welcome"
+    ],
+    "method": "Edge device scale emulation; not actual Windows DPI changes."
+  },
+  "aiQuality": "Explicit transport fixture and contract checks; no external model evaluation."
+}

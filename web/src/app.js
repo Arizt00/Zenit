@@ -579,7 +579,7 @@ async function start(){
   try{
     const response=await fetch('/api/bootstrap',{credentials:'same-origin',signal:AbortSignal.timeout(25000)});service=await response.json();if(!response.ok)throw new Error(service.error);
     token=service.token;tree=service.tree;
-    editor=new LumenEditor($('#editor-mount'),{change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>$('#cursor-status').textContent=`Ln ${line}, Col ${column}`,save:guard(saveFile),diagnostics:updateDiagnostics});
+    editor=new LumenEditor($('#editor-mount'),{change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
     await editor.init(service,settings);applySettings();
     await initializeDocuments();renderTree();updatePrompt();
     scene={kind:service.babylon?'babylon':'css',setMotion(){},setTheme(){},dispose(){}};

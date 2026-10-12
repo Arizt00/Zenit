@@ -74,15 +74,21 @@
 .melody-companion-toggle { align-self:flex-start; display:inline-flex; gap:6px; margin:2px 20px 7px; font-size:11px; color:var(--secondary); }
 .melody-companion-toggle .icon { width:14px; height:14px; }
 .melody-companion-toggle[aria-pressed=true] { color:var(--accent); }
-.melody-companion-card { margin:12px 0; padding:14px; border:1px solid var(--border); border-radius:var(--radius-control); background:var(--surface); }
+.melody-companion-card { margin:12px 0; padding:14px; border:1px solid var(--border); border-radius:var(--radius-control); background:var(--surface); overflow-anchor:none; }
 .melody-companion-card header { display:flex; align-items:center; gap:8px; font-size:12px; }
 .melody-companion-card header>.icon { width:16px; color:var(--accent); }
 .melody-companion-card header button { margin-left:auto; }
 .melody-companion-card small { display:block; margin-top:6px; font-size:11px; overflow-wrap:anywhere; color:var(--secondary); }
 .melody-companion-card pre { margin:12px 0; padding:0; white-space:pre-wrap; overflow-wrap:anywhere; font:13px/1.65 var(--font-ui); color:var(--text); }
 .melody-companion-card pre.is-code { font-family:var(--font-code); }
-.melody-companion-card footer { display:flex; flex-wrap:wrap; gap:8px; border-top:1px solid var(--border); padding-top:8px; }
+.melody-companion-card footer { display:flex; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--border); padding-bottom:8px; }
 .melody-companion-card footer button { font-size:11px; }
+.companion-focus { display:flex; flex-wrap:wrap; gap:4px; margin:12px 0; }
+.companion-focus button { border-radius:8px; padding:6px 8px; font-size:11px; color:var(--secondary); }
+.companion-focus button[aria-pressed=true] { color:var(--accent); background:var(--accent-soft); }
+.companion-budget { font-size:10px; color:var(--muted); overflow-wrap:anywhere; line-height:1.6; padding-bottom:8px; }
+.melody-companion-card[data-state=analyzing] header>.icon { color:var(--accent-bright); }
+.melody-companion-card[data-state=error] small { color:var(--danger); }
 
 .melody-tagline {
   padding: 0 20px 0 60px;

@@ -1,11 +1,11 @@
 {
-  "commit": "a5c6601cef4a4d5fcfbe6e2ad84b519659c3cf5b",
-  "trackedFiles": 494,
-  "sourceFiles": 232,
+  "commit": "5e76eff6928e0f604673fcdb657b4ec7c8cecebe",
+  "trackedFiles": 544,
+  "sourceFiles": 249,
   "stylesheets": [
     "/design.css"
   ],
-  "cssBytes": 393,
+  "cssBytes": 432,
   "importantDeclarations": 0,
   "transitionAll": 0,
   "sources": [
@@ -27,15 +27,21 @@
     "backend/emma.py",
     "backend/emma_bridge.mjs",
     "backend/extension_api.cjs",
+    "backend/extension_auth.cjs",
     "backend/extension_dependencies.py",
     "backend/extension_editors.cjs",
+    "backend/extension_environment.cjs",
+    "backend/extension_filesystem.cjs",
     "backend/extension_host.cjs",
     "backend/extension_install_plan.py",
+    "backend/extension_language_tools.cjs",
     "backend/extension_lsp.py",
+    "backend/extension_ports.cjs",
     "backend/extension_quickinput.cjs",
     "backend/extension_runtime.py",
     "backend/extension_services.cjs",
     "backend/extension_services.py",
+    "backend/extension_ui.cjs",
     "backend/extension_views.cjs",
     "backend/extensions.py",
     "backend/file_actions.py",
@@ -56,6 +62,7 @@
     "backend/platform_services.py",
     "backend/preferences.py",
     "backend/preview.py",
+    "backend/projects.py",
     "backend/providers.py",
     "backend/runner.py",
     "backend/runtime_paths.py",
@@ -88,13 +95,17 @@
     "tests/test_backend.py",
     "tests/test_checkpoint_io.py",
     "tests/test_continuity.py",
+    "tests/test_crystal_asset.py",
     "tests/test_distribution.py",
     "tests/test_extension_053.py",
+    "tests/test_extension_auth.mjs",
     "tests/test_extension_editors.py",
+    "tests/test_extension_esm.py",
     "tests/test_extension_install_plan.py",
     "tests/test_extension_quickinput.py",
     "tests/test_extension_r5.py",
     "tests/test_extension_r9.py",
+    "tests/test_extension_theme.mjs",
     "tests/test_floating_r5.py",
     "tests/test_foundation.py",
     "tests/test_languages052.py",
@@ -103,6 +114,7 @@
     "tests/test_layout03.mjs",
     "tests/test_lens_flush_r9.py",
     "tests/test_live_r5.py",
+    "tests/test_melody_companion.mjs",
     "tests/test_native_ready.mjs",
     "tests/test_platform.py",
     "tests/test_preview_r4.py",
@@ -111,6 +123,7 @@
     "tests/test_preview_r7.py",
     "tests/test_preview_r8.mjs",
     "tests/test_preview_r8.py",
+    "tests/test_projects.py",
     "tests/test_refinement052.py",
     "tests/test_studio052.py",
     "tests/test_terminal_input.mjs",
@@ -136,6 +149,7 @@
     "tests/test_ui_zenit_r3.py",
     "tests/test_ui_zenit_r4.py",
     "tests/test_visual_contract.py",
+    "tests/test_visual_correction.py",
     "tests/test_visual_r5.py",
     "tests/test_zenit_r2.py",
     "tests/ui_harness.py",
@@ -146,10 +160,12 @@
     "tests/verify_languages052.py",
     "tests/visual/review.html",
     "tools/asm_worker.py",
+    "tools/build_crystal.py",
     "tools/build_desktop.py",
     "tools/build_examples.py",
     "tools/build_native.py",
     "tools/create_brand_icon.py",
+    "tools/extension_compatibility_audit.py",
     "tools/format_design_css.py",
     "tools/install_user.py",
     "tools/machine_console.py",
@@ -218,6 +234,7 @@
     "web/src/lantern.js",
     "web/src/layout-state.js",
     "web/src/live-edit.js",
+    "web/src/melody-companion.js",
     "web/src/monaco-overlays.js",
     "web/src/motion.js",
     "web/src/native-ready.js",
@@ -245,7 +262,7 @@
   "references": [
     {
       "screen": "editor",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\editor.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\editor.png",
       "size": [
         1672,
         941
@@ -254,7 +271,7 @@
     },
     {
       "screen": "welcome",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\welcome.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\welcome.png",
       "size": [
         1672,
         941
@@ -263,7 +280,7 @@
     },
     {
       "screen": "search",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\search.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\search.png",
       "size": [
         1672,
         941
@@ -272,7 +289,7 @@
     },
     {
       "screen": "settings",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\settings.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\settings.png",
       "size": [
         1672,
         941
@@ -281,7 +298,7 @@
     },
     {
       "screen": "forge",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\forge.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\forge.png",
       "size": [
         1672,
         941
@@ -290,7 +307,7 @@
     },
     {
       "screen": "laboratory",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\laboratory.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\laboratory.png",
       "size": [
         1672,
         941
@@ -299,7 +316,7 @@
     },
     {
       "screen": "debug",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\debug.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\debug.png",
       "size": [
         1672,
         941
@@ -308,7 +325,7 @@
     },
     {
       "screen": "extensions",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-visual\\crystal-native-release\\references\\extensions.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\extensions.png",
       "size": [
         1672,
         941

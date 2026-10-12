@@ -101,7 +101,7 @@ def capture(page,base,out,core=False,screenshot_scale='css',profile_animation=Fa
     identifiers=page.evaluate('()=>{const ids=[...document.querySelectorAll("#settings-content [id]")].map(e=>e.id);return ids.filter((id,i)=>ids.indexOf(id)!==i);}');assert not identifiers,identifiers
     page.evaluate('__zenitQa.platform.closePage()')
     page.evaluate('__zenitQa.platform.extensions()');page.wait_for_selector('.extension-hero');snap('extensions');page.evaluate('__zenitQa.platform.closePage()')
-    page.locator('.foundation-toggle').click();page.wait_for_selector('.lab-tools');snap('laboratory');page.evaluate('__zenitQa.openFile("prueba.asm")');page.locator('.foundation-toggle').click();page.wait_for_selector('#lab-assembly');page.locator('#lab-assembly').click();page.locator('[data-asm=run]').click();page.wait_for_selector('.asm-status');
+    page.locator('.foundation-toggle').click();page.wait_for_selector('.lab-tools');snap('laboratory');page.evaluate('__zenitQa.openFile("prueba.asm")');page.locator('.foundation-toggle').click();page.locator('[data-lab-section=assembly]').click();page.wait_for_selector('#lab-assembly');page.locator('#lab-assembly').click();page.locator('[data-asm=run]').click();page.wait_for_selector('.asm-status');
     assembly=page.evaluate('()=>__zenitQa.profiles.assembly.result');assert int(assembly['registers']['rax'],16)==55,assembly
     (out/'assembly.json').write_text(json.dumps(assembly,indent=2),encoding='utf-8');snap('asm');page.evaluate('__zenitQa.openFile("java-inicial/E1.java")')
     page.evaluate('__zenitQa.profiles.tools.hidden=true;__zenitQa.studio.debug()');page.wait_for_selector('#debug-state');snap('debug');page.evaluate('__zenitQa.platform.closePage()')

@@ -1,159 +1,102 @@
-# Zénit · corrección de interfaz y evolución · 0.5.3 R6
+# Zénit 0.5.3 R7 · interfaz y Melody
 
-Esta entrega continúa desde `a5c6601` y aplica las instrucciones posteriores al
-primer rediseño. La bienvenida anterior de dos columnas fue sustituida por la
-composición mínima solicitada y después extendida a toda la ventana. Monaco,
-terminales reales, Lantern, Laboratory, extensiones y proveedores de Melody
-siguen conectados a los servicios del producto. No son capturas dentro de HTML.
+R7 continúa desde `5e76eff`. La petición posterior del usuario simplifica
+Laboratory y mejora el fondo del inicio; las referencias originales permanecen
+intactas. Se conservan servicios reales, Monaco, PTY, Forge, Lantern, Assembly,
+proveedores de IA y contratos de extensiones de R6.
 
-## Cambios y arquitectura
+## Qué cambió
 
-| Área | Archivos principales | Resultado |
+| Área | Archivos | Resultado |
 | --- | --- | --- |
-| Inicio | `studio.js`, `welcome.css`, `welcome-mountains.svg` | Escena a pantalla completa, dos acciones reales, perfil detrás de un clic y fondo con luz lenta. |
-| Perfil | `studio.js`, `dialogs.css` | Nombre/avatar y hasta 20 archivos recientes reales, ordenados por fecha; abre archivos de otras carpetas con control de cambios no guardados. |
-| Proyecto nuevo | `backend/projects.py`, `server.py`, `app.js` | Crea y abre una carpeta vacía real, sin sobrescribir otro proyecto; valida rutas y nombres reservados. |
-| Cristal | `tools/build_crystal.py`, `design/zenit-crystal.blend`, `glass.js`, `zenit-crystal.mesh.*` | Geometría de Blender, dos paredes, material óptico animado, órbita y carga verificada por SHA-256. |
-| Terminal / Forge | `desktop-workflows.js`, `docking.js`, `shell.css` | Abrir Terminal no activa el dashboard de Forge por una preferencia antigua. Forge conserva su ventana y su integración explícita. |
-| Redimensionado | `docking.js`, `shell.css` | El contenedor deja de recortar los separadores exteriores. Arrastrar izquierda, derecha e inferior modifica el tamaño real. |
-| Pestañas | `app.js` | Actualización por clave: conserva botones al editar/activar archivos, mantiene foco y webview tabs, y anima nuevas pestañas solo con opacity. |
-| Contraste | `tokens.css`, `extension-theme.js` | Texto secundario más legible, eliminación de saturación/blur heredados en paneles ordinarios y corrección de pares ilegibles de temas externos. |
-| Melody | `melody-companion.js`, `workbench.js`, `melody.css`, `app.js` | Ayuda opcional sobre el búfer actual y predicción solicitada expresamente dentro de Monaco. |
-| Extensiones | `extension_host.cjs`, `extension_api.cjs`, `extension_services.*`, módulos `extension_auth/environment/filesystem/language_tools/ports/ui.cjs` | Más contratos reales de VS Code, detallados abajo. |
+| Laboratory | `web/src/foundation-ui.js`, `web/design/laboratory.css` | Cinco secciones accesibles, filtro de herramientas y detalles plegables. Los formularios permanecen montados al navegar y añadir SSH solo actualiza la lista. |
+| Limpieza visual | `catalogue.css`, `design.css` | Retiradas 544 líneas de reglas del laboratorio anterior; un módulo propio usa la escala global de tokens. Se elimina el cambio de altura de la cabecera global al abrir Laboratory. |
+| Terminal | `foundation-ui.js` | Maven, Gradle, Bash, Docker y máquinas usan la terminal integrada. Forge se abre mediante su entrada explícita. Las excepciones se muestran junto a la acción. |
+| Datos de máquinas | `foundation-ui.js` | Núcleos y memoria se leen del perfil real. Un perfil inactivo no habilita Detener. Una consola ya adjunta se reutiliza. |
+| Inicio | `studio.js`, `welcome.css`, `welcome-crystal-landscape.png` | Paisaje atmosférico propio, niebla y cristal con movimiento lento. Se conservan pantalla completa, dos acciones, perfil/recientes y esfera de Blender/Babylon/WebGL2. |
+| Botones | `tokens.css` | Transición de presión, foco y sombras acotadas; brillo interior suave. Sin transition:all. |
+| Melody | `melody-companion.js`, `melody.css`, `app.js` | Revisar, Explicar y Próximo paso usan el contexto real. La selección viaja al proveedor existente. Predicciones ligadas al cursor y revisión; peticiones duplicadas no generan trabajos simultáneos. |
+| Distribución | `version.py`, `version.txt`, `setup.js`, `publish_native_release.py` | Revisión R7 reconocible por el actualizador; versiones nativas coherentes y publicación exige las 15 comprobaciones nativas vigentes. |
 
-### Blender, Babylon y WebGL2
+## Arquitectura y comportamiento
 
-Blender 5.0.1 genera una esfera de pared exterior y otra interior: 6.050 vértices
-y 12.096 triángulos por pared, 24.192 triángulos en conjunto. Se conserva el
-archivo `.blend` editable y el generador reproducible. Un formato binario pequeño
-exporta posiciones, normales e índices; Babylon aplica esos datos mediante
-VertexData. El navegador no necesita instalar Blender.
+Laboratory monta una hoja y cinco tabpanels. La navegación modifica visibilidad,
+aria-selected y tabIndex, sin rehacer formularios. ArrowLeft/Right y Home/End
+navegan las pestañas. Los endpoints `/foundation`, `/languages` y `/machines`
+siguen siendo la fuente de datos. Las rutas se identifican como base de Zénit,
+ruta del sistema o no detectada: no se confunden con una ejecución satisfactoria.
 
-El material de ejecución es un ShaderMaterial propio: Fresnel, doble borde,
-reflejos, desplazamiento cromático y lente con render target. Los campos pastel
-se desplazan lentamente y la órbita cambia de inclinación sin deformar la esfera.
-No se presenta como un render Cycles ni como una reproducción física exacta del
-material Blender. El checksum, los rangos de índices, las normales y la separación
-de las paredes tienen pruebas. CSS conserva un fallback identificable.
+Crear .venv usa el runner real; el resto de acciones abre una terminal PTY. Se
+conservan el control de confianza, errores reales y estándares configurados. No
+se sustituye el motor Docker por resultados de demostración.
 
-El motor limita su dibujo a 60 actualizaciones por segundo, conserva canvas y
-contexto, detiene el bucle al ocultarse y respeta reducir movimiento. La prueba
-fuerza una pérdida de contexto y comprueba su recuperación en el mismo canvas.
-El fondo de inicio usa transform/opacity del compositor, no timers permanentes
-ni cambios geométricos del layout. Se pausa también al ocultarse.
+El paisaje es un PNG local generado con la herramienta integrada image_gen.
+El prompt completo y su procedencia están en `design/welcome-background.json`.
+No contiene texto ni una esfera prerenderizada. La esfera conserva la malla de
+dos paredes creada en Blender y el shader vivo de Babylon. El paisaje y la luz
+usan transform/opacity; se pausan al ocultar la bienvenida, minimizar la ventana
+o desactivar/reducir movimiento. La visibilidad usa un listener con limpieza.
 
-### Melody contigo
+Melody conserva consentimiento por sesión, proveedor/modelo y límite de 12
+consultas, mínimo 20 segundos entre ellas, búfer máximo de 64.000 caracteres.
+Los enfoques ajustan el prompt, la selección y los diagnósticos reales. No son
+modelos nuevos entrenados ni una evaluación de calidad de IA externa.
 
-La acción «Ayuda en tiempo real», o la petición «Ayúdame en tiempo real mientras escribo», muestra el proveedor/modelo y autoriza una sesión
-acotada: hasta 12 consultas, separadas por al menos 20 segundos. Solo se envía el
-búfer activo de hasta 64.000 caracteres y diagnósticos actuales, mediante el mismo
-AIRouter y las mismas credenciales/proveedores existentes. No se envía todo el
-proyecto ni se crea una respuesta de demostración.
+Una predicción pendiente se cancela al mover el cursor; los consejos se invalidan
+al cambiar contenido, proveedor, proyecto o enfoque. Un clic de predicción que
+coincide con una revisión se encola una sola vez y conserva su cursor. Los
+controles quedan encima de la respuesta para no moverse al recibir texto. Una
+sugerencia válida de hasta ocho líneas entra en Monaco y requiere Tab; no guarda
+el archivo. Los ejemplos de transporte de las pruebas están identificados como
+fixtures, no como respuestas de un proveedor real.
 
-El cambio de carpeta, proveedor o modelo invalida la sesión. Editar durante una
-respuesta la cancela; una respuesta que llega después de detenerse se descarta.
-La consulta normal y la edición en vivo detienen la ayuda para evitar competencia.
-Los consejos se muestran como propuestas: no escriben ni guardan archivos.
+## Tokens y rendimiento
 
-«Sugerir siguiente código» solicita hasta ocho líneas. Una respuesta compatible
-se publica mediante un InlineCompletionsProvider real, ligada al modelo, revisión
-y cursor. Tab la acepta con el mecanismo de Monaco y la edición queda en el
-búfer con undo. La edición en vivo previa conserva su permiso por archivo,
-control de conflictos y suspensión de autoguardado. Las pruebas de transporte de
-esta nueva UI usan una fixture explícita: no evalúan la calidad de un modelo externo.
+Laboratory consume las escalas globales de espacio, radios, tipografía, colores,
+superficies y motion de `tokens.css`. Iconos de acciones pertenecen a la familia
+SVG local; las marcas de lenguajes usan assets locales. La página antigua y sus
+reglas responsivas se retiran, en lugar de apilar una segunda implementación.
 
-### Contratos de extensiones ampliados
+En WebView2, el inicio animado se midió durante unos tres segundos: cero tareas
+largas, cero mutaciones DOM, cero eventos de layout y paint, un único bucle para
+la esfera visible; CPU del render mediana 0,5 ms y p95 0,7 ms. El editor inactivo
+durante dos segundos tuvo cero mutaciones, layouts, paints y recálculos de
+estilos. Los datos están en `tests/visual/current/performance*.json`. Son muestras
+locales sobre Intel/ANGLE, no una garantía de FPS o consumo en todos los equipos.
 
-- `import 'vscode'` en ESM utiliza los hooks síncronos de Node 24, junto con el
-  require CJS existente. Comparten la identidad de API por extensión y dependencia.
-- StatusBarItem, LanguageStatusItem, OutputChannel y LogOutputChannel publican
-  estado y salida reales, con actualización, limpieza y disposición.
-- environmentVariableCollection conserva mutaciones por extensión y ámbito;
-  se aplican al entorno real al crear terminales, incluidas las terminales normales.
-- Autenticación admite proveedores registrados por extensiones, cuentas,
-  sesiones y consentimiento por consumidor. No inventa OAuth ni access tokens.
-- CustomTextEditorProvider abre documentos en webviews reales; las operaciones
-  de webview se serializan y esperan la creación del panel antes de continuar.
-- FileSystemProvider despacha lecturas, escrituras, stat, directorios y recursos
-  virtuales; readonly y operaciones entre proveedores fallan explícitamente.
-- Varios proveedores de configuración de depuración se conservan por tipo. Hay
-  registro y despacho de visualizadores de depuración y atributos de puertos.
-- Herramientas aportadas por extensiones pueden registrarse e invocarse de forma
-  explícita, con cancelación y sus mensajes de confirmación.
-- onWillCreate/Rename/DeleteFiles del host iniciador puede aportar ediciones de
-  texto a la misma transacción WorkspaceEdit. No se anuncia difusión global completa.
+## Validación
 
-La auditoría de ocho paquetes instalados activa siete. Prettier 12.4.0 produce
-una edición real de formato; Maven registra 38 comandos y seis proveedores;
-Markdown Preview Enhanced, Pyrefly, Python Debugger, Container Tools y Material
-Icon Theme también activan. GitHub Pull Requests queda bloqueado por el proveedor
-GitHub no conectado. **Activación de 7/8 paquetes no significa 90 % de paridad con
-VS Code**, ni certifica cada comando. La evidencia declara capabilityCertification=false.
+- Python: 277 pruebas ejecutadas, 272 satisfactorias y 5 omitidas; cero fallos.
+- JavaScript: 66 pruebas satisfactorias, incluidas 13 de intención/sesión de
+  Melody; 53 archivos pasan comprobación de sintaxis.
+- Laboratory: nueve comprobaciones, con SDK real, terminal Maven, persistencia
+  C99/SSH, filtro/teclado, tres resoluciones y tres temas, simulación ASM y
+  resultados invalidados al editar sin modificar el archivo en disco.
+- UI: quince comprobaciones de pantalla completa, perfil, pausas de animación,
+  recuperación WebGL, pestañas persistentes, terminal sin Forge, tres separadores,
+  composer visible, selección enviada y aceptación explícita de código en Monaco.
+- Capturas WebView2 de las trece vistas principales. 72 capturas adicionales de
+  Editor/Melody/Welcome cubren 24 combinaciones: seis resoluciones de 1280×720 a
+  3840×2160 y escalas 100/125/150/200 %, mediante emulación de dispositivo de Edge.
+  Cero overflow global y errores JS; no se presenta como un cambio de DPI físico.
+- Los cinco bounds principales de Editor/Welcome pasan con tolerancia de 2 px;
+  desviación máxima 1,333 px. Overlays/diffs de siete vistas se conservan para
+  revisión, sin convertir MAE/SSIM en un porcentaje de fidelidad.
 
-## Diseño y validación
+Evidencias específicas: `tests/visual/evidence/r7-*.json`,
+`tests/visual/current`, `tests/visual/responsive/r7-*` y
+`tests/visual/comparisons`. Laboratory tiene una composición nueva solicitada
+por el usuario; su golden original no se modifica para reducir el diff.
 
-Se mantienen los tokens centralizados de espaciado, radios, estados, tipografía,
-bordes y duraciones. Día usa blanco/lavanda con texto `#10133c`, secundario
-`#53638e` y acento `#6b43f5`. Los iconos de controles pertenecen a la misma familia
-SVG local; los logos de lenguajes/extensiones proceden de sus recursos reales.
-No se introdujo transition:all ni opacidad sobre el texto.
+## Límites
 
-- Suite Python completa: 275 pruebas ejecutadas, cinco omitidas por requisitos
-  del entorno. Después se verificó además el contrato del nuevo asset Blender.
-- JavaScript: 62 pruebas pasan, incluidas nueve de cancelación, revisión, cuota y
-  permisos de la ayuda; ESM, formato de Prettier, filesystem y servicios tienen
-  13 pruebas de integración nuevas dentro de la suite Python.
-- Recorrido de corrección: 14 comprobaciones con inicio, perfil, pérdida de WebGL,
-  reducir movimiento, pestañas conservadas, tres separadores, ayuda, aceptación
-  de inline suggestion, proyecto nuevo y ausencia de errores JS. Transporte de
-  IA simulado e identificado expresamente, no respuesta de un proveedor real.
-- Recorridos R5/R6 previos: siete y ocho comprobaciones de tres temas, terminales,
-  guardado Unicode, código en vivo con permiso y desinstalación sobre un destino
-  desechable. Los resultados se conservan como ejecuciones separadas.
-- Capturas de 13 vistas en WebView2 real al 150 % del host, viewport cliente
-  1672×917 fijado por CDP. Referencias originales intactas; overlays y diffs de
-  siete vistas. La bienvenida posterior se valida por su brief y geometría.
-- Matriz de seis resoluciones y cuatro escalas emuladas: 24 casos y 72 capturas
-  nuevas de Editor/Melody/Inicio. No representa 24 cambios físicos de DPI de Windows.
+No se añaden nuevas APIs de VS Code en esta revisión. La compatibilidad sigue
+siendo parcial y no existe una medición suficiente para declarar 90 % global.
+Los siete paquetes activados en la auditoría anterior no garantizan todos sus
+objetivos. Se conservan los límites de OAuth, CustomDocument, filesystem virtual,
+visualizadores y broker de modelos descritos en KNOWN_LIMITATIONS.md.
 
-En una muestra nativa de tres segundos del inicio animado se recogieron 182
-draws, CPU mediana 0,5 ms y p95 0,8 ms por frame del motor, sin long tasks ni
-mutaciones DOM. Son medidas locales de CPU, no tiempo GPU ni una garantía de
-60 FPS de pantalla. El perfil completo está en `tests/visual/current`.
-
-## Entrega y límites
-
-Los reports visuales, capturas, datos de rendimiento y contratos están incluidos
-en el repositorio. La comprobación del instalador reconstruido y de la instalación
-local se registra por separado en `tests/visual/evidence`. Los paquetes públicos
-anteriores no se presentan como builds de estos cambios. Consulte
-`KNOWN_LIMITATIONS.md` para capacidades parciales y distribución por plataforma.
-
-`packaging/lumen.spec` incluye todos los módulos extension_*.cjs que Node carga
-dinámicamente. El recorrido del paquete comprueba sus bytes contra el código,
-la integridad de la geometría Blender y el módulo de creación de proyectos, junto
-con los catorce contratos nativos anteriores (quince comprobaciones en total).
-
-
-## Windows construido, instalado y publicado
-
-Build de producto: `10ca2270c23ee8bccbe06e48529fa03c7b1dfc57`. El instalador
-Windows y el portable se publicaron como assets alternativos `UI-10ca227` en la
-release R6, con manifiesto, quince comprobaciones nativas y SHA-256. GitHub devolvió
-digests iguales a los archivos locales. Los assets anteriores permanecen intactos.
-
-La instalación local se actualizó y conservó una copia recuperable de su payload
-anterior, cuatro archivos del perfil y las selecciones Java/C++/Python del SDK.
-El frozen helper instalado detectó trece herramientas y ejecutó el ejemplo
-x86-64 con 36 instrucciones: RAX/RBX = 55, RCX = 0 y RDX = 110. No se reconstruyó
-ni rehasheó por completo el SDK compartido.
-
-Se compararon 27 archivos entre fuente, bundle e instalación. Otra comprobación
-abrió la UI instalada con perfil desechable: bienvenida a pantalla completa,
-geometría Blender, WebGL2, material avanzando, límite configurado de 60 dibujos,
-ayuda de Melody desactivada sin peticiones IA y pausa de la esfera al entrar al
-editor. Son cuatro comprobaciones adicionales, sin modificar los datos del usuario.
-
-Evidencia: `tests/visual/evidence/windows-crystal-*.json`. El build mantiene la
-revisión R6: se instala manualmente y no se presenta como actualización de versión
-automática. Linux/macOS no se reconstruyeron para esta corrección.
+El paisaje es raster con movimiento de composición, no un terreno 3D simulado.
+La esfera no certifica exactitud óptica perfecta. Linux/macOS requieren su propia
+construcción y verificación; esta máquina Windows no certifica nuevos binarios
+de esas plataformas.

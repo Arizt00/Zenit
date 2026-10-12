@@ -1,0 +1,7 @@
+{
+  "generator": "Built-in image_gen",
+  "prompt": "Use case: stylized-concept. Asset type: fullscreen background wallpaper for Zénit IDE welcome screen, landscape 16:9, highest available resolution preferably 3840x2160. Create a premium serene atmospheric 3D landscape of translucent opal crystal mountain ridges fading into a luminous white mist valley. Extremely soft white, pale lavender, icy cyan, delicate pearl pink. Crystal mountains on the far left and far right and along the lower horizon, beautifully refined irregular facets, realistic translucent edges, silky atmospheric depth with several distant layers and subtle sunrise glow. Keep the middle 45 percent of the image almost empty, luminous pale fog and clean sky, because a live glass sphere, dark navy heading and two small buttons will be overlaid in code. Horizon about 65 percent down. Broad graceful composition, polished physically rendered material, no harsh polygon clipart, no neon, no gamer style. Very quiet visual atmosphere but luxurious material detail toward the outer edges. No sphere or ring in the image, no UI, no letters, no logos, no text, no people, no watermark. Opaque background.",
+  "source": "exec-a3125fef-3715-4f1b-bdc6-6eb60fc9e612.png",
+  "asset": "web/assets/welcome-crystal-landscape.png",
+  "note": "Locally shipped static landscape. Dynamic compositor transforms and lighting are in welcome.css; the separate live Blender/Babylon sphere is not baked into this image."
+}

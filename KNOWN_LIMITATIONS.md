@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.3 R6
+# Límites reales · Zénit 0.5.3 R7
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -30,7 +30,7 @@
    no es un benchmark de IA externa. No se certifican predicciones correctas.
 10. **Cristal/fidelidad:** la geometría viene de Blender y el material se anima
     en Babylon/WebGL2; no es Cycles ni una simulación óptica físicamente exacta.
-    Los campos de luz, facetas de montañas e iconos tienen diferencias descritas
+    El paisaje es un asset raster generado localmente, no un terreno 3D simulado. Los campos de luz e iconos tienen diferencias descritas
     en VISUAL_DIFF_REPORT. La bienvenida de dos columnas fue sustituida por el
     brief posterior del usuario, conservando sus ocho goldens originales intactos.
 11. **Rendimiento:** las mediciones son muestras locales de CPU del renderer. No
@@ -59,3 +59,10 @@
 
 Los estados de compatibilidad parcial siguen visibles. Las pruebas no sustituyen
 datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inventados.
+
+## Límites específicos de R7
+
+- Laboratory detecta rutas; no ejecuta todos los compiladores al abrirse. Las acciones muestran sus respuestas reales en la terminal. Maven/Gradle comprueban su versión; no sustituyen el gestor completo de tareas de las extensiones.
+- El paisaje de inicio tiene movimiento de composición y luz CSS; la esfera conserva su render WebGL2 independiente. No se garantiza 60 FPS en cada GPU o pantalla.
+- Revisar, Explicar y Próximo paso ajustan el contexto y las instrucciones enviadas al proveedor existente. No hay un nuevo modelo predictivo entrenado ni una evaluación externa de calidad.
+- No se añaden nuevas APIs de VS Code en R7. Los límites de compatibilidad anteriores siguen vigentes.
