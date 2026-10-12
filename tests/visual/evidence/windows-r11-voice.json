@@ -1,0 +1,12 @@
+{
+  "configured": true,
+  "voice": "Emma",
+  "engine": "moss",
+  "language": "es-ES",
+  "existingSettingsPreserved": true,
+  "keysModified": [
+    "ai.voiceDirectory"
+  ],
+  "modelLoaded": false,
+  "referenceCopied": false
+}

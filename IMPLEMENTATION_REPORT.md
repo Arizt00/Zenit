@@ -90,3 +90,25 @@ No descarga modelos, referencias privadas ni voces alternativas. Sin ese motor,
 con memoria insuficiente o ante un fallo, muestra el error real. Hasta 2500
 caracteres de prosa por lectura, sin bloques de código, un trabajo de generación
 a la vez. La reproducción tiene controles explícitos y libera su blob al parar.
+
+
+## Distribución verificada de R11
+
+El build procede de `2b6e6581f7163154c02d9c676a68919bb7dcfe99` y está publicado en
+[GitHub](https://github.com/Arizt00/Zenit/releases/tag/v0.5.3-preview.11).
+Instalador: 113074595 bytes; portable:
+70847109 bytes. Los cinco assets tienen SHA-256
+confirmado por GitHub; no se sustituyen releases anteriores.
+
+Se superan 15 comprobaciones del paquete nativo y 12 del helper instalado.
+Los 101 archivos de frontend/assets/bridges coinciden byte por byte con el
+build. La comprobación instalada usa un Vira real en perfil QA aislado:
+contraste, 20 variantes, y evento ColorThemeKind recibido por una extensión
+Node real. Además verifica render/pausa, Laboratory, Debug y recuperación
+de archivos. El consentimiento de IA sigue desactivado al iniciar.
+
+`app-0.5.3-R11` conserva el payload R10, los cuatro archivos de perfil
+comprobados y el índice/selecciones del SDK, sin reinstalar Java/C++/Python.
+La respuesta real de GitHub permite al actualizador R10 seleccionar R11 con
+el SHA correcto. No se repite la descarga al comprobar el descubrimiento.
+Después se añade únicamente `ai.voiceDirectory` para conectar la voz solicitada; las demás preferencias conservan sus valores. No se copian referencias ni se carga el modelo al configurar. Los recibos completos están en `tests/visual/evidence/windows-r11-*.json`.
