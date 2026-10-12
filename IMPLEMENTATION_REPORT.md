@@ -47,7 +47,7 @@ No se presenta un paisaje raster como terreno 3D ni el shader como óptica físi
 correspondiente. Esperan hasta 12 s a la confirmación del renderer. La ausencia de
 temas, un comando desconocido, falta de respuesta o proyecto sin confianza se
 rechazan. Abrir el selector no equivale a aplicar un tema; la selección sigue
-perteneciendo al usuario. No se anuncia un resultado de compilación o depuración.
+perteneciendo al usuario. Los controles globales pertenecen al workbench principal; las ventanas auxiliares no abren ni confirman la misma petición por duplicado. Tres tests Node adicionales verifican la propiedad de la petición y el rechazo de un control fallido. No se anuncia un resultado de compilación o depuración.
 
 ## Melody y la voz vigente
 
@@ -66,7 +66,7 @@ referencias privadas. La voz online de OpenAI no se activa en esta entrega.
 ## Validación
 
 297 tests Python ejecutados: 292 pasan y 5 se omiten explícitamente. Pasan los
-88 tests Node y los 62 controles de sintaxis. `tests/test_assistant_markdown.mjs`
+91 tests Node y los 62 controles de sintaxis. `tests/test_assistant_markdown.mjs`
 comprueba preservación de contenido y fences; `tests/test_ui_command_ack.py`
 verifica confirmación, error, timeout y confianza. El test nuevo de interfaz
 `tests/test_ui_refinement_r13.py` utiliza una extensión Node real, un tema instalado,

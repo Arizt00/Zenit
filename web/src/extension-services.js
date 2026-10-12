@@ -24,6 +24,9 @@ export class ExtensionServicesUI {
     if(event.command==='zenit.debug.show'){await h.studio.debug();return;}
     if(event.command==='zenit.command'){
       if(event.request){
+        // All auxiliary windows share the event stream. Only the main workbench
+        // owns these global controls and may acknowledge the same request.
+        if(new URLSearchParams(location.search).has('panel'))return;
         let result={ok:true};try{
           if(event.id==='workbench.action.selectTheme'){p.themePicker.open();if(!document.querySelector('.theme-picker')?.getClientRects().length)throw Error('No hay temas instalados para abrir el selector.');}
           else if(event.id==='workbench.action.showCommands')h.studio.host.palette('>');

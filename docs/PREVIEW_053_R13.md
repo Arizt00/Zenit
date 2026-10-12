@@ -9,7 +9,7 @@ Cuatro comandos habituales de extensiones abren el selector de temas, comandos,
 archivos y ajustes, esperando confirmación del renderer. Se mantienen las
 correcciones de persistencia/coloreado del tema y la voz nueva Qwen de Emma de R12.
 
-Validación: 297 tests Python (292 pasan, 5 omisiones explícitas), 88 Node, 62 checks
+Validación: 297 tests Python (292 pasan, 5 omisiones explícitas), 91 Node, 62 checks
 de sintaxis, 13 vistas nativas y 24 casos de escala/resolución (72 capturas), sin
 overflow global. Terminales ConPTY, Debug Python y servicios Node reales siguen
 funcionando en las pruebas. Las pruebas UI de IA son fixtures identificadas.
