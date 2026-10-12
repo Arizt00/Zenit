@@ -162,9 +162,9 @@ export class DesktopWorkflows{
       if(panel==='lantern'){h.studio.lantern.openInline();surface.append($('#lantern-inline'));}
       else{h.studio.workspaces.apply('web');h.studio.workspaces.previewEnabled=true;h.studio.workspaces.tools.hidden=false;surface.append(h.studio.workspaces.tools);h.studio.workspaces.changed();}
     }else if(panel.startsWith('profile-')){
-      $('#editor-panel').prepend(header);h.studio.workspaces.apply(panel.slice(8));
+      const editor=$('#editor-panel');editor.classList.add('native-detached-content');editor.hidden=false;editor.inert=false;$('#app').append(editor);editor.prepend(header);h.studio.workspaces.apply(panel.slice(8));
       if(panel==='profile-web'){h.studio.workspaces.previewEnabled=true;h.studio.workspaces.changed();}
-    }else{const node=panel==='editor'?$('#editor-panel'):h.dock.panels[panel==='forge'?'console':panel];node?.prepend(header);}
+    }else{const node=panel==='editor'?$('#editor-panel'):h.dock.panels[panel==='forge'?'console':panel];if(panel==='editor'){node.classList.add('native-detached-content');node.hidden=false;node.inert=false;$('#app').append(node);}node?.prepend(header);}
     for(const button of document.querySelectorAll('[data-action="detach-editor"]')){button.title='Volver a Zénit';button.setAttribute('aria-label',button.title);button.innerHTML=icon('dock-left');}
   }
   activeFile(path){this.paintHacker();if(this.query.has('panel'))return;this.safe(async()=>{if(path&&(this.forgeWindowOpen||this.auxiliary.size||this.host.dock.nativeDetached.has('assistant')))await this.share(path);this.channel.postMessage({type:'active',path,workspace:this.host.service().workspace});});}

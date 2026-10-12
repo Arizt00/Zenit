@@ -29,6 +29,10 @@ por la instrucción de corrección visual.
   campos, desplazamiento y foco; sus etiquetas no comparten IDs duplicados.
 - `docking.js` conserva paneles al reparentarlos. Se corrigió la reapertura de
   Melody en el cajón de ventanas estrechas y la capa que interceptaba clics.
+- `desktop-workflows.js` monta el editor y los estilos de trabajo desacoplados
+  en el contenedor nativo visible, conservando sus modelos. El parser de CSS
+  distingue un nombre de clase completo de prefijos como `workspace-profile-*`,
+  para no eliminar por accidente los contratos de las herramientas de datos.
 - `editor.js` mantiene Monaco, minimapa y edición dividida. El interlineado
   predeterminado pasa a 1,35 en `backend/preferences.py`: 14 px de letra y 19 px
   de línea. Las preferencias explícitas del usuario conservan su valor.

@@ -1,5 +1,24 @@
 /* Shared tool heading; Assembly values always belong to the actual adapter. */
 
+:root[data-workspace-style]:not([data-workspace-style=general]) .workspace-profile-bar,
+:root[data-detached-panel^="profile-"] .workspace-profile-bar {
+  display: flex;
+}
+
+.workspace-profile-tools {
+  border-top-color: var(--border);
+}
+
+.profile-tool-heading input {
+  min-width: 120px;
+  max-width: 240px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--field);
+}
+
 .profile-tool-heading {
   display: flex;
   align-items: center;
