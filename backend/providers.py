@@ -198,12 +198,21 @@ class AIRouter:
             for jid in list(self.jobs):
                 if self.jobs[jid].done and time.monotonic()-self.jobs[jid].created>600:del self.jobs[jid]
             job=AIJob(provider,model);job.history_epoch=self.history_epoch;self.jobs[job.id]=job
-            messages=list(self.history.get(hkey,[]))[-12:]
+            messages=[] if body.get('filePlan') is True else list(self.history.get(hkey,[]))[-12:]
         message=(f'Archivo: {path}\n<context>\n{content}\n</context>\n\n' if content else '')+question
         messages.append({'role':'user','content':message})
         # Bound context independently of provider-specific token accounting.
         while len(messages)>1 and sum(len(m['content']) for m in messages)>100000:messages.pop(0)
         system=SYSTEM_ES if self.prefs.get('general.locale')=='es' else SYSTEM_EN
+        if body.get('filePlan') is True:
+            from .melody_files import FILE_PLAN_SYSTEM
+            job.file_workspace=body.get('fileWorkspace')
+            direct=re.sub(r'```[\s\S]*?(?:```|$)|(?m:^\s*>.*$)', '', question).lower()
+            job.file_delete_allowed=bool(re.search(r'(?:^|[.!?]\s*|\b(?:y|and|luego|then)\s+)(?:(?:por favor|please|puedes|can you)\s+)?(?:borra|elimina|suprime|delete|remove)\b',direct)) and not bool(re.search(r'\b(?:no|nunca|never|do not|don.t)\b',direct))
+            system+='\n'+FILE_PLAN_SYSTEM
+            inventory=body.get('fileInventory',[])
+            if not isinstance(inventory,list):raise ValueError('Inventario de archivos inválido.')
+            messages[-1]['content']+='\n<file-inventory>\n'+json.dumps(inventory,ensure_ascii=False)[:16000]+'\n</file-inventory>'
         threading.Thread(target=self._run,args=(job,messages,system,hkey),daemon=True).start()
         self.prefs.audit('ai.request',provider=provider)
         return {'id':job.id,'provider':provider,'model':model,'conversation':conversation}

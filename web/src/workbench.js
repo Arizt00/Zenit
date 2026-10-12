@@ -4,7 +4,8 @@ import {icon,escapeHTML,setFileIcons} from './icons.js';
 import {languageFor} from './editor.js';
 import {LiveEditSession} from './live-edit.js';
 import {applyShellTheme} from './extension-theme.js';
-import {requestsLiveEdit,requestsRealtimeHelp} from './ai-intent.js';
+import {requestsLiveEdit,requestsRealtimeHelp,requestsFileChanges} from './ai-intent.js';
+import {MelodyFilesUI} from './melody-files.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
 
 const PLATFORM_CATEGORIES=[
@@ -20,6 +21,7 @@ const PLATFORM_OPTION_NAMES={es:['Español','Spanish'],en:['Inglés','English'],
 export class LumenPlatform {
   constructor(host){
     this.host=host;this.api=(path,body)=>host.api('/platform'+path,body);this.prefs={};this.schema=[];this.providers=[];
+    this.melodyFiles=new MelodyFilesUI(this);
     this.page=null;this.activeCategory='general';this.disposed=false;this.timers=[];this.extensionContributions={};this.contributionDisposables=[];
     this.terminals=new Map();this.activeTerminal=null;this.showingPTY=false;this.aiJob=null;this.aiGeneration=0;this.conversation=crypto.randomUUID?.()||String(Date.now());
     this.lspSessions=new Map();this.diagnosticMap=new Map();this.development={tasks:[],servers:[],associations:{}};
@@ -349,6 +351,7 @@ export class LumenPlatform {
     bar.querySelector('select').onchange=e=>this.safe(async()=>{await this.savePreference('ai.provider',e.target.value);await this.savePreference('ai.model','');this.conversation=crypto.randomUUID?.()||String(Date.now());});
     document.getElementById('active-ai-model').onclick=()=>this.safe(()=>this.settings('ai'));
     document.getElementById('ai-cancel-generation').onclick=()=>this.safe(()=>this.cancelAI());this.updateProviderBar();
+    const files=document.createElement('button');files.className='text-button ai-files-button';files.id='ai-files-project';files.innerHTML=this.glyph('files')+this.t('Archivos y proyecto','Files and project');files.onclick=()=>this.melodyFiles.request();document.getElementById('ai-form').before(files);
   }
   updateIdentity(){
     const name='Melody';
@@ -377,22 +380,24 @@ export class LumenPlatform {
     this.companion?.session.stop();
     if(!this.prefs['ai.model']){await this.settings('ai');this.host.notify(this.t('Selecciona el proveedor y un modelo real antes de enviar.','Choose a provider and an actual model before sending.'));return;}
     const editor=this.host.editor,provider=this.prefs['ai.provider'],model=this.prefs['ai.model'],mode=this.prefs['ai.context'];
-    const live=edit===true||requestsLiveEdit(question);
+    const filePlan=edit!==true&&requestsFileChanges(question);
+    const live=!filePlan&&(edit===true||requestsLiveEdit(question));
+    if(filePlan&&!await this.host.ensureTrust())return;
     const content=editor.getValue();const file=editor.current||'';
     if(live&&!file)throw new Error('Abre o crea un archivo antes de autorizar la edición.');
     if(content.length>64000)throw new Error(this.t('Selecciona un fragmento menor de 64000 caracteres.','Select less than 64000 characters.'));
-    const consent=await this.host.confirmDialog(this.t('Revisar envío al modelo','Review model request'),this.t(
+    const consent=await this.host.confirmDialog(this.t('Revisar envío al modelo','Review model request'),filePlan?`Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán la petición, ${content.length} caracteres del archivo activo y hasta 300 nombres de archivos del proyecto. Recibirás un plan completo de rutas y contenidos antes de escribir en disco. El proveedor puede aplicar costes.`:this.t(
       `Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu pregunta y ${content.length} caracteres ${content?'de '+file:'de código'}. El proveedor puede aplicar sus propias condiciones y costes. No se enviará el resto del proyecto. ${live?'Has solicitado edición: confirmarás el archivo antes de aplicar cambios en vivo.':'Esta petición es de consulta y no modificará tus archivos.'}`,
       `Destination: ${PLATFORM_NAMES[provider]} · ${model}. Your question and ${content.length} characters ${content?'from '+file:'of code'} will be sent. Provider terms and charges may apply. The rest of the project will not be sent. ${live?'You requested editing: confirm the file before live changes begin.':'This request is read-only and will not modify your files.'}`),this.t('Enviar esta petición','Send this request'));
     if(!consent)return;
-    if(file!==editor.current||content!==editor.getValue())throw new Error('El archivo cambió durante la confirmación. Vuelve a enviar la petición con el contexto actual.');
+    if(file!==(editor.current||'')||content!==editor.getValue())throw new Error('El archivo cambió durante la confirmación. Vuelve a enviar la petición con el contexto actual.');
     if(live&&!await this.host.confirmDialog('Autorizar edición en vivo',`La IA podrá reemplazar, añadir y borrar código solamente en ${file} para esta petición. Podrá continuar mientras trabajas en otro archivo. Si modificas o cierras ${file}, se detendrá. Se suspende el autoguardado de ese archivo y Ctrl+Z permite deshacer.`, 'Permitir esta edición'))return;
-    if(file!==editor.current||content!==editor.getValue())throw new Error('El archivo cambió. Repite la petición.');
+    if(file!==(editor.current||'')||content!==editor.getValue())throw new Error('El archivo cambió. Repite la petición.');
     const userQuestion=question;
     if(live)question+='\n\nEDICIÓN EN VIVO AUTORIZADA: devuelve el contenido COMPLETO del archivo en un único bloque de código con triple acento grave. Sin explicaciones dentro del bloque. El usuario verá los tokens aplicarse a su búfer.';
     const snapshot={path:editor.current,text:editor.getValue(),version:editor.view?.getModel?.()?.getVersionId()};this.aiSnapshot=snapshot;
     const generation=++this.aiGeneration;
-    if(this.aiStarting||this.aiJob)return;this.aiStarting=true;let result;try{result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation});}finally{this.aiStarting=false;}
+    if(this.aiStarting||this.aiJob)return;this.aiStarting=true;let result;try{result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation,filePlan});}finally{this.aiStarting=false;}
     this.aiJob=result.id;document.getElementById('ai-input').value='';document.querySelector('.send-button').disabled=true;document.getElementById('ai-cancel-generation').hidden=false;
     document.querySelector('.provider-status-dot').classList.add('generating');
     this.host.appendChat(userQuestion,'user',this.t('TÚ','YOU'));
@@ -403,12 +408,12 @@ export class LumenPlatform {
     try{
       while(!this.disposed&&this.aiJob===result.id&&generation===this.aiGeneration){
         const update=await this.api('/ai/job?id='+encodeURIComponent(result.id)+'&offset='+offset);offset=update.offset;text+=update.delta||'';liveSession?.apply(text);if(live)this.host.refreshFileViews();
-        stream.textContent=text||update.message||this.t('Esperando al proveedor… Puedes detener la respuesta.','Waiting for provider… You can stop the response.');
+        stream.textContent=filePlan?'Preparando el plan de archivos · '+text.length+' caracteres recibidos. Ningún archivo se ha modificado.':text||update.message||this.t('Esperando al proveedor… Puedes detener la respuesta.','Waiting for provider… You can stop the response.');
         const messages=document.getElementById('chat-messages');messages.scrollTop=messages.scrollHeight;
         if(update.done){
           completed=!update.error&&!update.cancelled;
           element.remove();
-          if(text){const answer=this.host.appendChat(text,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);this.addReviewButtons(answer,text,snapshot);}
+          if(text){const answer=this.host.appendChat(filePlan?'Plan recibido. Comprobando rutas y conflictos…':text,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);if(filePlan&&completed){try{await this.melodyFiles.review(result.id,answer);}catch(error){answer.textContent=error.message;}}else if(!filePlan)this.addReviewButtons(answer,text,snapshot);}
           if(update.error)this.host.appendChat(update.error,'assistant',this.t('ERROR DEL PROVEEDOR','PROVIDER ERROR'));
           if(update.cancelled)this.host.appendChat(this.t('Generación cancelada. El proveedor puede haber procesado parte de la petición.','Generation cancelled. The provider may have processed part of the request.'),'assistant',this.t('CANCELADA','CANCELLED'));
           break;
@@ -474,6 +479,7 @@ export class LumenPlatform {
     return this.attachTerminal(result);
   }
   async attachTerminal(result){
+    if(this.terminals.has(result.id)){this.selectTerminal(result.id);return result;}
     const terminal={...result,offset:0,closed:false};this.terminals.set(result.id,terminal);
     terminal.input=new OrderedTerminalInput(async data=>{const response=await this.api('/terminals/write',{id:result.id,data});if(response.closed)terminal.closed=true;});
     terminal.mount=document.createElement('div');terminal.mount.className='pty-session';terminal.mount.dataset.sessionId=result.id;this.ptyMount.append(terminal.mount);
@@ -500,10 +506,20 @@ export class LumenPlatform {
   }
   themeTerminal(terminal){if(!terminal.xterm)return;const css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim();terminal.xterm.options.theme={background:get('terminal-bg'),foreground:get('terminal-text')||get('text'),cursor:get('accent'),selectionBackground:get('selection'),black:get('bg'),red:get('danger'),green:get('success'),yellow:get('syntax-string'),blue:get('syntax-function'),magenta:get('syntax-keyword'),cyan:get('syntax-type'),white:get('text')};}
   selectTerminal(id){
+    if(!this.terminals.has(id))return;
     this.activeTerminal=id;this.showingPTY=true;this.host.dock.show('console');this.renderActiveTerminal();
-    this.later(()=>{const terminal=this.terminals.get(id);if(terminal?.fit){terminal.fit.fit();this.resizeTerminal(terminal);}terminal?.xterm?.focus();terminal?.mount.querySelector('input')?.focus();},80);
+    this.focusTerminal(id);
+  }
+  focusTerminal(id){
+    cancelAnimationFrame(this.terminalFocusFrame);const terminal=this.terminals.get(id);if(!terminal||terminal.closed||!this.showingPTY||this.activeTerminal!==id)return;
+    terminal.xterm?.focus();terminal.mount.querySelector('input')?.focus();
+    this.terminalFocusFrame=requestAnimationFrame(()=>{this.terminalFocusFrame=0;if(this.disposed||this.activeTerminal!==id||!this.showingPTY||!terminal.mount.getBoundingClientRect().width)return;try{terminal.fit?.fit();this.resizeTerminal(terminal);}catch(_){}});
+  }
+  terminalLabel(terminal){
+    const same=[...this.terminals.values()].filter(t=>t.profile.label===terminal.profile.label);return terminal.profile.label+(same.length>1?' · '+(same.indexOf(terminal)+1):'');
   }
   renderActiveTerminal(){
+    this.extensionServices?.outputUI?.setVisible(!this.showingPTY&&document.querySelector('[data-terminal=output]').classList.contains('active'));
     this.sessionbar.hidden=!this.terminals.size;this.ptyMount.hidden=!this.showingPTY;
     if(this.showingPTY){document.getElementById('terminal-scroll').classList.add('hidden');document.getElementById('terminal-content').classList.add('hidden');document.querySelector('.terminal-signature').classList.add('hidden');}
     const tabs=this.sessionbar.querySelector('.pty-session-tabs');tabs.innerHTML=[...this.terminals.values()].map(t=>`<div class="pty-tab ${this.activeTerminal===t.id&&this.showingPTY?'active':''}"><button data-pty-select="${t.id}">${this.glyph('terminal')}<span>${this.e(t.profile.label)}${t.closed?' · '+this.t('cerrada','closed'):''}</span></button><button class="pty-tab-close" data-pty-close="${t.id}" aria-label="${this.t('Cerrar terminal','Close terminal')}">${this.glyph('close')}</button></div>`).join('');

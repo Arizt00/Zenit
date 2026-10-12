@@ -1,0 +1,13 @@
+.melody-file-review {display:flex;flex-direction:column;gap:var(--space-3);min-height:0;}
+.melody-plan-workspace {color:var(--secondary);overflow-wrap:anywhere;}
+.melody-plan-files {max-height:55vh;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-card);}
+.melody-plan-files details+details {border-top:1px solid var(--border);}
+.melody-plan-files summary {display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);cursor:pointer;}
+.melody-plan-files strong {font-size:12px;font-weight:500;overflow-wrap:anywhere;}
+.melody-plan-kind {font-size:10px;color:var(--success);min-width:60px;}
+.melody-plan-kind[data-kind=delete] {color:var(--danger);}
+.melody-plan-kind[data-kind=update] {color:var(--accent);}
+.melody-plan-files pre {font:12px/1.5 var(--font-code);padding:var(--space-3);background:var(--editor);max-height:240px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;}
+.melody-plan-files label {display:block;font-size:10px;color:var(--secondary);padding:var(--space-2) var(--space-3);}
+.melody-plan-paths {padding-left:18px;color:var(--secondary);font-size:12px;}
+.ai-files-button {white-space:nowrap;}

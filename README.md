@@ -1,6 +1,6 @@
-# Zénit 0.5.3 Preview R7
+# Zénit 0.5.3 Preview R8
 
-Última entrega: [instalador Windows R7](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-Windows-Setup.exe) · [portable](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.7/Zenit-0.5.3-R7-Windows-Portable.zip) · [cambios y límites de R7](docs/PREVIEW_053_R7.md). Laboratory se organiza por secciones, el inicio incorpora un paisaje de cristal y Melody conserva selección, revisión y cursor en su ayuda opcional. Consulta [implementación y pruebas](IMPLEMENTATION_REPORT.md), [comparación visual](VISUAL_DIFF_REPORT.md) y [límites reales](KNOWN_LIMITATIONS.md).
+Última entrega: [instalador Windows R8](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.8/Zenit-0.5.3-R8-Windows-Setup.exe) · [portable](https://github.com/Arizt00/Zenit/releases/download/v0.5.3-preview.8/Zenit-0.5.3-R8-Windows-Portable.zip) · [cambios y límites de R8](docs/PREVIEW_053_R8.md). Depuración concentra la sesión en un inspector; Proyecto desacoplado y selección de terminales se corrigen. Melody propone archivos y proyectos con revisión y recuperación. Los canales de extensiones tienen selector y niveles de registro reales. Consulta [implementación y pruebas](IMPLEMENTATION_REPORT.md), [comparación visual](VISUAL_DIFF_REPORT.md) y [límites reales](KNOWN_LIMITATIONS.md).
 
 Para activar los consejos, pulsa «Ayuda en tiempo real» o escribe «Ayúdame en tiempo real mientras escribo» en Melody y confirma el destino. «Sugerir siguiente código» muestra una propuesta en Monaco para aceptar con Tab. La edición en vivo conserva su permiso separado por archivo.
 

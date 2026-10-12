@@ -1,0 +1,7 @@
+.extension-output-toolbar { display:flex; align-items:center; gap:var(--space-3); padding:6px 12px; border-bottom:1px solid var(--border); flex:none; order:1; min-width:0; }
+.extension-output-toolbar [data-output-channel] { max-width:65%; margin-right:auto; }
+.extension-output-toolbar [data-output-channel] span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.extension-output-toolbar .secondary-button { font-size:11px; height:30px; min-height:30px; padding:0 10px; gap:8px; }
+.extension-output-toolbar .icon { width:15px; height:15px; flex:none; }
+.extension-output-toolbar .icon-button { width:26px; height:26px; }
+@media(max-width:800px) { .extension-output-toolbar { gap:2px; padding:5px 8px; } .extension-output-toolbar [data-output-channel]>.icon:first-child { display:none; } }

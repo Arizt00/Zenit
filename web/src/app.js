@@ -292,11 +292,12 @@ function termWrite(text,cls=''){
 }
 function termClear(){$('#terminal-log').textContent='';}
 function updatePrompt(){const path=String(service.workspace||service.name)+(cwd&&cwd!=='.'?'/'+cwd:'');$('#prompt-path').textContent=path;$('#prompt-path').title=path;$('#console-label').textContent=service.shell?'shell':'local';}
-function showTerminal(mode='terminal'){studio?.enter();if(platformUI?.page&&platformUI.page!=='settings')platformUI.closePage();if(platformUI){platformUI.showingPTY=false;platformUI.renderActiveTerminal();}dock?.show('console');terminalMode=mode;renderTerminalContent();}
+function showTerminal(mode='terminal',{forceConsole=false}={}){studio?.enter();if(platformUI?.page&&platformUI.page!=='settings')platformUI.closePage();dock?.show('console');terminalMode=mode;renderTerminalContent();if(platformUI){if(mode!=='terminal'||forceConsole)platformUI.showingPTY=false;platformUI.renderActiveTerminal();if(platformUI.showingPTY)platformUI.focusTerminal(platformUI.activeTerminal);}}
 async function renderTerminalContent(){
   $$('.terminal-tab').forEach(button=>{button.classList.toggle('active',button.dataset.terminal===terminalMode);button.setAttribute('aria-selected',String(button.dataset.terminal===terminalMode));button.tabIndex=button.dataset.terminal===terminalMode?0:-1;button.id='terminal-tab-'+button.dataset.terminal;button.setAttribute('aria-controls',button.dataset.terminal==='terminal'?'terminal-scroll':'terminal-content');});
   const standard=terminalMode==='terminal';$('#terminal-scroll').classList.toggle('hidden',!standard);$('#terminal-content').classList.toggle('hidden',standard);$('.terminal-signature').classList.toggle('hidden',!standard);
   const currentPane=standard?$('#terminal-scroll'):$('#terminal-content');currentPane.setAttribute('role','tabpanel');currentPane.setAttribute('aria-labelledby','terminal-tab-'+terminalMode);
+  platformUI?.extensionServices?.outputUI?.setVisible(terminalMode==='output');
   if(standard)return;
   const pane=$('#terminal-content');
   if(terminalMode==='problems'){
@@ -305,7 +306,7 @@ async function renderTerminalContent(){
   else if(terminalMode==='debug')pane.innerHTML='<p>Abre Depuración para inspeccionar tu programa paso a paso.</p><button class="secondary-button" data-action="debug-view">Abrir depuración</button>';
   else if(terminalMode==='git'){pane.textContent='Reading repository...';try{const result=await api('/git?mode=status');if(terminalMode==='git')pane.textContent=result.output;}catch(error){pane.textContent=error.message;}}
 }
-async function checkWorkspace(reveal=true){if(reveal)showTerminal();const data=await api('/console',{command:'check'});termWrite('❯ check\n','term-command');termWrite(data.output,'term-success');}
+async function checkWorkspace(reveal=true){if(reveal)showTerminal('terminal',{forceConsole:true});const data=await api('/console',{command:'check'});termWrite('❯ check\n','term-command');termWrite(data.output,'term-success');}
 async function ensureTrust(){
   if(service.trusted)return true;
   const yes=await confirmDialog('¿Confías en este proyecto?','El código podrá leer y modificar archivos, acceder a la red y ejecutar procesos con tus permisos. Esto no es una sandbox. Solo autoriza una carpeta cuyo contenido conoces. La confianza se revoca al cambiar de proyecto o reiniciar Zénit.','Confiar y continuar');
@@ -317,7 +318,7 @@ async function runCurrent(check=false){
   if(activeJob){notify('Ya hay una tarea activa en esta consola. Deténla antes de iniciar otra.');return;}
   if(!await ensureTrust())return;
   if(editor.isDirty())await saveFile();
-  showTerminal();termWrite('\n','term-muted');lastOutput='';
+  showTerminal('terminal',{forceConsole:true});termWrite('\n','term-muted');lastOutput='';
   let result;try{result=await api('/task',{path:editor.current,check});}catch(error){lastOutput=error.message;termWrite(error.message+'\n','term-error');notify(error.message,'error');return;}
   if(result.preview){studio.lantern.showPreview(result.preview);termWrite('Vista previa: '+result.preview.url+'\n','term-success');}else if(result.job)await watchJob(result.job);else{termWrite(result.output,'term-success');lastOutput=result.output;}
 }
@@ -513,7 +514,7 @@ function setupEvents(){
     const tab=event.target.closest('[data-tab]');if(tab)return activateFile(tab.dataset.tab);
     const directory=event.target.closest('[data-dir]');if(directory){const path=directory.dataset.dir;openFolders.has(path)?openFolders.delete(path):openFolders.add(path);renderTree();return;}
     const view=event.target.closest('[data-view]');if(view)return setView(view.dataset.view);
-    const terminal=event.target.closest('[data-terminal]');if(terminal){if(platformUI){platformUI.showingPTY=false;platformUI.renderActiveTerminal();}terminalMode=terminal.dataset.terminal;return renderTerminalContent();}
+    const terminal=event.target.closest('[data-terminal]');if(terminal){showTerminal(terminal.dataset.terminal);const active=platformUI?.terminals.get(platformUI.activeTerminal);if(terminal.dataset.terminal==='terminal'&&active&&!active.closed)platformUI.selectTerminal(active.id);return;}
     const aiAction=event.target.closest('[data-ai-action]');if(aiAction)return beginAiAction(aiAction.dataset.aiAction);
     const aiPrompt=event.target.closest('[data-ai-prompt]');if(aiPrompt){$('#ai-input').value=aiPrompt.dataset.aiPrompt;$('#ai-input').focus();return;}
     const action=event.target.closest('[data-action]');if(action)return perform(action.dataset.action,action);
@@ -586,8 +587,8 @@ async function start(){
     sceneStatus=service.babylon?'Babylon.js + Three.js · Lenon Glass':'Cristal CSS';
     await checkWorkspace(false);
     renderTerminalContent();
-    platformUI=new LumenPlatform({api,notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshFileViews:()=>{renderTree();renderTabs();},
-      isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode),graphicsKind:()=>scene?.kind||'css',
+    platformUI=new LumenPlatform({api,notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
+      isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
         settings.formatOnType=p['editor.formatOnType'];settings.motion=p['appearance.motion'];settings.density=p['appearance.density'];applySettings();applyTheme(p['appearance.theme'],false);

@@ -154,8 +154,8 @@ export class DesktopWorkflows{
   mountAuxiliary(){
     const panel=this.query.get('panel'),h=this.host;if(!panel)return;
     const header=document.createElement('header');header.className='native-window-heading';
-    const titles={preview:'Vista web en vivo',lantern:'Lantern Live','profile-general':'Desarrollo general','profile-web':'Desarrollo web','profile-data':'Ciencia de datos','profile-design':'Diseño y UI','profile-assembly':'Laboratorio ASM'};
-    header.innerHTML=`<span>${icon(panel==='lantern'?'sparkles':'layout')}<strong>${esc(titles[panel]||'Zénit · '+panel)}</strong><small>Búfer compartido · cambios en vivo</small></span><button class="secondary-button native-return">${icon('dock-left')}Volver a Zénit</button>`;
+    const titles={project:'Proyecto',assistant:'Melody',console:'Terminal',editor:'Editor',forge:'Forge',preview:'Vista web en vivo',lantern:'Lantern Live','profile-general':'Desarrollo general','profile-web':'Desarrollo web','profile-data':'Ciencia de datos','profile-design':'Diseño y UI','profile-assembly':'Laboratorio ASM'};
+    header.innerHTML=`<span>${icon(panel==='project'?'folder':panel==='lantern'||panel==='assistant'?'sparkles':'layout')}<strong>${esc(titles[panel]||'Zénit')}</strong><small>${panel==='project'?esc(h.service().name):'Búfer compartido · cambios en vivo'}</small></span><div class="native-heading-actions"><button class="secondary-button native-return">${icon('dock-left')}Volver a Zénit</button></div>`;
     header.querySelector('button').onclick=()=>this.safe(()=>this.returnToApp());
     if(panel==='preview'||panel==='lantern'){
       const surface=document.createElement('section');surface.className='native-auxiliary-surface panel';surface.append(header);$('#app').append(surface);
@@ -164,7 +164,7 @@ export class DesktopWorkflows{
     }else if(panel.startsWith('profile-')){
       const editor=$('#editor-panel');editor.classList.add('native-detached-content');editor.hidden=false;editor.inert=false;$('#app').append(editor);editor.prepend(header);h.studio.workspaces.apply(panel.slice(8));
       if(panel==='profile-web'){h.studio.workspaces.previewEnabled=true;h.studio.workspaces.changed();}
-    }else{const node=panel==='editor'?$('#editor-panel'):h.dock.panels[panel==='forge'?'console':panel];if(panel==='editor'){node.classList.add('native-detached-content');node.hidden=false;node.inert=false;$('#app').append(node);}node?.prepend(header);}
+    }else{const node=panel==='editor'?$('#editor-panel'):h.dock.panels[panel==='forge'?'console':panel];if(panel==='editor'){node.classList.add('native-detached-content');node.hidden=false;node.inert=false;$('#app').append(node);}node?.prepend(header);if(panel==='project'){const actions=node.querySelector('.panel-heading .heading-actions');if(actions){header.querySelector('.native-heading-actions').prepend(actions);node.querySelector('.panel-heading').hidden=true;}}}
     for(const button of document.querySelectorAll('[data-action="detach-editor"]')){button.title='Volver a Zénit';button.setAttribute('aria-label',button.title);button.innerHTML=icon('dock-left');}
   }
   activeFile(path){this.paintHacker();if(this.query.has('panel'))return;this.safe(async()=>{if(path&&(this.forgeWindowOpen||this.auxiliary.size||this.host.dock.nativeDetached.has('assistant')))await this.share(path);this.channel.postMessage({type:'active',path,workspace:this.host.service().workspace});});}

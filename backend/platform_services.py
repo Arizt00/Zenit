@@ -25,6 +25,7 @@ from .extension_services import ExtensionServices,file_path
 from .version import VERSION, REVISION
 from .simulation import Simulation
 from .machines import Machines
+from .melody_files import MelodyFiles
 
 
 class PlatformServices:
@@ -41,6 +42,7 @@ class PlatformServices:
         self.simulation=Simulation(self);self.machines=Machines(self)
         self.buffers=Buffers()
         self.extension_services=ExtensionServices(self);self.extension_runtime.services=self.extension_services
+        self.melody_files=MelodyFiles(self)
     def state(self):
         web=self.app.project/'web/vendor'
         return {'version':VERSION,'revision':REVISION,'preferences':self.prefs.export(),'providers':self.ai.vault.state(),
@@ -75,6 +77,7 @@ class PlatformServices:
             from .extension_dependencies import dependency_graph
             return {'extensions':[{'id':x['id'],'executable':bool(x['manifest'].get('main') or x['manifest'].get('lumen',{}).get('main'))} for x in dependency_graph(self.extensions,q('id'))]}
         if path=='/extensions/services':return self.extension_services.snapshot()
+        if path=='/extensions/output':self._trusted();return self.extension_services.output(q('extension'),q('key'))
         if path=='/extensions/resource':return self.extension_services.resource(q('panel'),q('path'))
         if path=='/extensions/file':
             self._trusted();p=file_path(q('path'));item=self.extension_services.file_workspace(p).read(p.name);item.update(path=self.extension_services.key(self.app.workspace,p),name=p.name,external=not p.is_relative_to(self.app.workspace.root));return item
@@ -117,6 +120,7 @@ class PlatformServices:
         if path=='/extensions/applyEdit':return self.extension_services.workspace_edit(ws,body['edit'],body.get('documents'))
         if path=='/extensions/pick':self._trusted();return self.extension_services.answer_prompt(body['id'],body.get('value'))
         if path=='/extensions/quickinput/event':self._trusted();return self.extension_services.quickinput_event(body)
+        if path=='/extensions/output/control':self._trusted();return self.extension_services.output(body.get('extension'),body.get('key'),body.get('action'),body.get('level'))
         if path=='/extensions/webview/document':self._trusted();return self.extension_services.webview_document(body['panel'],body['html'])
         if path=='/extensions/save':
             self._trusted();p=file_path(body['path']);item=self.extension_services.file_workspace(p).save(p.name,body['content'],body.get('revision'),newline=body.get('newline','LF'),bom=body.get('bom',False));item.update(path=str(p),saved=True);return item
@@ -213,7 +217,16 @@ class PlatformServices:
             return self.ai.accounts.codex.logout()
         if path=='/ai/forget':return self.ai.vault.delete(body.get('provider'))
         if path=='/ai/models':return self.ai.models(body.get('provider'),body.get('consent'))
-        if path=='/ai/start':return self.ai.start(body)
+        if path=='/ai/start':
+            request=dict(body)
+            if request.get('filePlan') is True:
+                self._trusted()
+                request['fileWorkspace']=str(ws.root)
+                request['fileInventory']=ws.files()[:300]
+            return self.ai.start(request)
+        if path=='/ai/files/review':self._trusted();return self.melody_files.review(ws,body.get('job'))
+        if path=='/ai/files/apply':self._trusted();return self.melody_files.commit(ws,body.get('ticket'),body.get('consent'))
+        if path=='/ai/files/undo':self._trusted();return self.melody_files.undo(ws,body.get('receipt'))
         if path=='/ai/cancel':self.ai.get(body.get('id')).cancel();return {'cancelled':True}
         if path=='/ai/clear':
             self.ai.clear_history()

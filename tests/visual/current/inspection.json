@@ -2317,7 +2317,7 @@
         0,
         0,
         1672,
-        60
+        70
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -2338,7 +2338,7 @@
     ".brand-name": {
       "bounds": [
         82,
-        14.052083969116211,
+        19.05208396911621,
         97.77083587646484,
         31.89583396911621
       ],
@@ -2361,7 +2361,7 @@
     ".global-search": {
       "bounds": [
         461.2708435058594,
-        11,
+        16,
         604.9271240234375,
         38
       ],
@@ -2384,9 +2384,9 @@
     ".activity-rail": {
       "bounds": [
         14,
-        61,
-        51,
-        810.3333740234375
+        71,
+        66,
+        800.3333740234375
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -2407,8 +2407,8 @@
     ".tree-entry": null,
     ".file-tab": {
       "bounds": [
-        362.66668701171875,
-        61.66666793823242,
+        377.66668701171875,
+        71.66667175292969,
         124,
         48.333335876464844
       ],
@@ -2430,9 +2430,9 @@
     },
     ".breadcrumbs": {
       "bounds": [
-        348.66668701171875,
-        110.66667175292969,
-        1306.666748046875,
+        363.66668701171875,
+        120.66667175292969,
+        1291.666748046875,
         32
       ],
       "font": [
@@ -2481,56 +2481,10 @@
     ".lab-sections": null,
     ".debug-intro": {
       "bounds": [
-        355.66668701171875,
-        81.66667175292969,
-        1292.666748046875,
-        108
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px 12px",
-      "gap": "normal",
-      "radius": "0px",
-      "border": "0px none rgb(16, 19, 60)",
-      "background": "rgba(0, 0, 0, 0)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".lantern-workbench": {
-      "bounds": [
-        355.66668701171875,
-        189.6666717529297,
-        1292.666748046875,
-        295.3125
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "18px 22px",
-      "gap": "normal",
-      "radius": "14px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
-    ".lantern-features": {
-      "bounds": [
-        378.3333435058594,
-        310.5208435058594,
-        810,
-        53.79166793823242
+        387.66668701171875,
+        91.66667175292969,
+        1243.666748046875,
+        105.23958587646484
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -2539,7 +2493,7 @@
         "18.85px"
       ],
       "padding": "0px",
-      "gap": "28px",
+      "gap": "20px",
       "radius": "0px",
       "border": "0px none rgb(16, 19, 60)",
       "background": "rgba(0, 0, 0, 0)",
@@ -2548,35 +2502,15 @@
       "blur": "none",
       "shadow": "none"
     },
-    ".lantern-question": {
-      "bounds": [
-        378.3333435058594,
-        386.3125,
-        1247.3333740234375,
-        45
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "0px 12px",
-      "gap": "14px",
-      "radius": "12px",
-      "border": "0.666667px solid rgb(222, 219, 252)",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
+    ".lantern-workbench": null,
+    ".lantern-features": null,
+    ".lantern-question": null,
     ".debug-controls": {
       "bounds": [
-        355.66668701171875,
-        498.97918701171875,
-        1292.666748046875,
-        89.72917175292969
+        387.66668701171875,
+        218.90625,
+        1243.666748046875,
+        40
       ],
       "font": [
         "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
@@ -2584,39 +2518,17 @@
         "400",
         "18.85px"
       ],
-      "padding": "14px 16px",
+      "padding": "0px",
       "gap": "10px",
-      "radius": "14px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
-      "background": "rgb(255, 255, 255)",
+      "radius": "0px",
+      "border": "0px none rgb(16, 19, 60)",
+      "background": "rgba(0, 0, 0, 0)",
       "color": "rgb(16, 19, 60)",
       "opacity": "1",
       "blur": "none",
       "shadow": "none"
     },
-    ".debug-card": {
-      "bounds": [
-        355.66668701171875,
-        602.7083740234375,
-        641.3333740234375,
-        148
-      ],
-      "font": [
-        "\"Segoe UI\", -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Arial, sans-serif",
-        "13px",
-        "400",
-        "18.85px"
-      ],
-      "padding": "16px 18px",
-      "gap": "normal",
-      "radius": "14px",
-      "border": "0.666667px solid rgb(233, 234, 250)",
-      "background": "rgb(255, 255, 255)",
-      "color": "rgb(16, 19, 60)",
-      "opacity": "1",
-      "blur": "none",
-      "shadow": "none"
-    },
+    ".debug-card": null,
     ".forge-dashboard": null,
     ".floating-panel": null,
     ".forge-main": null,

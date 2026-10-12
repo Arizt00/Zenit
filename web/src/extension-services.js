@@ -1,18 +1,14 @@
+import {ExtensionOutputUI} from './extension-output.js';
 import {escapeHTML as esc,icon} from './icons.js';
 import {ExtensionQuickInputUI} from './extension-quickinput.js';
 
 export class ExtensionServicesUI {
-  constructor(host){this.host=host;this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
+  constructor(host){this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
-    if(event.command==='zenit.output'){
-      const pane=document.getElementById('terminal-content'),id=event.extension+':'+event.key;
-      this.outputs ||= new Map();const previous=this.outputs.get(id);this.outputs.set(id,event);
-      if(event.visible){this.outputId=id;if(previous?.reveal!==event.reveal&&!event.preserveFocus)h.showConsole('output');if(document.querySelector('[data-terminal=output]').classList.contains('active'))this.renderOutput();}
-      else if(this.outputId===id){delete pane.dataset.extensionOutput;this.outputId=null;pane.textContent='';}
-      return;
-    }
+    if(event.command==='zenit.files.changed'){await p.melodyFiles.reload(event.paths||[]);return;}
+    if(event.command==='zenit.output'){this.outputUI.event(event);return;}
     if(event.command==='zenit.pick')return this.pick(event);
     if(event.command==='zenit.quickinput')return this.quickinput.update(event);
     if(event.command==='zenit.document.saved'){
@@ -63,8 +59,8 @@ export class ExtensionServicesUI {
   async poll(){
     if(this.disposed)return;
     try{
-      const {panels,quickinputs=[],statusItems=[]}=await this.host.platform.api('/extensions/services');
-      this.status(statusItems);
+      const {panels,quickinputs=[],statusItems=[],outputs=[]}=await this.host.platform.api('/extensions/services');
+      this.status(statusItems);this.outputUI.sync(outputs);
       await this.syncEditors();
       if(!this.quickinput.root)for(const input of quickinputs)if(input.visible)this.quickinput.update(input);
       const ids=new Set(panels.filter(x=>x.visible).map(x=>x.id));
@@ -76,10 +72,7 @@ export class ExtensionServicesUI {
     }catch(error){if(!this.disposed)console.warn('Extension services:',error.message);}
     this.timer=setTimeout(()=>this.poll(),500);
   }
-  renderOutput(){
-    const output=this.outputs?.get(this.outputId);if(!output?.visible)return false;
-    const pane=document.getElementById('terminal-content');if(pane.textContent!==output.text)pane.textContent=output.text;pane.dataset.extensionOutput=this.outputId;pane.setAttribute('aria-label','Salida · '+output.name);return true;
-  }
+  renderOutput(){this.outputUI.setVisible(true);return this.outputUI.render();}
   status(items){
     const ed=this.host.editor,language=ed.view?.getModel()?.getLanguageId(),path=ed.current;
     const matches=selector=>!selector||[selector].flat().some(s=>typeof s==='string'?s==='*'||s===language:(!s.language||s.language==='*'||s.language===language)&&(!s.scheme||s.scheme==='file'));
@@ -127,5 +120,5 @@ export class ExtensionServicesUI {
   }
   show(state){for(const value of this.panels.values()){if(value.node){value.node.hidden=true;value.node.classList.remove('active');}value.tab?.classList.remove('active');}this.host.platform.closePage();state.node.hidden=false;state.node.classList.add('active');state.tab.classList.add('active');document.documentElement.dataset.editorCovered='true';}
   async receive(event){const id=event.data?.zenitWebview,state=this.panels.get(id);if(!state||event.source!==state.frame?.contentWindow)return;if(event.data.stateUpdate){state.savedState=event.data.state;return;}try{await this.host.platform.api('/extensions/runtime/request',{id:state.panel.extension,method:'webviewMessage',panel:id,message:event.data.message});}catch(error){this.host.notify(error.message,'error');}}
-  dispose(){this.disposed=true;this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
+  dispose(){this.disposed=true;this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
 }

@@ -17,8 +17,9 @@
 6. **Eventos de archivos:** willCreate/Rename/Delete aplica al host iniciador de
    WorkspaceEdit. No se difunde todavía a cada host para todas las operaciones de
    UI, terminal o disco. El contrato no se anuncia como equivalencia global.
-7. **Entorno/output/status:** faltan applyAtShellIntegration, todos los selectores
-   glob, selector completo de canales y control UI de LogLevel. Mutaciones de
+7. **Entorno/output/status:** R8 incorpora selector de canales, clear, hide/show,
+   niveles Off/Trace/Debug/Info/Warning/Error y onDidChangeLogLevel reales. Faltan applyAtShellIntegration, todos los selectores
+   glob y preferencias globales persistentes de nivel de registro. Mutaciones de
    entorno se aplican al crear nuevos procesos, no a shells que ya estaban abiertas.
 8. **Language model API:** se registran e invocan herramientas explícitas. No hay
    broker universal de modelos de extensiones ni acceso automático a credenciales
@@ -50,12 +51,10 @@
     agotó el tiempo al compartir carga con otras pruebas; recorridos posteriores
     secuenciales completaron. La causa no está demostrada y no se considera cerrada
     solo porque las repeticiones pasan. Se conserva instrumentación de recursos.
-15. **Distribución:** esta entrega prepara Windows desde el código actual. No
-    reconstruye aquí Linux/macOS ni firma/notariza esos paquetes. Los binarios
-    públicos anteriores de GitHub no se sobrescriben ni se etiquetan como nuevos.
-    El nuevo Windows se publica como asset alternativo UI-10ca227 dentro de R6,
-    con su propio manifiesto, verificación y SHA-256. Como conserva la revisión,
-    no se ofrece como actualización de versión automática: su instalación es manual.
+15. **Distribución:** R8 prepara un instalador y portable Windows con revisión
+    propia, manifiesto y SHA-256. No reconstruye aquí Linux/macOS ni firma/notariza
+    los paquetes. Las releases anteriores se conservan. El actualizador reconoce
+    la nueva revisión; la instalación se elige después de guardar el trabajo.
 
 Los estados de compatibilidad parcial siguen visibles. Las pruebas no sustituyen
 datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inventados.
@@ -66,3 +65,12 @@ datos del usuario por salidas, diagnósticos, versiones o respuestas de IA inven
 - El paisaje de inicio tiene movimiento de composición y luz CSS; la esfera conserva su render WebGL2 independiente. No se garantiza 60 FPS en cada GPU o pantalla.
 - Revisar, Explicar y Próximo paso ajustan el contexto y las instrucciones enviadas al proveedor existente. No hay un nuevo modelo predictivo entrenado ni una evaluación externa de calidad.
 - No se añaden nuevas APIs de VS Code en R7. Los límites de compatibilidad anteriores siguen vigentes.
+
+## Límites específicos de R8
+
+- Los planes de Melody admiten hasta 60 archivos UTF-8 y 400000 bytes propuestos, dentro del proyecto abierto. Un proyecto completo se genera en una subcarpeta. No incluye ejecución de comandos, instalación de paquetes, binarios, borrado recursivo de carpetas ni edición de secretos o dependencias instaladas.
+- Aplicar exige revisar el plan concreto. Los cambios externos y los búferes sin guardar bloquean la operación. Hay rollback frente a excepciones de escritura y copias persistentes en `.lumen/melody`; no es una transacción resistente a caídas del sistema. Deshacer desde el chat requiere la misma sesión y archivos que no hayan cambiado; las copias permanecen disponibles después de reiniciar.
+- La generación UI usa un transporte de prueba explícito. Se acredita la creación/borrado/recuperación de archivos, no que cualquier modelo produzca un proyecto correcto ni que sus dependencias compilen.
+- Depuración conserva los nodos al cerrar/reabrir y al cambiar inspector. Los muestreos inactivo y pausado sin cambios producen cero mutaciones; no certifican ausencia de flicker en cada motor, GPU o recorrido.
+- El error de selección/entrada se verifica con tres sesiones CMD ConPTY y teclado real del navegador. No cubre todos los programas TUI, shells WSL ni todos los IME.
+- No se declara 90 % global de VS Code. Las áreas pendientes 1–8 conservan sus límites; cada avance se acredita con contratos y pruebas concretos.

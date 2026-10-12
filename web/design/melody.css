@@ -89,6 +89,10 @@
 .companion-budget { font-size:10px; color:var(--muted); overflow-wrap:anywhere; line-height:1.6; padding-bottom:8px; }
 .melody-companion-card[data-state=analyzing] header>.icon { color:var(--accent-bright); }
 .melody-companion-card[data-state=error] small { color:var(--danger); }
+#assistant-panel[data-companion=active] #assistant-hero,#assistant-panel[data-companion=active] #ai-actions { display:none; }
+#assistant-panel[data-companion=active] .assistant-scroll { overflow-anchor:none; }
+#assistant-panel[data-companion=active] .melody-companion-card { margin-top:16px; }
+.melody-advice-mark { border-left:2px solid var(--accent-bright); margin-left:5px; width:3px!important; }
 
 .melody-tagline {
   padding: 0 20px 0 60px;

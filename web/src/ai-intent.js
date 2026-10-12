@@ -12,3 +12,10 @@ export function requestsRealtimeHelp(question){
   const text=String(question).replace(/```[\s\S]*?(?:```|$)/g,'').replace(/^\s*>.*$/gm,'').replace(/["“][^"”]*["”]/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   return /^(?:(?:por favor|puedes|please|can you)\s+)?(?:ayudame|acompaname|help me|assist me)\b/.test(text)&&/\b(?:en tiempo real|mientras (?:escribo|programo)|in real time|while (?:coding|i type))\b/.test(text)&&! /\b(?:no|sin|don't|do not|never)\b/.test(text);
 }
+
+// Project/resource requests go through a complete, reviewable disk plan.
+export function requestsFileChanges(question){
+  const text=String(question).replace(/```[\s\S]*?(?:```|$)/g,'').replace(/^\s*>.*$/gm,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  if(/\b(?:no|nunca|never|don't|do not)\b/.test(text))return false;
+  return /^(?:(?:por favor|puedes|quiero que|necesito que|please|can you)\s+)?(?:crea|crear|genera|generar|borra|borrar|elimina|eliminar|create|generate|delete|remove)\b/.test(text)&&/\b(?:archivo[s]?|carpeta[s]?|proyecto[s]?|file[s]?|folder[s]?|project[s]?)\b/.test(text);
+}

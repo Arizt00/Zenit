@@ -554,6 +554,10 @@
   gap: 12px;
 }
 
+.native-heading-actions {display:flex;align-items:center;gap:var(--space-2);flex:none;}
+:root[data-detached-panel=project] .native-window-heading {flex-wrap:wrap;gap:var(--space-2);}
+:root[data-detached-panel=project] .sidebar-content {flex:1;min-height:0;width:100%;}
+
 .native-window-heading strong {
   font-size: 14px;
   font-weight: 500;

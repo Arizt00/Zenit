@@ -120,7 +120,7 @@ module.exports=function createAPI(host,options){
   vscode.commands.registerCommand=(id,fn,ctx)=>{const bound=(...args)=>fn.apply(ctx,args);bound.vscodeCommand=true;return registerCommand(id,bound,id);};
   const treeViews=require('./extension_views.cjs')(vscode);
   const services=require('./extension_services.cjs')(vscode,host,options,event,makeDocument,documents);
-  require('./extension_ui.cjs')(vscode,host);
+  const ui=require('./extension_ui.cjs')(vscode,host);
   require('./extension_auth.cjs')(vscode,options.id);
   const portAttributes=require('./extension_ports.cjs')(vscode);
   const fileSystems=require('./extension_filesystem.cjs')(vscode,event,makeDocument,documents,globPattern);
@@ -216,5 +216,5 @@ module.exports=function createAPI(host,options){
   const updateEditors=require('./extension_editors.cjs')(vscode,options,event,makeDocument,documents,doc=>{current=doc;});
   const serviceEvent=services.event;services.event=(name,value)=>{if(name==='editor.state'){updateEditors(value);return;}if(name==='document.saved'){const uri=Uri.file(value.uri),old=documents.get(uri.toString());if(old&&old.getText()===value.text){old._revision=value.revision;old.isDirty=false;event('save').fire(old);}return;}return serviceEvent(name,value);};
   function didSave(){if(current){if(current.uri.scheme==='file')try{current._revision=require('node:crypto').createHash('sha256').update(fs.readFileSync(current.uri.fsPath)).digest('hex');}catch{}current.isDirty=false;event('save').fire(current);}}
-  return {vscode,context,services,syncDocument,willSave,didSave,treeViews,fileDecorations,portAttributes,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme)||fileSystems.has(value),readVirtual:async value=>{if(fileSystems.has(value))return fileSystems.read(value);const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
+  return {vscode,context,services,uiEvent:ui.event,syncDocument,willSave,didSave,treeViews,fileDecorations,portAttributes,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme)||fileSystems.has(value),readVirtual:async value=>{if(fileSystems.has(value))return fileSystems.read(value);const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
 };

@@ -104,6 +104,6 @@ let queue=Promise.resolve();
 readline.createInterface({input:process.stdin}).on('line',line=>{
   let message;try{message=JSON.parse(line);}catch{return;}
   if(message.type==='serviceResult'){const p=pendingServices.get(message.id);if(p){pendingServices.delete(message.id);clearTimeout(p.timer);message.error?p.reject(Error(message.error)):p.resolve(message.result);}return;}
-  if(message.type==='serviceEvent'){for(const b of bridges.values())b.services?.event(message.name,message.value);return;}
+  if(message.type==='serviceEvent'){for(const b of bridges.values()){b.uiEvent?.(message.name,message.value);b.services?.event(message.name,message.value);}return;}
   queue=queue.then(async()=>{let m;try{m=JSON.parse(line);const result=await request(m);const text=JSON.stringify({id:m.id,result},(_,v)=>v instanceof Uint32Array?[...v]:v);if(Buffer.byteLength(text)>2000000)throw Error('Respuesta de extensión demasiado grande.');write(text+'\n');}catch(error){write(JSON.stringify({id:m?.id,error:error.message})+'\n');}});
 });

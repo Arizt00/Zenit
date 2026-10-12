@@ -1,0 +1,20 @@
+{
+  "baseCommit": "dab665d24ef0b79d8490b40342462dd2cee16376",
+  "captureState": "R8 working tree before product commit; original references unchanged",
+  "python": {
+    "executed": 285,
+    "passed": 280,
+    "skipped": 5
+  },
+  "node": {
+    "passed": 71
+  },
+  "syntaxFiles": 56,
+  "debugOutputChecks": 12,
+  "filesPanelsTerminalChecks": 7,
+  "correctionChecks": 17,
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "aiTransport": "Explicit deterministic fixture; not an external model quality evaluation."
+}

@@ -79,16 +79,22 @@ export class MelodyCompanion {
     if(provider!==p.prefs['ai.provider']||model!==p.prefs['ai.model'])throw Error('El destino cambió. Activa de nuevo la ayuda con el proveedor actual.');
     this.workspace=await p.host.workspace?.();this.session.begin(this.session.snapshot());
   }
-  changed(){const view=this.platform.host.editor.view,position=view?.getPosition();if(this.prediction&&(view?.getModel()!==this.prediction.model||this.prediction.model.getVersionId()!==this.prediction.version||position?.lineNumber!==this.prediction.position.lineNumber||position?.column!==this.prediction.position.column)){this.prediction=null;view?.trigger('melody','editor.action.inlineSuggest.hide',{});}this.session.changed();}
+  clearAdvice(){if(this.advice){if(!this.advice.model.isDisposed())this.advice.model.deltaDecorations(this.advice.ids,[]);this.advice=null;}}
+  changed(){const view=this.platform.host.editor.view,position=view?.getPosition();if(this.advice&&(view?.getModel()!==this.advice.model||this.advice.model.getVersionId()!==this.advice.version))this.clearAdvice();if(this.prediction&&(view?.getModel()!==this.prediction.model||this.prediction.model.getVersionId()!==this.prediction.version||position?.lineNumber!==this.prediction.position.lineNumber||position?.column!==this.prediction.position.column)){this.prediction=null;view?.trigger('melody','editor.action.inlineSuggest.hide',{});}this.session.changed();}
   render(state){
     const enabled=this.session?.enabled||false;this.button.setAttribute('aria-pressed',String(enabled));this.button.innerHTML=icon('bulb')+(enabled?'Ayuda activa · detener':'Ayuda en tiempo real');
-    if(state.status==='off'){this.panel.hidden=true;this.prediction=null;this.platform.host.editor.view?.trigger('melody','editor.action.inlineSuggest.hide',{});return;}
+    const assistant=document.querySelector('#assistant-panel'),mode=state.status==='off'?'off':'active';if(assistant.dataset.companion!==mode)assistant.dataset.companion=mode;
+    if(state.status==='off'){this.panel.hidden=true;this.clearAdvice();this.prediction=null;this.platform.host.editor.view?.trigger('melody','editor.action.inlineSuggest.hide',{});return;}
     const opening=this.panel.hidden;this.panel.hidden=false;this.panel.dataset.state=state.status;if(opening)this.panel.scrollIntoView({block:'nearest',behavior:'instant'});const labels={waiting:state.waitMs>this.session.idleMs?`Nueva consulta en ${Math.ceil(state.waitMs/1000)} s como mínimo`:'Esperando una pausa al escribir',analyzing:'Analizando el búfer actual',ready:(state.prediction?'Sugerencia para ':'Consejo para ')+(state.path||''),error:'Consulta no disponible',limit:'Sesión completada'};this.panel.querySelector('small').textContent=labels[state.status]||state.status;
     this.panel.querySelector('.companion-budget').textContent=enabled?`${this.session.grant?.provider} · ${this.session.grant?.model} · ${this.session.remaining}/${this.session.maxRequests} consultas disponibles`:'';
     for(const button of this.panel.querySelectorAll('footer button'))button.disabled=state.status==='analyzing'||!enabled;
     if(state.text!==undefined)this.panel.querySelector('pre').textContent=state.text||'El proveedor no ha devuelto una sugerencia.';
     this.panel.querySelector('pre').classList.toggle('is-code',!!state.prediction);
     if(state.status==='waiting')this.panel.querySelector('pre').textContent='Los consejos aparecerán aquí. Se comprobará la revisión antes de mostrarlos.';
+    if(state.status==='ready'&&!state.prediction&&state.text?.trim()){
+      this.clearAdvice();const model=this.platform.host.editor.view?.getModel(),line=state.snapshot?.position?.lineNumber;
+      if(model&&model.getVersionId()===state.snapshot.version&&line>=1&&line<=model.getLineCount())this.advice={model,version:model.getVersionId(),ids:model.deltaDecorations([],[{range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,linesDecorationsClassName:'melody-advice-mark',hoverMessage:{value:'**Melody · propuesta para esta revisión**\n\n'+state.text.slice(0,1800),isTrusted:false}}}])};
+    }
     if(state.prediction){
       const code=state.text.match(/```[^\n]*\n([\s\S]*?)```/)?.[1];if(!code?.trim()||code.trimEnd().split('\n').length>8)return;
       this.panel.querySelector('pre').textContent=code.trimEnd();
@@ -96,5 +102,5 @@ export class MelodyCompanion {
       if(model&&position&&model.getVersionId()===state.snapshot.version&&position.lineNumber===state.snapshot.position?.lineNumber&&position.column===state.snapshot.position?.column){this.prediction={text:code.replace(/\n$/,''),model,version:model.getVersionId(),position};ed.view.focus();ed.view.trigger('melody','editor.action.inlineSuggest.trigger',{});}
     }
   }
-  dispose(){this.session.dispose();this.inline?.dispose();document.removeEventListener('visibilitychange',this.hidden);this.button.remove();this.panel.remove();}
+  dispose(){this.session.dispose();this.clearAdvice();this.inline?.dispose();document.removeEventListener('visibilitychange',this.hidden);this.button.remove();this.panel.remove();}
 }

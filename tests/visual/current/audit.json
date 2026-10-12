@@ -1,11 +1,11 @@
 {
-  "commit": "5e76eff6928e0f604673fcdb657b4ec7c8cecebe",
-  "trackedFiles": 544,
-  "sourceFiles": 249,
+  "commit": "dab665d24ef0b79d8490b40342462dd2cee16376",
+  "trackedFiles": 571,
+  "sourceFiles": 250,
   "stylesheets": [
     "/design.css"
   ],
-  "cssBytes": 432,
+  "cssBytes": 562,
   "importantDeclarations": 0,
   "transitionAll": 0,
   "sources": [
@@ -190,6 +190,7 @@
     "web/design/catalogue.css",
     "web/design/debug.css",
     "web/design/dialogs.css",
+    "web/design/laboratory.css",
     "web/design/melody.css",
     "web/design/pages.css",
     "web/design/shell.css",
@@ -262,7 +263,7 @@
   "references": [
     {
       "screen": "editor",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\editor.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\editor.png",
       "size": [
         1672,
         941
@@ -271,7 +272,7 @@
     },
     {
       "screen": "welcome",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\welcome.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\welcome.png",
       "size": [
         1672,
         941
@@ -280,7 +281,7 @@
     },
     {
       "screen": "search",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\search.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\search.png",
       "size": [
         1672,
         941
@@ -289,7 +290,7 @@
     },
     {
       "screen": "settings",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\settings.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\settings.png",
       "size": [
         1672,
         941
@@ -298,7 +299,7 @@
     },
     {
       "screen": "forge",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\forge.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\forge.png",
       "size": [
         1672,
         941
@@ -307,7 +308,7 @@
     },
     {
       "screen": "laboratory",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\laboratory.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\laboratory.png",
       "size": [
         1672,
         941
@@ -316,7 +317,7 @@
     },
     {
       "screen": "debug",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\debug.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\debug.png",
       "size": [
         1672,
         941
@@ -325,7 +326,7 @@
     },
     {
       "screen": "extensions",
-      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-refinement\\native-r7\\references\\extensions.png",
+      "file": "C:\\Users\\arist\\Documents\\Codex\\2026-10-12\\zenit-r8\\native-final\\references\\extensions.png",
       "size": [
         1672,
         941

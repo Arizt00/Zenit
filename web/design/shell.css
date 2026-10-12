@@ -1204,6 +1204,7 @@
 
 .app>.native-detached-content,.app>.native-auxiliary-surface {
   display: flex;
+  flex-direction: column;
   position: relative;
   flex: 1;
   min-height: 0;
@@ -1214,7 +1215,7 @@
 }
 
 .app>.native-detached-content {
-  height: calc(100vh - 72px);
+  height: auto;
 }
 
 @media (max-width:1550px) {

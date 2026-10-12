@@ -224,7 +224,17 @@ class ExtensionServices:
                 if item['owner'] is host:
                     del self.quickinputs[ident];self.emit('zenit.quickinput',id=ident,visible=False)
     def snapshot(self):
-        with self.lock:return {'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()]}
+        with self.lock:return {'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()], 'outputs':[{k:copy.deepcopy(v) for k,v in item.items() if k not in ('owner','text')} for item in self.outputs.values()]}
+    def output(self,extension,key,action=None,level=None):
+        with self.lock:
+            item=next((v for v in self.outputs.values() if v['extension']==extension and v['key']==key),None)
+            if item is None:raise ValueError('El canal de salida ya no está disponible.')
+            if action is None:return {k:copy.deepcopy(v) for k,v in item.items() if k!='owner'}
+            if action not in ('clear','show','logLevel'):raise ValueError('Acción de salida inválida.')
+            if action=='logLevel' and (not item.get('log') or type(level) is not int or not 0<=level<=5):raise ValueError('Nivel de registro inválido.')
+            owner=item['owner']
+        owner.event('output.control',{'key':key,'action':action,'level':level})
+        return {'sent':True}
     def has_interaction(self,host):
         with self.lock:return any(item['owner'] is host and item.get('visible') for item in self.quickinputs.values())
     def workspace_edit(self,ws,edit,documents=None):
@@ -331,8 +341,8 @@ class ExtensionServices:
                 key=(host,p['key'])
                 if method=='output.dispose':self.outputs.pop(key,None);self.emit('zenit.output',key=p['key'],extension=host.extension_id,disposed=True)
                 else:
-                    previous=self.outputs.get(key);item={**p,'owner':host,'extension':host.extension_id};self.outputs[key]=item
-                    if item.get('visible') or previous and previous.get('visible'):self.emit('zenit.output',**{k:v for k,v in item.items() if k!='owner'})
+                    previous=self.outputs.get(key);item={**p,'owner':host,'extension':host.extension_id,'revision':(previous or {}).get('revision',0)+1};self.outputs[key]=item
+                    if item.get('visible') or previous and previous.get('visible') or item.get('dismiss')!=(previous or {}).get('dismiss'):self.emit('zenit.output',**{k:v for k,v in item.items() if k!='owner'})
             return {'ok':True}
         if method in ('status.update','status.dispose'):
             if not isinstance(p.get('key'),str) or len(json.dumps(p))>32000:raise ValueError('Estado de extensión inválido.')

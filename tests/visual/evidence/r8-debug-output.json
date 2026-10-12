@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "One inspector and its file selector are visible; each file loads its own breakpoints",
+    "Idle debugging causes zero DOM mutations",
+    "Closing and reopening Debug retains the actual page nodes",
+    "Real Python next-step computes and displays answer = 42",
+    "Inspector switching preserves nodes and unchanged paused polling has zero mutations",
+    "Clearing the displayed output keeps the real debugger transcript",
+    "Invalid breakpoints produce an inline error without losing the session view",
+    "Debugging fits 1280x720, 1366x768 and 1920x1080",
+    "A real hidden extension output channel can be selected and read",
+    "The UI changes real LogOutputChannel.logLevel and fires its extension event",
+    "Clear dispatches to the channel and Off suppresses log writes",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "idleMutations": 0,
+  "pausedMutations": 0,
+  "realPython": true,
+  "realNodeExtension": true
+}
