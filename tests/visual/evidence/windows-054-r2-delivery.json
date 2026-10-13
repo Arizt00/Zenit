@@ -1,0 +1,13 @@
+{
+  "version": "0.5.4",
+  "revision": 2,
+  "sourceCommit": "d6f515690eeabd3c5d340b88ceb40fdc193f9fed",
+  "release": "https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.2",
+  "packagedNativeChecks": 15,
+  "installedNativeChecks": 15,
+  "installedSourceFiles": 110,
+  "profilePreserved": true,
+  "stableLaunchVerified": true,
+  "assets": 5,
+  "signed": false
+}

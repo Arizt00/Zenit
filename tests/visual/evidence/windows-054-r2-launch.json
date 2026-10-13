@@ -1,0 +1,14 @@
+{
+  "stableLauncher": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\Zenit.exe",
+  "activeRevision": 2,
+  "processes": [
+    {
+      "pid": 46036,
+      "executable": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\app-0.5.4-R2\\zenit.exe"
+    }
+  ],
+  "previousProcessesStillRunning": [
+    16480
+  ],
+  "method": "Actual installed stable launcher, active manifest and Windows process path; no user window terminated."
+}
