@@ -1,0 +1,23 @@
+{
+  "platform": "win32",
+  "revision": 6,
+  "checks": [
+    "Frozen package includes every extension API module, verified Blender geometry and project creation",
+    "Packaged runtime, Monaco and native JS bridge",
+    "Native C/C++ core loaded",
+    "Packaged Oniguruma WASM and contributed TextMate grammar colour actual Monaco tokens",
+    "Packaged TextMate tokenizer preserves multiline comments in the native webview",
+    "Separate Forge window executes unsaved UTF-8 Python in real PTY",
+    "Forge returns to Z\u00e9nit without replacing the source file",
+    "Native web preview receives unsaved HTML in its separate desktop window",
+    "Same preview control reattaches the live surface to the main native window",
+    "Native Lantern shares the active session without a duplicate execution",
+    "Native Lantern updates in vivo and returns without saving the source",
+    "Packaged Monaco sends actual visible editor ranges to the Node extension",
+    "Native development mode shares edits and reattaches with the same control",
+    "Packaged QuickInput receives native UI text and returns it to the real extension",
+    "Packaged dependency plan persists packages and shares real function exports with their parent"
+  ],
+  "errors": [],
+  "javascriptErrors": []
+}

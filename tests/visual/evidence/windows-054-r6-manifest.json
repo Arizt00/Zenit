@@ -1,0 +1,19 @@
+{
+  "version": "v0.5.4-preview.6",
+  "platform": "win32",
+  "architecture": "x86_64",
+  "sourceCommit": "f2c1a40bd82d8346b59b07136ae295c83add5066",
+  "signed": false,
+  "outputs": [
+    {
+      "name": "Zenit-0.5.4-R6-Windows-Setup.exe",
+      "bytes": 127110696,
+      "sha256": "0c199613773fa61d2b8568fd594b92c93b407e32399904602eb8e0cd4ff4670c"
+    },
+    {
+      "name": "Zenit-0.5.4-R6-Windows-Portable.zip",
+      "bytes": 75075146,
+      "sha256": "330c09c7bcbe03973b76fe9793d719b9c7fdb7cdce36c07da09c8459e308090b"
+    }
+  ]
+}
