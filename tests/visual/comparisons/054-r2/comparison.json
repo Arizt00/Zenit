@@ -14,13 +14,13 @@
     },
     "activity": {
       "channelMAE": [
-        10.887090110795295,
-        9.61843249317381,
-        12.113933817734367
+        10.886814902196075,
+        9.617715552527343,
+        12.113339545124042
       ],
-      "meanMAE": 10.873152140567825,
-      "lowFrequencyMAE": 9.611746758199848,
-      "lumaBlockSSIM": 0.6628505248310845,
+      "meanMAE": 10.872623333282485,
+      "lowFrequencyMAE": 9.609319742042855,
+      "lumaBlockSSIM": 0.663046466517105,
       "overlay": "activity-overlay.png",
       "diff": "activity-diff.png"
     }

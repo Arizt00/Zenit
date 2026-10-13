@@ -27,31 +27,31 @@
         },
         {
           "name": "shell",
-          "ms": 206
+          "ms": 123
         },
         {
           "name": "service",
-          "ms": 212
+          "ms": 129
         },
         {
           "name": "native",
-          "ms": 328
+          "ms": 194
         },
         {
           "name": "editor",
-          "ms": 328
+          "ms": 194
         },
         {
           "name": "extensions",
-          "ms": 982
+          "ms": 556
         },
         {
           "name": "welcome",
-          "ms": 1504
+          "ms": 879
         },
         {
           "name": "ready",
-          "ms": 1535
+          "ms": 913
         }
       ]
     },

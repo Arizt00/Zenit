@@ -7,7 +7,7 @@ y barra compacta de historial. Mantiene datos reales; las capturas son QA.
 | Vista | MAE (0-255) | SSIM por bloques |
 | --- | ---: | ---: |
 | welcome | 5.032 | 0.9576 |
-| activity | 10.873 | 0.6629 |
+| activity | 10.873 | 0.6630 |
 
 Las cifras no equivalen a un porcentaje de acabado. Overlays/diferencias en
 tests/visual/comparisons/054-r2. Los ocho goldens iniciales permanecen intactos.
