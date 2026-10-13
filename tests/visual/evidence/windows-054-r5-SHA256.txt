@@ -1,0 +1,2 @@
+afbca1da51387d1dcb8610b8671e8f7aea4a61dd62c285eae43694f8f49f17db  Zenit-0.5.4-R5-Windows-Setup.exe
+4585c8f66ff528595283fe2ae509e0bfbe08e0d0b06a8d600cf89fef0b8fb78e  Zenit-0.5.4-R5-Windows-Portable.zip

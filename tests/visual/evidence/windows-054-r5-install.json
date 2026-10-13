@@ -1,0 +1,27 @@
+{
+  "installed": true,
+  "revision": 5,
+  "directory": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\app-0.5.4-R5",
+  "previousPayloadPreserved": true,
+  "profileFilesPreserved": {
+    "settings.json": true,
+    "studio.json": true,
+    "session.json": true,
+    "extensions\\installed.json": true
+  },
+  "sharedSDKIndexPreserved": true,
+  "sdkSelectionsPreserved": [
+    "java",
+    "cpp",
+    "python"
+  ],
+  "existingUserSessionUntouched": true,
+  "previousUserProcesses": [
+    15916
+  ],
+  "previousUserProcessesStillRunning": [
+    15916
+  ],
+  "requestedEnglishLocaleApplied": true,
+  "otherSettingsPreserved": true
+}

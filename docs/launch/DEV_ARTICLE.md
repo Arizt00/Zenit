@@ -1,6 +1,6 @@
 ---
 title: "Zénit: a desktop workspace for code, AI assistance and real execution"
-published: false
+published: true
 tags: opensource, python, javascript, productivity
 description: "A first look at Zénit: Monaco, shared editor windows, scoped AI context and Forge’s real execution loop."
 cover_image: https://raw.githubusercontent.com/Arizt00/Zenit/main/docs/media/workspace-dark.png

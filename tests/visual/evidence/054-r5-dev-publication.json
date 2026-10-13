@@ -1,0 +1,16 @@
+{
+  "published": true,
+  "id": 4846359,
+  "url": "https://dev.to/aristote_motehernndez/zenit-a-desktop-workspace-for-code-ai-assistance-and-real-execution-1np8",
+  "title": "Z\u00e9nit: a desktop workspace for code, AI assistance and real execution",
+  "publishedAt": "2026-10-13T20:37:56Z",
+  "tags": [
+    "productivity",
+    "opensource",
+    "python",
+    "javascript"
+  ],
+  "coverImage": "https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fraw.githubusercontent.com%2FArizt00%2FZenit%2Fmain%2Fdocs%2Fmedia%2Fworkspace-dark.png",
+  "publicApiVerified": true,
+  "screenshots": "Real application gallery; cover and content URLs verified in the browser."
+}

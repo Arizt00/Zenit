@@ -1,0 +1,35 @@
+{
+  "suites": [
+    {
+      "suite": "search-windows",
+      "passes": 15
+    },
+    {
+      "suite": "session-profile",
+      "passes": 11
+    },
+    {
+      "suite": "files-ui",
+      "passes": 7
+    },
+    {
+      "suite": "themes",
+      "passes": 10
+    },
+    {
+      "suite": "icons",
+      "passes": 12
+    },
+    {
+      "suite": "visual-correction",
+      "passes": 21
+    },
+    {
+      "suite": "startup-activity",
+      "passes": 14
+    }
+  ],
+  "legacyLocale": "Spanish fixtures retained intentionally",
+  "r5EnglishChecks": 12,
+  "totalUIChecks": 102
+}

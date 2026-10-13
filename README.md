@@ -14,6 +14,8 @@
 
 [**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.5) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
 
+[Read the launch article on DEV Community](https://dev.to/aristote_motehernndez/zenit-a-desktop-workspace-for-code-ai-assistance-and-real-execution-1np8)
+
 </div>
 
 ![Zénit: Monaco editor, project explorer, terminal and Melody in a dark workspace](docs/media/workspace-dark.png)
