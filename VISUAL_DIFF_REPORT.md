@@ -1,5 +1,13 @@
 # Comparación visual · Zénit 0.5.4 R4
 
+Distribución R4: Windows reconstruido y verificado con 15 comprobaciones del
+paquete y 21 de la instalación congelada. El lanzador estable y los dos accesos
+directos resuelven `app-0.5.4-R4`; se conservan los archivos de perfil, versiones
+anteriores y el índice/selección del SDK compartido. La instalación compara 112
+archivos de fuente/recursos. Se publica instalador, portable y tres ficheros de
+verificación/SHA-256, con sus cinco digests remotos comprobados. Los ejecutables
+continúan sin firma digital. Linux/macOS no se reconstruyen en esta entrega.
+
 El editor exterior elimina el doble margen y usa toda la ventana. El terminal
 queda debajo, con separador y controles; las capturas demuestran salida real.
 Forge añade la acción del lenguaje activo y el terminal interactivo. Búsqueda

@@ -1,0 +1,19 @@
+{
+  "probe": {
+    "executable": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\app-0.5.4-R4\\zenit.exe",
+    "version": "0.5.4",
+    "revision": 4,
+    "bundle": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\app-0.5.4-R4\\_internal"
+  },
+  "shortcuts": [
+    {
+      "path": "C:\\Users\\arist\\OneDrive\\Escritorio\\Z\u00e9nit.lnk",
+      "target": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\Zenit.exe"
+    },
+    {
+      "path": "C:\\Users\\arist\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Z\u00e9nit.lnk",
+      "target": "C:\\Users\\arist\\AppData\\Local\\Programs\\LumenStudio\\Zenit.exe"
+    }
+  ],
+  "verified": true
+}

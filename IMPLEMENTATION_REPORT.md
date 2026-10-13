@@ -1,5 +1,13 @@
 # Implementación · Zénit 0.5.4 R4
 
+Distribución R4: Windows reconstruido y verificado con 15 comprobaciones del
+paquete y 21 de la instalación congelada. El lanzador estable y los dos accesos
+directos resuelven `app-0.5.4-R4`; se conservan los archivos de perfil, versiones
+anteriores y el índice/selección del SDK compartido. La instalación compara 112
+archivos de fuente/recursos. Se publica instalador, portable y tres ficheros de
+verificación/SHA-256, con sus cinco digests remotos comprobados. Los ejecutables
+continúan sin firma digital. Linux/macOS no se reconstruyen en esta entrega.
+
 R4 corrige el cierre de menús y la entrada del terminal entre ventanas. Añade
 búsqueda con posiciones exactas, editor exterior completo con controles de
 ejecución y terminal inferior separable, sincronización de cambios y tareas,
