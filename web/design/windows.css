@@ -20,6 +20,7 @@
 :root[data-detached-panel=editor] .native-editor-shell>.native-detached-content {border-radius:0!important;}
 .native-heading-actions {display:flex;align-items:center;gap:8px;}
 .native-editor-run {min-height:32px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:11px;}
+.native-heading-actions .native-editor-run>.icon {color:inherit;}
 .native-editor-main-terminal {display:flex;align-items:center;gap:7px;padding:0 8px;font-size:11px;min-height:32px;}
 .forge-file-run {background:var(--accent-soft);border-color:var(--border-strong);}
 :root[data-detached-panel=forge] .app {padding:0;gap:0;}
