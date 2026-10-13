@@ -1,0 +1,56 @@
+{
+  "revision": 5,
+  "date": "2026-10-13",
+  "capture": "Real Edge browser, Monaco and Windows ConPTY; isolated demo profile; no simulated AI gallery answers.",
+  "files": [
+    {
+      "file": "workspace-dark.png",
+      "width": 1672,
+      "height": 917,
+      "bytes": 239099,
+      "sha256": "285d114af039c0936d58d579b638f6fe514b3bd8ce9517a9f693213dcdabcde4"
+    },
+    {
+      "file": "workspace-day.png",
+      "width": 1672,
+      "height": 917,
+      "bytes": 222988,
+      "sha256": "da69edc1581bbba9874218d9147bf236a28ebc989905a3f036233cb36b98d22d"
+    },
+    {
+      "file": "home.png",
+      "width": 1672,
+      "height": 917,
+      "bytes": 1341727,
+      "sha256": "4b5ae2ccacc7c4a120aca674632b565d15bdbe8f49368037fd73851eaa7e7341"
+    },
+    {
+      "file": "activity.png",
+      "width": 1672,
+      "height": 917,
+      "bytes": 538274,
+      "sha256": "882daee6281a15263fc882b6c8642eec77b8bf0d1027771cb9da40e29af2c58e"
+    },
+    {
+      "file": "forge.png",
+      "width": 1060,
+      "height": 760,
+      "bytes": 97001,
+      "sha256": "b7d697f99a2a9e72c33c6243f01d24d8a5cf7870d13475b3f5f57f41f9617a67"
+    },
+    {
+      "file": "search.png",
+      "width": 1672,
+      "height": 917,
+      "bytes": 172567,
+      "sha256": "33a27a7f45a8fb2784615b92db30ec8fa939f1f3cb0c8f9f9e05f79df200a29c"
+    },
+    {
+      "file": "profile.png",
+      "width": 1672,
+      "height": 917,
+      "bytes": 309020,
+      "sha256": "337aaf49e46e2dd384eab194d68297bd465abe16c22ae5c6a4afc52e259a5be2"
+    }
+  ]
+}

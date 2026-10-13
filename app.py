@@ -128,7 +128,7 @@ def main():
             import json
             try:
                 initial = json.loads(first_launch.read_text(encoding='utf-8'))
-                application.features.prefs.update({'general.locale': initial.get('general.locale', 'es')})
+                application.features.prefs.update({'general.locale': initial.get('general.locale', 'en')})
             except (OSError, ValueError): pass
         server = LumenServer(args.port, application)
     except (OSError, ValueError) as exc:

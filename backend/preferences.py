@@ -52,7 +52,7 @@ SCHEMA = {
  'general.restoreWorkspace': ('general',True,'Reabrir la última carpeta','Reopen the last folder','bool'),
  'updates.automatic': ('general',True,'Descargar actualizaciones de GitHub automáticamente','Download GitHub updates automatically','bool'),
  'hacker.enabled': ('terminal',False,'Modo Forge','Forge mode','bool'),
- 'general.locale': ('general','es','Idioma de la interfaz','Interface language',['es','en']),
+ 'general.locale': ('general','en','Idioma de la interfaz','Interface language',['es','en']),
  'general.showWelcome': ('general',True,'Mostrar inicio al abrir Zénit','Show welcome when Zénit starts','bool'),
  'general.restoreLayout': ('general',True,'Recordar la distribución de paneles','Remember panel layout','bool'),
  'appearance.extensionTheme': ('appearance','','Tema de extensión activo','Active extension theme','string'),

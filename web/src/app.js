@@ -397,6 +397,7 @@ async function sendAI(question){
 }
 function beginAiAction(action){
   const prompts={generate:'Propón una mejora concreta para este archivo y proporciona el código necesario.',refactor:'Refactoriza este código conservando su comportamiento. Explica los cambios antes de presentar el código.',explain:'Explica este código, su flujo de ejecución y las decisiones importantes.',fix:'Analiza este código y busca problemas reales. Distingue errores confirmados de posibles riesgos y propone correcciones.'};
+  if(platformUI?.prefs['general.locale']==='en')Object.assign(prompts,{generate:'Propose a concrete improvement to this file and provide the code.',refactor:'Refactor this code while preserving its behavior. Explain the changes before providing code.',explain:'Explain this code, its execution flow and important decisions.',fix:'Analyze this code for actual problems. Distinguish confirmed errors from possible risks and propose fixes.'});
   $('#ai-input').value=prompts[action]||'';if(!platformUI&&!service.ai?.connected)aiSettingsDialog();else $('#ai-input').focus();
 }
 function newChat(){if(platformUI)guard(()=>platformUI.clearAI())();if(aiBusy){notify('Espera a que termine la respuesta antes de abrir otra conversación.');return;}$('#chat-messages').textContent='';$('#chat-messages').classList.add('hidden');$('#assistant-hero').classList.remove('hidden');$('#ai-actions').classList.remove('hidden');$('#assistant-body').classList.remove('chatting');$('#ai-input').value='';}

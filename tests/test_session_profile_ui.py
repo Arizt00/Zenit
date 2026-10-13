@@ -21,7 +21,7 @@ def main():
         external=base/'external.py';external.write_text('# external source\n')
         app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True
         app.features.studio.update({'onboarded':True,'displayName':'Perfil de prueba','recent':[{'path':'main.py','workspace':str(ws),'openedAt':'2026-10-13T17:29:00Z'},{'path':'keep.py','workspace':str(ws),'openedAt':'2026-10-12T17:29:00Z'}]})
-        app.features.prefs.update({'security.confirmRoutineActions':False,'general.showWelcome':True,'appearance.motion':True,'updates.automatic':False,'ai.provider':'ollama','ai.model':'qa-fixture'})
+        app.features.prefs.update({'general.locale':'es','security.confirmRoutineActions':False,'general.showWelcome':True,'appearance.motion':True,'updates.automatic':False,'ai.provider':'ollama','ai.model':'qa-fixture'})
         gate=threading.Event();gate.set()
         def transport(job,messages,system,hkey):
             requests.append(messages[-1]['content']);gate.wait(15)

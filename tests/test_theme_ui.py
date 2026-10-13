@@ -13,7 +13,7 @@ def main():
   source=args.installed_from.resolve();index=json.loads((source/'installed.json').read_text(encoding='utf-8-sig'));selected={k:v for k,v in index.items() if k in ('vira.vsc-vira-theme','zhuangtongfa.material-theme','BeardedBear.beardedtheme')};assert 'zhuangtongfa.material-theme' in selected
   for item in selected.values():
    path=(source/item['directory']).resolve();assert path.parent==source and not path.is_symlink();shutil.copytree(path,dest/item['directory'])
-  (dest/'installed.json').write_text(json.dumps(selected),encoding='utf-8');app=Application(ROOT,ws,data_dir=profile);app.workspace.trusted=True;app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.showWelcome':False,'appearance.motion':False,'updates.automatic':False,'extensions.checkUpdatesOnOpen':False})
+  (dest/'installed.json').write_text(json.dumps(selected),encoding='utf-8');app=Application(ROOT,ws,data_dir=profile);app.workspace.trusted=True;app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.locale':'es','general.showWelcome':False,'appearance.motion':False,'updates.automatic':False,'extensions.checkUpdatesOnOpen':False})
   if 'vira.vsc-vira-theme' not in selected:
    assert args.vira_vsix,'Pass the explicit QA Vira VSIX when it is no longer installed.';store=app.features.extensions;store.install(store.inspect_local(str(args.vira_vsix.resolve()))['ticket'],True)
   server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/Arizt00/Zenit/discussions
+    about: Ask for help or discuss your workflow.

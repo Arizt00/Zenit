@@ -10,6 +10,7 @@ import {MelodyVoiceUI} from './melody-voice.js';
 import {ThemePicker,IconThemePicker} from './theme-picker.js';
 import {terminalTheme} from './theme-tokens.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
+import {melodyContext} from './melody-context.js';
 
 const PLATFORM_CATEGORIES=[
  ['general','globe','General','General'],['appearance','sun','Apariencia','Appearance'],['editor','code','Editor de texto','Text editor'],
@@ -422,19 +423,21 @@ export class LumenPlatform {
     const filePlan=edit!==true&&requestsFileChanges(question);
     const live=!filePlan&&(edit===true||requestsLiveEdit(question));
     if(filePlan&&!await this.host.ensureTrust())return;
-    const content=filePlan?'':editor.getValue();const file=editor.current||'';
+    const fullContent=editor.getValue(),selectedContent=editor.getSelection();
+    const content=filePlan?'':melodyContext({file:fullContent,selection:selectedContent,scope:mode,editing:live}).content;const file=editor.current||'';
     if(live&&!file)throw new Error('Abre o crea un archivo antes de autorizar la edición.');
     if(content.length>64000)throw new Error(this.t('Selecciona un fragmento menor de 64000 caracteres.','Select less than 64000 characters.'));
     const consent=await this.confirmRoutine(this.t('Revisar envío al modelo','Review model request'),filePlan?`Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu orden, el texto actual de los archivos que nombras y hasta 300 nombres del proyecto. Cada cambio tendrá una copia de recuperación y deshacer.`:this.t(
       `Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu pregunta y ${content.length} caracteres ${content?'de '+file:'de código'}. El proveedor puede aplicar sus propias condiciones y costes. No se enviará el resto del proyecto. ${live?'Has solicitado edición: confirmarás el archivo antes de aplicar cambios en vivo.':'Esta petición es de consulta y no modificará tus archivos.'}`,
       `Destination: ${PLATFORM_NAMES[provider]} · ${model}. Your question and ${content.length} characters ${content?'from '+file:'of code'} will be sent. Provider terms and charges may apply. The rest of the project will not be sent. ${live?'You requested editing: confirm the file before live changes begin.':'This request is read-only and will not modify your files.'}`),this.t('Enviar esta petición','Send this request'));
     if(!consent)return;
-    if(!filePlan&&(file!==(editor.current||'')||content!==editor.getValue()))throw new Error('El archivo cambió durante la confirmación. Vuelve a enviar la petición con el contexto actual.');
+    if(!filePlan&&(file!==(editor.current||'')||fullContent!==editor.getValue()||mode==='selection'&&selectedContent!==editor.getSelection()))throw new Error('The file or selection changed while confirming. Send the request again with the current context.');
     if(live&&!await this.confirmRoutine('Autorizar edición en vivo',`La IA podrá reemplazar, añadir y borrar código solamente en ${file} para esta petición. Podrá continuar mientras trabajas en otro archivo. Si modificas o cierras ${file}, se detendrá. Se suspende el autoguardado de ese archivo y Ctrl+Z permite deshacer.`, 'Permitir esta edición'))return;
-    if(!filePlan&&(file!==(editor.current||'')||content!==editor.getValue()))throw new Error('El archivo cambió. Repite la petición.');
+    if(!filePlan&&(file!==(editor.current||'')||fullContent!==editor.getValue()||mode==='selection'&&selectedContent!==editor.getSelection()))throw new Error('The file or selection changed. Send the request again.');
     const userQuestion=question;
     if(live)question+='\n\nEDICIÓN EN VIVO AUTORIZADA: devuelve el contenido COMPLETO del archivo en un único bloque de código con triple acento grave. Sin explicaciones dentro del bloque. El usuario verá los tokens aplicarse a su búfer.';
-    const snapshot={path:editor.current,text:editor.getValue(),version:editor.view?.getModel?.()?.getVersionId()};this.aiSnapshot=snapshot;
+    const scope=melodyContext({file:fullContent,selection:selectedContent,scope:mode,editing:live}).kind;
+    const snapshot={path:editor.current,text:editor.getValue(),version:editor.view?.getModel?.()?.getVersionId(),scope,selection:scope==='selection'?{...editor.view.getSelection()}:null,selectedText:scope==='selection'?selectedContent:''};this.aiSnapshot=snapshot;
     const generation=++this.aiGeneration;
     if(this.aiStarting||this.aiJob)return;this.aiStarting=true;this.filePlanRunning=filePlan;let result;try{if(filePlan){clearTimeout(this.saveTimer);await this.melodyFiles.capture();}result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation,filePlan});}finally{this.aiStarting=false;if(!result)this.filePlanRunning=false;}
     this.aiJob=result.id;document.getElementById('ai-input').value='';document.querySelector('.send-button').disabled=true;document.getElementById('ai-cancel-generation').hidden=false;
@@ -476,6 +479,13 @@ export class LumenPlatform {
     const editor=this.host.editor;if(!editor.current)throw new Error(this.t('Abre un archivo primero.','Open a file first.'));
     snapshot=snapshot||{path:editor.current,text:editor.getValue()};
     if(editor.current!==snapshot.path||editor.getValue()!==snapshot.text)throw new Error(this.t('El archivo cambió desde que se preparó esta propuesta. Revísalo de nuevo con el contexto actual.','The file changed since this proposal was prepared. Review again with the current context.'));
+    if(snapshot.scope==='selection'&&snapshot.selection&&window.monaco){
+      this.host.modal(this.t('Revisar selección','Review selection'),`<p>${this.e(snapshot.path)} · Only the captured selection will change. The rest of your file stays intact.</p><div class="code-review-grid"><section><h4>Original selection</h4><pre>${this.e(snapshot.selectedText)}</pre></section><section><h4>Proposed code</h4><pre>${this.e(proposed)}</pre></section></div><div class="modal-actions"><button class="secondary-button" data-action="close-modal">Cancel</button><button class="primary-button" id="review-selection">Replace selection</button></div>`,{wide:true});
+      document.getElementById('review-selection').onclick=()=>this.safe(()=>{
+        if(editor.current!==snapshot.path||editor.getValue()!==snapshot.text)throw Error('The file changed. Review the current selection again.');
+        const r=snapshot.selection;editor.view.pushUndoStop();editor.view.executeEdits('melody-selection',[{range:new monaco.Range(r.startLineNumber,r.startColumn,r.endLineNumber,r.endColumn),text:proposed,forceMoveMarkers:true}]);editor.view.pushUndoStop();this.host.closeModal();this.closePage();editor.view.focus();this.host.notify('Selection updated. Undo is available before saving.');
+      });return;
+    }
     this.host.modal(this.t('Revisión de código','Code review'),`<p>${this.e(snapshot.path)} · ${this.t('Se modificará el búfer, no el disco. Guarda después de revisar.','Only the editor buffer will change. Review before saving.')}</p><div class="code-review-grid"><section><h4>${this.t('Archivo actual','Current file')}</h4><pre>${this.e(snapshot.text)}</pre></section><section><h4>${this.t('Propuesta','Proposed code')}</h4><pre>${this.e(proposed)}</pre></section></div><div class="platform-notice warning"><p>${this.t('Un bloque puede ser solo un fragmento. Sustituir el archivo reemplaza TODO su contenido.','A code block may be only a fragment. Replacing the file replaces ALL its content.')}</p></div><div class="modal-actions"><button class="secondary-button" id="review-insert">${this.t('Insertar en el cursor','Insert at cursor')}</button><button class="primary-button" id="review-replace">${this.t('Reemplazar archivo','Replace file')}</button></div>`,{wide:true});
     const apply=(replace)=>{
       if(editor.current!==snapshot.path||editor.getValue()!==snapshot.text)throw new Error(this.t('El búfer cambió. Se ha cancelado la aplicación.','Buffer changed. Application cancelled.'));
@@ -576,7 +586,7 @@ export class LumenPlatform {
     try{
       const data=await this.api('/terminals/read?id='+terminal.id+'&offset='+terminal.offset);terminal.offset=data.offset;
       if(data.data){if(terminal.xterm)terminal.xterm.write(data.data);else{terminal.output.textContent=(terminal.output.textContent+this.stripTerminal(data.data)).slice(-180000);terminal.output.scrollTop=terminal.output.scrollHeight;}}
-      if(data.closed){terminal.closed=true;terminal.input.close();this.renderActiveTerminal();return;}
+      if(data.closed){terminal.closed=true;terminal.code=data.code;terminal.input.close();this.renderActiveTerminal();return;}
     }catch(error){terminal.closed=true;terminal.input.close(error);if(terminal.output)terminal.output.textContent+='\n'+error.message;this.renderActiveTerminal();return;}
     this.later(()=>this.pollTerminal(terminal),document.hidden?1000:80);
   }

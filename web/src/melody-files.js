@@ -6,7 +6,7 @@ export class MelodyFilesUI{
   constructor(platform){this.platform=platform;this.host=platform.host;}
   record(path){const normalize=p=>{const name=p.replace(/\\/g,'/');return /^[a-z]:\//i.test(name)?name.toLowerCase():name;};const key=[...this.host.editor.models.keys()].find(key=>normalize(key)===normalize(path));return this.host.editor.models.get(key);}
   read(path){const query='?path='+encodeURIComponent(path);return /^(?:[A-Za-z]:[\\/]|\/)/.test(path)?this.platform.api('/extensions/file'+query):this.host.api('/file'+query);}
-  request(){const input=document.getElementById('ai-input');input.value='Crea un proyecto completo en una nueva carpeta con ';input.focus();this.host.notify('Puedes crear un proyecto, modificar un archivo o pedir su borrado por nombre. Cada cambio conserva recuperación y deshacer.');}
+  request(){const input=document.getElementById('ai-input');input.value=this.platform.t('Crea un proyecto completo en una nueva carpeta con ','Create a complete project in a new folder with ');input.focus();this.host.notify(this.platform.t('Puedes crear un proyecto, modificar un archivo o pedir su borrado por nombre. Cada cambio conserva recuperación y deshacer.','Create a project, edit a file, or request deletion by name. Changes retain recovery and undo.'));}
   async capture(){
     const desktop=this.host.studio?.desktop;
     if(desktop){for(const path of this.host.editor.models.keys())await desktop.share(path);await desktop.publish();await desktop.bufferWrites;}

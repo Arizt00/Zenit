@@ -1,0 +1,23 @@
+{
+  "repository": "https://github.com/Arizt00/Zenit",
+  "visibility": "public",
+  "description": "A desktop coding workspace with Monaco, interactive terminals, Melody AI and Forge. Build across windows. Apache-2.0.",
+  "homepage": "https://github.com/Arizt00/Zenit/releases",
+  "topics": [
+    "ai-assistant",
+    "code-editor",
+    "debugger",
+    "desktop-app",
+    "developer-tools",
+    "ide",
+    "javascript",
+    "monaco-editor",
+    "open-source",
+    "python",
+    "terminal",
+    "webview2"
+  ],
+  "issues": true,
+  "discussions": true,
+  "verified": true
+}

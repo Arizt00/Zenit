@@ -58,8 +58,8 @@ class PlatformCase(unittest.TestCase):
     def test_defaults_include_no_cloud_or_hardware(self):
         self.assertFalse(self.f.prefs.get('security.cloudAI'));self.assertFalse(self.f.prefs.get('hardware.enabled'));self.assertGreaterEqual(len(SCHEMA),40)
     def test_settings_validated_atomically(self):
-        with self.assertRaises(ValueError):self.f.prefs.update({'general.locale':'en','editor.fontSize':999})
-        self.assertEqual(self.f.prefs.get('general.locale'),'es')
+        with self.assertRaises(ValueError):self.f.prefs.update({'general.locale':'es','editor.fontSize':999})
+        self.assertEqual(self.f.prefs.get('general.locale'),'en')
     def test_unknown_setting_rejected(self):
         with self.assertRaises(ValueError):self.f.prefs.update({'apiKey':'secret'})
     def test_bool_is_not_number(self):

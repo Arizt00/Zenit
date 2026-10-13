@@ -9,7 +9,7 @@ if sys.platform=='win32':hidden+=['winpty']
 if sys.platform.startswith('linux'):hidden+=['qtpy','PySide6.QtWebEngineWidgets','PySide6.QtWebEngineCore','PySide6.QtWebChannel']
 for package in ('webview','keyring','copilot'):
     if importlib.util.find_spec(package):hidden+=collect_submodules(package)
-data=[(str(ROOT/'web'),'web'),(str(ROOT/'licenses'),'licenses'),(str(ROOT/'README.md'),'.'),(str(ROOT/'LICENSE'),'.'),(str(ROOT/'THIRD_PARTY_NOTICES.md'),'.'),(str(ROOT/'LEEME_PRIMERO.txt'),'.'),(str(ROOT/'config/runtime-defaults.json'),'config'),(str(ROOT/'debugger-support'),'debugger-support'),(str(ROOT/'examples/lantern/counter.c'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.cpp'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.n'),'examples/lantern'),(str(ROOT/'backend/LumenJavaDebugger.java'),'backend'),(str(ROOT/'backend/emma_bridge.mjs'),'backend'),(str(ROOT/'backend/lantern_memory.cjs'),'backend'),(str(ROOT/'backend/extension_host.cjs'),'backend'),(str(ROOT/'backend/extension_api.cjs'),'backend')]
+data=[(str(ROOT/'web'),'web'),(str(ROOT/'licenses'),'licenses'),(str(ROOT/'README.md'),'.'),(str(ROOT/'LICENSE'),'.'),(str(ROOT/'NOTICE'),'.'),(str(ROOT/'THIRD_PARTY_NOTICES.md'),'.'),(str(ROOT/'LEEME_PRIMERO.txt'),'.'),(str(ROOT/'config/runtime-defaults.json'),'config'),(str(ROOT/'debugger-support'),'debugger-support'),(str(ROOT/'examples/lantern/counter.c'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.cpp'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.n'),'examples/lantern'),(str(ROOT/'backend/LumenJavaDebugger.java'),'backend'),(str(ROOT/'backend/emma_bridge.mjs'),'backend'),(str(ROOT/'backend/lantern_memory.cjs'),'backend'),(str(ROOT/'backend/extension_host.cjs'),'backend'),(str(ROOT/'backend/extension_api.cjs'),'backend')]
 data.append((str(ROOT/'tools/asm_worker.py'),'tools'))
 data.append((str(ROOT/'examples/asm/x86_64_sum.s'),'examples/asm'))
 data.append((str(ROOT/'tools/machine_console.py'),'tools'))
@@ -25,8 +25,9 @@ already={Path(source).name for source,destination in data if destination=='backe
 for name in ('emma_voice_bridge.mjs','emma_voice_worker.py'):data.append((str(ROOT/'backend'/name),'backend'))
 for source in (ROOT/'backend').glob('extension_*.cjs'):
     if source.name not in already:data.append((str(source),'backend'))
-for name in ('PREVIEW_054_R4.md','VSCODE_PARITY_054_R4.md','PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
+for name in ('PREVIEW_054_R5.md','VSCODE_PARITY_054_R5.md','GETTING_STARTED.md','STATUS.md','ROADMAP.md','PREVIEW_054_R4.md','VSCODE_PARITY_054_R4.md','PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
     data.append((str(ROOT/'docs'/name),'docs'))
+data.extend([(str(ROOT/'CONTRIBUTING.md'),'.'),(str(ROOT/'docs/media'),'docs/media')])
 # Only the shipped examples belong in the bundle, never compiler/profile caches.
 for file in (ROOT/'workspace').rglob('*'):
     relative=file.relative_to(ROOT)
@@ -50,4 +51,4 @@ exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='zenit',debug=False,bootload
 python_exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='zenit-python',debug=False,bootloader_ignore_signals=False,strip=False,version=str(ROOT/'packaging/version.txt') if sys.platform=='win32' else None,upx=False,console=True)
 collection=COLLECT(exe,python_exe,a.binaries,a.datas,strip=False,upx=False,name='Zenit')
 if sys.platform=='darwin':
-    app=BUNDLE(collection,name='Zenit.app',icon=str(icon) if icon.exists() else None,bundle_identifier='studio.lumen.ide',info_plist={'CFBundleShortVersionString':'0.5.4','CFBundleVersion':'0.5.4.4','NSHighResolutionCapable':True,'LSMinimumSystemVersion':'14.0','NSHumanReadableCopyright':'Zénit. Licencia propietaria de preview.'})
+    app=BUNDLE(collection,name='Zenit.app',icon=str(icon) if icon.exists() else None,bundle_identifier='studio.lumen.ide',info_plist={'CFBundleShortVersionString':'0.5.4','CFBundleVersion':'0.5.4.5','NSHighResolutionCapable':True,'LSMinimumSystemVersion':'14.0','NSHumanReadableCopyright':'Copyright 2026 L4CE and Zénit contributors. Apache-2.0; component licenses retained.'})

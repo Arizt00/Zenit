@@ -10,7 +10,7 @@ def main():
  def passed(name):checks.append(name);print('PASS',name,flush=True)
  with tempfile.TemporaryDirectory(prefix='zenit-correction-') as tmp:
   base=Path(tmp);ws=base/'project';ws.mkdir();(ws/'main.js').write_text('const value=41;\nconsole.log(value+1);\n');(ws/'other.py').write_text('print("hola ñ")\n',encoding='utf-8')
-  app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True;app.features.studio.update({'onboarded':True,'displayName':'Usuario ñ'});app.features.prefs.update({'hacker.enabled':True,'appearance.motion':True,'general.showWelcome':True})
+  app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True;app.features.studio.update({'onboarded':True,'displayName':'Usuario ñ'});app.features.prefs.update({'general.locale':'es','hacker.enabled':True,'appearance.motion':True,'general.showWelcome':True})
   server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
   try:
    with sync_playwright() as pw:

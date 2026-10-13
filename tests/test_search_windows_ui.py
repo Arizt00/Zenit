@@ -14,7 +14,7 @@ def main():
         (ws/'src/main.py').write_text('😀 needle\n  needle\nAlpha alphabet ALPHA\n',encoding='utf-8');(ws/'note.txt').write_text('needle\n');external=base/'external.py';external.write_text('print("EXTERNAL_RUN_R4")\n')
         (ws/'ConsoleProbe.java').write_text('public class ConsoleProbe { public static void main(String[] args) { var c=System.console(); if(c==null) throw new IllegalStateException("No console"); System.out.println("FORGE_JAVA_TTY_OK"); System.out.println("FORGE_INPUT_"+c.readLine()); }}',encoding='utf-8')
         app=Application(ROOT,ws,data_dir=base/'profile');app.features.studio.update({'onboarded':True,'displayName':'Perfil de prueba'})
-        app.features.prefs.update({'security.confirmRoutineActions':False,'general.showWelcome':False,'updates.automatic':False,'terminal.defaultProfile':'cmd'})
+        app.features.prefs.update({'general.locale':'es','security.confirmRoutineActions':False,'general.showWelcome':False,'updates.automatic':False,'terminal.defaultProfile':'cmd'})
         app.workspace.trusted=True;server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}'
         try:
             with sync_playwright() as pw:

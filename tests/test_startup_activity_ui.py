@@ -24,7 +24,7 @@ def main():
             (ws/name).write_text(source,encoding='utf-8')
         app=Application(ROOT,ws,data_dir=Path(tmp)/'profile')
         app.features.studio.update({'onboarded':True,'displayName':'Perfil de prueba'})
-        app.features.prefs.update({'updates.automatic':False,'appearance.motion':False})
+        app.features.prefs.update({'general.locale':'es','updates.automatic':False,'appearance.motion':False})
         server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
         base=f'http://127.0.0.1:{server.server_port}'
         try:

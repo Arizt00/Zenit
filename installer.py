@@ -73,7 +73,7 @@ class Installer:
         packages = options.get('packages', [])
         if not isinstance(packages, list) or any(p not in PACKAGES for p in packages) or len(packages) != len(set(packages)):
             raise ValueError('Paquetes no válidos.')
-        if options.get('locale', 'es') not in ('es', 'en'): raise ValueError('Idioma no válido.')
+        if options.get('locale', 'en') not in ('es', 'en'): raise ValueError('Invalid language.')
         if not (self.payload / 'zenit.exe').is_file(): raise ValueError('No se encuentra el programa que debe instalarse.')
         with self.lock:
             if self.state['status'] == 'installing': raise ValueError('La instalación ya está en curso.')
@@ -204,9 +204,9 @@ class Installer:
                 temporary_launcher=target/'.Zenit-launcher.new'
                 shutil.copy2(launcher,temporary_launcher)
                 temporary_launcher.replace(target/'Zenit.exe')
-            atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'es')})
+            atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'en')})
             # The app consumes this only if there is no profile yet.
-            atomic_json(destination / 'first-launch.json', {'general.locale': options.get('locale', 'es')})
+            atomic_json(destination / 'first-launch.json', {'general.locale': options.get('locale', 'en')})
             if options.get('shortcuts', True): self._shortcuts(destination, options.get('desktop', False))
             if options.get('register', True): self._register(destination)
             self._install_tools(options.get('packages', []))

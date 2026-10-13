@@ -1,66 +1,164 @@
-# Zénit 0.5.4 R4
+<div align="center">
 
-Última entrega: [instalador Windows 0.5.4 R4](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.4/Zenit-0.5.4-R4-Windows-Setup.exe) · [portable](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.4/Zenit-0.5.4-R4-Windows-Portable.zip) · [cambios y límites](docs/PREVIEW_054_R4.md). Editor exterior a tamaño completo con Ejecutar, terminal inferior separable y opción de usar el principal. Sincronización de documentos, guardado, apariencia y tareas; búsqueda con filtros y posiciones exactas; cierre de menús corregido. Forge prepara y ejecuta el lenguaje del archivo en PTY. Melody añade comparación Monaco y conserva recuperación/deshacer. Consulta [implementación](IMPLEMENTATION_REPORT.md), [comparación visual](VISUAL_DIFF_REPORT.md), [paridad](docs/VSCODE_PARITY_054_R4.md) y [límites](KNOWN_LIMITATIONS.md).
+<img src="web/assets/lumen.svg" width="56" alt="Zénit logo">
 
-Para activar consejos, pulsa «Ayuda en tiempo real» o pídelo en Melody. «Sugerir siguiente código» propone una continuación en Monaco para aceptar con Tab. En Ajustes → Seguridad puedes usar modo directo para evitar avisos rutinarios; los planes y conflictos se siguen revisando.
+# Zénit
 
-Zénit es un IDE de escritorio con editor Monaco, terminal integrada, depuración por lenguaje, Lantern Live y asistencia de IA. R6 ejecuta gramáticas TextMate de extensiones con Oniguruma local y mejora el laboratorio ASM con sugerencias por CPU, vista decimal y un ejemplo x86-64 de bucles y pila. Consulta [los cambios y límites de R6](docs/PREVIEW_053_R6.md).
+### A calmer place to build.
 
-## Usar Zénit
+**Code, execution and AI assistance in one desktop workspace — even across windows.**
 
-Instalador `.exe` para Windows 10/11 x64 (Edge WebView2), `.deb` y portable para Linux x64 compatible con Ubuntu 24.04. La pipeline prepara `.dmg` separados para macOS Apple Silicon e Intel; su publicación queda pendiente de construcción y verificación en Mac. Los paquetes incluyen el runtime Python del IDE; los compiladores y SDK de tus proyectos se preparan aparte. Los ejecutables de esta preview no tienen firma Authenticode ni notarización de Apple. Consulta [los paquetes de 0.5.3 R6](docs/PREVIEW_053_R6.md) y [las instrucciones de cada plataforma](docs/PREVIEW_R8.md).
+[![Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-7b61ff)](LICENSE)
+[![Public preview](https://img.shields.io/badge/preview-0.5.4_R5-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.5)
+[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.5/Zenit-0.5.4-R5-Windows-Setup.exe)
 
-El primer inicio permite elegir tema, idioma, distribución y perfil. Una instalación nueva comienza sin archivos recientes inventados. Los paneles principales usan superficies opacas con colores del tema, sintaxis integrada e iridiscencia animada configurable.
+[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.5) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
 
-## Trabajo diario
+</div>
 
-- Pestañas agrupadas por carpeta, selector de archivos, menús contextuales, renombrado, eliminación recuperable y apertura en otra ventana.
-- Proyecto, Asistente y Terminal pueden cerrarse, recuperarse, acoplarse, flotar dentro del área de trabajo o abrirse en ventanas nativas independientes en otro monitor.
-- Dos archivos de código simultáneos con Ctrl+\. El editor separado comparte el búfer sin guardar y detecta cambios simultáneos.
-- Arrastra archivos a los bordes para dividir el editor en filas o columnas; arrastra pestañas y encabezados de panel fuera de Zénit para separarlos en otra ventana o monitor.
-- Estilos persistentes con herramientas propias: desarrollo general, vista web sin guardar, exploración CSV/TSV y paleta/contraste para diseño.
-- Forge: espacio de ejecución y depuración con contexto del archivo, herramientas detectadas, Python desde el búfer actual y C con GCC y GDB integrado.
-- La última carpeta y las extensiones instaladas se conservan; los motores previamente autorizados se recuperan en proyectos de confianza.
-- Actualizaciones de GitHub: comprobación al iniciar y cada seis horas, descarga automática configurable e instalación elegida por el usuario.
-- Ruta superior ligada al archivo activo. Búsqueda de archivos, texto y comandos.
-- Autoguardado configurable o guardado manual, sin notificaciones repetidas en cada autoguardado.
-- Depuración integrada con pila, variables, puntos de interrupción y entrada al programa, según el adaptador.
-- Lantern Live ejecuta el búfer sin guardarlo. Lens muestra valores reales junto al código. La memoria entre revisiones es cooperativa.
-- La IA recibe el contexto actual; preguntar o explicar no reescribe el archivo. Una edición autorizada puede continuar en su archivo original mientras cambias de pestaña.
-- Open VSX y VSIX locales, con aportaciones declarativas y motores Node autorizados. La compatibilidad con la API de VS Code es parcial.
+![Zénit: Monaco editor, project explorer, terminal and Melody in a dark workspace](docs/media/workspace-dark.png)
 
-Atajos: Ctrl+N, nuevo archivo; Ctrl+Shift+N, nueva ventana; Ctrl+S o Ctrl+O, guardar; Ctrl+Shift+S o Ctrl+Shift+O, guardar como; Ctrl+K, buscar; Ctrl+Alt+L, Lantern. Ctrl+O conserva la asignación solicitada para esta preview.
+Zénit brings the edit → run → inspect workflow into a single place. Keep Monaco,
+your project, interactive terminals and Melody together; move an editor or panel
+onto another monitor when you need space. Shared buffers keep unsaved work in
+sync between the main application and its detached windows.
 
-## Configuración local
+This is an actively developed **public preview**, not a claim of full VS Code
+compatibility. Windows is the verified binary target for this release. See the
+[release notes](docs/PREVIEW_054_R5.md) and [current boundaries](docs/STATUS.md).
 
-Las instalaciones nuevas almacenan preferencias, sesiones y extensiones bajo `%LOCALAPPDATA%/Zenit`. Si existe un perfil anterior de Lumen Studio, Zénit lo reutiliza para conservar los datos. Los proyectos externos permanecen donde los hayas creado. Emma se configura con su carpeta o endpoint local. Los clientes oficiales de IA que admiten cuentas usan sus flujos de autenticación y los derechos del plan correspondiente; una suscripción web no concede acceso universal a una API.
+## What makes it useful
 
-El desinstalador gráfico permite conservar los datos, borrar los datos locales o incluir también los proyectos internos, con una revisión previa. Los proyectos externos quedan fuera de esas opciones.
+| A daily problem | How Zénit helps |
+| --- | --- |
+| Code and execution drift across windows | Detached editors share buffers, saves and appearance; their terminal can sit below the code or return to the main window. |
+| AI requests lack a clear scope | Melody shows the selected model and context. Choose a selection, the whole file, or no code for a question. |
+| A snippet replaces too much | Review a selected range before applying; the rest of the file stays intact and the edit can be undone. |
+| Running code requires switching tools | Forge prepares the configured runtime, starts an interactive terminal, and shows elapsed time and exit code. |
+| A project is difficult to navigate | Search with case, whole-word, include/exclude, folder and file-type filters; open an exact matching location. |
+| Tooling should fit your workspace | Light, dark and forest palettes, file icon themes, docking, split editors and native detached panels. |
 
-## Desarrollo
+## Install in a few steps
+
+**Windows 10/11 x64** with Microsoft Edge WebView2:
+
+1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.5/Zenit-0.5.4-R5-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.5/Zenit-0.5.4-R5-Windows-Portable.zip).
+2. Run the installer, then open **Zénit**. For the portable version, extract the entire ZIP and run `Zenit/zenit.exe`.
+3. Choose **Open project**, select a folder, open a source file and use **Run** or **Forge**.
+
+The application includes its own Python runtime. Project compilers, language SDKs
+and AI models are separate: configure them under **Settings → Languages and tools**
+and **Settings → Artificial intelligence**. Provider accounts, availability and
+charges depend on the chosen integration. Emma voice requires a compatible local
+voice bridge; a hosted model or voice is not bundled.
+
+Preview executables are currently unsigned. Release assets include SHA-256
+checksums and a build manifest. Download from the linked GitHub release; see
+[the installation guide](docs/GETTING_STARTED.md) for verification and platform details.
+
+## Try a complete workflow
+
+Create `hello.py`:
+
+```python
+def greet(name: str) -> str:
+    return f"Hello, {name}!"
+
+print(greet("Zénit"))
+```
+
+Open **Forge**, click **Run Python**, and inspect the real output. **Run again**
+repeats that file; **Stop** ends its running process. **Run buffer** is the Python
+action for executing unsaved editor content.
+
+In Melody, connect a model and try:
+
+```text
+Explain this function and suggest a clearer name.
+```
+
+Select `greet`, choose **Selection or file**, and ask for a focused suggestion.
+Review the selection before applying. For authorized workspace changes, name
+the intended files explicitly:
+
+```text
+Create tests/test_greet.py with tests for greet, and update hello.py so importing
+it does not print anything.
+```
+
+File plans provide review, recovery copies and undo. **Edit file** is a separate
+mode for live changes to the active buffer. Automatic assistance and next-code
+suggestions are available through **Live assistance**; generated advice still
+needs your judgment.
+
+## A workspace that moves with you
+
+![Zénit welcome: landscape, crystal and project actions](docs/media/home.png)
+
+Start with a project, return through **My activity**, and keep your profile local.
+The profile image becomes a faded cover behind your identity.
+
+| Light workspace | Your activity |
+| --- | --- |
+| ![Zénit light theme](docs/media/workspace-day.png) | ![Recent files in My activity](docs/media/activity.png) |
+
+![Forge with real Python output, elapsed time and a successful exit code](docs/media/forge.png)
+
+These are screenshots of the running application and a small demo project.
+Forge output is real. The gallery does not present a simulated AI answer as a
+production result. [Capture details](docs/media/README.md).
+
+## Useful shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+K` / `Ctrl+Shift+P` | Search / command palette |
+| `Ctrl+Shift+F` | Project search |
+| `Ctrl+S` | Save file |
+| `Ctrl+\\` | Split editor |
+| `Ctrl+J` | Toggle terminal |
+| `F5` / `Shift+F5` | Run / stop the active task |
+| `Ctrl+,` | Settings |
+
+## Develop locally
 
 ```powershell
+git clone https://github.com/Arizt00/Zenit.git
+cd Zenit
 python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-build.txt
 .venv/Scripts/python tools/setup_assets.py
 .venv/Scripts/python app.py --desktop
-.venv/Scripts/python tools/build_desktop.py --require-assets --installer
 ```
 
-Node.js se necesita para los motores de extensiones. Para depuración nativa prepara LLVM/LLDB y el SDK del lenguaje; NetCoreDbg y Delve pueden seleccionarse en Lenguajes y depuradores. Los binarios auxiliares de la distribución no se versionan en este repositorio. `config/runtime-local.json` es una personalización opcional de desarrollo, ignorada por Git y por el paquete final.
+For browser development, run `python app.py` and open the local URL printed by
+the application. Native detached windows require the desktop runtime. Node.js
+is needed for extension engines and JavaScript checks.
 
 ```powershell
 python -m unittest discover -s tests -p "test_*.py"
 npm run check
 npm test
-python tests/test_ui_r7.py --output qa-output
-python tests/verify_desktop_r7.py --output qa-output
 ```
 
-Las pruebas visuales requieren Playwright y Microsoft Edge. Las pruebas dependientes de herramientas pueden omitirse si no están instaladas.
+[Contributing](CONTRIBUTING.md) · [Architecture](docs/ARCHITECTURE.md) ·
+[Feature status](docs/STATUS.md) · [R5 notes](docs/PREVIEW_054_R5.md)
 
-## Documentación y licencia
+## Build it with us
 
-[0.5.3 R4](docs/PREVIEW_053_R4.md) · [0.5.3 R3](docs/PREVIEW_053_R3.md) · [0.5.3 R2](docs/PREVIEW_053_R2.md) · [0.5.3 R1](docs/PREVIEW_053_R1.md) · [Lantern, cambios y límites](docs/PREVIEW_R7.md) · [Lenguajes](docs/LENGUAJES.md) · [Extensiones](docs/EXTENSIONES.md) · [Seguridad](docs/SEGURIDAD.md)
+Try Zénit on a small project, share a reproducible issue, or improve one focused
+workflow. Useful contributions include layout fixes at different DPI settings,
+terminal behavior, accessibility, providers and extension compatibility.
 
-Repositorio público bajo [licencia propietaria](LICENSE), sin licencia de código abierto por el momento. Las dependencias mantienen sus propias licencias: [avisos de terceros](THIRD_PARTY_NOTICES.md).
+[Report a bug](https://github.com/Arizt00/Zenit/issues/new?template=bug_report.yml) ·
+[Suggest a feature](https://github.com/Arizt00/Zenit/issues/new?template=feature_request.yml) ·
+[Ask a question](https://github.com/Arizt00/Zenit/discussions)
+
+If Zénit helps your work, a star or a link shared with another developer helps
+people discover it. The [roadmap](docs/ROADMAP.md) makes the next work visible.
+
+## License
+
+Zénit’s original code and documentation are **Apache-2.0**. See [LICENSE](LICENSE)
+and [NOTICE](NOTICE). The independent `tools/asm_worker.py` retains **GPL-2.0-or-later**;
+dependencies retain their own licenses: [third-party notices](THIRD_PARTY_NOTICES.md).

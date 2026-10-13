@@ -1,4 +1,6 @@
 import {icon} from './icons.js';
+import {installMelodyExperience} from './melody-experience.js';
+import {installChromeLocale} from './chrome-locale.js';
 
 /** Keep existing actions and handlers; expose secondary tools through one menu. */
 export function installProductUI(host){
@@ -64,5 +66,7 @@ export function installProductUI(host){
     set('.composer-context>button>span',t('Contexto: archivo actual','Context: current file'));
   };
   const applyPreferences=platform.applyPreferences.bind(platform);platform.applyPreferences=(...args)=>{const result=applyPreferences(...args);refresh();return result;};refresh();
-  return {dispose(){document.removeEventListener('zenit:breadcrumbs',updateCrumbs);document.removeEventListener('pointerdown',providerPointer);document.removeEventListener('keydown',providerKey);}};
+  const melody=installMelodyExperience(host);
+  const localeUI=installChromeLocale(platform);
+  return {dispose(){localeUI.dispose();melody.dispose();document.removeEventListener('zenit:breadcrumbs',updateCrumbs);document.removeEventListener('pointerdown',providerPointer);document.removeEventListener('keydown',providerKey);}};
 }

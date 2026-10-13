@@ -1,31 +1,31 @@
-# Componentes de Lumen Studio 0.5.2
+# Zénit third-party components
 
-Las distribuciones contienen bibliotecas locales. No requieren una CDN para cargar su interfaz. La tabla siguiente documenta la distribución Windows original. Los paquetes R8 incluyen además `licenses/native-python/PACKAGE_INVENTORY.json` con las versiones y licencias reales de su sistema de construcción. Linux añade PySide6/QtWebEngine y qtpy; macOS añade PyObjC/Cocoa/WebKit. Sus avisos de licencia se conservan junto al inventario y en el runtime empaquetado.
+Distributions load local libraries without a frontend CDN. The table records the baseline Windows inventory. Current builds include `licenses/native-python/PACKAGE_INVENTORY.json` with actual Python package versions and licenses. Linux uses PySide6/QtWebEngine and qtpy; macOS uses PyObjC/Cocoa/WebKit. Their notices remain with the inventory and packaged runtime.
 
-| Componente | Versión de esta entrega | Procedencia |
+| Component | Baseline version | Source |
 |---|---|---|
 | Monaco Editor | 0.52.2 | npm monaco-editor / Microsoft |
 | Babylon.js | 8.32.0 | npm babylonjs |
 | Three.js | 0.180.0 | npm three |
 | xterm.js / addon-fit | 5.5.0 / 0.10.0 | npm @xterm |
 | pywebview | 6.2.1 | PyPI / pywebview |
-| Python principal | 3.12.10 | python.org / PSF |
-| Python auxiliar para LLDB | 3.11.9 embeddable amd64 | python.org / PSF |
-| pywin32 | 312 | PyPI; integración del desinstalador con Windows |
-| pywinpty | 3.0.5 | PyPI; incluye OpenConsole y winpty-agent |
+| Main Python | 3.12.10 | python.org / PSF |
+| LLDB helper Python | 3.11.9 embeddable amd64 | python.org / PSF |
+| pywin32 | 312 | PyPI; Windows uninstaller integration |
+| pywinpty | 3.0.5 | PyPI; includes OpenConsole and winpty-agent |
 | websocket-client | 1.9.2 | PyPI |
 | NetCoreDbg | 3.2.0-1092 | github.com/Samsung/netcoredbg |
-| Delve | 1.27.2, compilado con Go 1.27.1 | github.com/go-delve/delve |
+| Delve | 1.27.2, built with Go 1.27.1 | github.com/go-delve/delve |
 
-Los textos de licencia se conservan junto a web/vendor, en debugger-support y en licenses. Las dependencias de Go usadas para compilar Delve tienen sus licencias en licenses/delve-dependencies. Los avisos de paquetes Python están en licenses/python-packages. PyInstaller se usa para construir; las licencias de su bootloader incluyen su excepción de distribución.
+License texts are preserved beside web/vendor, in debugger-support and in licenses. Delve dependencies retain notices under licenses/delve-dependencies. Python notices are under licenses/python-packages. PyInstaller is a build tool; its bootloader license includes a distribution exception.
 
-Se usan fuentes instaladas en el sistema, sin añadir una tipografía de terceros. Los iconos son SVG locales. Los recursos de paisaje preexistentes proceden de las referencias del proyecto; no se utiliza una captura entera como interfaz.
+UI fonts come from the system. Icons are local SVGs. Existing landscape assets come from project references; a full screenshot is not used as a substitute for the interface.
 
-LLVM, GCC, SDK .NET, JDK, Node, Rust, Go, Git, ncc y modelos de IA son herramientas externas. Se detectan o se seleccionan en el instalador; sus licencias y requisitos son propios. No se incluyen credenciales, pesos de modelos ni una copia del repositorio de nC. La ruta local nC se conserva como configuración de este equipo.
+LLVM, GCC, .NET SDK, JDK, Node, Rust, Go, Git, ncc and AI models are external tools with their own licenses and requirements. Credentials, model weights and a copy of the nC repository are not included. Local nC paths are device configuration.
 
-El código propio de Lumen se publica bajo la licencia propietaria de preview incluida en LICENSE. Las licencias de terceros se mantienen independientes. Las marcas de terceros no implican afiliación. Las integraciones Copilot/Ollama/API conservan las condiciones de sus proveedores. El host VSIX admite aportaciones declarativas y una API Node parcial; no equivale al host completo de VS Code.
+Zénit’s original code and documentation use Apache-2.0, as provided in LICENSE and NOTICE. The independent tools/asm_worker.py retains GPL-2.0-or-later. Third-party licenses remain independent. Trademarks do not imply affiliation. Provider integrations retain their own terms. The VSIX host supports declarative contributions and a partial Node API, not the full VS Code extension host.
 
-Esta entrega incluye github-copilot-sdk 1.0.15 y sus dependencias Python; sus versiones y licencias están en licenses/python-packages. Los clientes oficiales Codex, Claude Code, Gemini CLI y Copilot CLI se instalan por separado; no se incluyen sesiones ni credenciales.
+The baseline includes github-copilot-sdk 1.0.15 and Python dependencies, with notices in licenses/python-packages. Official Codex, Claude Code, Gemini CLI and Copilot CLI clients are installed separately; sessions and credentials are not distributed.
 # Independent ASM laboratory
 
 The source of `tools/asm_worker.py` is GPL-2.0-or-later; see

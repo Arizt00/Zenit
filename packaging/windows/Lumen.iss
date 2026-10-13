@@ -1,4 +1,4 @@
-#define AppVersion "0.5.3"
+#define AppVersion "0.5.4"
 [Setup]
 AppId={{842D0758-86C8-48DB-B6C5-035BE7E04AA1}
 AppName=Zénit
@@ -8,7 +8,7 @@ DefaultDirName={localappdata}\Programs\Zenit
 DefaultGroupName=Zénit
 PrivilegesRequired=lowest
 OutputDir=..\..\dist\installers
-OutputBaseFilename=Zenit-{#AppVersion}-R4-Windows-Setup
+OutputBaseFilename=Zenit-{#AppVersion}-R5-Windows-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

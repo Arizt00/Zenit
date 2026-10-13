@@ -14,7 +14,9 @@ export class DesktopWorkflows{
     const hacker=document.createElement('button');hacker.className='hacker-toggle forge-toggle';hacker.dataset.action='forge-window';hacker.title='Abrir Forge en su propia ventana';hacker.innerHTML=icon('build')+'<span>Forge</span>'+icon('arrow-up-right');$('.top-actions').prepend(hacker);
     this.hackerBar=document.createElement('section');this.hackerBar.className='hacker-bar forge-dashboard';this.hackerBar.setAttribute('aria-label','Forge · ejecución y depuración');
     this.hackerBar.innerHTML=`<div class="forge-main"><div class="forge-identity"><span class="forge-mark">${icon('build')}</span><div><strong>Forge</strong><small>Ejecuta. Inspecciona. Itera.</small></div></div><div class="forge-context">${icon('file')}<span class="forge-file"></span><span class="forge-buffer"></span></div><div class="forge-actions"><button class="forge-action forge-file-run" data-action="hacker-file">${icon('play')}<span><strong>Ejecutar archivo</strong><small>Guardar, preparar y ejecutar en PTY</small></span></button><button class="forge-action forge-python" data-action="hacker-python">${icon('play')}<span><strong>Ejecutar Python</strong><small>Búfer actual · terminal integrada</small></span></button><button class="forge-action forge-gdb" data-action="hacker-gdb">${icon('bug')}<span><strong>Compilar y depurar C</strong><small>GCC → GDB · pausa en main</small></span></button></div></div><div class="forge-footer"><div class="forge-tools" aria-label="Herramientas detectadas"></div><span class="forge-status" role="status"></span><button class="icon-button forge-refresh" data-action="forge-refresh" title="Volver a detectar herramientas" aria-label="Volver a detectar herramientas">${icon('refresh')}</button><button class="forge-placement" data-action="forge-window">${icon('arrow-up-right')}<span>Otra ventana</span></button></div><div class="forge-guide"></div>`;
+    this.hackerBar.insertAdjacentHTML('beforeend',`<section class="forge-run-session" hidden><div><span class="forge-session-kicker">EXECUTION</span><strong class="forge-session-name"></strong><small class="forge-session-detail"></small></div><button class="secondary-button" data-action="forge-rerun">${icon('refresh')}Run again</button><button class="secondary-button" data-action="forge-stop">${icon('stop')}Stop</button></section><details class="forge-history" hidden><summary>Recent executions</summary><ol></ol></details>`);
     $('#terminal-panel').prepend(this.hackerBar);this.paintHacker();await this.refreshForgeTools();
+    this.forgeTimer=setInterval(()=>{if(this.forgeRun&&!this.hackerBar.hidden)this.paintHacker();},1000);
     const appearance=h.platform.onAppearance;h.platform.onAppearance=()=>{appearance?.();this.paintHacker();};
     const old=h.editor.callbacks.change;h.editor.callbacks.change=(path,...args)=>{old?.(path,...args);this.paintHacker();if(!this.applying){if(this.shared.has(path))this.queue(path);else if(this.auxiliary.size)this.safe(()=>this.share(path));}};
     const renderTerminal=h.platform.renderActiveTerminal;h.platform.renderActiveTerminal=(...args)=>{renderTerminal?.apply(h.platform,args);this.paintHacker();};
@@ -32,22 +34,28 @@ export class DesktopWorkflows{
   }
   safe(fn){return Promise.resolve().then(fn).catch(e=>this.host.notify(e.message,'error'));}
   paintHacker(){
-    const h=this.host,enabled=this.query.get('panel')==='forge'||this.forgeIntegrated===true,path=this.forgeNoFile?'':h.editor.current||'',dirty=path&&h.editor.isDirty(path),tools=this.forgeTools;
+    const h=this.host,t=(es,en)=>h.platform.t(es,en),enabled=this.query.get('panel')==='forge'||this.forgeIntegrated===true,path=this.forgeNoFile?'':h.editor.current||'',dirty=path&&h.editor.isDirty(path),tools=this.forgeTools;
     this.hackerBar.hidden=!enabled;document.documentElement.classList.toggle('hacker-mode',enabled);$('.hacker-toggle')?.setAttribute('aria-pressed',String(enabled));
-    const file=this.hackerBar.querySelector('.forge-file');file.textContent=path||'Abre un archivo para comenzar';file.title=path;
-    const buffer=this.hackerBar.querySelector('.forge-buffer');buffer.textContent=path?(dirty?'Sin guardar':'Búfer actual'):'';buffer.dataset.dirty=String(!!dirty);buffer.hidden=!path;
-    const generic=this.hackerBar.querySelector('.forge-file-run');generic.disabled=!!this.forgeBusy||!!this.forgeFollowing||!!this.staleWorkspace||!path;generic.querySelector('strong').textContent='Ejecutar '+(path?languageLabel(path):'archivo');generic.title='Guarda el archivo actual y usa su entorno configurado en una terminal real';
+    this.hackerBar.querySelector('.forge-identity small').textContent=t('Del código a la ejecución.','From code to running.');
+    const file=this.hackerBar.querySelector('.forge-file');file.textContent=path||t('Abre un archivo para comenzar','Open a file to begin');file.title=path;
+    const buffer=this.hackerBar.querySelector('.forge-buffer');buffer.textContent=path?(dirty?t('Sin guardar','Unsaved'):t('Guardado','Saved')):'';buffer.dataset.dirty=String(!!dirty);buffer.hidden=!path;
+    const generic=this.hackerBar.querySelector('.forge-file-run');generic.disabled=!!this.forgeBusy||!!this.forgeFollowing||!!this.staleWorkspace||!path;generic.querySelector('strong').textContent=t('Ejecutar ','Run ')+(path?languageLabel(path):t('archivo','file'));generic.title=t('Guarda y ejecuta con el entorno del archivo','Save and run with the file’s configured runtime');generic.querySelector('small').textContent=t('Guardar · preparar · ejecutar','Save · prepare · run');
     for(const [mode,selector,valid] of [['python','.forge-python',/\.pyw?$/i.test(path)],['gdb','.forge-gdb',/\.c$/i.test(path)]]){
       const button=this.hackerBar.querySelector(selector),available=mode==='python'?tools?.python:tools?.gcc&&tools?.gdb;
       button.disabled=!!this.forgeBusy||!!this.forgeFollowing||!!this.staleWorkspace||!valid||!available;
-      button.title=this.forgeBusy?'Espera a que termine la preparación.':!valid?(mode==='python'?'Abre un archivo .py o .pyw.':'Abre un archivo .c.'):!tools?'Detectando herramientas…':!available?'Instala GCC y GDB desde Lenguajes y herramientas.':'Ejecutar el texto del editor sin guardar el archivo';
+      button.hidden=!valid;button.querySelector('strong').textContent=mode==='python'?t('Ejecutar búfer','Run buffer'):t('Depurar C','Debug C');button.querySelector('small').textContent=mode==='python'?t('Python · sin guardar','Python · without saving'):'GCC + GDB · break at main';
+      button.title=this.forgeBusy?'Preparing execution…':!tools?'Detecting tools…':!available?'Set up GCC and GDB in Languages and tools.':'Run the current editor buffer';
     }
-    this.hackerBar.querySelector('.forge-tools').innerHTML=['python','gcc','gdb'].map(name=>`<span class="forge-tool ${tools?.[name]?'available':'missing'}" title="${esc(tools?.[name]||(!tools?'Detectando…':'No se ha encontrado. Configura su ruta en Lenguajes y herramientas.'))}">${icon(tools?.[name]?'check':'minus')}<span>${name==='python'?'Python integrado':name.toUpperCase()}</span></span>`).join('');
+    this.hackerBar.querySelector('.forge-tools').innerHTML=['python','gcc','gdb'].map(name=>`<span class="forge-tool ${tools?.[name]?'available':'missing'}" title="${esc(tools?.[name]||(!tools?'Detecting…':'Not found. Set up the tool in Languages and tools.'))}">${icon(tools?.[name]?'check':'minus')}<span>${name==='python'?'Python':name.toUpperCase()}</span></span>`).join('');
     const run=this.forgeRun,terminal=run?.terminal&&h.platform.terminals.get(run.terminal),closed=run?.terminal&&(!terminal||terminal.closed);
-    const message=this.forgeBusy?(run.mode==='gdb'?'Compilando con símbolos…':'Preparando '+(run.mode==='file'?languageLabel(path):'Python')+'…'):this.forgeError?'Revisa la salida de tareas':run?(closed?'Sesión finalizada':run.mode==='gdb'?'Depurador preparado':run.mode==='file'?'Archivo en ejecución':'Python en ejecución'):tools?'Listo para tu código':'Detectando herramientas…';
-    const status=this.hackerBar.querySelector('.forge-status');status.textContent=message+(run?' · '+run.path:'');status.title=status.textContent;status.dataset.state=this.forgeError?'error':this.forgeBusy?'busy':closed?'idle':run?'running':'idle';
+    const failed=this.forgeError||closed&&!run?.stopped&&terminal?.code!=null&&terminal.code!==0;
+    const message=this.forgeBusy?'Preparing…':failed?'Execution failed':run?(closed?(run.stopped?'Stopped':'Finished'):run.mode==='gdb'?'Debugger ready':'Running'):tools?'Ready when you are':'Detecting tools…';
+    const status=this.hackerBar.querySelector('.forge-status');status.textContent=message;status.title=status.textContent;status.dataset.state=failed?'error':this.forgeBusy?'busy':closed?'idle':run?'running':'idle';
     this.hackerBar.querySelector('.forge-refresh').disabled=!!this.forgeBusy||!!this.refreshingForge;
-    const guide=this.hackerBar.querySelector('.forge-guide');guide.innerHTML=/\.c$/i.test(path)?'<span>Depuración C</span><code>-g3 -O0 -Wall -Wextra -fno-omit-frame-pointer</code><small>En GDB: <b>next</b> · <b>step</b> · <b>print variable</b> · <b>continue</b></small>':'<span>Python</span><small>Entrada interactiva e imports locales. El archivo se guarda cuando tú decides.</small>';
+    const guide=this.hackerBar.querySelector('.forge-guide');guide.innerHTML=/\.c$/i.test(path)?'<span>C debugger</span><code>next · step · print · continue</code>':`<span>${esc(path?languageLabel(path):'Runtime')}</span><small>${/\.pyw?$/i.test(path)?'Run saves your file. Run buffer uses unsaved code.':'Run uses the configured toolchain and a real interactive terminal.'}</small>`;
+    const session=this.hackerBar.querySelector('.forge-run-session');session.hidden=!run;
+    if(run){if(closed&&!run.finished)run.finished=Date.now();session.dataset.state=status.dataset.state;session.querySelector('.forge-session-name').textContent=run.path.replaceAll('\\','/').split('/').pop();session.querySelector('.forge-session-detail').textContent=message+' · '+Math.max(0,Math.floor(((run.finished||Date.now())-run.started)/1000))+'s'+(terminal?.code!=null?' · exit '+terminal.code:'');session.querySelector('[data-action=forge-stop]').disabled=this.forgeBusy||!terminal||closed;session.querySelector('[data-action=forge-rerun]').disabled=this.forgeBusy||!closed&&!failed;}
+    const history=this.hackerBar.querySelector('.forge-history');history.hidden=!this.forgeHistory?.length;if(this.forgeHistory?.length)history.querySelector('ol').innerHTML=this.forgeHistory.map(r=>`<li>${icon('terminal')}<strong>${esc(r.path.replaceAll('\\','/').split('/').pop())}</strong><small>${esc(r.state)}</small></li>`).join('');
   }
   async refreshForgeTools(){
     this.refreshingForge=true;this.paintHacker();
@@ -101,6 +109,8 @@ export class DesktopWorkflows{
       else await this.openForgeTerminal();return true;
     }
     if(action==='forge-refresh'){await this.refreshForgeTools();return true;}
+    if(action==='forge-stop'){const id=this.forgeRun?.terminal;if(id){await h.platform.api('/terminals/close',{id});const terminal=h.platform.terminals.get(id);if(terminal){terminal.closed=true;terminal.input?.close();}this.forgeRun.stopped=true;this.forgeRun.finished=Date.now();h.platform.renderActiveTerminal();this.paintHacker();}return true;}
+    if(action==='forge-rerun'){const run=this.forgeRun;if(run){await h.openFile(run.path);await this.runHacker(run.mode);}return true;}
     if(['hacker-python','hacker-gdb','hacker-file'].includes(action)){await this.runHacker(action==='hacker-file'?'file':action==='hacker-python'?'python':'gdb');return true;}
     if(action==='updates'){await this.updatesPage(true);return true;}
     return false;
@@ -108,7 +118,8 @@ export class DesktopWorkflows{
   async runHacker(mode){
     if(this.forgeBusy||this.forgeFollowing)return;
     const h=this.host,path=h.editor.current,content=h.editor.getValue();if(!path)throw Error('Abre el archivo que quieres ejecutar.');if(!await h.ensureTrust())return;
-    this.forgeBusy=true;this.forgeError=false;this.forgeRun={mode,path};
+    if(this.forgeRun){const old=this.forgeRun,terminal=h.platform.terminals.get(old.terminal);this.forgeHistory=[{path:old.path,state:old.stopped?'Stopped':terminal?.closed?'exit '+(terminal.code??'—'):this.forgeError?'Failed':'Separate session'},...(this.forgeHistory||[])].slice(0,6);}
+    this.forgeBusy=true;this.forgeError=false;this.forgeRun={mode,path,started:Date.now()};
     try{
       if(mode==='file'&&h.editor.isDirty(path))await h.saveFile(path);
       if(!this.query.has('panel'))this.forgeIntegrated=true;
@@ -294,5 +305,5 @@ export class DesktopWorkflows{
     $('#update-status').innerHTML=`<strong>${esc(labels[s.status])}</strong><p>${esc(s.current)}${s.available?' → '+esc(s.available.version):''}</p>${s.transfer?`<progress max="${s.transfer.total||s.available.size}" value="${s.transfer.bytes}"></progress><small>${(s.transfer.bytes/1e6).toFixed(1)} / ${(s.available.size/1e6).toFixed(1)} MB</small>`:''}${s.error?`<p role="alert">${esc(s.error)}</p>`:''}`;
     $('#update-download').disabled=!s.available||['ready','downloading'].includes(s.status);$('#update-install').disabled=s.status!=='ready';
   }
-  dispose(){this.disposed=true;this.channel.close();clearTimeout(this.publishTimer);clearTimeout(this.bufferTimer);clearTimeout(this.updateTimer);window.removeEventListener('lumen:native-return',this.returned);window.removeEventListener('lumen:detach-editor',this.detachEditor);}
+  dispose(){this.disposed=true;this.channel.close();clearInterval(this.forgeTimer);clearTimeout(this.publishTimer);clearTimeout(this.bufferTimer);clearTimeout(this.updateTimer);window.removeEventListener('lumen:native-return',this.returned);window.removeEventListener('lumen:detach-editor',this.detachEditor);}
 }

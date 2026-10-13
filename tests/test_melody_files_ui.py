@@ -10,7 +10,7 @@ def main():
  def passed(text):checks.append(text);print('PASS',text,flush=True)
  with tempfile.TemporaryDirectory(prefix='zenit-files-ui-') as tmp:
   base=Path(tmp);ws=base/'project';ws.mkdir();(ws/'old.py').write_text('print("old")\n');(ws/'keep.py').write_text('print("keep")\n')
-  app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True;app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.showWelcome':False,'appearance.motion':False,'updates.automatic':False,'ai.provider':'ollama','ai.model':'qa-fixture','terminal.confirmClose':False})
+  app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True;app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.locale':'es','general.showWelcome':False,'appearance.motion':False,'updates.automatic':False,'ai.provider':'ollama','ai.model':'qa-fixture','terminal.confirmClose':False})
   proposal={'summary':'Proyecto Python con documentación y prueba','operations':[{'kind':'create','path':'sample/src/main.py','content':'print(42)\n'},{'kind':'create','path':'sample/README.md','content':'# Sample\nRun src/main.py\n'},{'kind':'create','path':'sample/test_main.py','content':'def test_answer():\n    assert 40+2==42\n'},{'kind':'delete','path':'old.py'}]}
   def transport(job,messages,system,hkey):
    assert 'Return ONLY a JSON' in system;job.append(json.dumps(proposal));job.done=True

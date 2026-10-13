@@ -1,0 +1,12 @@
+Zénit
+Copyright 2026 L4CE (Arizt00) and Zénit contributors.
+
+Zénit’s original source code and documentation are licensed under the Apache
+License, Version 2.0. Original project artwork is included under the same license
+unless a file or third-party notice states otherwise. The Apache license does
+not grant trademark rights.
+
+Exception: tools/asm_worker.py remains GPL-2.0-or-later and is distributed as a
+separate subprocess worker. Its corresponding source and GPL license must be
+preserved. The Apache license does not replace this license or any dependency
+license. See THIRD_PARTY_NOTICES.md and licenses/ for component notices.
