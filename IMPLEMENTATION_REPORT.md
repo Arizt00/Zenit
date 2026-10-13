@@ -1,4 +1,30 @@
-# Implementación · Zénit 0.5.4 R2
+# Implementación · Zénit 0.5.4 R3
+
+R3 añade el fondo de foto real y difuminada a Tu perfil, sincronizado con el
+recorte. Conserva la composición de Mi actividad aceptada por el usuario y mejora
+el foco, los materiales y las estrellas discretas de Inicio. No sustituye la foto
+local ni cambia la geometría Blender existente.
+
+Melody recibe contexto de los archivos nombrados y revisiones capturadas antes
+de la generación. Se corrige también la conexión ausente entre su host y Studio,
+que impedía publicar correctamente los búferes de la sesión. La aplicación
+directa respeta la preferencia de omitir confirmaciones rutinarias. Conserva
+recuperación atómica, formatos originales, deshacer del disco y texto previo
+sin guardar; cambios posteriores cancelan la aplicación. Los binarios se pueden
+borrar por orden explícita, con copia de sus bytes. Rutas externas requieren
+pertenecer a los documentos abiertos. No se envían credenciales al modelo.
+
+El alcance nuevo se recoge en [PREVIEW_054_R3](docs/PREVIEW_054_R3.md) y
+[VSCODE_PARITY_054_R3](docs/VSCODE_PARITY_054_R3.md). La generación de planes usa
+fixtures deterministas en QA; no se certifica capacidad universal del proveedor.
+Las secciones siguientes conservan la evidencia histórica de R2.
+
+Validación R3: 317 pruebas Python (312 pasan, 5 omitidas), 101 pruebas Node,
+64 comprobaciones de sintaxis JavaScript y 69 comprobaciones de interfaz en
+seis recorridos. Se capturaron 15 vistas del WebView2 real al 150 % de escala
+Windows; los cinco límites de composición medidos quedan dentro de 2 px CSS.
+Las evidencias y capturas de prueba están en `tests/visual/evidence/054-r3-*`
+y `tests/visual/current/054-r3`. La imagen privada del usuario no se añade a Git.
 
 R2 reconstruye Inicio y Mi actividad con las referencias posteriores del usuario,
 sus correcciones de material y la última petición de alineación y tipografía.

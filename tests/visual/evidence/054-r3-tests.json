@@ -1,0 +1,41 @@
+{
+  "python": {
+    "tests": 317,
+    "pass": 312,
+    "skip": 5
+  },
+  "node": {
+    "tests": 101,
+    "pass": 101
+  },
+  "syntax": 64,
+  "ui": {
+    "session-profile-ui": {
+      "checks": 11,
+      "errors": []
+    },
+    "files-ui": {
+      "checks": 7,
+      "errors": []
+    },
+    "startup-ui": {
+      "checks": 14,
+      "errors": []
+    },
+    "themes-ui": {
+      "checks": 10,
+      "errors": []
+    },
+    "icons-ui": {
+      "checks": 12,
+      "errors": []
+    },
+    "voice-ui": {
+      "checks": 15,
+      "errors": []
+    }
+  },
+  "uiChecks": 69,
+  "nativeCaptureViews": 15,
+  "modelQualityMeasured": false
+}

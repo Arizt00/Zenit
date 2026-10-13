@@ -207,12 +207,15 @@ class AIRouter:
         if body.get('filePlan') is True:
             from .melody_files import FILE_PLAN_SYSTEM
             job.file_workspace=body.get('fileWorkspace')
-            direct=re.sub(r'```[\s\S]*?(?:```|$)|(?m:^\s*>.*$)', '', question).lower()
-            job.file_delete_allowed=bool(re.search(r'(?:^|[.!?]\s*|\b(?:y|and|luego|then)\s+)(?:(?:por favor|please|puedes|can you)\s+)?(?:borra|elimina|suprime|delete|remove)\b',direct)) and not bool(re.search(r'\b(?:no|nunca|never|do not|don.t)\b',direct))
+            from .melody_files import MelodyFiles
+            job.file_delete_allowed=MelodyFiles.deletion_requested(question)
+            job.file_snapshots=body.get('fileSnapshots',{})
+            job.file_session=body.get('fileSession',())
             system+='\n'+FILE_PLAN_SYSTEM
             inventory=body.get('fileInventory',[])
             if not isinstance(inventory,list):raise ValueError('Inventario de archivos inválido.')
             messages[-1]['content']+='\n<file-inventory>\n'+json.dumps(inventory,ensure_ascii=False)[:16000]+'\n</file-inventory>'
+            messages[-1]['content']+='\n<session-context>\n'+json.dumps(body.get('fileContext',[]),ensure_ascii=False)+'\n</session-context>'
         threading.Thread(target=self._run,args=(job,messages,system,hkey),daemon=True).start()
         self.prefs.audit('ai.request',provider=provider)
         return {'id':job.id,'provider':provider,'model':model,'conversation':conversation}

@@ -245,8 +245,7 @@ class PlatformServices:
             request=dict(body)
             if request.get('filePlan') is True:
                 self._trusted()
-                request['fileWorkspace']=str(ws.root)
-                request['fileInventory']=ws.files()[:300]
+                request.update(self.melody_files.prepare(ws,request))
             return self.ai.start(request)
         if path=='/ai/files/review':self._trusted();return self.melody_files.review(ws,body.get('job'))
         if path=='/ai/files/apply':self._trusted();return self.melody_files.commit(ws,body.get('ticket'),body.get('consent'))

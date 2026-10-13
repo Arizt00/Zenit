@@ -1,4 +1,16 @@
-# Comparacion visual - Zenit 0.5.4 R2
+# Comparación visual · Zénit 0.5.4 R3
+
+Tu perfil añade el mismo recurso fotográfico del avatar como portada ampliada,
+difuminada y desvanecida, con recorte sincronizado y material claro/oscuro.
+Mi actividad mantiene el diseño, centrado y tamaños aceptados. Inicio conserva
+la referencia nocturna con estrellas discretas y estados de foco más visibles.
+
+`tests/test_session_profile_ui.py` comprueba igualdad del canvas de portada con
+el recorte real, zoom/arrastre, cancelación, WebP persistido y viewports de
+1672×917, 1366×768, 800×600 y 640×360. Las imágenes de QA usan una foto geométrica
+de prueba, identificada como fixture; no se publica la foto privada del usuario.
+Las medidas de diferencia de R2 que siguen son históricas, no una nueva medición
+de igualdad de píxeles para R3.
 
 Inicio se ajusta a la referencia nocturna de 1672x941. Mi actividad sigue las
 correcciones posteriores: cabecera de perfil, identidad centrada, ultimo archivo

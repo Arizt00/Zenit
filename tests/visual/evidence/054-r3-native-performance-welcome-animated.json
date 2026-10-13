@@ -1,0 +1,200 @@
+{
+  "duration": 3005.699999999255,
+  "frameInterval": {
+    "samples": 202,
+    "median": 12.599999999998545,
+    "p95": 25.100000000000364,
+    "max": 33.30000000000109
+  },
+  "longTasks": [],
+  "mutations": {},
+  "webgl": {
+    "renderSamples": 168,
+    "medianCpuMs": 0.3999999985098839,
+    "p95CpuMs": 0.5,
+    "contextEvents": [],
+    "engines": 2,
+    "surfaces": [
+      {
+        "kind": "orb",
+        "renderLoops": 0,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      },
+      {
+        "kind": "welcome",
+        "renderLoops": 1,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      }
+    ]
+  },
+  "memory": {
+    "used": 46814517,
+    "total": 71943677
+  },
+  "canvases": [
+    {
+      "kind": "decorationsOverviewRuler",
+      "width": 0,
+      "height": 0,
+      "visible": false
+    },
+    {
+      "kind": "",
+      "width": 12,
+      "height": 7,
+      "visible": false
+    },
+    {
+      "kind": "minimap-decorations-layer",
+      "width": 12,
+      "height": 7,
+      "visible": false
+    },
+    {
+      "kind": "orb",
+      "width": 300,
+      "height": 267,
+      "visible": false
+    },
+    {
+      "kind": "",
+      "width": 96,
+      "height": 96,
+      "visible": false
+    },
+    {
+      "kind": "welcome",
+      "width": 570,
+      "height": 483,
+      "visible": true
+    }
+  ],
+  "editors": 1,
+  "animations": [
+    {
+      "target": "welcome-landscape",
+      "name": "welcome-horizon",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    },
+    {
+      "target": "",
+      "name": "welcome-twinkle",
+      "state": "running"
+    }
+  ],
+  "cdp": {
+    "LayoutCount": 0,
+    "RecalcStyleCount": 213,
+    "LayoutDuration": 0,
+    "RecalcStyleDuration": 0.041037,
+    "ScriptDuration": 0.096108,
+    "TaskDuration": 0.292214
+  },
+  "timeline": {
+    "Layout": {
+      "events": 0,
+      "totalMs": 0.0
+    },
+    "Paint": {
+      "events": 0,
+      "totalMs": 0.0
+    },
+    "UpdateLayoutTree": {
+      "events": 204,
+      "totalMs": 38.982
+    },
+    "CompositeLayers": {
+      "events": 0,
+      "totalMs": 0.0
+    }
+  }
+}

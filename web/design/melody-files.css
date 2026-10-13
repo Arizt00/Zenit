@@ -11,3 +11,10 @@
 .melody-plan-files label {display:block;font-size:10px;color:var(--secondary);padding:var(--space-2) var(--space-3);}
 .melody-plan-paths {padding-left:18px;color:var(--secondary);font-size:12px;}
 .ai-files-button {white-space:nowrap;}
+.melody-applied {display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--success);padding-left:14px;}
+.melody-applied>strong {display:flex;align-items:center;gap:8px;font-size:14px;line-height:1.5;}
+.melody-applied>strong .icon {width:18px;height:18px;color:var(--success);}
+.melody-applied .melody-plan-paths {list-style:none;margin:0;padding:0;display:grid;gap:6px;font:12px/1.6 var(--font-code);overflow-wrap:anywhere;}
+.melody-recovery {font-size:11px;line-height:1.5;color:var(--secondary);overflow-wrap:anywhere;}
+.melody-file-actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.melody-file-actions button {font-size:12px;min-height:34px;}

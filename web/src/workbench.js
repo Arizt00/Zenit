@@ -421,26 +421,26 @@ export class LumenPlatform {
     const filePlan=edit!==true&&requestsFileChanges(question);
     const live=!filePlan&&(edit===true||requestsLiveEdit(question));
     if(filePlan&&!await this.host.ensureTrust())return;
-    const content=editor.getValue();const file=editor.current||'';
+    const content=filePlan?'':editor.getValue();const file=editor.current||'';
     if(live&&!file)throw new Error('Abre o crea un archivo antes de autorizar la edición.');
     if(content.length>64000)throw new Error(this.t('Selecciona un fragmento menor de 64000 caracteres.','Select less than 64000 characters.'));
-    const consent=await this.confirmRoutine(this.t('Revisar envío al modelo','Review model request'),filePlan?`Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán la petición, ${content.length} caracteres del archivo activo y hasta 300 nombres de archivos del proyecto. Recibirás un plan completo de rutas y contenidos antes de escribir en disco. El proveedor puede aplicar costes.`:this.t(
+    const consent=await this.confirmRoutine(this.t('Revisar envío al modelo','Review model request'),filePlan?`Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu orden, el texto actual de los archivos que nombras y hasta 300 nombres del proyecto. Cada cambio tendrá una copia de recuperación y deshacer.`:this.t(
       `Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu pregunta y ${content.length} caracteres ${content?'de '+file:'de código'}. El proveedor puede aplicar sus propias condiciones y costes. No se enviará el resto del proyecto. ${live?'Has solicitado edición: confirmarás el archivo antes de aplicar cambios en vivo.':'Esta petición es de consulta y no modificará tus archivos.'}`,
       `Destination: ${PLATFORM_NAMES[provider]} · ${model}. Your question and ${content.length} characters ${content?'from '+file:'of code'} will be sent. Provider terms and charges may apply. The rest of the project will not be sent. ${live?'You requested editing: confirm the file before live changes begin.':'This request is read-only and will not modify your files.'}`),this.t('Enviar esta petición','Send this request'));
     if(!consent)return;
-    if(file!==(editor.current||'')||content!==editor.getValue())throw new Error('El archivo cambió durante la confirmación. Vuelve a enviar la petición con el contexto actual.');
+    if(!filePlan&&(file!==(editor.current||'')||content!==editor.getValue()))throw new Error('El archivo cambió durante la confirmación. Vuelve a enviar la petición con el contexto actual.');
     if(live&&!await this.confirmRoutine('Autorizar edición en vivo',`La IA podrá reemplazar, añadir y borrar código solamente en ${file} para esta petición. Podrá continuar mientras trabajas en otro archivo. Si modificas o cierras ${file}, se detendrá. Se suspende el autoguardado de ese archivo y Ctrl+Z permite deshacer.`, 'Permitir esta edición'))return;
-    if(file!==(editor.current||'')||content!==editor.getValue())throw new Error('El archivo cambió. Repite la petición.');
+    if(!filePlan&&(file!==(editor.current||'')||content!==editor.getValue()))throw new Error('El archivo cambió. Repite la petición.');
     const userQuestion=question;
     if(live)question+='\n\nEDICIÓN EN VIVO AUTORIZADA: devuelve el contenido COMPLETO del archivo en un único bloque de código con triple acento grave. Sin explicaciones dentro del bloque. El usuario verá los tokens aplicarse a su búfer.';
     const snapshot={path:editor.current,text:editor.getValue(),version:editor.view?.getModel?.()?.getVersionId()};this.aiSnapshot=snapshot;
     const generation=++this.aiGeneration;
-    if(this.aiStarting||this.aiJob)return;this.aiStarting=true;let result;try{result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation,filePlan});}finally{this.aiStarting=false;}
+    if(this.aiStarting||this.aiJob)return;this.aiStarting=true;this.filePlanRunning=filePlan;let result;try{if(filePlan){clearTimeout(this.saveTimer);await this.melodyFiles.capture();}result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation,filePlan});}finally{this.aiStarting=false;if(!result)this.filePlanRunning=false;}
     this.aiJob=result.id;document.getElementById('ai-input').value='';document.querySelector('.send-button').disabled=true;document.getElementById('ai-cancel-generation').hidden=false;
     document.querySelector('.provider-status-dot').classList.add('generating');
     this.host.appendChat(userQuestion,'user',this.t('TÚ','YOU'));
     const element=this.host.appendChat('', 'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);const stream=document.createElement('div');stream.className='ai-stream';element.appendChild(stream);
-    let offset=0,text='',completed=false;this.liveEditing=live;this.liveEditingPath=live?file:null;if(live)clearTimeout(this.saveTimer);
+    let offset=0,text='',completed=false;this.liveEditing=live;this.filePlanRunning=filePlan;this.liveEditingPath=live?file:null;if(live)clearTimeout(this.saveTimer);
     const liveSession=live?new LiveEditSession(editor,snapshot):null;
     if(live){document.getElementById('ai-edit-file').disabled=true;document.querySelector('.ai-live-control').classList.add('is-editing');document.querySelector('.ai-live-control small').textContent='Editando en vivo · '+file;}
     try{
@@ -459,7 +459,7 @@ export class LumenPlatform {
         await new Promise(resolve=>setTimeout(resolve,160));
       }
     }catch(error){await this.api('/ai/cancel',{id:result.id}).catch(()=>{});stream.textContent=error.message;throw error;}
-    finally{liveSession?.dispose();if(live&&completed){this.host.notify(liveSession.complete?`Edición finalizada en ${file}. Revisa el archivo antes de guardarlo; Ctrl+Z permite deshacer.`:'La respuesta no contiene un archivo completo. Revisa los cambios parciales o usa Ctrl+Z.');}this.liveEditing=false;this.liveEditingPath=null;document.querySelector('.ai-live-control').classList.remove('is-editing');document.querySelector('.ai-live-control small').textContent='Preguntar no modifica tu archivo.';this.aiJob=null;document.querySelector('.send-button').disabled=false;document.getElementById('ai-edit-file').disabled=false;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('.provider-status-dot').classList.remove('generating');}
+    finally{liveSession?.dispose();if(live&&completed){this.host.notify(liveSession.complete?`Edición finalizada en ${file}. Revisa el archivo antes de guardarlo; Ctrl+Z permite deshacer.`:'La respuesta no contiene un archivo completo. Revisa los cambios parciales o usa Ctrl+Z.');}this.liveEditing=false;this.filePlanRunning=false;this.liveEditingPath=null;document.querySelector('.ai-live-control').classList.remove('is-editing');document.querySelector('.ai-live-control small').textContent='Preguntar no modifica tu archivo.';this.aiJob=null;document.querySelector('.send-button').disabled=false;document.getElementById('ai-edit-file').disabled=false;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('.provider-status-dot').classList.remove('generating');}
   }
   async cancelAI(){if(this.aiJob)await this.api('/ai/cancel',{id:this.aiJob});}
   async clearAI(){await this.voice?.stop();if(this.aiJob)await this.cancelAI();this.aiGeneration++;this.aiJob=null;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('#ai-form .send-button').disabled=false;await this.api('/ai/clear',{});this.conversation=crypto.randomUUID?.()||String(Date.now());}
@@ -704,7 +704,7 @@ export class LumenPlatform {
     if(this.disposed)return;this.autoLanguageServer();this.lantern?.changed();this.companion?.changed();if(this.liveEditingPath===this.host.editor.current){clearTimeout(this.saveTimer);return;}clearTimeout(this.changeTimer);this.changeTimer=this.later(()=>{for(const s of this.lspSessions.values())this.safe(()=>this.syncLSP(s));this.refreshDiagnostics();},220);
     clearTimeout(this.syntaxTimer);const ed=this.host.editor,path=ed.current,text=ed.getValue();
     if(path&&text.length<250000)this.syntaxTimer=this.later(async()=>{try{const result=await this.api('/diagnostics',{path,content:text});if(this.disposed||ed.models.get(path)?.value!==text)return;ed.setDiagnostics(path,result.diagnostics);}catch(_){}},700);
-    clearTimeout(this.saveTimer);const live=this.lantern?.state.active;if(this.prefs['files.autoSave']&&!live&&ed.isDirty())this.saveTimer=this.later(()=>{if(this.prefs['files.autoSave']&&ed.current===path&&this.liveEditingPath!==path&&ed.isDirty())this.safe(()=>this.host.saveFile(path,{automatic:true}));},live?1100:this.prefs['files.autoSaveDelay']);
+    clearTimeout(this.saveTimer);const live=this.lantern?.state.active;if(this.prefs['files.autoSave']&&!live&&!this.filePlanRunning&&ed.isDirty())this.saveTimer=this.later(()=>{if(this.prefs['files.autoSave']&&!this.filePlanRunning&&ed.current===path&&this.liveEditingPath!==path&&ed.isDirty())this.safe(()=>this.host.saveFile(path,{automatic:true}));},live?1100:this.prefs['files.autoSaveDelay']);
   }
   async checkSaved(path){
     if(!/\.(c|cpp|cc|cxx|cs|rs|go|java|nc|n)$/i.test(path)||this.lantern?.state.active)return;

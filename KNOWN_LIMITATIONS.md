@@ -1,4 +1,15 @@
-# Límites reales · Zénit 0.5.4 R2
+# Límites reales · Zénit 0.5.4 R3
+
+R3 amplía Melody a archivos nombrados y documentos abiertos de la sesión, con
+deshacer de disco/búfer. Los planes siguen acotados a 60 archivos y 400000 bytes
+de texto; borrados individuales hasta 32 MiB, copia del lote hasta 64 MiB.
+El contexto de texto total no supera 64000 caracteres. No se ejecutan comandos
+de un plan, no se borran directorios y no se modifica .git/.lumen. Credenciales
+y binarios se omiten del contexto enviado al proveedor. El botón de deshacer
+pertenece a la sesión actual; las copias de recuperación sí quedan en disco.
+Los tests de planes prueban el flujo real con un transporte determinista, no la
+calidad del modelo. Los límites anteriores que siguen continúan vigentes, salvo
+la descripción histórica de Melody restringida a archivos limpios/de texto.
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.

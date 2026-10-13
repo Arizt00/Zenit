@@ -601,6 +601,7 @@ async function start(){
     });
     window.zenitStartup?.phase('extensions');await platformUI.init();
     studio=new LenonStudio({api,platform:platformUI,dock,editor,motion,modal,showMenu,closeModal,notify,ensureTrust,openFile,saveFile,changeWorkspace,palette:openPalette,refreshTree,service:()=>service,files:allFiles});
+    platformUI.host.studio=studio;
     window.zenitStartup?.phase('welcome');await studio.init();
     previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
     platformUI.companion=new MelodyCompanion(platformUI);

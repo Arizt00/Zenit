@@ -1,0 +1,117 @@
+{
+  "checks": [
+    "Browser boot finishes with real Monaco and no desktop wait",
+    "Day and dark welcome retain the real Blender/Babylon canvas",
+    "A fresh browser origin receives the actual profile theme before the app module runs",
+    "Activity preserves a real history filter after closing and reopening",
+    "Clear search, arrows and Enter reopen an actual buffer",
+    "Continue opens the actual most recent file",
+    "Activity projects and selected tab survive reopening",
+    "Activity row menus open above the sheet and Escape retains the sheet",
+    "The faded cover uses exactly the actual local profile image",
+    "Activity stays inside four desktop and compact viewports",
+    "Scrollbars are invisible while real mouse-wheel scrolling still works",
+    "Native detach visibility and auxiliary resizing cannot overwrite the saved main layout",
+    "A failed module import is visible and Retry recovers the actual app",
+    "Normal interactions produce no uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "metrics": {
+    "browserBoot": {
+      "complete": true,
+      "failed": false,
+      "phases": [
+        {
+          "name": "shell",
+          "ms": 0
+        },
+        {
+          "name": "shell",
+          "ms": 212
+        },
+        {
+          "name": "service",
+          "ms": 220
+        },
+        {
+          "name": "native",
+          "ms": 333
+        },
+        {
+          "name": "editor",
+          "ms": 333
+        },
+        {
+          "name": "extensions",
+          "ms": 1014
+        },
+        {
+          "name": "welcome",
+          "ms": 1470
+        },
+        {
+          "name": "ready",
+          "ms": 1510
+        }
+      ]
+    },
+    "welcomeStyles": {
+      ".welcome-copy h1": {
+        "size": "58px",
+        "color": "rgb(249, 247, 255)",
+        "line": "66.7px",
+        "rect": {
+          "x": 20,
+          "y": 483.671875,
+          "width": 1632,
+          "height": 66.6875
+        }
+      },
+      ".welcome-copy p": {
+        "size": "20px",
+        "color": "rgb(183, 177, 204)",
+        "line": "28px",
+        "rect": {
+          "x": 20,
+          "y": 566.359375,
+          "width": 1632,
+          "height": 28
+        }
+      },
+      ".welcome-profile": {
+        "size": "14px",
+        "color": "rgb(237, 232, 251)",
+        "line": "19.6px",
+        "rect": {
+          "x": 1466,
+          "y": 35,
+          "width": 156,
+          "height": 54
+        }
+      },
+      ".welcome-footer": {
+        "size": "14px",
+        "color": "rgb(191, 185, 211)",
+        "line": "20px",
+        "rect": {
+          "x": 50,
+          "y": 873,
+          "width": 1572,
+          "height": 20
+        }
+      },
+      ".welcome-scene": {
+        "size": "13px",
+        "color": "rgb(248, 246, 255)",
+        "line": "18.85px",
+        "rect": {
+          "x": 646,
+          "y": 153,
+          "width": 380,
+          "height": 330
+        }
+      }
+    }
+  },
+  "fixture": "Disposable Java/Python/JSON files and real Babylon/Monaco. Deliberate 404 tests error recovery; no user profile or model requests."
+}

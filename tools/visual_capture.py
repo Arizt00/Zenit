@@ -98,6 +98,15 @@ def capture(page,base,out,core=False,screenshot_scale='css',profile_animation=Fa
     (out/'optical.json').write_text(json.dumps(optical,indent=2),encoding='utf-8');page.evaluate('__zenitQa.studio.enter()')
     if core:
         (out/'baseline.json').write_text(json.dumps({'geometry':geometry,'errors':errors},indent=2),encoding='utf-8');return
+    # The portrait is an explicit local QA fixture, never the user's private avatar.
+    import base64,io
+    portrait=Image.new('RGB',(320,320),'#6a467d')
+    from PIL import ImageDraw
+    drawing=ImageDraw.Draw(portrait);drawing.rectangle((0,0,150,320),fill='#77c8de');drawing.ellipse((130,70,300,280),fill='#f08792');encoded=io.BytesIO();portrait.save(encoded,format='PNG')
+    avatar='data:image/png;base64,'+base64.b64encode(encoded.getvalue()).decode()
+    page.evaluate('async(avatar)=>{await __zenitQa.studio.save({avatar});__zenitQa.studio.editProfile()}',avatar)
+    page.wait_for_selector('.profile-portrait.has-picture');snap('profile');page.keyboard.press('Escape')
+    page.evaluate('__zenitQa.studio.showActivity()');snap('activity');page.keyboard.press('Escape')
     page.evaluate('__zenitQa.studio.search()');snap('search');page.evaluate('__zenitQa.platform.closePage()')
     page.evaluate('__zenitQa.platform.settings("general")');page.wait_for_selector('#settings-content');snap('settings')
     stats=page.evaluate('async()=>{let content=document.querySelector("#settings-content"),nav=document.querySelector(".settings-navigation"),count=0;const m=new MutationObserver(x=>count+=x.length);m.observe(document.querySelector("#platform-page"),{subtree:true,childList:true,attributes:true});await __zenitQa.platform.settings("appearance");await __zenitQa.platform.settings("general");m.disconnect();return {contentRetained:content===document.querySelector("#settings-content"),navigationRetained:nav===document.querySelector(".settings-navigation"),mutations:count}}');assert stats['contentRetained'] and stats['navigationRetained'],stats

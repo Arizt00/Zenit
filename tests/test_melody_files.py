@@ -21,6 +21,10 @@ class MelodyFilesTests(unittest.TestCase):
     def plan(self,ops,delete=False):
         self.jobs['job']=SimpleNamespace(file_workspace=str(self.root),file_delete_allowed=delete,done=True,error='',cancelled=threading.Event(),text=json.dumps({'summary':'Revisión','operations':ops}))
         return self.files.review(self.ws,'job')
+    def requested_plan(self,question,ops,path=''):
+        request=self.files.prepare(self.ws,{'question':question,'path':path})
+        self.jobs['job']=SimpleNamespace(file_workspace=str(self.root),file_delete_allowed=self.files.deletion_requested(question),file_snapshots=request['fileSnapshots'],file_session=request['fileSession'],done=True,error='',cancelled=threading.Event(),text=json.dumps({'summary':'Petición explícita','operations':ops}))
+        return self.files.review(self.ws,'job'),request
     def test_project_create_update_delete_and_recover(self):
         (self.root/'old.py').write_bytes(b'# old\r\n');(self.root/'keep.py').write_text('old')
         plan=self.plan([{'kind':'create','path':'project/src/main.py','content':'print(42)\n'},{'kind':'update','path':'keep.py','content':'new'},{'kind':'delete','path':'old.py'}],True)
@@ -68,3 +72,43 @@ class MelodyFilesTests(unittest.TestCase):
         with self.assertRaises(PermissionError):self.files.review(self.ws,'job')
         self.files.plans[plan['ticket']]['created']-=601
         with self.assertRaises(ConflictError):self.files.commit(self.ws,plan['ticket'],True)
+    def test_requested_dirty_buffer_is_context_and_undo_restores_it(self):
+        (self.root/'main.py').write_bytes(b'\xef\xbb\xbfprint(1)\r\n')
+        buffers=self.files.platform.buffers;buffers.update(self.ws,{'path':'main.py','text':'print(2)\n','saved':False})
+        plan,request=self.requested_plan('Modifica main.py para imprimir 3',[{'kind':'update','path':'main.py','content':'print(3)\n'}])
+        self.assertEqual(request['fileContext'][0]['content'],'print(2)\n');self.assertEqual(plan['operations'][0]['before'],'print(2)\n')
+        result=self.files.commit(self.ws,plan['ticket'],True)
+        self.assertEqual((self.root/'main.py').read_bytes(),b'\xef\xbb\xbfprint(3)\r\n');self.assertTrue(buffers.items['main.py']['saved'])
+        self.files.undo(self.ws,result['receipt']);self.assertEqual((self.root/'main.py').read_bytes(),b'\xef\xbb\xbfprint(1)\r\n')
+        self.assertEqual(buffers.items['main.py']['text'],'print(2)\n');self.assertFalse(buffers.items['main.py']['saved'])
+    def test_request_revision_cannot_be_replaced_during_generation(self):
+        path=self.root/'main.py';path.write_text('original');request=self.files.prepare(self.ws,{'question':'Modifica main.py'})
+        path.write_text('new edit')
+        self.jobs['job']=SimpleNamespace(file_workspace=str(self.root),file_delete_allowed=False,file_snapshots=request['fileSnapshots'],file_session=request['fileSession'],done=True,error='',cancelled=threading.Event(),text=json.dumps({'operations':[{'kind':'update','path':'main.py','content':'model'}]}))
+        with self.assertRaises(ConflictError):self.files.review(self.ws,'job')
+        self.assertEqual(path.read_text(),'new edit')
+    def test_named_binary_and_private_deletion_is_recoverable_without_remote_contents(self):
+        raw=b'\x00\xffBINARY';(self.root/'asset.bin').write_bytes(raw);(self.root/'.env').write_text('KEY=private-fixture')
+        plan,request=self.requested_plan('Borra asset.bin y elimina .env',[{'kind':'delete','path':'asset.bin'},{'kind':'delete','path':'.env'}])
+        self.assertTrue(all(x['content'] is None for x in request['fileContext']))
+        self.assertNotIn('private-fixture',json.dumps(request['fileContext']))
+        result=self.files.commit(self.ws,plan['ticket'],True);self.assertFalse((self.root/'asset.bin').exists());self.files.undo(self.ws,result['receipt'])
+        self.assertEqual((self.root/'asset.bin').read_bytes(),raw);self.assertEqual((self.root/'.env').read_text(),'KEY=private-fixture')
+    def test_only_open_external_session_files_are_targets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'external.py';path.write_text('outside');self.files.platform.buffers.update(self.ws,{'path':str(path),'text':'outside','saved':True})
+            plan,_=self.requested_plan('Modifica external.py',[{'kind':'update','path':path.as_posix(),'content':'changed'}])
+            result=self.files.commit(self.ws,plan['ticket'],True);self.assertEqual(path.read_text(),'changed');self.files.undo(self.ws,result['receipt']);self.assertEqual(path.read_text(),'outside')
+            other=Path(tmp)/'other.py';other.write_text('untouched')
+            with self.assertRaises(PermissionError):self.requested_plan('Modifica external.py',[{'kind':'update','path':other.as_posix(),'content':'bad'}])
+    def test_ambiguous_basename_and_unrequested_existing_file_are_rejected(self):
+        for folder in ('a','b'):(self.root/folder).mkdir();(self.root/folder/'main.py').write_text(folder)
+        with self.assertRaises(ValueError):self.files.prepare(self.ws,{'question':'Modifica main.py'})
+        with self.assertRaises(PermissionError):self.requested_plan('Modifica a/main.py',[{'kind':'update','path':'b/main.py','content':'bad'}])
+        with self.assertRaises(PermissionError):self.files.prepare(self.ws,{'question':'Explica cómo borrar a/main.py'})
+        self.assertFalse(self.files.deletion_requested('Modifica a/main.py y no borres b/main.py'))
+    def test_named_new_config_and_open_unsaved_draft_can_be_created(self):
+        self.files.platform.buffers.update(self.ws,{'path':'new.py','text':'# unsaved draft','saved':False})
+        plan,_=self.requested_plan('Crea new.py y .env.example',[{'kind':'create','path':'new.py','content':'print(42)'},{'kind':'create','path':'.env.example','content':'API_KEY='}])
+        receipt=self.files.commit(self.ws,plan['ticket'],True);self.assertEqual((self.root/'new.py').read_text(),'print(42)')
+        self.files.undo(self.ws,receipt['receipt']);self.assertFalse((self.root/'new.py').exists());self.assertEqual(self.files.platform.buffers.items['new.py']['text'],'# unsaved draft')

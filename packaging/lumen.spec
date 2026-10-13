@@ -25,7 +25,7 @@ already={Path(source).name for source,destination in data if destination=='backe
 for name in ('emma_voice_bridge.mjs','emma_voice_worker.py'):data.append((str(ROOT/'backend'/name),'backend'))
 for source in (ROOT/'backend').glob('extension_*.cjs'):
     if source.name not in already:data.append((str(source),'backend'))
-for name in ('PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
+for name in ('PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
     data.append((str(ROOT/'docs'/name),'docs'))
 # Only the shipped examples belong in the bundle, never compiler/profile caches.
 for file in (ROOT/'workspace').rglob('*'):
@@ -50,4 +50,4 @@ exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='zenit',debug=False,bootload
 python_exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='zenit-python',debug=False,bootloader_ignore_signals=False,strip=False,version=str(ROOT/'packaging/version.txt') if sys.platform=='win32' else None,upx=False,console=True)
 collection=COLLECT(exe,python_exe,a.binaries,a.datas,strip=False,upx=False,name='Zenit')
 if sys.platform=='darwin':
-    app=BUNDLE(collection,name='Zenit.app',icon=str(icon) if icon.exists() else None,bundle_identifier='studio.lumen.ide',info_plist={'CFBundleShortVersionString':'0.5.4','CFBundleVersion':'0.5.4.2','NSHighResolutionCapable':True,'LSMinimumSystemVersion':'14.0','NSHumanReadableCopyright':'Zénit. Licencia propietaria de preview.'})
+    app=BUNDLE(collection,name='Zenit.app',icon=str(icon) if icon.exists() else None,bundle_identifier='studio.lumen.ide',info_plist={'CFBundleShortVersionString':'0.5.4','CFBundleVersion':'0.5.4.3','NSHighResolutionCapable':True,'LSMinimumSystemVersion':'14.0','NSHumanReadableCopyright':'Zénit. Licencia propietaria de preview.'})

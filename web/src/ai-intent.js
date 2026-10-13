@@ -1,5 +1,5 @@
 // Classify only a direct first-person request, excluding quoted/code content.
-// The concrete target still requires per-request confirmation before editing.
+// The concrete target is captured when the request starts.
 export function requestsLiveEdit(question){
   const text=String(question).replace(/```[\s\S]*?(?:```|$)/g,'').replace(/^\s*>.*$/gm,'').replace(/["“][^"”]*["”]/g,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   if(/\b(no|nunca|sin|don't|do not|never)\b/.test(text))return false;
@@ -16,6 +16,6 @@ export function requestsRealtimeHelp(question){
 // Project/resource requests go through a complete, reviewable disk plan.
 export function requestsFileChanges(question){
   const text=String(question).replace(/```[\s\S]*?(?:```|$)/g,'').replace(/^\s*>.*$/gm,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-  if(/\b(?:no|nunca|never|don't|do not)\b/.test(text))return false;
-  return /^(?:(?:por favor|puedes|quiero que|necesito que|please|can you)\s+)?(?:crea|crear|genera|generar|borra|borrar|elimina|eliminar|create|generate|delete|remove)\b/.test(text)&&/\b(?:archivo[s]?|carpeta[s]?|proyecto[s]?|file[s]?|folder[s]?|project[s]?)\b/.test(text);
+  const direct=/^\s*(?:(?:por favor|puedes|quiero que|necesito que|please|can you)\s+)*(?:crea|crear|genera|generar|escribe|escribir|reescribe|modifica|modificar|edita|editar|actualiza|actualizar|cambia|cambiar|anade|implementa|borra|borrar|elimina|eliminar|suprime|create|generate|write|rewrite|edit|update|change|add|implement|delete|remove)\b/.test(text);
+  return direct&&(/\b(?:archivo[s]?|carpeta[s]?|proyecto[s]?|file[s]?|folder[s]?|project[s]?)\b/.test(text)||/(?:^|[\s"'`(])(?:[\w@-]+[\/\\])*[\w@-]+\.[\w.-]+(?:$|[\s"'`,:)])/.test(text));
 }

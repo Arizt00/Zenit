@@ -28,6 +28,14 @@
 .welcome-footer>span:last-child:before {content:"";width:44px;height:1px;background:#bfb9d3;}
 .welcome-profile {position:absolute;top:35px;right:50px;display:flex;align-items:center;gap:var(--space-7);padding:var(--space-4);border:1px solid #aaa0ce30;background:#1d1d31b0;border-radius:16px;color:#ede8fb;font-size:14px;line-height:1.4;min-height:52px;width:156px;box-shadow:0 2px 20px #8d73dd12;}
 .welcome-profile:hover {background:#28273fb0;border-color:#aaa0ce50;}
+.welcome-sky {position:absolute;inset:0;pointer-events:none;}
+.welcome-sky i {position:absolute;width:2px;height:2px;border-radius:50%;background:#e9e2ff;box-shadow:0 0 6px #d6c7ff80;opacity:.12;animation:welcome-twinkle var(--twinkle-time) ease-in-out var(--twinkle-delay) infinite alternate;}
+@keyframes welcome-twinkle {to {opacity:.65;}}
+#lumen-home[hidden] .welcome-sky i,:root[data-motion=off] .welcome-sky i,:root[data-app-visible=false] .welcome-sky i {animation-play-state:paused;}
+.welcome-actions button>.icon:last-child {transition:transform var(--motion-fast);}
+.welcome-actions button:hover>.icon:last-child {transform:translateX(3px);}
+.welcome-actions button:focus-visible,.welcome-profile:focus-visible {outline:2px solid #e3d1ff;outline-offset:4px;}
+@media(prefers-reduced-motion:reduce) {.welcome-sky i {animation:none;}.welcome-actions button>.icon:last-child {transition:none;transform:none;}}
 .welcome-profile>span:last-child {padding-right:var(--space-4);}
 .welcome-profile-avatar,.activity-avatar {display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:12px;background:linear-gradient(145deg,#b18bff,#7643f7);color:#fff;font-size:18px;box-shadow:inset 0 1px 1px #ffffff44;}
 .welcome-profile-avatar img,.activity-avatar img {width:100%;height:100%;object-fit:cover;border-radius:inherit;}

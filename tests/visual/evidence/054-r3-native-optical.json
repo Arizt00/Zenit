@@ -1,0 +1,50 @@
+{
+  "context": {
+    "alpha": true,
+    "antialias": true,
+    "depth": true,
+    "desynchronized": false,
+    "failIfMajorPerformanceCaveat": false,
+    "powerPreference": "default",
+    "premultipliedAlpha": true,
+    "preserveDrawingBuffer": false,
+    "stencil": false,
+    "xrCompatible": false
+  },
+  "rect": {
+    "x": 646,
+    "y": 149.15625,
+    "w": 380,
+    "h": 321.7083435058594
+  },
+  "meshes": [
+    {
+      "name": "Crystal outer wall",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "Crystal inner wall",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    },
+    {
+      "name": "liquid-ribbon",
+      "alpha": 0.55,
+      "emissive": [
+        1,
+        0.99,
+        1
+      ],
+      "type": "StandardMaterial"
+    },
+    {
+      "name": "light-field",
+      "alpha": 1,
+      "emissive": null,
+      "type": "ShaderMaterial"
+    }
+  ]
+}
