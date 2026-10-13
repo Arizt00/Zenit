@@ -89,7 +89,8 @@ def main():
                 until(lambda:api._window.evaluate_js('!!window.lumen?.ready'))
                 assert api.status()['revision']==REVISION
                 assert api._window.evaluate_js('window.lumen.editorKind')=='monaco'
-                assert api._window.evaluate_js('document.title').startswith(PRODUCT_NAME)
+                title=api._window.evaluate_js('document.title')
+                assert title.endswith(PRODUCT_NAME),(title,PRODUCT_NAME)
                 assert api._window.evaluate_js('document.querySelector(".brand-tagline").textContent').endswith('R'+str(REVISION))
                 checks.append('Packaged runtime, Monaco and native JS bridge')
                 assert app.native.lib is not None,app.native.name

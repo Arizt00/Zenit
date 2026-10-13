@@ -1,5 +1,5 @@
 """Version shared by native packages and the update service."""
-PRODUCT_NAME = 'ZÃ©nit'
+PRODUCT_NAME = 'Zénit'
 REPOSITORY = 'Arizt00/Zenit'
 VERSION = '0.5.4'
 REVISION = 5
