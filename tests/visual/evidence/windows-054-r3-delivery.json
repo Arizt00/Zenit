@@ -1,0 +1,20 @@
+{
+  "revision": 3,
+  "sourceCommit": "6b49760e262fd9890690663e7f469dd30d8ee5fa",
+  "release": "https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.3",
+  "python": {
+    "tests": 317,
+    "pass": 312,
+    "skip": 5
+  },
+  "node": 101,
+  "ui": 69,
+  "packagedNative": 15,
+  "installedNative": 18,
+  "installedSources": 110,
+  "actualUserPhotoVerified": true,
+  "profilePreserved": true,
+  "stableLauncherActualRevision": 3,
+  "remoteDigestsVerified": true,
+  "generationQualityMeasured": false
+}
