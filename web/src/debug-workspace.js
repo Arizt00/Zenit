@@ -25,7 +25,7 @@ export class DebugWorkspace{
     root.querySelectorAll('[data-debug]').forEach(button=>button.onclick=()=>this.command(button.dataset.debug));
     root.querySelector('.debug-more').onclick=e=>h.platform.host.showMenu(e.currentTarget,[{label:'Salir de la función',icon:'arrow-up-right',disabled:!this.state?.stepOutSupported||this.state.status!=='paused',run:()=>this.command('out')},{label:'Pausar ejecución',icon:'stop',disabled:this.state?.status!=='running'||this.state?.preparing,run:()=>this.command('pause')}],'Depuración');
     root.querySelector('#debug-configure').onclick=()=>this.studio.safe(()=>this.studio.configureLanguages());
-    root.querySelector('[data-debug-analyze]').onclick=()=>{h.dock.show('assistant');document.querySelector('#ai-input').value=`Analiza esta sesión de depuración y propone una corrección revisable. Distingue hechos e hipótesis.\n${JSON.stringify({path:this.state?.path,status:this.state?.status,line:this.state?.line,error:this.state?.error,stack:this.state?.stack,variables:this.state?.variables,output:this.state?.output?.slice(-6000)},null,2)}`;document.querySelector('#ai-input').focus();};
+    root.querySelector('[data-debug-analyze]').onclick=()=>this.studio.safe(()=>this.consultMelody());
     root.querySelector('#debug-clear').onclick=()=>{this.outputOffset=(this.state?.output||'').length;this.signatures.delete('output');this.renderOutput();};
     root.querySelector('#debug-input-form').onsubmit=e=>{e.preventDefault();this.action(async()=>{const field=root.querySelector('#debug-input');await h.api('/platform/debug/input',{text:field.value+'\n'});field.value='';});};
     root.querySelectorAll('[data-debug-tab]').forEach(button=>button.onclick=()=>this.select(button.dataset.debugTab));
@@ -34,6 +34,14 @@ export class DebugWorkspace{
   }
   select(tab){if(!TABS.some(x=>x[0]===tab)||!this.root?.isConnected)return;this.tab=tab;this.root.querySelectorAll('[data-debug-tab]').forEach(button=>{const active=button.dataset.debugTab===tab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});this.root.querySelectorAll('[data-debug-pane]').forEach(pane=>pane.hidden=pane.dataset.debugPane!==tab);}
   busy(){return ['running','paused'].includes(this.state?.status);}
+  async consultMelody(){
+    const h=this.host,p=h.platform;if(p.aiStarting||p.aiJob){h.dock.floatPanel('assistant');document.getElementById('ai-input').focus();h.notify(p.t('Melody está respondiendo. Detén o termina la respuesta antes de consultar otra sesión.','Melody is responding. Finish or stop the response before consulting another session.'));return;}
+    const state=this.state||{},path=state.path||this.selected;
+    const question='Analyze this debugger snapshot. Explain the observed state, likely cause, and next diagnostic step. Distinguish facts from hypotheses. Propose a reviewable fix if supported by the evidence. This is a read-only consultation; do not edit files.\n'+JSON.stringify({path,status:state.status,line:state.line,error:state.error,stack:state.stack,variables:state.variables,output:state.output?.slice(-6000)},null,2);
+    h.dock.floatPanel('assistant');p.melodyMode='chat';const input=document.getElementById('ai-input');input.value=question;input.focus();
+    if(!p.prefs['ai.model']){await p.settings('ai');h.notify(p.t('Conecta un modelo. La consulta de depuración permanece preparada en Melody.','Connect a model. Your debug question remains prepared in Melody.'));return;}
+    await p.sendAI(question,{consult:true});
+  }
   engine(){const node=this.root.querySelector('#debug-engine'),text=this.busy()&&this.state?.engine||ENGINES[this.selected?.split('.').pop().toLowerCase()]||'DAP configurable';if(node.textContent!==text)node.textContent=text;}
   command(command){return this.action(()=>this.host.api('/platform/debug/command',{command}));}
   async action(fn){if(this.pending)return;this.pending=true;this.controls();const root=this.root;root.querySelector('.debug-feedback').hidden=true;try{await fn();}catch(error){if(root.isConnected){root.querySelector('.debug-feedback').textContent=error.message;root.querySelector('.debug-feedback').hidden=false;}}finally{this.pending=false;if(root===this.root&&root.isConnected){this.controls();await this.poll();}}}

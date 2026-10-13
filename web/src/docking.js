@@ -40,8 +40,10 @@ export class DockManager {
   read(){try{return normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||localStorage.getItem('lumen.layout.v2')||'null'));}catch(_){return defaultLayout();}}
   save(){if(new URLSearchParams(location.search).has('panel'))return;try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(this.snapshot({persistent:true})));}catch(_){/* Session remains usable in storage-restricted webviews. */}}
   snapshot({persistent=false}={}){return persistent?persistedLayout(this.state,[...this.nativeDetached]):JSON.parse(JSON.stringify(this.state));}
-  visibleIds(side){return this.state.groups[side].filter(id=>!this.state.hidden.includes(id)&&!this.state.floating[id]);}
-  isVisible(id){const side=sideOf(this.state,id),drawerClosed=side==='right'&&matchMedia('(max-width:1099px)').matches&&!this.compactOpen;return !this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!drawerClosed&&!this.state.collapsed.includes(side)&&this.state.active[side]===id));}
+  setContext(kind){this.contextHidden=new Set(kind==='extensions'?['project','assistant','console']:kind==='foundation'?['project','assistant']:kind==='debug'||kind==='search'?['assistant']:[]);this.render();}
+  contextAllows(id){return !this.contextHidden?.has(id)||(this.root.dataset.page==='debug'&&id==='assistant'&&!!this.state.floating[id]);}
+  visibleIds(side){return this.state.groups[side].filter(id=>!this.state.hidden.includes(id)&&!this.state.floating[id]&&this.contextAllows(id));}
+  isVisible(id){const side=sideOf(this.state,id),drawerClosed=side==='right'&&matchMedia('(max-width:1099px)').matches&&!this.compactOpen;return this.contextAllows(id)&&!this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!drawerClosed&&!this.state.collapsed.includes(side)&&this.state.active[side]===id));}
   announce(message){document.querySelector('#layout-announcement').textContent=message;}
   transition(change,animate=true){
     const apply=()=>{change();this.state=normalizeLayout(this.state);this.save();this.render();};
@@ -145,7 +147,7 @@ export class DockManager {
       }
       const content=frame.querySelector('.floating-content');if(panel.parentElement!==content)content.appendChild(panel);
       const forge=panel.querySelector('.forge-dashboard'),caption=id==='console'&&forge&&!forge.hidden?'Zénit · Forge':PANEL_LABELS[id],title=frame.querySelector('.floating-title>span');if(title.dataset.caption!==caption){title.dataset.caption=caption;title.innerHTML=icon(PANEL_ICONS[id])+escapeHTML(caption);}
-      frame.hidden=this.state.hidden.includes(id);panel.hidden=frame.hidden;panel.inert=frame.hidden;panel.removeAttribute('role');panel.removeAttribute('aria-labelledby');this.placeFloat(id);if(created&&!frame.hidden)this.motion.enter(frame,4);
+      frame.hidden=this.state.hidden.includes(id)||!this.contextAllows(id);panel.hidden=frame.hidden;panel.inert=frame.hidden;panel.removeAttribute('role');panel.removeAttribute('aria-labelledby');this.placeFloat(id);if(created&&!frame.hidden)this.motion.enter(frame,4);
     }
   }
   resizeFloat(event,id){
@@ -161,7 +163,7 @@ export class DockManager {
     document.querySelector('[data-action="toggle-rail"]')?.setAttribute('aria-expanded',String(!this.state.railCompact));
     const limits=this.limits();
     for(const side of SIDES){
-      const slot=this.slots[side],visible=this.visibleIds(side),active=this.state.active[side];
+      const slot=this.slots[side],visible=this.visibleIds(side),active=visible.includes(this.state.active[side])?this.state.active[side]:visible[0];
       const available=visible.length>0&&(side!=='right'||!compact||this.compactOpen);
       const collapsed=this.state.collapsed.includes(side)&&side!=='bottom';
       slot.hidden=!available;slot.classList.toggle('is-collapsed',collapsed);
@@ -177,7 +179,7 @@ export class DockManager {
         if(this.panels[id].classList.contains('native-detached-content'))continue;
         if(this.state.floating[id])continue;
         const panel=this.panels[id];if(panel.parentElement!==slot.querySelector('.dock-content'))slot.querySelector('.dock-content').appendChild(panel);
-        panel.hidden=id!==active||this.state.hidden.includes(id);panel.inert=panel.hidden;
+        panel.hidden=id!==active||this.state.hidden.includes(id)||!this.contextAllows(id);panel.inert=panel.hidden;
         if(visible.length>1){panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','dock-tab-'+id);}
         else {panel.removeAttribute('role');panel.removeAttribute('aria-labelledby');}
       }

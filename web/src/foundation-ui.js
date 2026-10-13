@@ -50,7 +50,15 @@ export class FoundationUI{
     page.querySelector('#lab-assembly').onclick=()=>h.platform.safe(async()=>{await h.studio.save({workspaceStyle:'assembly'});h.platform.closePage();h.profiles.apply();});
     page.querySelector('#lab-create-arch').onclick=e=>this.operation(e.currentTarget,async()=>{if(!await h.ensureTrust())return false;this.machines=await h.platform.api('/machines/create',{type:'arch'});if(page.isConnected)this.updateMachines();},'Perfil Arch preparado.');
     page.querySelector('#lab-ssh').onsubmit=e=>{e.preventDefault();this.operation(e.submitter,async()=>{if(!await h.ensureTrust())return false;const body=Object.fromEntries(new FormData(e.target));body.port=Number(body.port);this.machines=await h.platform.api('/machines/create',body);if(page.isConnected)this.updateMachines();},'Conexión añadida.');};
-    this.updateTools();this.updateMachines();this.selectSection(this.section);
+    this.addProjectWorkflow();this.updateTools();this.updateMachines();this.selectSection(this.section);
+  }
+  addProjectWorkflow(){
+    const h=this.host,p=h.platform,t=(es,en)=>p.t(es,en),path=h.editor.current||'',language=path.split('.').pop();
+    const box=document.createElement('section');box.className='lab-project-context';
+    box.innerHTML=`<div><span class="platform-eyebrow">PROJECT READINESS</span><strong>${esc(path||t('Sin archivo activo','No active file'))}</strong><p>${t('Configura el entorno aquí. Ejecuta y observa su resultado en Forge.','Configure the environment here. Execute and inspect the result in Forge.')}</p></div><button class="primary-button" data-lab-forge>${icon('play')}Open Forge</button><button class="secondary-button" data-lab-assist>${icon('sparkles')}Explain setup</button>`;
+    this.root.querySelector('.lab-navigation').before(box);
+    box.querySelector('[data-lab-forge]').onclick=()=>p.safe(async()=>{p.closePage();await h.desktop.openForgeTerminal();});
+    box.querySelector('[data-lab-assist]').onclick=()=>p.safe(async()=>{const tools=this.sdk.tools.map(x=>({name:NAMES[x.id]||x.id,available:!!x.path,bundled:!!x.bundled}));p.closePage();p.host.dock.floatPanel('assistant');p.melodyMode='chat';const question='Explain the environment needed to run this active project file. Use the detected tool inventory, identify missing prerequisites and propose clear setup steps. Do not run commands or edit files.\n'+JSON.stringify({path,language,tools},null,2);document.getElementById('ai-input').value=question;await p.sendAI(question,{consult:true});});
   }
   selectSection(id){
     if(!SECTIONS.some(s=>s[0]===id))return;this.section=id;

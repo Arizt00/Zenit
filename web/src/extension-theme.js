@@ -45,12 +45,16 @@ export function themePalette(theme) {
     palette[token+'-text']=readable(palette.text,palette[background]);palette[token+'-secondary']=readable(palette.secondary,palette[background]);palette[token+'-accent']=readable(palette.accent,palette[background]);
   }
   palette.overlay=palette.bg+'88';palette.focus=readable(pick('focusBorder',palette.accent),palette.surface,3);
+  palette['editor-text']=readable(text,palette.editor);
+  palette['editor-muted']=readable(pick('editorLineNumber.foreground',palette.secondary),palette.editor);
+  palette['border-strong']=contrastRatio(opaque(palette['border-strong'],palette.surface),palette.surface)>=1.2?opaque(palette['border-strong'],palette.surface):hex(rgb(palette.surface).map((c,i)=>c*.72+rgb(palette.text)[i]*.28));
   palette['chrome-halo']=palette.bg;palette['selection-halo']=palette.selected;
   palette['logo-light']=palette['logo-dark']=palette['chrome-accent'];
   for(const key of ['success','danger','warning'])palette[key]=readable(palette[key],palette.surface);
   palette['positive-bg']=palette['accent-soft'];palette['positive-text']=readable(palette.success,palette['positive-bg']);
   palette['terminal-text']=readable(palette['terminal-text'],palette['terminal-bg']);
   palette['selected-text']=readable(pick('list.activeSelectionForeground',palette.text),palette.selected);
+  palette.pressed=palette.hover;
   for(const key of Object.keys(palette).filter(k=>k.startsWith('syntax-')))palette[key]=readable(palette[key],palette.editor);
   return {palette,colors,dark};
 }

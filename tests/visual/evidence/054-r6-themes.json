@@ -1,0 +1,4112 @@
+{
+  "checks": [
+    "89 real themes occupy one chooser per package, without a variant button row",
+    "Theme picker filters real variants and supports keyboard selection",
+    "All 89 variants retain actual contrast, card bounds and the same Monaco model; one theme notice",
+    "A separated Project window receives the same theme through real preference events",
+    "Theme changes from a separated window retain Settings fields and focus, and show only the effective theme as active",
+    "Theme type filters use actual declarations and an empty search reports no invented results",
+    "Theme package cards fit 1280x720, 1366x768 and 1920x1080",
+    "Removing an extension theme restores the chosen Z\u00e9nit theme in both windows",
+    "Theme state persists after reload without residual extension tokens",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "themes": [
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro",
+        "label": "One Dark Pro"
+      },
+      "ratios": {
+        "accent": 6.5143033813220015,
+        "soft-text": 4.9926185282113025,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "selected-text": 9.327638148310466,
+        "chrome-accent": 5.924116690419365,
+        "positive-text": 5.629180975327024
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(97, 175, 239)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 255, 255)"
+        }
+      ],
+      "accent": "#61afef",
+      "primary": "#ffffff"
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Flat",
+        "label": "One Dark Pro Flat"
+      },
+      "ratios": {
+        "accent": 12.284217216634145,
+        "soft-text": 10.352667525865085,
+        "field-text": 7.22197939059332,
+        "button-text": 9.34449815586896,
+        "selected-text": 9.327638148310466,
+        "chrome-accent": 12.284217216634145,
+        "positive-text": 5.629180975327024
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(240, 240, 240)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "",
+          "color": "rgb(150, 154, 164)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 255, 255)"
+        }
+      ],
+      "accent": "#f0f0f0",
+      "primary": "#ffffff"
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Darker",
+        "label": "One Dark Pro Darker"
+      },
+      "ratios": {
+        "accent": 6.766608796080326,
+        "soft-text": 4.9926185282113025,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "selected-text": 9.327638148310466,
+        "chrome-accent": 6.342526205143665,
+        "positive-text": 5.629180975327024
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(97, 175, 239)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 255, 255)"
+        }
+      ],
+      "accent": "#61afef",
+      "primary": "#ffffff"
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Mix",
+        "label": "One Dark Pro Mix"
+      },
+      "ratios": {
+        "accent": 6.5143033813220015,
+        "soft-text": 4.9926185282113025,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "selected-text": 9.327638148310466,
+        "chrome-accent": 6.5143033813220015,
+        "positive-text": 5.629180975327024
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(97, 175, 239)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "",
+          "color": "rgb(139, 145, 157)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 255, 255)"
+        }
+      ],
+      "accent": "#61afef",
+      "primary": "#ffffff"
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Night Flat",
+        "label": "One Dark Pro Night Flat"
+      },
+      "ratios": {
+        "accent": 7.4620884324884145,
+        "soft-text": 4.9926185282113025,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "selected-text": 9.327638148310466,
+        "chrome-accent": 7.4620884324884145,
+        "positive-text": 5.629180975327024
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(97, 175, 239)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "",
+          "color": "rgb(171, 178, 191)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 255, 255)"
+        }
+      ],
+      "accent": "#61afef",
+      "primary": "#ffffff"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Metallian",
+        "label": "Bearded Theme Monokai Metallian"
+      },
+      "ratios": {
+        "accent": 10.707286392026765,
+        "soft-text": 9.49987136989093,
+        "field-text": 9.971416597300664,
+        "button-text": 4.695601604880636,
+        "selected-text": 8.947302605694711,
+        "chrome-accent": 11.471445940066689,
+        "positive-text": 9.488898107590447
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(208, 211, 222)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(120, 220, 232)"
+        },
+        {
+          "label": "",
+          "color": "rgb(208, 211, 222)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(208, 211, 222)"
+        },
+        {
+          "label": "",
+          "color": "rgb(147, 153, 168)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(217, 221, 228)"
+        }
+      ],
+      "accent": "#78dce8",
+      "primary": "#d9dde4"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Terra",
+        "label": "Bearded Theme Monokai Terra"
+      },
+      "ratios": {
+        "accent": 10.383192772858465,
+        "soft-text": 9.121326172621922,
+        "field-text": 9.947077829897667,
+        "button-text": 4.6178907415987,
+        "selected-text": 9.02509083296974,
+        "chrome-accent": 11.21379242550978,
+        "positive-text": 9.11079016632002
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(217, 214, 219)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(120, 220, 232)"
+        },
+        {
+          "label": "",
+          "color": "rgb(217, 214, 219)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(217, 214, 219)"
+        },
+        {
+          "label": "",
+          "color": "rgb(159, 156, 163)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(228, 223, 224)"
+        }
+      ],
+      "accent": "#78dce8",
+      "primary": "#e4dfe0"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Stone",
+        "label": "Bearded Theme Monokai Stone"
+      },
+      "ratios": {
+        "accent": 9.296101152795622,
+        "soft-text": 8.06821545752223,
+        "field-text": 9.569614328537035,
+        "button-text": 4.520762689732426,
+        "selected-text": 9.285526790635503,
+        "chrome-accent": 10.158931461675387,
+        "positive-text": 8.058895895070807
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(222, 224, 228)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(120, 220, 232)"
+        },
+        {
+          "label": "",
+          "color": "rgb(222, 224, 228)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(222, 224, 228)"
+        },
+        {
+          "label": "",
+          "color": "rgb(163, 166, 172)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(223, 226, 227)"
+        }
+      ],
+      "accent": "#78dce8",
+      "primary": "#dfe2e3"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Black",
+        "label": "Bearded Theme Monokai Black"
+      },
+      "ratios": {
+        "accent": 12.135303202718799,
+        "soft-text": 11.052297162961619,
+        "field-text": 10.295485686405037,
+        "button-text": 4.845442873551445,
+        "selected-text": 8.375737047648922,
+        "chrome-accent": 12.737202651193536,
+        "positive-text": 11.03953070002019
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(199, 199, 199)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(120, 220, 232)"
+        },
+        {
+          "label": "",
+          "color": "rgb(199, 199, 199)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(199, 199, 199)"
+        },
+        {
+          "label": "",
+          "color": "rgb(141, 141, 141)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(199, 199, 199)"
+        }
+      ],
+      "accent": "#78dce8",
+      "primary": "#c7c7c7"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Reversed",
+        "label": "Bearded Theme Monokai Reversed"
+      },
+      "ratios": {
+        "accent": 11.024416304047511,
+        "soft-text": 9.974847548684995,
+        "field-text": 10.627640975909209,
+        "button-text": 4.7743599702963575,
+        "selected-text": 8.614506008480431,
+        "chrome-accent": 11.74952365678689,
+        "positive-text": 9.96332564335626
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(198, 202, 215)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(120, 220, 232)"
+        },
+        {
+          "label": "",
+          "color": "rgb(198, 202, 215)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(198, 202, 215)"
+        },
+        {
+          "label": "",
+          "color": "rgb(140, 144, 161)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(217, 221, 228)"
+        }
+      ],
+      "accent": "#78dce8",
+      "primary": "#d9dde4"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Solarized",
+        "label": "Bearded Theme Solarized"
+      },
+      "ratios": {
+        "accent": 8.306812854169696,
+        "soft-text": 6.987217171143644,
+        "field-text": 9.518027609225289,
+        "button-text": 4.507416883809253,
+        "selected-text": 8.647554871481555,
+        "chrome-accent": 9.130345352818686,
+        "positive-text": 6.036969656125066
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(195, 224, 233)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(71, 207, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(195, 224, 233)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(195, 224, 233)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 171, 184)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(223, 247, 245)"
+        }
+      ],
+      "accent": "#47cfc4",
+      "primary": "#dff7f5"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Solarized Reversed",
+        "label": "Bearded Theme Solarized Reversed"
+      },
+      "ratios": {
+        "accent": 8.652201026583827,
+        "soft-text": 7.603394575760272,
+        "field-text": 10.929207038149023,
+        "button-text": 4.506456738210579,
+        "selected-text": 8.596086383008108,
+        "chrome-accent": 9.441486489230542,
+        "positive-text": 6.569348170109573
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(186, 215, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(71, 207, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(186, 215, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(186, 215, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(123, 162, 178)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(216, 245, 243)"
+        }
+      ],
+      "accent": "#47cfc4",
+      "primary": "#d8f5f3"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+        "label": "Bearded Theme Solarized Light"
+      },
+      "ratios": {
+        "accent": 4.682187257699142,
+        "soft-text": 4.501162936973286,
+        "field-text": 19.76872905995244,
+        "button-text": 11.037854004987265,
+        "selected-text": 17.674134461956033,
+        "chrome-accent": 4.500852405042236,
+        "positive-text": 4.501969419912875
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(59, 85, 204)"
+        },
+        {
+          "label": "",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "",
+          "color": "rgb(49, 47, 44)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#405dde",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Oceanic",
+        "label": "Bearded Theme Oceanic"
+      },
+      "ratios": {
+        "accent": 8.224118428565847,
+        "soft-text": 6.789694288393522,
+        "field-text": 9.564979559290938,
+        "button-text": 4.508655049568876,
+        "selected-text": 8.24883787365531,
+        "chrome-accent": 8.982014054519333,
+        "positive-text": 6.789694288393522
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(205, 221, 230)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(151, 200, 146)"
+        },
+        {
+          "label": "",
+          "color": "rgb(205, 221, 230)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(205, 221, 230)"
+        },
+        {
+          "label": "",
+          "color": "rgb(142, 166, 179)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(237, 246, 236)"
+        }
+      ],
+      "accent": "#97c892",
+      "primary": "#edf6ec"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Oceanic Reversed",
+        "label": "Bearded Theme Oceanic Reversed"
+      },
+      "ratios": {
+        "accent": 8.50352083439231,
+        "soft-text": 7.437517860190569,
+        "field-text": 10.721849575939792,
+        "button-text": 4.527302781795947,
+        "selected-text": 8.667313844370954,
+        "chrome-accent": 9.24080726457203,
+        "positive-text": 7.437517860190569
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(195, 214, 224)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(151, 200, 146)"
+        },
+        {
+          "label": "",
+          "color": "rgb(195, 214, 224)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(195, 214, 224)"
+        },
+        {
+          "label": "",
+          "color": "rgb(134, 160, 173)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(233, 244, 232)"
+        }
+      ],
+      "accent": "#97c892",
+      "primary": "#e9f4e8"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc",
+        "label": "Bearded Theme Arc"
+      },
+      "ratios": {
+        "accent": 8.535772020313699,
+        "soft-text": 7.5368365187309525,
+        "field-text": 9.953656630961722,
+        "button-text": 4.513341076436415,
+        "selected-text": 9.058587082456624,
+        "chrome-accent": 9.184282915976663,
+        "positive-text": 9.397176648637947
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(208, 215, 228)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(105, 195, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(208, 215, 228)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(208, 215, 228)"
+        },
+        {
+          "label": "",
+          "color": "rgb(145, 156, 177)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(201, 210, 223)"
+        }
+      ],
+      "accent": "#69c3ff",
+      "primary": "#c9d2df"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc Eggplant",
+        "label": "Bearded Theme Arc Eggplant"
+      },
+      "ratios": {
+        "accent": 6.966526659092457,
+        "soft-text": 6.410748726032938,
+        "field-text": 9.855706277872098,
+        "button-text": 5.905021870844579,
+        "selected-text": 8.367737115128277,
+        "chrome-accent": 7.290187715877712,
+        "positive-text": 11.148415970050548
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(200, 193, 217)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(150, 152, 216)"
+        },
+        {
+          "label": "",
+          "color": "rgb(200, 193, 217)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(200, 193, 217)"
+        },
+        {
+          "label": "",
+          "color": "rgb(142, 133, 163)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(232, 232, 246)"
+        }
+      ],
+      "accent": "#9698d8",
+      "primary": "#e8e8f6"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc EolStorm",
+        "label": "Bearded Theme Arc EolStorm"
+      },
+      "ratios": {
+        "accent": 7.953997672868762,
+        "soft-text": 6.952025231057846,
+        "field-text": 9.738143907655349,
+        "button-text": 4.520349781446433,
+        "selected-text": 9.206214070544753,
+        "chrome-accent": 8.644679510400875,
+        "positive-text": 8.66801462386486
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(216, 221, 231)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(105, 195, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(216, 221, 231)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(216, 221, 231)"
+        },
+        {
+          "label": "",
+          "color": "rgb(154, 163, 179)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(228, 232, 238)"
+        }
+      ],
+      "accent": "#69c3ff",
+      "primary": "#e4e8ee"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc Blueberry",
+        "label": "Bearded Theme Arc Blueberry"
+      },
+      "ratios": {
+        "accent": 8.583960894000578,
+        "soft-text": 7.890358879873934,
+        "field-text": 9.785625319025849,
+        "button-text": 5.534845532491169,
+        "selected-text": 8.307390480638999,
+        "chrome-accent": 8.949526373026892,
+        "positive-text": 11.233246801679263
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(188, 193, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(142, 176, 230)"
+        },
+        {
+          "label": "",
+          "color": "rgb(188, 193, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(188, 193, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(126, 133, 168)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(234, 240, 250)"
+        }
+      ],
+      "accent": "#8eb0e6",
+      "primary": "#eaf0fa"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc Reversed",
+        "label": "Bearded Theme Arc Reversed"
+      },
+      "ratios": {
+        "accent": 8.815564520821853,
+        "soft-text": 7.940756513305261,
+        "field-text": 10.578212757042428,
+        "button-text": 4.599650290642145,
+        "selected-text": 8.654798275483435,
+        "chrome-accent": 9.43663536579409,
+        "positive-text": 9.900797435887128
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(197, 205, 222)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(105, 195, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(197, 205, 222)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(197, 205, 222)"
+        },
+        {
+          "label": "",
+          "color": "rgb(136, 147, 171)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(200, 209, 223)"
+        }
+      ],
+      "accent": "#69c3ff",
+      "primary": "#c8d1df"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Amethyst",
+        "label": "Bearded Theme Black & Amethyst"
+      },
+      "ratios": {
+        "accent": 5.1023237757668936,
+        "soft-text": 4.683610653195215,
+        "field-text": 10.134226573587348,
+        "button-text": 5.929640472475462,
+        "selected-text": 8.340252810296048,
+        "chrome-accent": 5.349272895895857,
+        "positive-text": 5.828633137820353
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(168, 95, 241)"
+        },
+        {
+          "label": "",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 141, 153)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(224, 198, 250)"
+        }
+      ],
+      "accent": "#a85ff1",
+      "primary": "#e0c6fa"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Amethyst Soft",
+        "label": "Bearded Theme Black & Amethyst Soft"
+      },
+      "ratios": {
+        "accent": 4.913611710392,
+        "soft-text": 4.51166801593285,
+        "field-text": 9.971995406423426,
+        "button-text": 5.638889478862819,
+        "selected-text": 8.65222443690816,
+        "chrome-accent": 5.156749125581916,
+        "positive-text": 5.614654942884799
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(198, 197, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(168, 95, 241)"
+        },
+        {
+          "label": "",
+          "color": "rgb(198, 197, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(198, 197, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(137, 136, 167)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(224, 198, 250)"
+        }
+      ],
+      "accent": "#a85ff1",
+      "primary": "#e0c6fa"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Diamond",
+        "label": "Bearded Theme Black & Diamond"
+      },
+      "ratios": {
+        "accent": 8.010504939184703,
+        "soft-text": 7.353137103691403,
+        "field-text": 10.134226573587348,
+        "button-text": 4.518517644711529,
+        "selected-text": 8.340252810296048,
+        "chrome-accent": 8.3982081178649,
+        "positive-text": 5.828633137820353
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(17, 183, 212)"
+        },
+        {
+          "label": "",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 141, 153)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(115, 225, 243)"
+        }
+      ],
+      "accent": "#11b7d4",
+      "primary": "#73e1f3"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Diamond Soft",
+        "label": "Bearded Theme Black & Diamond Soft"
+      },
+      "ratios": {
+        "accent": 7.437703339012574,
+        "soft-text": 6.616049291228302,
+        "field-text": 10.05125670305059,
+        "button-text": 4.505235977703187,
+        "selected-text": 8.701458511808305,
+        "chrome-accent": 7.90493464613216,
+        "positive-text": 5.244363541235629
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(197, 207, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(17, 183, 212)"
+        },
+        {
+          "label": "",
+          "color": "rgb(197, 207, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(197, 207, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(136, 150, 167)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(142, 230, 246)"
+        }
+      ],
+      "accent": "#11b7d4",
+      "primary": "#8ee6f6"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Emerald",
+        "label": "Bearded Theme Black & Emerald"
+      },
+      "ratios": {
+        "accent": 9.223283963725835,
+        "soft-text": 8.466391575367656,
+        "field-text": 10.134226573587348,
+        "button-text": 4.506056331648324,
+        "selected-text": 8.340252810296048,
+        "chrome-accent": 9.66968485078035,
+        "positive-text": 5.828633137820353
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(56, 199, 189)"
+        },
+        {
+          "label": "",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 141, 153)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(167, 231, 226)"
+        }
+      ],
+      "accent": "#38c7bd",
+      "primary": "#a7e7e2"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Emerald Soft",
+        "label": "Bearded Theme Black & Emerald Soft"
+      },
+      "ratios": {
+        "accent": 8.313211109041232,
+        "soft-text": 7.270711088065258,
+        "field-text": 9.995626027559219,
+        "button-text": 4.506724963053442,
+        "selected-text": 8.685113664455764,
+        "chrome-accent": 8.996297154907557,
+        "positive-text": 5.00547455266676
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(197, 214, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(56, 199, 189)"
+        },
+        {
+          "label": "",
+          "color": "rgb(197, 214, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(197, 214, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(136, 159, 167)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(194, 238, 235)"
+        }
+      ],
+      "accent": "#38c7bd",
+      "primary": "#c2eeeb"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Gold",
+        "label": "Bearded Theme Black & Gold"
+      },
+      "ratios": {
+        "accent": 6.853027325332171,
+        "soft-text": 6.290645830828211,
+        "field-text": 10.134226573587348,
+        "button-text": 4.679330802782498,
+        "selected-text": 8.340252810296048,
+        "chrome-accent": 7.1847093475997905,
+        "positive-text": 5.828633137820353
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(199, 145, 12)"
+        },
+        {
+          "label": "",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 141, 153)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(244, 197, 79)"
+        }
+      ],
+      "accent": "#c7910c",
+      "primary": "#f4c54f"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Gold Soft",
+        "label": "Bearded Theme Black & Gold Soft"
+      },
+      "ratios": {
+        "accent": 6.228182826768534,
+        "soft-text": 5.480004759877806,
+        "field-text": 10.013452843611867,
+        "button-text": 4.53093678106468,
+        "selected-text": 8.648751545454978,
+        "chrome-accent": 6.656127396125327,
+        "positive-text": 5.077529111924551
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(213, 209, 207)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(199, 145, 12)"
+        },
+        {
+          "label": "",
+          "color": "rgb(213, 209, 207)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(213, 209, 207)"
+        },
+        {
+          "label": "",
+          "color": "rgb(157, 152, 149)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(245, 204, 99)"
+        }
+      ],
+      "accent": "#c7910c",
+      "primary": "#f5cc63"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Ruby",
+        "label": "Bearded Theme Black & Ruby"
+      },
+      "ratios": {
+        "accent": 4.511146225777385,
+        "soft-text": 4.500778971684294,
+        "field-text": 10.134226573587348,
+        "button-text": 4.5212400506104355,
+        "selected-text": 8.340252810296048,
+        "chrome-accent": 4.729482740704132,
+        "positive-text": 5.828633137820353
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(206, 78, 107)"
+        },
+        {
+          "label": "",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(190, 198, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 141, 153)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(227, 137, 157)"
+        }
+      ],
+      "accent": "#ce4e6b",
+      "primary": "#e3899d"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Ruby Soft",
+        "label": "Bearded Theme Black & Ruby Soft"
+      },
+      "ratios": {
+        "accent": 4.515251031316818,
+        "soft-text": 4.508057018200471,
+        "field-text": 10.012186438413481,
+        "button-text": 4.524418243390785,
+        "selected-text": 8.794733693023518,
+        "chrome-accent": 4.80852340422025,
+        "positive-text": 5.174223309655601
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(220, 203, 211)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(209, 89, 117)"
+        },
+        {
+          "label": "",
+          "color": "rgb(220, 203, 211)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(220, 203, 211)"
+        },
+        {
+          "label": "",
+          "color": "rgb(167, 142, 154)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(230, 149, 167)"
+        }
+      ],
+      "accent": "#d15975",
+      "primary": "#e695a7"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Stained Purple",
+        "label": "Bearded Theme Stained Purple"
+      },
+      "ratios": {
+        "accent": 4.516171884016405,
+        "soft-text": 4.506123958207675,
+        "field-text": 10.072054468110714,
+        "button-text": 4.988274865738765,
+        "selected-text": 8.92241228130971,
+        "chrome-accent": 4.785412596537416,
+        "positive-text": 5.725948209456843
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(210, 202, 223)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(174, 84, 240)"
+        },
+        {
+          "label": "",
+          "color": "rgb(210, 202, 223)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(210, 202, 223)"
+        },
+        {
+          "label": "",
+          "color": "rgb(152, 140, 170)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(217, 175, 248)"
+        }
+      ],
+      "accent": "#ae54f0",
+      "primary": "#d9aff8"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Stained Blue",
+        "label": "Bearded Theme Stained Blue"
+      },
+      "ratios": {
+        "accent": 5.03553988385615,
+        "soft-text": 4.614284328218799,
+        "field-text": 9.935527135172952,
+        "button-text": 5.120261914854544,
+        "selected-text": 8.51862996874957,
+        "chrome-accent": 5.26820057481152,
+        "positive-text": 6.071009519706159
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(190, 198, 223)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(58, 127, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(190, 198, 223)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(190, 198, 223)"
+        },
+        {
+          "label": "",
+          "color": "rgb(127, 138, 172)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(170, 200, 255)"
+        }
+      ],
+      "accent": "#3a7fff",
+      "primary": "#aac8ff"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Vivid Purple",
+        "label": "Bearded Theme Vivid Purple"
+      },
+      "ratios": {
+        "accent": 6.372308112213477,
+        "soft-text": 5.932481252523539,
+        "field-text": 9.973802026706126,
+        "button-text": 6.7244725010470034,
+        "selected-text": 8.742640127582618,
+        "chrome-accent": 6.618084594712802,
+        "positive-text": 9.816188312799287
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(199, 191, 232)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(166, 128, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(199, 191, 232)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(199, 191, 232)"
+        },
+        {
+          "label": "",
+          "color": "rgb(137, 125, 183)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(245, 240, 255)"
+        }
+      ],
+      "accent": "#a680ff",
+      "primary": "#f5f0ff"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Vivid Black",
+        "label": "Bearded Theme Vivid Black"
+      },
+      "ratios": {
+        "accent": 7.485315550364291,
+        "soft-text": 6.8518605328488755,
+        "field-text": 10.098020480329387,
+        "button-text": 5.07719878772301,
+        "selected-text": 8.328930521934101,
+        "chrome-accent": 7.825919565461775,
+        "positive-text": 9.878598916796921
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(197, 197, 203)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(40, 169, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(197, 197, 203)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(197, 197, 203)"
+        },
+        {
+          "label": "",
+          "color": "rgb(139, 139, 147)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(226, 226, 226)"
+        }
+      ],
+      "accent": "#28a9ff",
+      "primary": "#e2e2e2"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Vivid Light",
+        "label": "Bearded Theme Vivid Light"
+      },
+      "ratios": {
+        "accent": 4.537046384188813,
+        "soft-text": 4.50822346399157,
+        "field-text": 16.86517987468609,
+        "button-text": 10.128220463608093,
+        "selected-text": 14.491686795668373,
+        "chrome-accent": 4.561690594842948,
+        "positive-text": 4.505625888252086
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(24, 24, 24)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(90, 90, 90)"
+        },
+        {
+          "label": "",
+          "color": "rgb(24, 24, 24)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(24, 24, 24)"
+        },
+        {
+          "label": "",
+          "color": "rgb(47, 47, 47)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#6a6a6a",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Will",
+        "label": "Bearded Theme feat. Will"
+      },
+      "ratios": {
+        "accent": 8.173188460714734,
+        "soft-text": 7.5071709451746615,
+        "field-text": 9.107151665475884,
+        "button-text": 6.889980816465414,
+        "selected-text": 7.5346079988676085,
+        "chrome-accent": 8.46408828490105,
+        "positive-text": 12.173581252254818
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(189, 182, 211)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(180, 152, 245)"
+        },
+        {
+          "label": "",
+          "color": "rgb(189, 182, 211)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(189, 182, 211)"
+        },
+        {
+          "label": "",
+          "color": "rgb(155, 150, 178)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(254, 254, 255)"
+        }
+      ],
+      "accent": "#b498f5",
+      "primary": "#fefeff"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Gold D Raynh",
+        "label": "Bearded Theme feat. Gold D Raynh"
+      },
+      "ratios": {
+        "accent": 7.3511972806903625,
+        "soft-text": 6.738218156311694,
+        "field-text": 9.825484956821557,
+        "button-text": 4.525052590041547,
+        "selected-text": 8.409416037387054,
+        "chrome-accent": 7.688514717935009,
+        "positive-text": 12.78578754553267
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(184, 196, 228)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(227, 144, 0)"
+        },
+        {
+          "label": "",
+          "color": "rgb(184, 196, 228)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(184, 196, 228)"
+        },
+        {
+          "label": "",
+          "color": "rgb(120, 136, 178)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 198, 96)"
+        }
+      ],
+      "accent": "#e39000",
+      "primary": "#ffc660"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Melle Julie",
+        "label": "Bearded Theme feat. Melle Julie"
+      },
+      "ratios": {
+        "accent": 12.378540201832164,
+        "soft-text": 10.927061078773823,
+        "field-text": 10.023631233606157,
+        "button-text": 4.505098167771723,
+        "selected-text": 8.768437281761926,
+        "chrome-accent": 13.302510907833273,
+        "positive-text": 10.028495706738767
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(205, 209, 216)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(99, 237, 239)"
+        },
+        {
+          "label": "",
+          "color": "rgb(205, 209, 216)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(205, 209, 216)"
+        },
+        {
+          "label": "",
+          "color": "rgb(146, 152, 160)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(10, 13, 13)"
+        }
+      ],
+      "accent": "#63edef",
+      "primary": "#0a0d0d"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Melle Julie Light",
+        "label": "Bearded Theme feat. Melle Julie Light"
+      },
+      "ratios": {
+        "accent": 4.550594794834731,
+        "soft-text": 4.542955361810211,
+        "field-text": 18.88989887417207,
+        "button-text": 9.597784124253375,
+        "selected-text": 16.171274675029952,
+        "chrome-accent": 4.511648178825401,
+        "positive-text": 4.52189106348428
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(23, 96, 98)"
+        },
+        {
+          "label": "",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "",
+          "color": "rgb(46, 46, 46)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#1b7173",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Mintshake D Raynh",
+        "label": "Bearded Theme feat. Mintshake D Raynh"
+      },
+      "ratios": {
+        "accent": 4.630942313774858,
+        "soft-text": 4.507958674763324,
+        "field-text": 15.770740296006691,
+        "button-text": 10.543935070099963,
+        "selected-text": 13.546347053901222,
+        "chrome-accent": 4.5031560735290705,
+        "positive-text": 4.526104348437872
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(15, 33, 45)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(56, 81, 193)"
+        },
+        {
+          "label": "",
+          "color": "rgb(15, 33, 45)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(15, 33, 45)"
+        },
+        {
+          "label": "",
+          "color": "rgb(47, 47, 47)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(1, 5, 8)"
+        }
+      ],
+      "accent": "#405dde",
+      "primary": "#010508"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. WebDevCody",
+        "label": "Bearded Theme feat. WebDevCody"
+      },
+      "ratios": {
+        "accent": 5.902161358544308,
+        "soft-text": 4.7137565368076215,
+        "field-text": 12.581285798021382,
+        "button-text": 5.674134665615437,
+        "selected-text": 7.937885835618777,
+        "chrome-accent": 6.282658786914321,
+        "positive-text": 9.787877979363197
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(129, 240, 254)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(233, 93, 116)"
+        },
+        {
+          "label": "",
+          "color": "rgb(129, 240, 254)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(129, 240, 254)"
+        },
+        {
+          "label": "",
+          "color": "rgb(62, 190, 206)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(246, 192, 201)"
+        }
+      ],
+      "accent": "#e95d74",
+      "primary": "#f6c0c9"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Earth",
+        "label": "Bearded Theme Earth"
+      },
+      "ratios": {
+        "accent": 4.551513073000366,
+        "soft-text": 4.518180095114599,
+        "field-text": 7.075107883256507,
+        "button-text": 4.634555546487685,
+        "selected-text": 6.13437702900345,
+        "chrome-accent": 4.851975343397554,
+        "positive-text": 6.153044355301335
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(202, 165, 165)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(211, 83, 134)"
+        },
+        {
+          "label": "",
+          "color": "rgb(202, 165, 165)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(202, 165, 165)"
+        },
+        {
+          "label": "",
+          "color": "rgb(154, 128, 128)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(234, 172, 197)"
+        }
+      ],
+      "accent": "#d35386",
+      "primary": "#eaacc5"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Coffee",
+        "label": "Bearded Theme Coffee"
+      },
+      "ratios": {
+        "accent": 7.014107426740384,
+        "soft-text": 5.756901606607844,
+        "field-text": 7.294628118827093,
+        "button-text": 4.785425317647504,
+        "selected-text": 5.852572579658545,
+        "chrome-accent": 7.583540760358035,
+        "positive-text": 7.657269691932755
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(206, 181, 176)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(240, 145, 119)"
+        },
+        {
+          "label": "",
+          "color": "rgb(206, 181, 176)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(206, 181, 176)"
+        },
+        {
+          "label": "",
+          "color": "rgb(159, 143, 140)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(251, 227, 220)"
+        }
+      ],
+      "accent": "#f09177",
+      "primary": "#fbe3dc"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Coffee Reversed",
+        "label": "Bearded Theme Coffee Reversed"
+      },
+      "ratios": {
+        "accent": 7.2559167906859905,
+        "soft-text": 5.926666302966088,
+        "field-text": 7.874925818015877,
+        "button-text": 4.883431482283141,
+        "selected-text": 5.334920563502513,
+        "chrome-accent": 7.802760080853788,
+        "positive-text": 7.883074152910873
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(200, 172, 165)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(240, 145, 119)"
+        },
+        {
+          "label": "",
+          "color": "rgb(200, 172, 165)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(200, 172, 165)"
+        },
+        {
+          "label": "",
+          "color": "rgb(153, 135, 131)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(251, 227, 220)"
+        }
+      ],
+      "accent": "#f09177",
+      "primary": "#fbe3dc"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Coffee Cream",
+        "label": "Bearded Theme Coffee Cream"
+      },
+      "ratios": {
+        "accent": 4.504341716369666,
+        "soft-text": 4.500541792753457,
+        "field-text": 12.430394823480794,
+        "button-text": 8.797512334909388,
+        "selected-text": 12.502913057480134,
+        "chrome-accent": 4.51996179885755,
+        "positive-text": 4.5037706870921
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(54, 34, 29)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(50, 71, 171)"
+        },
+        {
+          "label": "",
+          "color": "rgb(54, 34, 29)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(54, 34, 29)"
+        },
+        {
+          "label": "",
+          "color": "rgb(45, 44, 43)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(26, 10, 6)"
+        }
+      ],
+      "accent": "#3c56ce",
+      "primary": "#1a0a06"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Void",
+        "label": "Bearded Theme Void"
+      },
+      "ratios": {
+        "accent": 4.500890371333275,
+        "soft-text": 4.510177013981169,
+        "field-text": 9.786526729468411,
+        "button-text": 6.109439736814836,
+        "selected-text": 8.40448450794325,
+        "chrome-accent": 4.687285338826523,
+        "positive-text": 6.748097685754469
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(199, 191, 219)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(125, 102, 237)"
+        },
+        {
+          "label": "",
+          "color": "rgb(199, 191, 219)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(199, 191, 219)"
+        },
+        {
+          "label": "",
+          "color": "rgb(140, 130, 165)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(208, 200, 249)"
+        }
+      ],
+      "accent": "#7d66ed",
+      "primary": "#d0c8f9"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Altica",
+        "label": "Bearded Theme Altica"
+      },
+      "ratios": {
+        "accent": 4.500130965700657,
+        "soft-text": 4.516289492648136,
+        "field-text": 10.021300690456918,
+        "button-text": 5.127205292230214,
+        "selected-text": 8.565864806829634,
+        "chrome-accent": 4.786668007720984,
+        "positive-text": 6.295173918084857
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(194, 206, 209)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(8, 138, 168)"
+        },
+        {
+          "label": "",
+          "color": "rgb(194, 206, 209)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(194, 206, 209)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 143, 147)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(26, 211, 254)"
+        }
+      ],
+      "accent": "#088aa8",
+      "primary": "#1ad3fe"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Anthracite",
+        "label": "Bearded Theme Anthracite"
+      },
+      "ratios": {
+        "accent": 5.791985361936289,
+        "soft-text": 5.219769485045067,
+        "field-text": 10.112997890302275,
+        "button-text": 4.958832299720386,
+        "selected-text": 8.668191835493653,
+        "chrome-accent": 6.128343298046894,
+        "positive-text": 5.840541967225897
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(200, 204, 212)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(51, 152, 219)"
+        },
+        {
+          "label": "",
+          "color": "rgb(200, 204, 212)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(200, 204, 212)"
+        },
+        {
+          "label": "",
+          "color": "rgb(141, 146, 156)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(225, 228, 231)"
+        }
+      ],
+      "accent": "#3398db",
+      "primary": "#e1e4e7"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Light",
+        "label": "Bearded Theme Light"
+      },
+      "ratios": {
+        "accent": 4.577527152001574,
+        "soft-text": 4.522832045489698,
+        "field-text": 17.878487079174633,
+        "button-text": 11.281914321417913,
+        "selected-text": 15.278998800312836,
+        "chrome-accent": 4.501780201797062,
+        "positive-text": 4.546347220622745
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(9, 19, 22)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(55, 80, 191)"
+        },
+        {
+          "label": "",
+          "color": "rgb(9, 19, 22)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(9, 19, 22)"
+        },
+        {
+          "label": "",
+          "color": "rgb(47, 47, 47)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#405dde",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Surprising Eggplant",
+        "label": "Bearded Theme Surprising Eggplant"
+      },
+      "ratios": {
+        "accent": 4.510643608466268,
+        "soft-text": 4.500519871531102,
+        "field-text": 9.958964281072817,
+        "button-text": 4.756304067832857,
+        "selected-text": 8.06599556382529,
+        "chrome-accent": 4.7176786488647275,
+        "positive-text": 10.40876948426603
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(208, 193, 222)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(211, 82, 82)"
+        },
+        {
+          "label": "",
+          "color": "rgb(208, 193, 222)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(208, 193, 222)"
+        },
+        {
+          "label": "",
+          "color": "rgb(150, 131, 169)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(233, 167, 167)"
+        }
+      ],
+      "accent": "#d35252",
+      "primary": "#e9a7a7"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Surprising Blueberry",
+        "label": "Bearded Theme Surprising Blueberry"
+      },
+      "ratios": {
+        "accent": 4.5069146762159695,
+        "soft-text": 4.515815550344227,
+        "field-text": 9.94261679503413,
+        "button-text": 4.501299999506238,
+        "selected-text": 8.31762316426335,
+        "chrome-accent": 4.7572576277227645,
+        "positive-text": 10.333775066369995
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(186, 203, 228)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(207, 82, 127)"
+        },
+        {
+          "label": "",
+          "color": "rgb(186, 203, 228)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(186, 203, 228)"
+        },
+        {
+          "label": "",
+          "color": "rgb(123, 144, 177)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(226, 150, 178)"
+        }
+      ],
+      "accent": "#cf527f",
+      "primary": "#e296b2"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Surprising Watermelon",
+        "label": "Bearded Theme Surprising Watermelon"
+      },
+      "ratios": {
+        "accent": 5.217632612510027,
+        "soft-text": 4.515435569494011,
+        "field-text": 10.0063326317085,
+        "button-text": 4.9004154589704445,
+        "selected-text": 8.110653110745611,
+        "chrome-accent": 5.636235829107933,
+        "positive-text": 9.309705447815357
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(193, 217, 222)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(218, 108, 98)"
+        },
+        {
+          "label": "",
+          "color": "rgb(193, 217, 222)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(193, 217, 222)"
+        },
+        {
+          "label": "",
+          "color": "rgb(131, 163, 169)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(239, 193, 189)"
+        }
+      ],
+      "accent": "#da6c62",
+      "primary": "#efc1bd"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Ebony",
+        "label": "Bearded Theme HC Ebony"
+      },
+      "ratios": {
+        "accent": 11.394270274373392,
+        "soft-text": 10.292891077768733,
+        "field-text": 10.083954156123365,
+        "button-text": 4.510052868824163,
+        "selected-text": 8.581347739888574,
+        "chrome-accent": 11.951765781279526,
+        "positive-text": 11.833382506263046
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(200, 200, 213)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(127, 215, 245)"
+        },
+        {
+          "label": "",
+          "color": "rgb(200, 200, 213)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(200, 200, 213)"
+        },
+        {
+          "label": "",
+          "color": "rgb(141, 141, 158)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(12, 12, 12)"
+        }
+      ],
+      "accent": "#7fd7f5",
+      "primary": "#0c0c0c"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Midnight Void",
+        "label": "Bearded Theme HC Midnight Void"
+      },
+      "ratios": {
+        "accent": 15.039252326022908,
+        "soft-text": 13.35393231651634,
+        "field-text": 9.998214221515555,
+        "button-text": 4.536346256490136,
+        "selected-text": 8.690180285900517,
+        "chrome-accent": 16.076083113803012,
+        "positive-text": 11.1600961443347
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(195, 210, 222)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(219, 239, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(195, 210, 222)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(195, 210, 222)"
+        },
+        {
+          "label": "",
+          "color": "rgb(133, 153, 170)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(26, 26, 26)"
+        }
+      ],
+      "accent": "#dbefff",
+      "primary": "#1a1a1a"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Wonderland Wood",
+        "label": "Bearded Theme HC Wonderland Wood"
+      },
+      "ratios": {
+        "accent": 14.119354373584779,
+        "soft-text": 11.44894766517023,
+        "field-text": 10.374333248344772,
+        "button-text": 4.526415825426395,
+        "selected-text": 7.5386307079654715,
+        "chrome-accent": 14.94847453326019,
+        "positive-text": 8.183756453826241
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(211, 210, 230)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(251, 231, 195)"
+        },
+        {
+          "label": "",
+          "color": "rgb(211, 210, 230)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(211, 210, 230)"
+        },
+        {
+          "label": "",
+          "color": "rgb(149, 147, 179)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(26, 26, 26)"
+        }
+      ],
+      "accent": "#fbe7c3",
+      "primary": "#1a1a1a"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Brewing Storm",
+        "label": "Bearded Theme HC Brewing Storm"
+      },
+      "ratios": {
+        "accent": 13.39504728428613,
+        "soft-text": 10.189668201298504,
+        "field-text": 9.438503620323731,
+        "button-text": 4.538638241029494,
+        "selected-text": 6.940315939064019,
+        "chrome-accent": 14.627000961939672,
+        "positive-text": 9.700829271539389
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(192, 220, 243)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(157, 255, 217)"
+        },
+        {
+          "label": "",
+          "color": "rgb(192, 220, 243)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(192, 220, 243)"
+        },
+        {
+          "label": "",
+          "color": "rgb(121, 165, 199)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(32, 32, 32)"
+        }
+      ],
+      "accent": "#9dffd9",
+      "primary": "#202020"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Minuit",
+        "label": "Bearded Theme HC Minuit"
+      },
+      "ratios": {
+        "accent": 11.095367989428528,
+        "soft-text": 8.516226976009937,
+        "field-text": 10.033394450413434,
+        "button-text": 4.590509530514292,
+        "selected-text": 6.096847227242234,
+        "chrome-accent": 11.70343396567204,
+        "positive-text": 6.236751854739041
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(205, 200, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(236, 196, 140)"
+        },
+        {
+          "label": "",
+          "color": "rgb(205, 200, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(205, 200, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(146, 138, 167)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(252, 245, 236)"
+        }
+      ],
+      "accent": "#ecc48c",
+      "primary": "#fcf5ec"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Chocolate Espresso",
+        "label": "Bearded Theme HC Chocolate Espresso"
+      },
+      "ratios": {
+        "accent": 7.739594124935216,
+        "soft-text": 6.277660101931668,
+        "field-text": 7.0537771431647265,
+        "button-text": 5.287116716296991,
+        "selected-text": 5.650099604688354,
+        "chrome-accent": 8.408535859203573,
+        "positive-text": 5.84054315169547
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(211, 177, 177)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(246, 156, 149)"
+        },
+        {
+          "label": "",
+          "color": "rgb(211, 177, 177)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(211, 177, 177)"
+        },
+        {
+          "label": "",
+          "color": "rgb(164, 140, 140)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(255, 253, 252)"
+        }
+      ],
+      "accent": "#f69c95",
+      "primary": "#fffdfc"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Flurry",
+        "label": "Bearded Theme HC Flurry"
+      },
+      "ratios": {
+        "accent": 7.364759067947405,
+        "soft-text": 6.590166271101894,
+        "field-text": 13.66972079409091,
+        "button-text": 7.585890443862538,
+        "selected-text": 4.522810582128549,
+        "chrome-accent": 5.783112198647674,
+        "positive-text": 4.5147329887974585
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(39, 45, 52)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(68, 76, 84)"
+        },
+        {
+          "label": "",
+          "color": "rgb(39, 45, 52)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(39, 45, 52)"
+        },
+        {
+          "label": "",
+          "color": "rgb(85, 91, 99)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#444c54",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Raspberry",
+        "label": "Bearded Theme Milkshake Raspberry"
+      },
+      "ratios": {
+        "accent": 4.507078042883757,
+        "soft-text": 4.52359547847646,
+        "field-text": 17.226422181737252,
+        "button-text": 7.3116435569270495,
+        "selected-text": 4.502595942896708,
+        "chrome-accent": 4.521101807423781,
+        "positive-text": 4.533647120029518
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(21, 7, 11)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(160, 18, 61)"
+        },
+        {
+          "label": "",
+          "color": "rgb(21, 7, 11)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(21, 7, 11)"
+        },
+        {
+          "label": "",
+          "color": "rgb(47, 44, 45)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#c3164a",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Blueberry",
+        "label": "Bearded Theme Milkshake Blueberry"
+      },
+      "ratios": {
+        "accent": 6.009265135405429,
+        "soft-text": 5.368738619785472,
+        "field-text": 15.484698430769775,
+        "button-text": 5.833147892776332,
+        "selected-text": 4.515234387393463,
+        "chrome-accent": 4.507192587129508,
+        "positive-text": 4.505006577366349
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(7, 6, 12)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(63, 44, 167)"
+        },
+        {
+          "label": "",
+          "color": "rgb(7, 6, 12)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(7, 6, 12)"
+        },
+        {
+          "label": "",
+          "color": "rgb(41, 41, 46)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#422eb0",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Mango",
+        "label": "Bearded Theme Milkshake Mango"
+      },
+      "ratios": {
+        "accent": 4.508332670995433,
+        "soft-text": 4.527641863563309,
+        "field-text": 17.262911406985427,
+        "button-text": 8.62698256212838,
+        "selected-text": 4.5251070540903156,
+        "chrome-accent": 4.512939872251304,
+        "positive-text": 4.547096086072734
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(16, 10, 8)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(144, 60, 30)"
+        },
+        {
+          "label": "",
+          "color": "rgb(16, 10, 8)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(16, 10, 8)"
+        },
+        {
+          "label": "",
+          "color": "rgb(48, 45, 43)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#aa4723",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Mint",
+        "label": "Bearded Theme Milkshake Mint"
+      },
+      "ratios": {
+        "accent": 4.508095365992395,
+        "soft-text": 4.52071057665325,
+        "field-text": 19.42157374457026,
+        "button-text": 10.446627029925262,
+        "selected-text": 4.50661418005996,
+        "chrome-accent": 4.5087178172762465,
+        "positive-text": 4.506159010415894
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(74, 90, 134)"
+        },
+        {
+          "label": "",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "",
+          "color": "rgb(45, 47, 46)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#56689b",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Vanilla Banana",
+        "label": "Bearded Theme Milkshake Vanilla Banana"
+      },
+      "ratios": {
+        "accent": 4.505307115005511,
+        "soft-text": 4.534166051885602,
+        "field-text": 17.640725350016158,
+        "button-text": 9.05644105372776,
+        "selected-text": 4.5355222115517355,
+        "chrome-accent": 4.54068108959384,
+        "positive-text": 4.500125183399626
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(105, 82, 15)"
+        },
+        {
+          "label": "",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(0, 0, 0)"
+        },
+        {
+          "label": "",
+          "color": "rgb(46, 45, 41)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#7a6012",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Themanopia (Experimental)",
+        "label": "Bearded Themanopia (Experimental)"
+      },
+      "ratios": {
+        "accent": 5.857364955010171,
+        "soft-text": 5.231423950861233,
+        "field-text": 10.043368668653962,
+        "button-text": 5.991045604906053,
+        "selected-text": 8.885293288512656,
+        "chrome-accent": 6.240551790531458,
+        "positive-text": 11.947156273806058
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(204, 208, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(152, 135, 235)"
+        },
+        {
+          "label": "",
+          "color": "rgb(204, 208, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(204, 208, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(144, 149, 166)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(235, 231, 251)"
+        }
+      ],
+      "accent": "#9887eb",
+      "primary": "#ebe7fb"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Aquarelle Cymbidium",
+        "label": "Bearded Theme Aquarelle Cymbidium"
+      },
+      "ratios": {
+        "accent": 4.8900958587492465,
+        "soft-text": 4.502320647608885,
+        "field-text": 9.774674451711228,
+        "button-text": 4.680600183618592,
+        "selected-text": 9.050279944768263,
+        "chrome-accent": 5.307903152284027,
+        "positive-text": 8.624273473903653
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(222, 216, 220)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(218, 110, 108)"
+        },
+        {
+          "label": "",
+          "color": "rgb(222, 216, 220)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(222, 216, 220)"
+        },
+        {
+          "label": "",
+          "color": "rgb(166, 158, 164)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(241, 198, 198)"
+        }
+      ],
+      "accent": "#da6e6c",
+      "primary": "#f1c6c6"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Aquarelle Hydrangea",
+        "label": "Bearded Theme Aquarelle Hydrangea"
+      },
+      "ratios": {
+        "accent": 5.269241009557869,
+        "soft-text": 4.663088485669182,
+        "field-text": 10.130845963913972,
+        "button-text": 4.780994358124508,
+        "selected-text": 9.636226651996425,
+        "chrome-accent": 5.675540165280582,
+        "positive-text": 8.617648279360566
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(218, 221, 233)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(99, 148, 241)"
+        },
+        {
+          "label": "",
+          "color": "rgb(218, 221, 233)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(218, 221, 233)"
+        },
+        {
+          "label": "",
+          "color": "rgb(154, 160, 183)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(202, 219, 250)"
+        }
+      ],
+      "accent": "#6394f1",
+      "primary": "#cadbfa"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Aquarelle Lilac",
+        "label": "Bearded Theme Aquarelle Lilac"
+      },
+      "ratios": {
+        "accent": 5.5554293360006275,
+        "soft-text": 4.91942040952704,
+        "field-text": 10.147275127432806,
+        "button-text": 6.321660576113074,
+        "selected-text": 9.379910833587829,
+        "chrome-accent": 5.9664309645236075,
+        "positive-text": 8.900574982853666
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(217, 217, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(149, 135, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(217, 217, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(217, 217, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(157, 156, 174)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(248, 247, 255)"
+        }
+      ],
+      "accent": "#9587ff",
+      "primary": "#f8f7ff"
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme OLED (Experimental)",
+        "label": "Bearded Theme OLED (Experimental)"
+      },
+      "ratios": {
+        "accent": 6.901811629768877,
+        "soft-text": 6.429080405793113,
+        "field-text": 9.663731272411473,
+        "button-text": 6.885228783526504,
+        "selected-text": 7.2177679734630455,
+        "chrome-accent": 6.901811629768877,
+        "positive-text": 10.86181117565319
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(179, 179, 179)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(104, 142, 255)"
+        },
+        {
+          "label": "",
+          "color": "rgb(179, 179, 179)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(179, 179, 179)"
+        },
+        {
+          "label": "",
+          "color": "rgb(122, 122, 122)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(216, 226, 255)"
+        }
+      ],
+      "accent": "#688eff",
+      "primary": "#d8e2ff"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Teal",
+        "label": "Vira Teal"
+      },
+      "ratios": {
+        "accent": 7.05452059547328,
+        "soft-text": 5.38316673656581,
+        "field-text": 8.407714930034697,
+        "button-text": 11.2573176910229,
+        "selected-text": 7.05452059547328,
+        "chrome-accent": 7.05452059547328,
+        "positive-text": 7.291330152602319
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(216, 223, 223)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(216, 223, 223)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(216, 223, 223)"
+        },
+        {
+          "label": "",
+          "color": "rgb(133, 155, 164)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Teal High Contrast",
+        "label": "Vira Teal High Contrast"
+      },
+      "ratios": {
+        "accent": 8.663191780166619,
+        "soft-text": 6.711036998663125,
+        "field-text": 8.407714930034697,
+        "button-text": 11.2573176910229,
+        "selected-text": 8.663191780166619,
+        "chrome-accent": 8.663191780166619,
+        "positive-text": 9.089888687861563
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(216, 223, 223)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(216, 223, 223)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(216, 223, 223)"
+        },
+        {
+          "label": "",
+          "color": "rgb(115, 139, 150)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Graphene",
+        "label": "Vira Graphene"
+      },
+      "ratios": {
+        "accent": 8.631785120891628,
+        "soft-text": 6.6737867425753,
+        "field-text": 10.030953480190139,
+        "button-text": 11.2573176910229,
+        "selected-text": 8.631785120891628,
+        "chrome-accent": 8.631785120891628,
+        "positive-text": 9.039434386760242
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "",
+          "color": "rgb(136, 136, 136)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Graphene High Contrast",
+        "label": "Vira Graphene High Contrast"
+      },
+      "ratios": {
+        "accent": 9.3298116302236,
+        "soft-text": 7.382697582253291,
+        "field-text": 10.030953480190139,
+        "button-text": 11.2573176910229,
+        "selected-text": 9.3298116302236,
+        "chrome-accent": 9.3298116302236,
+        "positive-text": 9.999631838148913
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "",
+          "color": "rgb(132, 132, 132)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Palenight",
+        "label": "Vira Palenight"
+      },
+      "ratios": {
+        "accent": 8.050734731956274,
+        "soft-text": 6.321042120229352,
+        "field-text": 7.790786749989049,
+        "button-text": 11.2573176910229,
+        "selected-text": 8.050734731956274,
+        "chrome-accent": 8.050734731956274,
+        "positive-text": 8.561652882500145
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(134, 139, 171)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Palenight High Contrast",
+        "label": "Vira Palenight High Contrast"
+      },
+      "ratios": {
+        "accent": 8.87438530378063,
+        "soft-text": 7.008081297418756,
+        "field-text": 7.790786749989049,
+        "button-text": 11.2573176910229,
+        "selected-text": 8.87438530378063,
+        "chrome-accent": 8.87438530378063,
+        "positive-text": 9.492225854470906
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(125, 132, 166)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Ocean",
+        "label": "Vira Ocean"
+      },
+      "ratios": {
+        "accent": 10.092561486725947,
+        "soft-text": 8.204475416004989,
+        "field-text": 11.201851244333918,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.092561486725947,
+        "chrome-accent": 10.092561486725947,
+        "positive-text": 11.112704085618713
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(117, 124, 148)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Ocean High Contrast",
+        "label": "Vira Ocean High Contrast"
+      },
+      "ratios": {
+        "accent": 10.550771277899235,
+        "soft-text": 8.820794770327298,
+        "field-text": 11.201851244333918,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.550771277899235,
+        "chrome-accent": 10.550771277899235,
+        "positive-text": 11.9474892802288
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(206, 209, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(115, 121, 141)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Deepforest",
+        "label": "Vira Deepforest"
+      },
+      "ratios": {
+        "accent": 9.654040391939493,
+        "soft-text": 8.478866721368485,
+        "field-text": 11.794628307221362,
+        "button-text": 11.2573176910229,
+        "selected-text": 9.654040391939493,
+        "chrome-accent": 9.654040391939493,
+        "positive-text": 11.484358484658394
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(202, 229, 213)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(202, 229, 213)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(202, 229, 213)"
+        },
+        {
+          "label": "",
+          "color": "rgb(114, 131, 128)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Deepforest High Contrast",
+        "label": "Vira Deepforest High Contrast"
+      },
+      "ratios": {
+        "accent": 10.350825969695316,
+        "soft-text": 9.335942721765152,
+        "field-text": 11.794628307221362,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.350825969695316,
+        "chrome-accent": 10.350825969695316,
+        "positive-text": 12.645240989433027
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(202, 229, 213)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(202, 229, 213)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(202, 229, 213)"
+        },
+        {
+          "label": "",
+          "color": "rgb(109, 126, 123)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Carbon",
+        "label": "Vira Carbon"
+      },
+      "ratios": {
+        "accent": 10.613048378882862,
+        "soft-text": 8.835910187321467,
+        "field-text": 12.717249345523987,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.613048378882862,
+        "chrome-accent": 10.613048378882862,
+        "positive-text": 8.564111346144987
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "",
+          "color": "rgb(120, 120, 125)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Carbon High Contrast",
+        "label": "Vira Carbon High Contrast"
+      },
+      "ratios": {
+        "accent": 10.613048378882862,
+        "soft-text": 8.835910187321467,
+        "field-text": 12.717249345523987,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.613048378882862,
+        "chrome-accent": 10.613048378882862,
+        "positive-text": 8.564111346144987
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(217, 217, 217)"
+        },
+        {
+          "label": "",
+          "color": "rgb(120, 120, 125)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Anthracite",
+        "label": "Vira Anthracite"
+      },
+      "ratios": {
+        "accent": 9.634140453623154,
+        "soft-text": 7.630913816955967,
+        "field-text": 11.211800564179974,
+        "button-text": 11.2573176910229,
+        "selected-text": 9.634140453623154,
+        "chrome-accent": 9.634140453623154,
+        "positive-text": 10.33583292665683
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(204, 219, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(204, 219, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(204, 219, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(123, 129, 131)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Anthracite High Contrast",
+        "label": "Vira Anthracite High Contrast"
+      },
+      "ratios": {
+        "accent": 10.063255211454962,
+        "soft-text": 8.153167564960224,
+        "field-text": 11.211800564179974,
+        "button-text": 11.2573176910229,
+        "selected-text": 9.634140453623154,
+        "chrome-accent": 10.063255211454962,
+        "positive-text": 11.04320921397619
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(204, 219, 227)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(204, 219, 227)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(204, 219, 227)"
+        },
+        {
+          "label": "",
+          "color": "rgb(119, 126, 128)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Montana",
+        "label": "Vira Montana"
+      },
+      "ratios": {
+        "accent": 10.170612602523027,
+        "soft-text": 8.347958791973642,
+        "field-text": 11.877533113543882,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.170612602523027,
+        "chrome-accent": 10.170612602523027,
+        "positive-text": 11.307047808708521
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(219, 206, 225)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(219, 206, 225)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(219, 206, 225)"
+        },
+        {
+          "label": "",
+          "color": "rgb(124, 122, 137)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Montana High Contrast",
+        "label": "Vira Montana High Contrast"
+      },
+      "ratios": {
+        "accent": 10.546212748321516,
+        "soft-text": 8.80027606902344,
+        "field-text": 11.877533113543882,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.170612602523027,
+        "chrome-accent": 10.546212748321516,
+        "positive-text": 11.91969734421225
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(219, 206, 225)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(219, 206, 225)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(219, 206, 225)"
+        },
+        {
+          "label": "",
+          "color": "rgb(122, 119, 134)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Sand",
+        "label": "Vira Sand"
+      },
+      "ratios": {
+        "accent": 10.035996816201614,
+        "soft-text": 8.081675707842694,
+        "field-text": 12.379894859108342,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.035996816201614,
+        "chrome-accent": 10.035996816201614,
+        "positive-text": 10.946375740488218
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(223, 217, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(223, 217, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(223, 217, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(127, 124, 120)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Sand High Contrast",
+        "label": "Vira Sand High Contrast"
+      },
+      "ratios": {
+        "accent": 10.604198664137183,
+        "soft-text": 8.805766783676484,
+        "field-text": 12.379894859108342,
+        "button-text": 11.2573176910229,
+        "selected-text": 10.035996816201614,
+        "chrome-accent": 10.604198664137183,
+        "positive-text": 11.927134344637508
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(223, 217, 208)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(223, 217, 208)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(223, 217, 208)"
+        },
+        {
+          "label": "",
+          "color": "rgb(123, 120, 116)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Clay",
+        "label": "Vira Clay"
+      },
+      "ratios": {
+        "accent": 9.456390835599485,
+        "soft-text": 7.505620239742185,
+        "field-text": 11.519466777562888,
+        "button-text": 11.2573176910229,
+        "selected-text": 9.456390835599485,
+        "chrome-accent": 9.456390835599485,
+        "positive-text": 10.166126714278006
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(227, 211, 204)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(227, 211, 204)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(227, 211, 204)"
+        },
+        {
+          "label": "",
+          "color": "rgb(135, 127, 127)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    },
+    {
+      "theme": {
+        "id": "vira.vsc-vira-theme:Vira Clay High Contrast",
+        "label": "Vira Clay High Contrast"
+      },
+      "ratios": {
+        "accent": 10.129471817784562,
+        "soft-text": 8.21160339689378,
+        "field-text": 11.519466777562888,
+        "button-text": 11.2573176910229,
+        "selected-text": 9.456390835599485,
+        "chrome-accent": 10.129471817784562,
+        "positive-text": 11.122358711701272
+      },
+      "selection": "none",
+      "modelSame": true,
+      "overflow": false,
+      "buttons": [
+        {
+          "label": "Laboratorio",
+          "color": "rgb(227, 211, 204)"
+        },
+        {
+          "label": "Forge",
+          "color": "rgb(128, 203, 196)"
+        },
+        {
+          "label": "",
+          "color": "rgb(227, 211, 204)"
+        },
+        {
+          "label": "Depurar",
+          "color": "rgb(227, 211, 204)"
+        },
+        {
+          "label": "",
+          "color": "rgb(130, 122, 122)"
+        },
+        {
+          "label": "A",
+          "color": "rgb(0, 0, 0)"
+        }
+      ],
+      "accent": "#80cbc4",
+      "primary": "#000000"
+    }
+  ],
+  "packages": "Read-only installed One Dark Pro/Bearded copies; Vira 2026.9.4 from installed copy or explicit QA VSIX. User profile untouched."
+}

@@ -1,0 +1,19 @@
+{
+  "checks": [
+    "English default, visible model destination, chat/edit modes and context",
+    "Context chooser is actionable and edit mode always uses the full file",
+    "No-code request sends no file content to the fixture transport",
+    "Selection request sends the selected code, excluding the rest of the file",
+    "Selection review changes only captured range; a single undo restores the whole source",
+    "Three actual theme palettes keep the product hierarchy and typography",
+    "Forge executes actual Python and shows process exit code and elapsed time",
+    "Run again executes the captured file and retains bounded execution history",
+    "Stop terminates the actual tracked process without closing unrelated terminals",
+    "Forge remains actionable at compact window sizes",
+    "Compact main workspace and reduced motion remain functional",
+    "No uncaught browser errors"
+  ],
+  "errors": [],
+  "aiTransport": "Explicit fixture for context payload and selection edits; no model-quality claim.",
+  "runtime": "Actual Windows ConPTY and Python"
+}

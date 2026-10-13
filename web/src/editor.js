@@ -217,7 +217,7 @@ export class LumenEditor {
         'editorSuggestWidget.foreground':c('text'),'editorSuggestWidget.border':c('border'),
         'editorGutter.background':c('editor'),'minimap.background':c('editor'),
         'scrollbarSlider.background':c('border-strong').slice(0,7)+'70','scrollbarSlider.hoverBackground':c('border-strong').slice(0,7)+'b0',
-        'editorSuggestWidget.selectedBackground':c('selected'),'editorSuggestWidget.selectedForeground':c('text'),
+        'editorSuggestWidget.selectedBackground':c('selected'),'editorSuggestWidget.selectedForeground':c('selected-text')||c('text'),
         'editorSuggestWidget.highlightForeground':c('accent'),'editorSuggestWidget.focusHighlightForeground':c('accent'),
         'editorHoverWidget.background':c('surface'),'editorHoverWidget.border':c('border'),
         'editorError.foreground':c('error-color')||'#df3958','editorGhostText.foreground':c('muted'),

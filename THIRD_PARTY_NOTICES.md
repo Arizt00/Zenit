@@ -1,5 +1,8 @@
 # Zénit third-party components
 
+Provider identity SVGs are from Simple Icons 13.21.0 (CC0-1.0).
+Their sources and trademark notice are retained in `web/assets/providers/NOTICE.md`.
+
 Distributions load local libraries without a frontend CDN. The table records the baseline Windows inventory. Current builds include `licenses/native-python/PACKAGE_INVENTORY.json` with actual Python package versions and licenses. Linux uses PySide6/QtWebEngine and qtpy; macOS uses PyObjC/Cocoa/WebKit. Their notices remain with the inventory and packaged runtime.
 
 | Component | Baseline version | Source |

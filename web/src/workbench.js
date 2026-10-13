@@ -11,6 +11,8 @@ import {ThemePicker,IconThemePicker} from './theme-picker.js';
 import {terminalTheme} from './theme-tokens.js';
 import {OrderedTerminalInput,isDeviceAttributesReply} from './terminal-input.js';
 import {melodyContext} from './melody-context.js';
+import {providerIcon,providerName,providerKind} from './provider-identity.js';
+import {validDiagnostics} from './language-diagnostics.js';
 
 const PLATFORM_CATEGORIES=[
  ['general','globe','General','General'],['appearance','sun','Apariencia','Appearance'],['editor','code','Editor de texto','Text editor'],
@@ -18,7 +20,7 @@ const PLATFORM_CATEGORIES=[
  ['security','shield','Seguridad','Security'],['ai','sparkles','Inteligencia artificial','Artificial intelligence'],
  ['development','build','Lenguajes y herramientas','Languages and tools'],['hardware','cpu','Hardware','Hardware'],['keys','keyboard','Atajos de teclado','Keyboard shortcuts']
 ];
-const PLATFORM_NAMES={codex:'ChatGPT · cuenta', 'claude-code':'Claude · cuenta','gemini-cli':'Gemini · cuenta',copilot:'Copilot · cuenta',emma:'Emma',ollama:'Ollama',openai:'OpenAI · API',anthropic:'Claude · API',gemini:'Gemini · API'};
+const PLATFORM_NAMES={codex:'ChatGPT · Account', 'claude-code':'Claude · Account','gemini-cli':'Gemini · Account',copilot:'Copilot · Account',emma:'Emma',ollama:'Ollama',openai:'OpenAI · API',anthropic:'Claude · API',gemini:'Gemini · API'};
 const PLATFORM_OPTION_NAMES={es:['Español','Spanish'],en:['Inglés','English'],day:['Día','Day'],dark:['Oscuro','Dark'],forest:['Bosque','Forest'],comfortable:['Cómoda','Comfortable'],compact:['Compacta','Compact'],none:['Ninguno','None'],selection:['Selección','Selection'],file:['Archivo activo','Active file'],all:['Todos','All'],smooth:['Suave','Smooth'],blink:['Intermitente','Blink'],solid:['Fijo','Solid']};
 
 /** The platform UI owns no provider credentials after the configuration request. */
@@ -91,7 +93,8 @@ export class LumenPlatform {
   }
   setSaved(){const el=this.workbench.querySelector('#settings-save-state');if(el){el.textContent=this.t('Guardado en este equipo','Saved on this device');el.classList.remove('pending');}}
   async syncPreferences(){
-    await this.settingsWrite.catch(()=>{});const epoch=this.preferenceEpoch;
+    const epoch=this.preferenceEpoch,write=this.settingsWrite;await write.catch(()=>{});
+    if(epoch!==this.preferenceEpoch||write!==this.settingsWrite||this.disposed)return;
     const {settings}=await this.api('/settings');if(epoch!==this.preferenceEpoch||this.disposed)return;
     const previous=this.prefs,changed=Object.keys(settings).filter(key=>settings[key]!==previous[key]);this.prefs=settings;
     if(changed.some(key=>['extensions.loadContributions','general.locale'].includes(key))||settings['appearance.extensionTheme']&&!this.extensionThemes?.some(t=>t.id===settings['appearance.extensionTheme']))await this.loadContributions();else this.applyPreferences();
@@ -135,6 +138,7 @@ export class LumenPlatform {
     this.settingsOverlay.hidden=kind!=='settings';document.getElementById('app').inert=kind==='settings';
     (kind==='settings'?this.settingsOverlay:document.getElementById('editor-panel')).append(this.workbench);
     document.getElementById('workspace').dataset.page=kind;this.workbench.dataset.page=kind;
+    this.host.dock.setContext(kind);
     this.page=kind;this.workbench.hidden=false;document.getElementById('editor-panel').classList.add('platform-open');
     if(kind!=='settings')document.querySelectorAll('.activity-rail .rail-item').forEach(el=>el.classList.toggle('active',(el.dataset.action||el.dataset.view)===(kind==='debug'?'run':kind)));
     for(const selector of ['.editor-tabbar','.breadcrumbs','#editor-mount','#editor-empty']){const el=document.querySelector(selector);if(el)el.inert=true;}
@@ -145,6 +149,7 @@ export class LumenPlatform {
     delete document.documentElement.dataset.editorCovered;
     if(this.settingsOverlay)this.settingsOverlay.hidden=true;
     document.getElementById('app').inert=false;delete document.getElementById('workspace').dataset.page;
+    this.host.dock.setContext(null);
     document.getElementById('editor-panel').append(this.workbench);this.previousPageFocus?.focus?.({preventScroll:true});this.previousPageFocus=null;
     this.page=null;this.workbench.hidden=true;document.getElementById('editor-panel').classList.remove('platform-open');
     document.querySelectorAll('.activity-rail .rail-item').forEach(el=>el.classList.toggle('active',el.dataset.view==='explorer'));
@@ -364,7 +369,7 @@ export class LumenPlatform {
   }
   providerSettings(){
     const selected=this.prefs['ai.provider'];const info=this.providers.find(p=>p.id===selected);const needsKey=['openai','anthropic','gemini'].includes(selected);
-    return `<div class="provider-settings"><div class="provider-grid">${Object.entries(PLATFORM_NAMES).map(([id,name])=>{const state=this.providers.find(p=>p.id===id);return `<button class="provider-card ${selected===id?'selected':''}" data-provider="${id}"><span class="provider-monogram">${name[0]}</span><strong>${name}</strong><small>${state?.credential?this.t('Credencial disponible','Credential available'):id==='emma'?this.t('Motor local de Emma','Emma local engine'):id==='ollama'?this.t('Servidor local','Local server'):ACCOUNT_PROVIDERS.has(id)?this.t('Iniciar sesión con tu cuenta','Sign in with your account'):this.t('Configurar credencial','Set up credential')}</small></button>`;}).join('')}</div><div class="provider-detail"><div class="provider-detail-heading"><h4>${PLATFORM_NAMES[selected]}</h4><span class="capability-badge">${this.t('Chat + contexto + revisión','Chat + context + review')}</span></div><p>${selected==='emma'?this.t('Usa el motor y el modelo local de tu carpeta de Emma. La sesión de Zénit es independiente de sus conversaciones y recuerdos; no necesita copiar credenciales. La primera respuesta carga el modelo.','Uses the engine and local model in your Emma folder. Zénit has its own session, separate from Emma conversations and memories. No copied credentials. The first response loads the model.'):selected==='openai'?this.t('Integración mediante la API de OpenAI, no mediante la sesión web de ChatGPT.','Integrated through the OpenAI API, not your ChatGPT web session.'):ACCOUNT_PROVIDERS.has(selected)?this.t('Acceso mediante el cliente oficial. Usa Iniciar sesión para vincular tu cuenta; su plan determina la disponibilidad.','Official client access. Sign in to connect your account; your plan determines availability.'):selected==='copilot'?this.t('Usa el SDK oficial y Copilot CLI autenticada. El adaptador no concede permisos para ejecutar herramientas.','Uses the official SDK and authenticated Copilot CLI. The adapter does not grant permission to execute tools.'):selected==='ollama'?this.t('Conecta un modelo instalado en el servidor local indicado arriba.','Connect a model installed in the local server configured above.'):this.t('Conexión nativa a la API del proveedor. No se emula el servicio con otro modelo.','Native provider API connection. No substitution with another model.')}</p>${accountPanel(this,selected)}${needsKey?`<form id="provider-credential-form"><label class="field-label" for="provider-key">${this.t('Credencial de API','API credential')}</label><div class="credential-field"><input type="password" id="provider-key" autocomplete="new-password" placeholder="${info?.credential?this.t('Ya hay una credencial. Escribe otra para sustituirla.','Credential available. Enter a new one to replace it.'):this.t('Solo se envía al backend local','Sent only to the local backend')}" required><button class="secondary-button" type="submit">${this.t('Guardar','Save')}</button></div><label class="checkbox-note"><input type="checkbox" id="provider-remember">${this.t('Recordar en el almacén seguro del sistema, si está disponible.','Remember in the native secure store, when available.')}</label><p class="muted-small">${this.t('Sin marcar: solo esta sesión. No se guarda en JSON ni en localStorage.','Unchecked: this session only. Never saved in JSON or localStorage.')}</p></form>`:''}<div class="provider-detail-actions"><button class="secondary-button" id="provider-fetch-models">${this.glyph('refresh')}${this.t('Consultar modelos','Fetch models')}</button>${needsKey?`<button class="text-button" id="provider-forget-key">${this.t('Olvidar credencial','Forget credential')}</button>`:''}<span id="provider-validation-state" role="status"></span></div><div id="provider-model-results"></div></div></div>`;
+    return `<div class="provider-settings"><div class="provider-grid">${Object.entries(PLATFORM_NAMES).map(([id,name])=>{const state=this.providers.find(p=>p.id===id);return `<button class="provider-card ${selected===id?'selected':''}" data-provider="${id}"><span class="provider-monogram">${providerIcon(id)}</span><strong>${providerName(id)}</strong><span class="provider-kind">${providerKind(id)}</span><small>${state?.credential?this.t('Credencial disponible','Credential available'):id==='emma'?this.t('Motor local de Emma','Emma local engine'):id==='ollama'?this.t('Servidor local','Local server'):ACCOUNT_PROVIDERS.has(id)?this.t('Iniciar sesión con tu cuenta','Sign in with your account'):this.t('Configurar credencial','Set up credential')}</small></button>`;}).join('')}</div><div class="provider-detail"><div class="provider-detail-heading"><h4>${PLATFORM_NAMES[selected]}</h4><span class="capability-badge">${this.t('Chat + contexto + revisión','Chat + context + review')}</span></div><p>${selected==='emma'?this.t('Usa el motor y el modelo local de tu carpeta de Emma. La sesión de Zénit es independiente de sus conversaciones y recuerdos; no necesita copiar credenciales. La primera respuesta carga el modelo.','Uses the engine and local model in your Emma folder. Zénit has its own session, separate from Emma conversations and memories. No copied credentials. The first response loads the model.'):selected==='openai'?this.t('Integración mediante la API de OpenAI, no mediante la sesión web de ChatGPT.','Integrated through the OpenAI API, not your ChatGPT web session.'):ACCOUNT_PROVIDERS.has(selected)?this.t('Acceso mediante el cliente oficial. Usa Iniciar sesión para vincular tu cuenta; su plan determina la disponibilidad.','Official client access. Sign in to connect your account; your plan determines availability.'):selected==='copilot'?this.t('Usa el SDK oficial y Copilot CLI autenticada. El adaptador no concede permisos para ejecutar herramientas.','Uses the official SDK and authenticated Copilot CLI. The adapter does not grant permission to execute tools.'):selected==='ollama'?this.t('Conecta un modelo instalado en el servidor local indicado arriba.','Connect a model installed in the local server configured above.'):this.t('Conexión nativa a la API del proveedor. No se emula el servicio con otro modelo.','Native provider API connection. No substitution with another model.')}</p>${accountPanel(this,selected)}${needsKey?`<form id="provider-credential-form"><label class="field-label" for="provider-key">${this.t('Credencial de API','API credential')}</label><div class="credential-field"><input type="password" id="provider-key" autocomplete="new-password" placeholder="${info?.credential?this.t('Ya hay una credencial. Escribe otra para sustituirla.','Credential available. Enter a new one to replace it.'):this.t('Solo se envía al backend local','Sent only to the local backend')}" required><button class="secondary-button" type="submit">${this.t('Guardar','Save')}</button></div><label class="checkbox-note"><input type="checkbox" id="provider-remember">${this.t('Recordar en el almacén seguro del sistema, si está disponible.','Remember in the native secure store, when available.')}</label><p class="muted-small">${this.t('Sin marcar: solo esta sesión. No se guarda en JSON ni en localStorage.','Unchecked: this session only. Never saved in JSON or localStorage.')}</p></form>`:''}<div class="provider-detail-actions"><button class="secondary-button" id="provider-fetch-models">${this.glyph('refresh')}${this.t('Consultar modelos','Fetch models')}</button>${needsKey?`<button class="text-button" id="provider-forget-key">${this.t('Olvidar credencial','Forget credential')}</button>`:''}<span id="provider-validation-state" role="status"></span></div><div id="provider-model-results"></div></div></div>`;
   }
   bindProviders(){
     bindAccount(this);const form=document.getElementById('provider-credential-form');if(form)form.onsubmit=event=>{event.preventDefault();this.safe(async()=>{
@@ -413,15 +418,15 @@ export class LumenPlatform {
     this.conversation=crypto.randomUUID?.()||String(Date.now());this.updateProviderBar();
   }
   updateProviderBar(){this.updateIdentity();const select=document.getElementById('active-ai-provider');if(select)select.value=this.prefs['ai.provider']||'openai';const label=document.getElementById('active-ai-model');if(label){label.textContent=this.prefs['ai.model']||this.t('Configurar modelo','Configure model');label.title=this.prefs['ai.model']||this.t('Abrir ajustes de IA','Open AI settings');}}
-  async sendAI(question,{edit=false}={}){
+  async sendAI(question,{edit=false,consult=false}={}){
     if(this.aiStarting)return;
     if(this.aiJob||!question.trim())return;
-    if(requestsRealtimeHelp(question)&&this.companion){if(!this.companion.session.enabled)await this.companion.toggle();if(this.companion.session.enabled)document.getElementById('ai-input').value='';return;}
+    if(!consult&&requestsRealtimeHelp(question)&&this.companion){if(!this.companion.session.enabled)await this.companion.toggle();if(this.companion.session.enabled)document.getElementById('ai-input').value='';return;}
     this.companion?.session.stop();
     if(!this.prefs['ai.model']){await this.settings('ai');this.host.notify(this.t('Selecciona el proveedor y un modelo real antes de enviar.','Choose a provider and an actual model before sending.'));return;}
     const editor=this.host.editor,provider=this.prefs['ai.provider'],model=this.prefs['ai.model'],mode=this.prefs['ai.context'];
-    const filePlan=edit!==true&&requestsFileChanges(question);
-    const live=!filePlan&&(edit===true||requestsLiveEdit(question));
+    const filePlan=!consult&&edit!==true&&requestsFileChanges(question);
+    const live=!consult&&!filePlan&&(edit===true||requestsLiveEdit(question));
     if(filePlan&&!await this.host.ensureTrust())return;
     const fullContent=editor.getValue(),selectedContent=editor.getSelection();
     const content=filePlan?'':melodyContext({file:fullContent,selection:selectedContent,scope:mode,editing:live}).content;const file=editor.current||'';
@@ -686,14 +691,14 @@ export class LumenPlatform {
     try{const result=await this.api('/lsp/events?id='+s.id+'&after='+s.offset);s.offset=result.sequence;
       for(const event of result.events)if(event.method==='textDocument/publishDiagnostics'){
         const p=event.params,path=this.relativeURI(s,p.uri);if(!path)continue;const record=s.documents.get(path);if(p.version!=null&&record&&p.version<record.version)continue;
-        const diagnostics=(p.diagnostics||[]).slice(0,500);this.diagnosticMap.set(path,diagnostics);
+        const diagnostics=validDiagnostics(p.diagnostics);this.diagnosticMap.set(path,diagnostics);
         if(this.host.editor.kind==='monaco'){const model=this.host.editor.models.get(path)?.model;if(model)window.monaco.editor.setModelMarkers(model,'lumen-lsp',diagnostics.map(d=>({message:String(d.message||''),severity:({1:8,2:4,3:2,4:1})[d.severity]||2,startLineNumber:d.range.start.line+1,startColumn:d.range.start.character+1,endLineNumber:d.range.end.line+1,endColumn:d.range.end.character+1})));}
       }
       this.refreshDiagnostics();if(result.closed){await this.stopLSP(s.id,false);this.host.notify(this.t('El servidor de lenguaje ha terminado.','Language server exited.'),'warning');return;}
     }catch(error){await this.stopLSP(s.id,false);this.report(error);return;}
     this.later(()=>this.pollLSP(s),document.hidden?1500:400);
   }
-  refreshDiagnostics(){this.host.editor.externalDiagnostics=[...(this.diagnosticMap.get(this.host.editor.current)||[])].map(d=>({message:String(d.message||''),severity:d.severity===1?8:d.severity===2?4:2,startLineNumber:d.range.start.line+1,startColumn:d.range.start.character+1}));this.host.updateDiagnostics(this.host.editor.diagnostics());}
+  refreshDiagnostics(){this.host.editor.externalDiagnostics=validDiagnostics(this.diagnosticMap.get(this.host.editor.current)).map(d=>({message:String(d.message||''),severity:d.severity===1?8:d.severity===2?4:2,startLineNumber:d.range.start.line+1,startColumn:d.range.start.character+1}));this.host.updateDiagnostics(this.host.editor.diagnostics());}
   async stopLSP(id,remote=true){const s=this.lspSessions.get(id);if(!s)return;s.disposables.forEach(d=>d.dispose());this.lspSessions.delete(id);if(remote)await this.api('/lsp/stop',{id});for(const path of s.documents.keys()){this.diagnosticMap.delete(path);const model=this.host.editor.models.get(path)?.model;if(model&&window.monaco)window.monaco.editor.setModelMarkers(model,'lumen-lsp',[]);}this.refreshDiagnostics();this.updateSystemStatus();if(this.page==='tools')await this.tools();}
   async languageAction(method='textDocument/completion'){
     const ed=this.host.editor;if(!ed.current)return;

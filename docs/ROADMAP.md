@@ -2,8 +2,10 @@
 
 The next work follows complete workflows rather than a feature count.
 
-## Available in R5
+## Available in R6
 
+- Contextual Extensions workspace and floating Debug consultations.
+- Melody diagnostics/test planning and execution/environment analysis.
 - Coordinated editing, terminals and native detached windows.
 - Melody’s destination, code scope, live edit and selection review.
 - Forge’s real execution status, repeat and process stop.

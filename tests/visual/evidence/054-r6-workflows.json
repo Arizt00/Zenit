@@ -1,0 +1,19 @@
+{
+  "checks": [
+    "Three built-in themes: rounded active tab joins code background without an accent underline",
+    "A preference read overtaken by a newer write cannot restore a stale model",
+    "Extensions isolates content and restores the unchanged dock state",
+    "All nine destinations have a recognizable identity and Account/API/Local type",
+    "Debug opens floating Melody and submits a read-only session snapshot even from Edit mode",
+    "Plan tests sends the scoped source to a read-only request",
+    "Review diagnostics includes actual editor diagnostic records",
+    "Forge runs real Python and sends its captured output and exit code to Melody",
+    "Laboratory connects detected tool readiness with Forge and a real setup-context request",
+    "Grouped panels survive contextual view switching without state loss",
+    "Compact workspace has no horizontal page overflow",
+    "Reduced motion and browser error checks pass"
+  ],
+  "errors": [],
+  "aiTransport": "Explicit fixture; verifies context/actions only.",
+  "terminal": "Actual Windows ConPTY/Python"
+}

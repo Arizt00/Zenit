@@ -409,5 +409,12 @@ export const ENGLISH_CHROME=Object.freeze({
   "Español": "Spanish",
   "Día": "Light",
   "Bosque": "Forest",
-  "Continuidad para tu código.": "Continuity for your code."
+  "Continuidad para tu código.": "Continuity for your code.",
+  "Personaliza tu entorno de desarrollo.": "Make the workspace yours.",
+  "Tu código, paso a paso.": "Inspect your code, step by step.",
+  "ChatGPT · cuenta": "ChatGPT · Account",
+  "Claude · cuenta": "Claude · Account",
+  "Gemini · cuenta": "Gemini · Account",
+  "Copilot · cuenta": "Copilot · Account",
+  "Flotante": "Floating"
 });
