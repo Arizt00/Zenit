@@ -1,4 +1,5 @@
 import {icon,escapeHTML as esc} from './icons.js';
+import {languageLabel} from './editor.js';
 const $=s=>document.querySelector(s);
 
 export class DesktopWorkflows{
@@ -12,12 +13,12 @@ export class DesktopWorkflows{
     // Keep the preference and action IDs stable for profiles from early R7 builds.
     const hacker=document.createElement('button');hacker.className='hacker-toggle forge-toggle';hacker.dataset.action='forge-window';hacker.title='Abrir Forge en su propia ventana';hacker.innerHTML=icon('build')+'<span>Forge</span>'+icon('arrow-up-right');$('.top-actions').prepend(hacker);
     this.hackerBar=document.createElement('section');this.hackerBar.className='hacker-bar forge-dashboard';this.hackerBar.setAttribute('aria-label','Forge · ejecución y depuración');
-    this.hackerBar.innerHTML=`<div class="forge-main"><div class="forge-identity"><span class="forge-mark">${icon('build')}</span><div><strong>Forge</strong><small>Ejecuta. Inspecciona. Itera.</small></div></div><div class="forge-context">${icon('file')}<span class="forge-file"></span><span class="forge-buffer"></span></div><div class="forge-actions"><button class="forge-action forge-python" data-action="hacker-python">${icon('play')}<span><strong>Ejecutar Python</strong><small>Búfer actual · terminal integrada</small></span></button><button class="forge-action forge-gdb" data-action="hacker-gdb">${icon('bug')}<span><strong>Compilar y depurar C</strong><small>GCC → GDB · pausa en main</small></span></button></div></div><div class="forge-footer"><div class="forge-tools" aria-label="Herramientas detectadas"></div><span class="forge-status" role="status"></span><button class="icon-button forge-refresh" data-action="forge-refresh" title="Volver a detectar herramientas" aria-label="Volver a detectar herramientas">${icon('refresh')}</button><button class="forge-placement" data-action="forge-window">${icon('arrow-up-right')}<span>Otra ventana</span></button></div><div class="forge-guide"></div>`;
+    this.hackerBar.innerHTML=`<div class="forge-main"><div class="forge-identity"><span class="forge-mark">${icon('build')}</span><div><strong>Forge</strong><small>Ejecuta. Inspecciona. Itera.</small></div></div><div class="forge-context">${icon('file')}<span class="forge-file"></span><span class="forge-buffer"></span></div><div class="forge-actions"><button class="forge-action forge-file-run" data-action="hacker-file">${icon('play')}<span><strong>Ejecutar archivo</strong><small>Guardar, preparar y ejecutar en PTY</small></span></button><button class="forge-action forge-python" data-action="hacker-python">${icon('play')}<span><strong>Ejecutar Python</strong><small>Búfer actual · terminal integrada</small></span></button><button class="forge-action forge-gdb" data-action="hacker-gdb">${icon('bug')}<span><strong>Compilar y depurar C</strong><small>GCC → GDB · pausa en main</small></span></button></div></div><div class="forge-footer"><div class="forge-tools" aria-label="Herramientas detectadas"></div><span class="forge-status" role="status"></span><button class="icon-button forge-refresh" data-action="forge-refresh" title="Volver a detectar herramientas" aria-label="Volver a detectar herramientas">${icon('refresh')}</button><button class="forge-placement" data-action="forge-window">${icon('arrow-up-right')}<span>Otra ventana</span></button></div><div class="forge-guide"></div>`;
     $('#terminal-panel').prepend(this.hackerBar);this.paintHacker();await this.refreshForgeTools();
     const appearance=h.platform.onAppearance;h.platform.onAppearance=()=>{appearance?.();this.paintHacker();};
     const old=h.editor.callbacks.change;h.editor.callbacks.change=(path,...args)=>{old?.(path,...args);this.paintHacker();if(!this.applying){if(this.shared.has(path))this.queue(path);else if(this.auxiliary.size)this.safe(()=>this.share(path));}};
     const renderTerminal=h.platform.renderActiveTerminal;h.platform.renderActiveTerminal=(...args)=>{renderTerminal?.apply(h.platform,args);this.paintHacker();};
-    this.channel.onmessage=e=>this.safe(async()=>{if(e.data.type==='workspace-changed'&&this.query.has('panel')){this.freezeWorkspace();return;}if(e.data.workspace!==h.service().workspace)return;if(e.data.type==='open'&&!this.query.has('panel'))await h.openFile(e.data.path);if(e.data.type==='active'&&e.data.path&&this.query.get('panel')==='assistant')await h.openFile(e.data.path);if(e.data.type==='active'&&this.query.get('panel')==='forge')await this.followForgeFile(e.data.path);if(e.data.type==='forge-terminal'&&!this.query.has('panel'))await this.openForgeTerminal();});
+    this.channel.onmessage=e=>this.safe(async()=>{if(e.data.type==='workspace-changed'&&this.query.has('panel')){this.freezeWorkspace();return;}if(e.data.workspace!==h.service().workspace)return;if(['task','terminal-main','terminal-created'].includes(e.data.type)){this.safe(()=>this.sessionMessage(e.data));return;}if(e.data.type==='open'&&!this.query.has('panel'))await h.openFile(e.data.path);if(e.data.type==='active'&&e.data.path&&this.query.get('panel')==='assistant')await h.openFile(e.data.path);if(e.data.type==='active'&&this.query.get('panel')==='forge')await this.followForgeFile(e.data.path);if(e.data.type==='forge-terminal'&&!this.query.has('panel'))await this.openForgeTerminal();});
     if(!this.query.has('panel')){const active=h.editor.callbacks.active;h.editor.callbacks.active=(path,...args)=>{active?.(path,...args);this.activeFile(path);};}
     for(const [panel,node] of Object.entries(h.dock.panels)){
       const b=document.createElement('button');b.className='icon-button';b.title='Abrir '+{project:'Proyecto',assistant:'asistente',console:'terminal'}[panel]+' en el escritorio';b.setAttribute('aria-label',b.title);b.innerHTML=icon('arrow-up-right');b.onclick=()=>this.safe(()=>this.detach(panel));node.querySelector(panel==='console'?'.terminal-tools':'.heading-actions').append(b);
@@ -35,6 +36,7 @@ export class DesktopWorkflows{
     this.hackerBar.hidden=!enabled;document.documentElement.classList.toggle('hacker-mode',enabled);$('.hacker-toggle')?.setAttribute('aria-pressed',String(enabled));
     const file=this.hackerBar.querySelector('.forge-file');file.textContent=path||'Abre un archivo para comenzar';file.title=path;
     const buffer=this.hackerBar.querySelector('.forge-buffer');buffer.textContent=path?(dirty?'Sin guardar':'Búfer actual'):'';buffer.dataset.dirty=String(!!dirty);buffer.hidden=!path;
+    const generic=this.hackerBar.querySelector('.forge-file-run');generic.disabled=!!this.forgeBusy||!!this.forgeFollowing||!!this.staleWorkspace||!path;generic.querySelector('strong').textContent='Ejecutar '+(path?languageLabel(path):'archivo');generic.title='Guarda el archivo actual y usa su entorno configurado en una terminal real';
     for(const [mode,selector,valid] of [['python','.forge-python',/\.pyw?$/i.test(path)],['gdb','.forge-gdb',/\.c$/i.test(path)]]){
       const button=this.hackerBar.querySelector(selector),available=mode==='python'?tools?.python:tools?.gcc&&tools?.gdb;
       button.disabled=!!this.forgeBusy||!!this.forgeFollowing||!!this.staleWorkspace||!valid||!available;
@@ -42,7 +44,7 @@ export class DesktopWorkflows{
     }
     this.hackerBar.querySelector('.forge-tools').innerHTML=['python','gcc','gdb'].map(name=>`<span class="forge-tool ${tools?.[name]?'available':'missing'}" title="${esc(tools?.[name]||(!tools?'Detectando…':'No se ha encontrado. Configura su ruta en Lenguajes y herramientas.'))}">${icon(tools?.[name]?'check':'minus')}<span>${name==='python'?'Python integrado':name.toUpperCase()}</span></span>`).join('');
     const run=this.forgeRun,terminal=run?.terminal&&h.platform.terminals.get(run.terminal),closed=run?.terminal&&(!terminal||terminal.closed);
-    const message=this.forgeBusy?(run.mode==='gdb'?'Compilando con símbolos…':'Preparando Python…'):this.forgeError?'Revisa la salida de tareas':run?(closed?'Sesión finalizada':run.mode==='gdb'?'Depurador preparado':'Python en ejecución'):tools?'Listo para tu código':'Detectando herramientas…';
+    const message=this.forgeBusy?(run.mode==='gdb'?'Compilando con símbolos…':'Preparando '+(run.mode==='file'?languageLabel(path):'Python')+'…'):this.forgeError?'Revisa la salida de tareas':run?(closed?'Sesión finalizada':run.mode==='gdb'?'Depurador preparado':run.mode==='file'?'Archivo en ejecución':'Python en ejecución'):tools?'Listo para tu código':'Detectando herramientas…';
     const status=this.hackerBar.querySelector('.forge-status');status.textContent=message+(run?' · '+run.path:'');status.title=status.textContent;status.dataset.state=this.forgeError?'error':this.forgeBusy?'busy':closed?'idle':run?'running':'idle';
     this.hackerBar.querySelector('.forge-refresh').disabled=!!this.forgeBusy||!!this.refreshingForge;
     const guide=this.hackerBar.querySelector('.forge-guide');guide.innerHTML=/\.c$/i.test(path)?'<span>Depuración C</span><code>-g3 -O0 -Wall -Wextra -fno-omit-frame-pointer</code><small>En GDB: <b>next</b> · <b>step</b> · <b>print variable</b> · <b>continue</b></small>':'<span>Python</span><small>Entrada interactiva e imports locales. El archivo se guarda cuando tú decides.</small>';
@@ -88,6 +90,7 @@ export class DesktopWorkflows{
   }
   async handle(action){
     const h=this.host;
+    if(action==='toggle-terminal'&&this.editorShell){await this.toggleEditorTerminal();return true;}
     if(action==='split-editor'){h.studio.enter();const paths=[...h.editor.models.keys()],path=paths.find(p=>p!==h.editor.current)||h.editor.current;if(!path)throw Error('Abre un archivo para dividir el editor.');h.editor.split(path);return true;}
     if(action==='close-split-editor'){h.editor.closeSplit();return true;}
     if(action==='detach-editor'){await this.detach('editor',h.editor.current);return true;}
@@ -98,7 +101,7 @@ export class DesktopWorkflows{
       else await this.openForgeTerminal();return true;
     }
     if(action==='forge-refresh'){await this.refreshForgeTools();return true;}
-    if(action==='hacker-python'||action==='hacker-gdb'){await this.runHacker(action==='hacker-python'?'python':'gdb');return true;}
+    if(['hacker-python','hacker-gdb','hacker-file'].includes(action)){await this.runHacker(action==='hacker-file'?'file':action==='hacker-python'?'python':'gdb');return true;}
     if(action==='updates'){await this.updatesPage(true);return true;}
     return false;
   }
@@ -107,19 +110,21 @@ export class DesktopWorkflows{
     const h=this.host,path=h.editor.current,content=h.editor.getValue();if(!path)throw Error('Abre el archivo que quieres ejecutar.');if(!await h.ensureTrust())return;
     this.forgeBusy=true;this.forgeError=false;this.forgeRun={mode,path};
     try{
+      if(mode==='file'&&h.editor.isDirty(path))await h.saveFile(path);
       if(!this.query.has('panel'))this.forgeIntegrated=true;
       h.studio.enter();this.showForgeConsole();this.paintHacker();
       const result=await h.platform.api('/hacker/start',{mode,path,content});
-      if(result.terminal){await h.platform.attachTerminal(result.terminal);this.forgeRun.terminal=result.terminal.id;return;}
+      if(result.preview){h.studio.lantern.showPreview(result.preview);return;}
+      if(result.terminal){await h.platform.attachTerminal(result.terminal);this.forgeRun.terminal=result.terminal.id;this.publishTerminal(result.terminal.id);return;}
       h.showConsole();await h.watchJob(result.job,path);
       const terminal=await h.platform.api('/hacker/attach',{job:result.job});await h.platform.attachTerminal(terminal);this.forgeRun.terminal=terminal.id;
-      h.notify('Forge · GDB listo en main. Usa next, step, print variable, continue o quit.');
+      this.publishTerminal(terminal.id);h.notify(mode==='file'?'Forge · ejecutando '+path:'Forge · GDB listo en main. Usa next, step, print variable, continue o quit.');
     }catch(error){this.forgeError=true;throw error;}
     finally{this.forgeBusy=false;this.paintHacker();}
   }
   async detach(panel,path='',position){
     const h=this.host,api=window.pywebview?.api;
-    if(this.query.has('panel')){await this.returnToApp();return;}
+    if(this.query.has('panel')&&!(this.editorShell&&panel==='console')){await this.returnToApp();return;}
     if(panel==='profile')panel='profile-'+h.studio.profile.workspaceStyle;
     if(panel==='editor'&&!path)throw Error('Abre un archivo para separarlo.');
     const auxiliary=panel==='preview'||panel==='lantern'||panel.startsWith('profile-');
@@ -132,15 +137,17 @@ export class DesktopWorkflows{
     else{
       const key=panel==='editor'?panel+':'+path:panel,existing=this.browserChildren.get(key);
       if(existing&&!existing.closed){existing.close();this.browserChildren.delete(key);this.restorePanel(panel);return;}
-      const url=new URL(location.href);url.search=new URLSearchParams({panel,file:path});
+      const url=new URL(location.href);url.search=new URLSearchParams({panel,file:path,...(this.editorShell?{parentPanel:'editor'}:{})});
       const child=window.open(url.href,'_blank','width=1060,height=760');if(!child)throw Error('Permite las ventanas emergentes para separar el panel.');this.browserChildren.set(key,child);
       const timer=setInterval(()=>{if(child.closed){clearInterval(timer);this.browserChildren.delete(key);this.restorePanel(panel);}},400);
     }
     if(!opened){this.restorePanel(panel);return;}
     if(auxiliary){this.auxiliary.add(panel);if(panel==='lantern')$('#lantern-inline')?.setAttribute('hidden','');else h.studio.workspaces?.setDetached(true,panel);}
+    else if(this.editorShell&&panel==='console'){this.editorTerminalDetached=true;this.showEditorTerminal(false);}
     else if(panel!=='editor'){h.dock.nativeDetached.add(panel);h.dock.hide(panel);}
   }
   restorePanel(panel){
+    if(this.editorShell&&panel==='console'){this.editorTerminalDetached=false;this.showEditorTerminal(!this.editorTerminalInMain);return;}
     const h=this.host;if(panel==='forge'){this.forgeWindowOpen=false;return;}
     if(this.auxiliary.delete(panel)){if(panel==='lantern'){h.studio.lantern.openInline();$('#lantern-inline')?.removeAttribute('hidden');}else h.studio.workspaces?.setDetached(false);return;}
     if(panel!=='editor'&&h.dock.panels[panel]){h.dock.nativeDetached.delete(panel);h.dock.show(panel);}
@@ -156,6 +163,7 @@ export class DesktopWorkflows{
     const header=document.createElement('header');header.className='native-window-heading';
     const titles={project:'Proyecto',assistant:'Melody',console:'Terminal',editor:'Editor',forge:'Forge',preview:'Vista web en vivo',lantern:'Lantern Live','profile-general':'Desarrollo general','profile-web':'Desarrollo web','profile-data':'Ciencia de datos','profile-design':'Diseño y UI','profile-assembly':'Laboratorio ASM'};
     header.innerHTML=`<span>${icon(panel==='project'?'folder':panel==='lantern'||panel==='assistant'?'sparkles':'layout')}<strong>${esc(titles[panel]||'Zénit')}</strong><small>${panel==='project'?esc(h.service().name):'Búfer compartido · cambios en vivo'}</small></span><div class="native-heading-actions"><button class="secondary-button native-return">${icon('dock-left')}Volver a Zénit</button></div>`;
+    if(this.query.get('parentPanel')==='editor')header.querySelector('.native-return').innerHTML=icon('dock-bottom')+'Volver al editor';
     header.querySelector('button').onclick=()=>this.safe(()=>this.returnToApp());
     if(panel==='preview'||panel==='lantern'){
       const surface=document.createElement('section');surface.className='native-auxiliary-surface panel';surface.append(header);$('#app').append(surface);
@@ -164,8 +172,37 @@ export class DesktopWorkflows{
     }else if(panel.startsWith('profile-')){
       const editor=$('#editor-panel');editor.classList.add('native-detached-content');editor.hidden=false;editor.inert=false;$('#app').append(editor);editor.prepend(header);h.studio.workspaces.apply(panel.slice(8));
       if(panel==='profile-web'){h.studio.workspaces.previewEnabled=true;h.studio.workspaces.changed();}
-    }else{const node=panel==='editor'?$('#editor-panel'):h.dock.panels[panel==='forge'?'console':panel];if(panel==='editor'){node.classList.add('native-detached-content');node.hidden=false;node.inert=false;$('#app').append(node);}node?.prepend(header);if(panel==='project'){const actions=node.querySelector('.panel-heading .heading-actions');if(actions){header.querySelector('.native-heading-actions').prepend(actions);node.querySelector('.panel-heading').hidden=true;}}}
+    }else{const node=panel==='editor'?$('#editor-panel'):h.dock.panels[panel==='forge'?'console':panel];if(panel==='editor'){node.classList.add('native-detached-content');node.hidden=false;node.inert=false;this.editorShell=document.createElement('section');this.editorShell.className='native-editor-shell';$('#app').append(this.editorShell);this.editorShell.append(node);const terminal=$('#terminal-panel');terminal.classList.add('native-detached-content');this.editorShell.append(terminal);const button=document.createElement('button');button.className='secondary-button native-editor-terminal';button.innerHTML=icon('terminal')+'Terminal';button.title='Mostrar terminal · Ctrl J';button.onclick=()=>this.safe(()=>this.toggleEditorTerminal());header.querySelector('.native-heading-actions').prepend(button);this.showEditorTerminal(false);this.installEditorTerminalResize();this.installEditorActions(header);}node?.prepend(header);if(panel==='project'){const actions=node.querySelector('.panel-heading .heading-actions');if(actions){header.querySelector('.native-heading-actions').prepend(actions);node.querySelector('.panel-heading').hidden=true;}}}
     for(const button of document.querySelectorAll('[data-action="detach-editor"]')){button.title='Volver a Zénit';button.setAttribute('aria-label',button.title);button.innerHTML=icon('dock-left');}
+  }
+  showEditorTerminal(visible){
+    if(visible&&this.editorTerminalInMain){this.requestMainTerminal(this.host.platform.showingPTY?this.host.platform.activeTerminal:null,!this.host.platform.showingPTY);visible=false;}
+    if(!this.editorShell)return false;this.editorTerminalVisible=visible;this.editorShell.dataset.terminalVisible=String(visible);const panel=$('#terminal-panel');panel.hidden=!visible;panel.inert=!visible;this.editorShell.querySelector('.native-editor-terminal')?.setAttribute('aria-pressed',visible);
+    if(visible){const p=this.host.platform,terminal=p.terminals.get(p.activeTerminal);if(terminal)p.focusTerminal(terminal.id);else this.safe(async()=>{const data=await p.api('/terminals');if(data.sessions.length)await p.attachTerminal(data.sessions[0]);else{const profiles=await p.api('/terminals/profiles');const profile=profiles.profiles.find(x=>x.id===p.prefs['terminal.defaultProfile'])||profiles.profiles[0];if(profile)await p.openTerminal(profile.id);}});}return true;
+  }
+  toggleEditorTerminal(){this.editorTerminalInMain=false;return this.editorTerminalDetached?this.detach('console'):this.showEditorTerminal(!this.editorTerminalVisible);}
+  installEditorActions(header){
+    const actions=header.querySelector('.native-heading-actions'),run=document.createElement('button');run.className='primary-button native-editor-run';run.dataset.action='run';run.dataset.sessionRun='';run.title='Ejecutar archivo · F5';run.innerHTML=icon('play')+'Ejecutar';actions.prepend(run);
+    const main=document.createElement('button');main.className='text-button native-editor-main-terminal';main.innerHTML=icon('dock-bottom')+'<span>Usar terminal de Zénit</span>';main.setAttribute('aria-label','Usar terminal de Zénit');main.title='Ocultar este terminal y continuar en la aplicación';main.onclick=()=>this.safe(()=>this.useMainTerminal());actions.insertBefore(main,actions.querySelector('.native-return'));
+  }
+  async useMainTerminal(){this.editorTerminalInMain=true;if(this.editorTerminalDetached)await this.detach('console');this.showEditorTerminal(false);this.requestMainTerminal(this.host.platform.showingPTY?this.host.platform.activeTerminal:null,!this.host.platform.showingPTY);if(window.pywebview?.api.focus_main)await window.pywebview.api.focus_main();else window.opener?.focus();}
+  requestMainTerminal(id,tasks=false){this.channel.postMessage({type:'terminal-main',id,tasks,workspace:this.host.service().workspace});}
+  publishTask(job,path){this.watchedJobs ||= new Set();this.watchedJobs.add(job);if(this.watchedJobs.size>50)this.watchedJobs.delete(this.watchedJobs.values().next().value);this.channel.postMessage({type:'task',job,path,workspace:this.host.service().workspace});}
+  publishTerminal(id){this.channel.postMessage({type:'terminal-created',id,workspace:this.host.service().workspace});}
+  async sessionMessage(data){
+    const h=this.host,p=h.platform;if(data.type==='task'){this.watchedJobs ||= new Set();if(this.watchedJobs.has(data.job)||h.isTaskRunning())return;this.watchedJobs.add(data.job);h.showTaskConsole();await h.watchJob(data.job,data.path,{shared:true});}
+    if(data.type==='terminal-created'&&!this.query.has('panel')){const sessions=await p.api('/terminals'),session=sessions.sessions.find(t=>t.id===data.id);if(session)await p.attachTerminal(session);}
+    if(data.type==='terminal-main'&&!this.query.has('panel')){
+      if(data.tasks){h.showTaskConsole();return;}
+      const {sessions}=await p.api('/terminals'),session=sessions.find(t=>t.id===(data.id||p.activeTerminal)&&!t.closed)||sessions.find(t=>!t.closed);
+      if(session)await p.attachTerminal(session);else{const profiles=await p.api('/terminals/profiles');const profile=profiles.profiles.find(x=>x.id===p.prefs['terminal.defaultProfile'])||profiles.profiles[0];if(profile)await p.openTerminal(profile.id);}
+    }
+  }
+  installEditorTerminalResize(){
+    const shell=this.editorShell,handle=document.createElement('div');handle.className='native-terminal-resize';handle.tabIndex=0;handle.setAttribute('role','separator');handle.setAttribute('aria-label','Altura del terminal');handle.setAttribute('aria-orientation','horizontal');handle.setAttribute('aria-valuemin','20');handle.setAttribute('aria-valuemax','65');shell.insertBefore(handle,$('#terminal-panel'));
+    const set=value=>{this.editorTerminalHeight=Math.max(20,Math.min(65,value));shell.style.setProperty('--external-terminal-height',this.editorTerminalHeight+'%');handle.setAttribute('aria-valuenow',Math.round(this.editorTerminalHeight));};set(30);
+    handle.onkeydown=e=>{if(!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;e.preventDefault();set(e.key==='Home'?20:e.key==='End'?65:this.editorTerminalHeight+(e.key==='ArrowUp'?3:-3));};
+    handle.onpointerdown=e=>{if(e.button)return;e.preventDefault();handle.setPointerCapture(e.pointerId);handle.classList.add('dragging');};handle.onpointermove=e=>{if(handle.hasPointerCapture(e.pointerId)){const r=shell.getBoundingClientRect();set((r.bottom-e.clientY)/r.height*100);}};handle.onpointerup=handle.onpointercancel=e=>{if(handle.hasPointerCapture(e.pointerId))handle.releasePointerCapture(e.pointerId);handle.classList.remove('dragging');};
   }
   activeFile(path){this.paintHacker();if(this.query.has('panel'))return;this.safe(async()=>{if(path&&(this.forgeWindowOpen||this.auxiliary.size||this.host.dock.nativeDetached.has('assistant')))await this.share(path);this.channel.postMessage({type:'active',path,workspace:this.host.service().workspace});});}
   openInParent(path){this.channel.postMessage({type:'open',path,workspace:this.host.service().workspace});}
@@ -232,7 +269,7 @@ export class DesktopWorkflows{
     if(h.dock.panels[panel==='forge'?'console':panel]){const node=h.dock.panels[panel==='forge'?'console':panel];node.classList.add('native-detached-content');node.hidden=false;node.inert=false;node.removeAttribute('aria-hidden');$('#app').append(node);}
     if(panel==='forge'){const button=this.hackerBar.querySelector('.forge-placement');button.dataset.action='forge-terminal';button.innerHTML=icon('dock-bottom')+'<span>Integrar en Zénit</span>';this.paintHacker();}
     if(panel==='console'||panel==='forge'){
-      if(h.service().trusted){const data=await h.platform.api('/terminals');for(const terminal of data.sessions)if((panel!=='forge'||terminal.profile.kind==='hacker')&&!h.platform.terminals.has(terminal.id))await h.platform.attachTerminal(terminal);}
+      if(h.service().trusted){const data=await h.platform.api('/terminals');for(const terminal of data.sessions)if(!h.platform.terminals.has(terminal.id))await h.platform.attachTerminal(terminal);if(panel==='forge'&&!data.sessions.length){const profiles=await h.platform.api('/terminals/profiles');const profile=profiles.profiles.find(x=>x.id===h.platform.prefs['terminal.defaultProfile'])||profiles.profiles[0];if(profile)await h.platform.openTerminal(profile.id);}}
     }
   }
   async pollUpdates(){

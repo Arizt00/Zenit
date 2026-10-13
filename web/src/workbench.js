@@ -27,7 +27,8 @@ export class LumenPlatform {
     this.melodyFiles=new MelodyFilesUI(this);
     this.themePicker=new ThemePicker(this);this.iconThemePicker=new IconThemePicker(this);
     this.page=null;this.activeCategory='general';this.disposed=false;this.timers=[];this.extensionContributions={};this.contributionDisposables=[];
-    this.terminals=new Map();this.activeTerminal=null;this.showingPTY=false;this.aiJob=null;this.aiGeneration=0;this.conversation=crypto.randomUUID?.()||String(Date.now());
+    this.terminals=new Map();this.terminalView=crypto.randomUUID();this.activeTerminal=null;this.showingPTY=false;this.aiJob=null;this.aiGeneration=0;this.conversation=crypto.randomUUID?.()||String(Date.now());
+    this.terminalWindowFocus=()=>{const t=this.terminals.get(this.activeTerminal);if(t&&this.showingPTY&&t.mount.contains(document.activeElement))this.safe(()=>this.claimTerminal(t));};window.addEventListener('focus',this.terminalWindowFocus);
     this.lspSessions=new Map();this.diagnosticMap=new Map();this.development={tasks:[],servers:[],associations:{}};
     this.workbench=document.createElement('section');this.workbench.id='platform-page';this.workbench.className='platform-page';this.workbench.hidden=true;
     this.workbench.setAttribute('aria-label','Zénit workbench');document.getElementById('editor-panel').appendChild(this.workbench);
@@ -526,10 +527,10 @@ export class LumenPlatform {
       terminal.xterm=new this.TerminalCtor({fontFamily:this.prefs['editor.fontFamily'],fontSize:this.prefs['terminal.fontSize'],cursorBlink:this.prefs['terminal.cursorBlink'],scrollback:this.prefs['terminal.scrollback'],allowProposedApi:false,convertEol:false});
       terminal.fit=new this.FitCtor();terminal.xterm.loadAddon(terminal.fit);terminal.xterm.open(terminal.mount);this.themeTerminal(terminal);
       terminal.xterm.onData(data=>{
-        // Windows GDB/readline treats DA replies from ConPTY (including a
+        // Windows CMD/GDB/readline treats DA replies from ConPTY (including a
         // second view replaying its history) as text in the command prompt.
         // Keep cursor replies, control keys, paste and ordinary shell input.
-        if(terminal.profile.kind==='hacker'&&terminal.profile.label.startsWith('GDB · ')&&isDeviceAttributesReply(data))return;
+        if(terminal.kind==='ConPTY/pywinpty'&&isDeviceAttributesReply(data))return;
         if(!terminal.closed)this.safe(()=>terminal.input.write(data));
       });
       terminal.xterm.attachCustomKeyEventHandler(event=>{if((event.ctrlKey||event.metaKey)&&event.altKey&&['f','t'].includes(event.key.toLowerCase()))return false;return true;});
@@ -540,17 +541,20 @@ export class LumenPlatform {
       terminal.mount.querySelector('.pty-interrupt').onclick=()=>this.safe(()=>terminal.input.write('\u0003'));
       input.onkeydown=event=>{if(event.ctrlKey&&['c','d'].includes(event.key.toLowerCase())){event.preventDefault();this.safe(()=>terminal.input.write(event.key.toLowerCase()==='c'?'\u0003':'\u0004'));}};
     }
+    terminal.mount.addEventListener('focusin',()=>this.safe(()=>this.claimTerminal(terminal)));
+    terminal.mount.addEventListener('pointerdown',()=>this.safe(()=>this.claimTerminal(terminal)));
     this.selectTerminal(result.id);this.pollTerminal(terminal);return result;
   }
   themeTerminal(terminal){if(!terminal.xterm)return;const css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim(),theme=this.extensionThemes?.find(t=>t.id===this.prefs['appearance.extensionTheme']);terminal.xterm.options.theme=terminalTheme(theme,{background:get('terminal-bg'),foreground:get('terminal-text')||get('text'),cursor:get('accent'),selectionBackground:get('selection'),black:get('bg'),red:get('danger'),green:get('success'),yellow:get('syntax-string'),blue:get('syntax-function'),magenta:get('syntax-keyword'),cyan:get('syntax-type'),white:get('text')});}
   selectTerminal(id){
     if(!this.terminals.has(id))return;
-    this.activeTerminal=id;this.showingPTY=true;this.host.dock.show('console');this.renderActiveTerminal();
+    this.activeTerminal=id;this.showingPTY=true;if(!this.host.studio?.desktop?.showEditorTerminal?.(true))this.host.dock.show('console');this.renderActiveTerminal();
     this.focusTerminal(id);
   }
   focusTerminal(id){
     cancelAnimationFrame(this.terminalFocusFrame);const terminal=this.terminals.get(id);if(!terminal||terminal.closed||!this.showingPTY||this.activeTerminal!==id)return;
     terminal.xterm?.focus();terminal.mount.querySelector('input')?.focus();
+    this.safe(()=>this.claimTerminal(terminal));
     this.terminalFocusFrame=requestAnimationFrame(()=>{this.terminalFocusFrame=0;if(this.disposed||this.activeTerminal!==id||!this.showingPTY||!terminal.mount.getBoundingClientRect().width)return;try{terminal.fit?.fit();this.resizeTerminal(terminal);}catch(_){}});
   }
   terminalLabel(terminal){
@@ -565,7 +569,8 @@ export class LumenPlatform {
     for(const t of this.terminals.values())t.mount.hidden=t.id!==this.activeTerminal;
   }
   useConsole(){this.showingPTY=false;this.ptyMount.hidden=true;this.host.showConsole();this.renderActiveTerminal();}
-  async resizeTerminal(terminal){if(terminal.closed||!terminal.xterm)return;try{await this.api('/terminals/resize',{id:terminal.id,cols:terminal.xterm.cols,rows:terminal.xterm.rows});}catch(_){}}
+  async claimTerminal(terminal){if(terminal.closed||!document.hasFocus()||!terminal.mount.getBoundingClientRect().width)return;await this.api('/terminals/claim',{id:terminal.id,view:this.terminalView});terminal.fit?.fit();await this.resizeTerminal(terminal);}
+  async resizeTerminal(terminal){if(terminal.closed||!terminal.xterm)return;try{await this.api('/terminals/resize',{id:terminal.id,cols:terminal.xterm.cols,rows:terminal.xterm.rows,view:this.terminalView});}catch(_){}}
   async pollTerminal(terminal){
     if(this.disposed||!this.terminals.has(terminal.id))return;
     try{
@@ -783,5 +788,5 @@ export class LumenPlatform {
     clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();t.mount.remove();}this.terminals.clear();this.activeTerminal=null;this.showingPTY=false;this.renderActiveTerminal();
     for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.lspSessions.clear();this.diagnosticMap.clear();this.lastContent.clear();this.voice?.stop().catch(()=>{});this.aiGeneration++;this.aiJob=null;this.conversation=crypto.randomUUID?.()||String(Date.now());this.closePage();this.updateSystemStatus();
   }
-  dispose(){this.voice?.dispose();this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
+  dispose(){window.removeEventListener('focus',this.terminalWindowFocus);this.voice?.dispose();this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
 }

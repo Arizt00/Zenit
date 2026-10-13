@@ -1,5 +1,6 @@
 """Explicit WebView2 bridge. Native objects MUST remain private to avoid JS introspection."""
 import sys
+import os
 from .version import PRODUCT_NAME, VERSION, REVISION
 
 class DesktopAPI:
@@ -21,16 +22,25 @@ class DesktopAPI:
         from urllib.parse import urlencode
         titles={'project':'Proyecto','assistant':'Melody','console':'Terminal','editor':path or 'Editor','forge':'Forge','preview':'Vista web','lantern':'Lantern','profile-general':'Desarrollo general','profile-web':'Desarrollo web','profile-data':'Ciencia de datos','profile-design':'Diseño y UI','profile-assembly':'Laboratorio ASM'}
         if panel not in titles:raise ValueError('Panel desconocido.')
-        if self._owner is not None:
+        if self._owner is not None and not (self._panel=='editor' and panel=='console'):
             self.close_panel()
             return {'opened':False,'returned':True,'panel':self._panel}
-        if path:self._application.workspace.resolve(path)
+        if path:
+            from pathlib import Path
+            if Path(path).is_absolute():
+                app=self._application
+                target=Path(path).resolve()
+                known={os.path.normcase(str(Path(b['path']).resolve())) for b in app.features.buffers.snapshot()['buffers'] if Path(b['path']).is_absolute()}
+                if not app.workspace.trusted or os.path.normcase(str(target)) not in known or not target.is_file():
+                    raise PermissionError('Abre el archivo en la sesión antes de separarlo.')
+                path=str(target)
+            else:self._application.workspace.resolve(path)
         key=panel+':'+path if panel=='editor' else panel
         if key in self._children:
             self._children[key].destroy()
             return {'opened':False,'returned':True,'panel':panel}
         api=DesktopAPI();api._application=self._application;api._url=self._url;api._panel=panel;api._owner=self
-        query=urlencode({'panel':panel,'file':path})
+        query=urlencode({'panel':panel,'file':path,**({'parentPanel':'editor'} if self._panel=='editor' else {})})
         coordinates={}
         if isinstance(position,dict):
             for axis in ('x','y'):
@@ -56,6 +66,12 @@ class DesktopAPI:
         if self._owner is None:raise ValueError('Esta ventana ya está acoplada.')
         self._window.destroy()
         return {'returned':True,'panel':self._panel}
+
+    def focus_main(self):
+        owner=self
+        while owner._owner is not None:owner=owner._owner
+        owner._window.restore();owner._window.show()
+        return {'focused':True}
 
     def close_forge(self):
         if getattr(self,'_panel',None)!='forge':raise ValueError('Esta ventana no es Forge.')

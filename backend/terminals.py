@@ -66,7 +66,7 @@ def terminal_profiles():
 
 class TerminalSession:
     def __init__(self,profile,cwd,project,cols=100,rows=26,environment=None):
-        self.id=uuid.uuid4().hex;self.profile=profile;self.cwd=str(cwd);self.lock=threading.RLock()
+        self.id=uuid.uuid4().hex;self.profile=profile;self.cwd=str(cwd);self.lock=threading.RLock();self.resize_owner=''
         self.output='';self.start=0;self.closed=False;self.code=None;self.fd=None;self.process=None;self.win=None;self.created=time.time()
         env=child_environment();env.update(environment or {});self.decoder=codecs.getincrementaldecoder('utf-8')('replace')
         argv=list(profile['argv'])
@@ -148,15 +148,21 @@ class TerminalSession:
             # exits. This is a normal closed stream, not an internal error.
             self.closed=True;return False
         return True
-    def resize(self,cols,rows):
+    def claim(self,view):
+        if not isinstance(view,str) or not re.fullmatch(r'[\w-]{1,80}',view):raise ValueError('Vista de terminal no válida.')
+        with self.lock:self.resize_owner=view
+        return {'claimed':True}
+    def resize(self,cols,rows,view=''):
         cols=max(20,min(int(cols),500));rows=max(5,min(int(rows),200))
-        if self.closed:return
-        if self.win:
-            try:self.win.setwinsize(rows,cols)
-            except EOFError:self.closed=True
-        else:
-            import fcntl,termios,struct
-            fcntl.ioctl(self.fd,termios.TIOCSWINSZ,struct.pack('HHHH',rows,cols,0,0))
+        with self.lock:
+            if (view and view!=self.resize_owner) or self.closed:return False
+            if self.win:
+                try:self.win.setwinsize(rows,cols)
+                except EOFError:self.closed=True;return False
+            else:
+                import fcntl,termios,struct
+                fcntl.ioctl(self.fd,termios.TIOCSWINSZ,struct.pack('HHHH',rows,cols,0,0))
+            return True
     def close(self):
         callback=getattr(self,'before_close',None)
         if callback and not self.closed:callback()

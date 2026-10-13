@@ -149,7 +149,8 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/file":
                     return self.reply(ws.read(query.get("path", [""])[0]))
                 if path == "/api/search":
-                    return self.reply({"results": ws.search(query.get("q", [""])[0], content=query.get("content", ["0"])[0] == "1", folder=query.get('folder',[''])[0])})
+                    results=ws.search(query.get('q',[''])[0],content=query.get('content',['0'])[0]=='1',folder=query.get('folder',[''])[0],case=query.get('case',['0'])[0]=='1',word=query.get('word',['0'])[0]=='1',include=query.get('include',[''])[0],exclude=query.get('exclude',[''])[0],file_type=query.get('type',[''])[0],limit=201)
+                    return self.reply({'results':results[:200],'truncated':len(results)>200})
                 if path == "/api/git":
                     return self.reply({"output": self.app.runner.git(ws, query.get("mode", ["status"])[0])})
                 if path == "/api/job":
@@ -201,6 +202,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/save":
                 result=ws.save(body["path"], body["content"], body.get("revision"), create=bool(body.get("create")), newline=body.get("newline", "LF"), bom=bool(body.get("bom")))
                 self.app.features.lantern.saved(ws,body['path'])
+                if body.get('create'):self.app.features.extension_services.emit('zenit.tree.changed')
                 return self.reply(result)
             if path == "/api/workspace":
                 if any(not job.done for job in self.app.runner.jobs.values()):
@@ -226,12 +228,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(self.app.runner.console(ws, body.get("command", ""), body.get("cwd", "")))
             if path == "/api/task":
                 from .runtimes import language
-                if language(body['path']):
-                    plan=self.app.features.runtimes.plan(ws,body['path'],check=bool(body.get('check')))
-                    if plan.get('preview'):return self.reply({'preview':self.app.features.preview.start(ws,body['path'])})
+                ws,target=self.app.features.execution_workspace(ws,body['path'])
+                if language(target):
+                    plan=self.app.features.runtimes.plan(ws,target,check=bool(body.get('check')))
+                    if plan.get('preview'):return self.reply({'preview':self.app.features.preview.start(ws,target)})
                     if not plan['commands']:return self.reply({'output':'Comprobación completada.\n'})
                     return self.reply(self.app.runner.start(plan['commands'],ws.root,timeout=120 if body.get('check') else 0))
-                return self.reply(self.app.runner.task(ws, body['path'], check=bool(body.get('check'))))
+                return self.reply(self.app.runner.task(ws, target, check=bool(body.get('check'))))
             if path == "/api/task-input":
                 if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de interactuar con su programa.')
                 job=self.app.runner.jobs.get(body.get('id'))

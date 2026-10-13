@@ -5,6 +5,8 @@ import json
 import os
 import shutil
 import tempfile
+import fnmatch
+import re
 import threading
 import time
 from pathlib import Path
@@ -152,31 +154,48 @@ class Workspace:
                     os.unlink(temp_name)
             return self.read(name)
 
-    def search(self, query: str, *, content=False, folder='') -> list[dict]:
+    def search(self, query: str, *, content=False, folder='', case=False, word=False, include='', exclude='', file_type='', limit=200) -> list[dict]:
         if not query or len(query) > 200:
             return []
         results = []
+        if len(include)>1024 or len(exclude)>1024:raise ValueError('Los filtros admiten hasta 1024 caracteres.')
+        def patterns(value):return [p.strip().replace('\\','/') for p in value.split(',') if p.strip()][:32]
+        includes,excludes=patterns(include),patterns(exclude)
+        def matches(name,pattern):
+            name,pattern=name.lower(),pattern.lower()
+            if pattern.startswith('.'):pattern='*'+pattern
+            return fnmatch.fnmatchcase(name,pattern) or '/' not in pattern and fnmatch.fnmatchcase(Path(name).name,pattern) or pattern.startswith('**/') and fnmatch.fnmatchcase(name,pattern[3:])
+        code=re.compile(r'\.(py|pyw|js|mjs|cjs|ts|tsx|jsx|c|cpp|h|hpp|java|cs|go|rs|kt|nc|n|asm|s|sh|bash|html|css|sql)$',re.I)
+        needle=re.compile((r'(?<!\w)' if word else '')+re.escape(query)+(r'(?!\w)' if word else ''),0 if case else re.I)
         scope = self.resolve(folder).relative_to(self.root).as_posix() if folder else ''
         if scope == '.': scope = ''
         for name in self.files():
             if scope and not name.startswith(scope + '/'): continue
+            if includes and not any(matches(name,p) for p in includes):continue
+            if any(matches(name,p) for p in excludes):continue
+            if file_type and (bool(code.search(name))!=(file_type=='code')):continue
             if content:
                 try:
                     data = self.read(name)
                 except (ValueError, OSError):
                     continue
                 for number, line in enumerate(data["content"].splitlines(), 1):
-                    if query.lower() in line.lower():
-                        results.append({"path": name, "line": number, "text": line.strip()[:200]})
-                        if len(results) >= 200:
+                    match=needle.search(line)
+                    if match:
+                        start=max(0,match.start()-72);end=min(len(line),max(match.end()+72,start+180));snippet=line[start:end];prefix='…' if start else ''
+                        units=lambda text:len(text.encode('utf-16-le'))//2
+                        spans=[{'start':units(line[start:m.start()])+len(prefix),'end':units(line[start:m.end()])+len(prefix)} for m in needle.finditer(line,start,end)][:32]
+                        results.append({"path": name, "line": number, "column":units(line[:match.start()])+1,"text":prefix+snippet+('…' if end<len(line) else ''),'matches':spans})
+                        if len(results) >= limit:
                             return results
             else:
+                if (case or word) and not needle.search(name):continue
                 score = self.native.fuzzy(query, name)
                 if score != -1:
                     results.append({"path": name, "score": score})
         if not content:
             results.sort(key=lambda x: (-x["score"], x["path"]))
-        return results[:200]
+        return results[:limit]
 
     def check(self) -> str:
         names = self.files()

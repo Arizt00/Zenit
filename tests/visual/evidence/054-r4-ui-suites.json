@@ -1,0 +1,42 @@
+{
+  "suites": [
+    {
+      "suite": "search-windows",
+      "checks": 15,
+      "errors": []
+    },
+    {
+      "suite": "session-profile",
+      "checks": 11,
+      "errors": []
+    },
+    {
+      "suite": "files-ui",
+      "checks": 7,
+      "errors": []
+    },
+    {
+      "suite": "themes",
+      "checks": 10,
+      "errors": []
+    },
+    {
+      "suite": "icons",
+      "checks": 12,
+      "errors": []
+    },
+    {
+      "suite": "visual-correction",
+      "checks": 21,
+      "errors": []
+    },
+    {
+      "suite": "startup-activity",
+      "checks": 14,
+      "errors": []
+    }
+  ],
+  "checks": 90,
+  "aiTransport": "Declared fixtures for plan/advice mechanics; real provider quality not evaluated.",
+  "terminal": "Actual Windows CMD/Java ConPTY and keyboard"
+}

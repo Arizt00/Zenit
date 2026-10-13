@@ -1,4 +1,5 @@
 import {icon,escapeHTML as esc} from './icons.js';
+import {languageFor} from './editor.js';
 
 /** Completed model proposals are data; a reviewed ticket is the only disk action. */
 export class MelodyFilesUI{
@@ -30,6 +31,11 @@ export class MelodyFilesUI{
       try{await this.apply(plan,element);this.host.closeModal();
       }catch(error){const target=document.getElementById('melody-plan-error');if(target)target.textContent=error.message;else this.host.notify(error.message,'error');button.disabled=false;}
     };
+    if(window.monaco){for(const [index,details] of [...document.querySelectorAll('.melody-plan-files details')].entries()){
+      const op=plan.operations[index];if(op.kind==='delete')continue;const button=document.createElement('button');button.className='text-button melody-diff-toggle';button.type='button';button.innerHTML=icon('split')+'Comparar cambios';details.append(button);
+      button.onclick=()=>{if(details.querySelector('.melody-diff'))return;const mount=document.createElement('div');mount.className='melody-diff';details.append(mount);const editor=monaco.editor.createDiffEditor(mount,{readOnly:true,automaticLayout:true,renderSideBySide:innerWidth>800,minimap:{enabled:false},scrollBeyondLastLine:false,originalEditable:false,fontSize:12});const original=monaco.editor.createModel(op.before||'',languageFor(op.path)),modified=monaco.editor.createModel(op.content||'',languageFor(op.path));editor.setModel({original,modified});button.hidden=true;for(const source of details.querySelectorAll(':scope>pre,:scope>label'))source.hidden=true;
+        const observer=new MutationObserver(()=>{if(!mount.isConnected){editor.dispose();original.dispose();modified.dispose();observer.disconnect();}});observer.observe(document.body,{childList:true,subtree:true});};
+    }}
   }
   async apply(plan,element){
     await this.clean(plan);const captured=new Map(plan.operations.map(op=>{const r=this.record(op.path);return [op.path,r?{record:r,text:r.model?.getValue()??r.value}:null];}));

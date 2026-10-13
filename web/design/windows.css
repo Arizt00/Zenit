@@ -1,5 +1,32 @@
 /* Popovers and actual detached windows use one material, radius and header. */
 .popover[data-over-modal=true] {z-index:220;}
+.popover .menu-label {display:flex;align-items:center;padding:8px 10px 10px;font-size:11px;font-weight:500;letter-spacing:.2px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.popover .menu-item {min-height:34px;font-size:12px;border:1px solid transparent;transition:background-color var(--motion-fast),border-color var(--motion-fast);}
+.popover .menu-item:focus-visible {outline:0;background:var(--selected);border-color:color-mix(in srgb,var(--accent) 30%,var(--border));}
+.popover .menu-shortcut {font:10px var(--font-ui);padding:3px 6px;border-radius:5px;background:var(--field);color:var(--secondary);}
+:root[data-detached-panel=editor] #workspace {display:none!important;}
+.native-editor-shell {display:grid;grid-template-rows:minmax(0,1fr);width:100%;height:100%;min-width:0;min-height:0;gap:10px;padding:12px;background:var(--bg);}
+.native-editor-shell[data-terminal-visible=true] {grid-template-rows:minmax(0,1fr) 6px minmax(110px,var(--external-terminal-height,30%));gap:0;}
+.native-terminal-resize {grid-column:1;grid-row:2;cursor:ns-resize;border-radius:4px;outline-offset:0;touch-action:none;background:transparent;}
+.native-terminal-resize:is(:hover,:focus-visible,.dragging) {background:var(--accent-soft);}
+.native-editor-shell[data-terminal-visible=false]>.native-terminal-resize {display:none;}
+:root[data-detached-panel=editor] .native-editor-shell>.native-detached-content {display:flex;flex-direction:column;grid-column:1!important;grid-row:auto!important;position:relative;width:100%;min-width:0;min-height:0;margin:0!important;height:auto!important;border-radius:14px!important;overflow:hidden;border:1px solid var(--border);}
+:root[data-detached-panel=editor] .native-editor-shell[data-terminal-visible=false]>#terminal-panel {display:none!important;}
+.native-editor-terminal {font-size:11px;min-height:30px;}
+.native-editor-terminal[aria-pressed=true] {background:var(--accent-soft);color:var(--accent);border-color:var(--accent);}
+.native-editor-shell .pty-mount {min-height:0;flex:1;}
+:root[data-detached-panel=editor] .app {padding:0;gap:0;}
+:root[data-detached-panel=editor] .native-editor-shell {padding:0;flex:1;}
+:root[data-detached-panel=editor] .native-editor-shell>.native-detached-content {border-radius:0!important;}
+.native-heading-actions {display:flex;align-items:center;gap:8px;}
+.native-editor-run {min-height:32px;padding:0 12px;display:flex;align-items:center;gap:7px;font-size:11px;}
+.native-editor-main-terminal {display:flex;align-items:center;gap:7px;padding:0 8px;font-size:11px;min-height:32px;}
+.forge-file-run {background:var(--accent-soft);border-color:var(--border-strong);}
+:root[data-detached-panel=forge] .app {padding:0;gap:0;}
+:root[data-detached-panel=forge] .app>.native-detached-content {border:0;border-radius:0;}
+:root[data-detached-panel] .toasts {top:auto;bottom:12px;right:12px;max-width:min(320px,calc(100vw - 24px));}
+@media(max-width:700px) {.native-editor-main-terminal span {display:none;}.native-heading-actions {gap:4px;}.native-window-heading {padding-inline:8px;}.native-heading-actions .native-return {max-width:125px;overflow:hidden;white-space:nowrap;}}
+@media(max-width:550px) {:root[data-detached-panel=editor] .native-window-heading {flex-wrap:wrap;gap:5px;}.native-editor-shell .native-heading-actions {width:100%;justify-content:space-between;}.native-editor-shell .native-window-heading>span {display:none;}.native-editor-shell .native-editor-run {padding-inline:9px;}}
 
 .popover {
   position: fixed;

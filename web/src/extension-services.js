@@ -9,6 +9,8 @@ export class ExtensionServicesUI {
     const h=this.host,p=h.platform,ed=h.editor;
     if(event.command==='zenit.trust.changed'){p.host.setTrusted(event.trusted);p.host.setTrustSource?.(event.source);if(!event.trusted)p.workspaceChanged();return;}
     if(event.command==='zenit.preferences.changed'){await p.syncPreferences();return;}
+    if(event.command==='zenit.studio.changed'){await p.host.studio?.syncProfile();return;}
+    if(event.command==='zenit.tree.changed'){await p.host.refreshTree();return;}
     if(event.command==='zenit.contributions.changed'){await p.loadContributions();return;}
     if(event.command==='zenit.files.changed'){await p.melodyFiles.reload(event.paths||[]);return;}
     if(event.command==='zenit.output'){this.outputUI.event(event);return;}

@@ -1,0 +1,117 @@
+{
+  "duration": 3000.300000000745,
+  "frameInterval": {
+    "samples": 591,
+    "median": 4.199999999998909,
+    "p95": 8.400000000001455,
+    "max": 49.899999999999636
+  },
+  "longTasks": [],
+  "mutations": {
+    "#lumen-tooltip/attributes/hidden": 6,
+    "#ai-provider-bar/attributes/class": 1,
+    "H2/attributes/aria-expanded": 1,
+    "monaco-editor/attributes/class": 1,
+    "cursor/attributes/style": 1,
+    "view-overlays/attributes/class": 1,
+    "margin-view-overlays/attributes/class": 1,
+    "#modal-backdrop/attributes/class": 1,
+    "#modal/childList": 1,
+    "avatar/attributes/data-tooltip": 1,
+    "overflowingContentWidgets/childList": 1,
+    "overlayWidgets/childList": 1
+  },
+  "webgl": {
+    "renderSamples": 172,
+    "medianCpuMs": 0.5,
+    "p95CpuMs": 0.6999999992549419,
+    "contextEvents": [],
+    "engines": 2,
+    "surfaces": [
+      {
+        "kind": "orb",
+        "renderLoops": 1,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      },
+      {
+        "kind": "welcome",
+        "renderLoops": 0,
+        "version": 2,
+        "renderer": "ANGLE (Intel, Intel(R) Graphics (0x00007D67) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "timerQueryAvailable": true
+      }
+    ]
+  },
+  "memory": {
+    "used": 48840051,
+    "total": 76947471
+  },
+  "canvases": [
+    {
+      "kind": "decorationsOverviewRuler",
+      "width": 0,
+      "height": 0,
+      "visible": false
+    },
+    {
+      "kind": "",
+      "width": 79,
+      "height": 745,
+      "visible": true
+    },
+    {
+      "kind": "minimap-decorations-layer",
+      "width": 79,
+      "height": 745,
+      "visible": true
+    },
+    {
+      "kind": "orb",
+      "width": 300,
+      "height": 267,
+      "visible": true
+    },
+    {
+      "kind": "",
+      "width": 96,
+      "height": 96,
+      "visible": false
+    },
+    {
+      "kind": "welcome",
+      "width": 300,
+      "height": 150,
+      "visible": false
+    }
+  ],
+  "editors": 1,
+  "animations": [],
+  "cdp": {
+    "LayoutCount": 2,
+    "RecalcStyleCount": 23,
+    "LayoutDuration": 0.000411,
+    "RecalcStyleDuration": 0.004816,
+    "ScriptDuration": 0.17889,
+    "TaskDuration": 0.49492699999999995
+  },
+  "timeline": {
+    "Layout": {
+      "events": 2,
+      "totalMs": 0.381
+    },
+    "Paint": {
+      "events": 22,
+      "totalMs": 2.887
+    },
+    "UpdateLayoutTree": {
+      "events": 23,
+      "totalMs": 4.865
+    },
+    "CompositeLayers": {
+      "events": 0,
+      "totalMs": 0.0
+    }
+  }
+}

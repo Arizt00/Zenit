@@ -18,3 +18,5 @@
 .melody-recovery {font-size:11px;line-height:1.5;color:var(--secondary);overflow-wrap:anywhere;}
 .melody-file-actions {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .melody-file-actions button {font-size:12px;min-height:34px;}
+.melody-diff {height:min(400px,45vh);min-height:180px;margin:12px;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.melody-diff-toggle {display:flex;align-items:center;gap:7px;font-size:12px;margin:10px 12px;}

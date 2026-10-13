@@ -1,3 +1,13 @@
+# Límites reales · Zénit 0.5.4 R4
+
+R4 verifica flujos de ventanas/PTY, búsquedas y comparación. No añade toda la
+API VS Code, reemplazo masivo ni expresiones regulares. La ejecución depende
+de los entornos configurados; no convierte cualquier texto en un programa.
+La sincronización preserva conflictos concurrentes y los diseños de paneles
+pertenecen a cada ventana. Las pruebas de generación de IA usan fixtures y
+no acreditan calidad del modelo; la voz existente no se reentrena.
+Los límites de planes y recuperación de R3 que siguen continúan vigentes.
+
 # Límites reales · Zénit 0.5.4 R3
 
 R3 amplía Melody a archivos nombrados y documentos abiertos de la sesión, con

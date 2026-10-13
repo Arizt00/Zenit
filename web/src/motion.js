@@ -18,7 +18,7 @@ export class LumenMotion {
     animation.finished.catch(()=>{}).finally(()=>{if(this.running.get(element)===animation)this.running.delete(element);});
     return animation;
   }
-  enter(element,offset=5){return this.play(element,[{opacity:0,transform:`translateY(${offset}px) scale(.985)`},{opacity:1,transform:'translateY(0) scale(1)'}],200);}
+  enter(element,offset=5){return this.play(element,[{opacity:0,translate:`0 ${offset}px`},{opacity:1,translate:'0 0'}],180);}
   changeLayout(elements,mutate) {
     const root=elements[0]?.closest('.workspace');
     if(!root){mutate();return;}

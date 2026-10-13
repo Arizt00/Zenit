@@ -62,18 +62,18 @@ class MelodyFiles:
 
     @staticmethod
     def request_text(question):
-        return re.sub(r'```[\s\S]*?(?:```|$)|(?m:^\s*>.*$)', '', str(question)).strip()
+        return re.sub(r'```[\s\S]*?(?:```|$)|(?m:^\s*>.*$)', '', str(question)).strip().lstrip('¿¡ ').rstrip(' .?!')
 
     @classmethod
     def deletion_requested(cls, question):
         text = unicodedata.normalize('NFD', re.sub(r'["“][^"”]*["”]', '', cls.request_text(question))).encode('ascii', 'ignore').decode().lower()
-        return bool(re.search(r'(?:^|[.!?]\s*|\b(?:y|and|luego|then)\s+)(?:(?:por favor|please|puedes|can you|quiero que|necesito que)\s+)*(?:borra|borrar|elimina|eliminar|suprime|delete|remove)\b', text))
+        return bool(re.search(r'(?:^|[.!?]\s*|\b(?:y|and|luego|then)\s+)(?:(?:por favor|please|puedes|podrias|can you|could you|quiero que|necesito que)\s+)*(?:borra|borrar|borres|elimina|eliminar|elimines|suprime|delete|remove)\b', text))
 
     def prepare(self, ws, body):
         """Capture requested files before inference, never a model-selected future revision."""
         question = self.request_text(body.get('question', '')).replace('\\','/')
         direct = unicodedata.normalize('NFD', question).encode('ascii', 'ignore').decode().lower()
-        if not re.match(r'(?:(?:por favor|puedes|quiero que|necesito que|please|can you)\s+)*(?:crea|crear|genera|generar|escribe|escribir|reescribe|modifica|modificar|edita|editar|actualiza|actualizar|cambia|cambiar|anade|implementa|borra|borrar|elimina|eliminar|suprime|create|generate|write|rewrite|edit|update|change|add|implement|delete|remove)\b', direct):
+        if not re.match(r'(?:(?:por favor|puedes|podrias|quiero que|necesito que|please|can you|could you)\s+)*(?:crea|crear|crees|genera|generar|generes|escribe|escribir|escribas|reescribe|modifica|modificar|modifiques|edita|editar|edites|actualiza|actualizar|actualices|cambia|cambiar|cambies|anade|anadas|implementa|borra|borrar|borres|elimina|eliminar|elimines|suprime|create|generate|write|rewrite|edit|update|change|add|implement|delete|remove)\b', direct):
             raise PermissionError('Los cambios de archivos requieren una orden directa del usuario.')
         with ws.lock, self.platform.buffers.lock:
             inventory = ws.files()

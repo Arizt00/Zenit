@@ -1,6 +1,7 @@
 """Authenticated platform routes, composed without changing legacy API contracts."""
 from __future__ import annotations
 import json
+import os
 import threading
 import time
 from .preferences import Preferences
@@ -63,6 +64,17 @@ class PlatformServices:
                 'development':self.tools.discover_servers(),'commandSequence':self.command_seq}
     def _trusted(self):
         if not self.app.workspace.trusted:raise PermissionError('El proyecto no es de confianza. Autorízalo antes de continuar.')
+    def execution_workspace(self,ws,path):
+        """An exterior file must already be part of the user's open session."""
+        from pathlib import Path
+        if not isinstance(path,str):raise ValueError('Ruta de ejecución inválida.')
+        if not Path(path).is_absolute():return ws,path
+        self._trusted();target=Path(path).resolve()
+        known={os.path.normcase(str(Path(b['path']).resolve())) for b in self.buffers.snapshot()['buffers'] if Path(b['path']).is_absolute()}
+        if os.path.normcase(str(target)) not in known or not target.is_file():raise PermissionError('Abre este archivo en la sesión antes de ejecutarlo.')
+        from .workspace import Workspace
+        scoped=Workspace(target.parent,ws.native);scoped.trusted=True
+        return scoped,target.name
     def _terminal(self,sid):
         session=self.terminals.get(sid)
         if session.profile.get('kind')!='account':self._trusted()
@@ -146,7 +158,7 @@ class PlatformServices:
         if path=='/updates/download':return self.updates.download()
         if path=='/files/operation':
             from .file_actions import perform
-            return perform(ws,body)
+            result=perform(ws,body);self.extension_services.emit('zenit.tree.changed');return result
         if path=='/downloads/start':return self.downloads.start(body.get('url',''),body.get('name',''),body.get('sha256',''))
         if path=='/downloads/pause':return self.downloads.pause(body.get('id'))
         if path=='/downloads/resume':return self.downloads.resume(body.get('id'))
@@ -167,7 +179,10 @@ class PlatformServices:
             plan=self.runtimes.plan(ws,body.get('path',''),check=True)
             return self.app.runner.start(plan['commands'],ws.root,timeout=20) if plan['commands'] else {'output':''}
         if path=='/diagnostics/output':return {'diagnostics':output_diagnostics(str(body.get('output',''))[:512000],str(body.get('path','')))}
-        if path=='/studio':return self.studio.update(body)
+        if path=='/studio':
+            result=self.studio.update(body)
+            if any(key in body for key in ('displayName','avatar','workspaceStyle')):self.extension_services.emit('zenit.studio.changed')
+            return result
         if path=='/languages/config':return self.runtimes.save(body)
         if path=='/preview':return self.preview.start(ws,body.get('path',''),body.get('buffers'))
         if path=='/debug/start':
@@ -219,7 +234,8 @@ class PlatformServices:
         if path=='/terminals/write':
             terminal=self._terminal(body.get('id'));written=terminal.write(body.get('data',''))
             return {'ok':written,'closed':terminal.closed}
-        if path=='/terminals/resize':self._terminal(body.get('id')).resize(body.get('cols',100),body.get('rows',26));return {'ok':True}
+        if path=='/terminals/claim':return self._terminal(body.get('id')).claim(body.get('view'))
+        if path=='/terminals/resize':return {'ok':self._terminal(body.get('id')).resize(body.get('cols',100),body.get('rows',26),body.get('view',''))}
         if path=='/terminals/close':self.terminals.get(body.get('id')).close();return {'closed':True}
         if path=='/development':return self.tools.save(body)
         if path=='/tasks/run':return self.tools.run(ws,body.get('id'),body.get('file',''),body.get('consent'))

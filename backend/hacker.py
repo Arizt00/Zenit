@@ -39,8 +39,20 @@ class Hacker:
 
     def start(self, ws, path, content, mode):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto para ejecutar su código.')
+        project=ws.root;ws,path=self.features.execution_workspace(ws,path)
         file=ws.resolve(path)
         if not isinstance(content,str) or len(content)>2_000_000:raise ValueError('El búfer admite hasta 2 MB.')
+        if mode=='file':
+            from .runtimes import language
+            plan=self.features.runtimes.plan(ws,path)
+            if plan.get('preview'):return {'preview':self.features.preview.start(ws,path)}
+            commands=plan['commands']
+            if not commands:raise ValueError('No hay una orden de ejecución para este archivo.')
+            label=language(path)+' · '+file.name
+            if len(commands)==1:return {'terminal':self._terminal(commands[0],label,ws.root)}
+            result=self.features.app.runner.start(commands[:-1],ws.root,timeout=120)
+            self.builds[result['job']]={'argv':commands[-1],'workspace':ws.root,'project':project,'name':label}
+            return result
         folder=Path(tempfile.mkdtemp(prefix='lumen-hacker-'));self.folders.append(folder)
         source=folder/file.name;source.write_text(content,encoding='utf-8',newline='')
         if mode=='python':
@@ -56,14 +68,17 @@ class Hacker:
         target=folder/('program.exe' if os.name=='nt' else 'program')
         argv=[tools['gcc'],'-g3','-O0','-Wall','-Wextra','-fno-omit-frame-pointer','-iquote',str(file.parent),str(source),'-o',str(target)]
         result=self.features.app.runner.start([argv],ws.root,timeout=120)
-        self.builds[result['job']]={'target':target,'gdb':tools['gdb'],'workspace':ws.root,'source':source,'name':file.name}
+        self.builds[result['job']]={'target':target,'gdb':tools['gdb'],'workspace':ws.root,'project':project,'source':source,'name':file.name}
         return {**result,'flags':argv[1:6]}
 
     def attach(self, ws, key):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto.')
         build=self.builds.get(key);job=self.features.app.runner.jobs.get(key)
-        if not build or build['workspace']!=ws.root or not job:raise ValueError('Compilación no encontrada en este proyecto.')
+        if not build or build.get('project',build['workspace'])!=ws.root or not job:raise ValueError('Compilación no encontrada en este proyecto.')
         if not job.done:raise ValueError('La compilación sigue en curso.')
+        if 'argv' in build:
+            if job.code!=0:raise ValueError('La compilación falló. Revisa sus errores en la salida de tareas.')
+            result=self._terminal(build['argv'],build['name'],build['workspace']);del self.builds[key];return result
         if job.code!=0 or not build['target'].is_file():raise ValueError('GCC no pudo compilar. Revisa sus errores en la salida de tareas.')
         result=self._terminal([build['gdb'],'--quiet','-ex','set pagination off','-ex','start','--args',str(build['target'])],'GDB · '+build['name'],ws.root)
         del self.builds[key]

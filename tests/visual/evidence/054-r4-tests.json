@@ -1,0 +1,56 @@
+{
+  "python": {
+    "run": 325,
+    "passed": 320,
+    "skipped": 5,
+    "errors": 0
+  },
+  "node": {
+    "passed": 102,
+    "errors": 0
+  },
+  "javascriptSyntax": 65,
+  "interface": {
+    "suites": [
+      {
+        "suite": "search-windows",
+        "checks": 15,
+        "errors": []
+      },
+      {
+        "suite": "session-profile",
+        "checks": 11,
+        "errors": []
+      },
+      {
+        "suite": "files-ui",
+        "checks": 7,
+        "errors": []
+      },
+      {
+        "suite": "themes",
+        "checks": 10,
+        "errors": []
+      },
+      {
+        "suite": "icons",
+        "checks": 12,
+        "errors": []
+      },
+      {
+        "suite": "visual-correction",
+        "checks": 21,
+        "errors": []
+      },
+      {
+        "suite": "startup-activity",
+        "checks": 14,
+        "errors": []
+      }
+    ],
+    "checks": 90,
+    "aiTransport": "Declared fixtures for plan/advice mechanics; real provider quality not evaluated.",
+    "terminal": "Actual Windows CMD/Java ConPTY and keyboard"
+  },
+  "note": "The shader regression waits up to 12 seconds for an actual rendered frame; a fixed 900ms interval was unreliable under graphical load."
+}

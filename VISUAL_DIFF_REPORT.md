@@ -1,3 +1,19 @@
+# Comparación visual · Zénit 0.5.4 R4
+
+El editor exterior elimina el doble margen y usa toda la ventana. El terminal
+queda debajo, con separador y controles; las capturas demuestran salida real.
+Forge añade la acción del lenguaje activo y el terminal interactivo. Búsqueda
+usa una cabecera, filtros y grupos con coincidencias independientes. Inicio,
+Mi actividad y Tu perfil conservan la composición aceptada. Los PNG de QA usan
+identidades de prueba; la foto privada permanece fuera de Git.
+
+Se capturan 15 vistas reales de WebView2 a DPI Windows de 150 %, con área
+cliente ajustada a 1672×917 CSS. Las cinco comprobaciones de composición mayor
+pasan con tolerancia de 2 píxeles CSS; no certifican fidelidad de cada píxel.
+
+Las capturas y comprobaciones actuales están en `tests/visual/current/054-r4`.
+No se declara equivalencia nueva de píxeles con todas las referencias históricas.
+
 # Comparación visual · Zénit 0.5.4 R3
 
 Tu perfil añade el mismo recurso fotográfico del avatar como portada ampliada,

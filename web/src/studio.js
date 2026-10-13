@@ -3,6 +3,7 @@ import {LanternView} from './lantern.js';
 import {icon,escapeHTML as esc,fileIcon} from './icons.js';
 import {glassArt,createLumenScene} from './glass.js';
 import {normalizeLayout,defaultLayout} from './layout-state.js';
+import {ProjectSearch} from './project-search.js';
 
 const $=s=>document.querySelector(s);
 export class LenonStudio {
@@ -23,6 +24,7 @@ export class LenonStudio {
     this.queue=this.queue.catch(()=>{}).then(()=>this.host.api('/platform/studio',changes));
     await this.queue;return this.profile;
   }
+  async syncProfile(){await this.queue.catch(()=>{});const style=this.profile.workspaceStyle;Object.assign(this.profile,await this.host.api('/platform/studio'));this.updateProfile();if(style!==this.profile.workspaceStyle)this.workspaces?.apply();}
   decorate(){
     $('.brand').dataset.action='home';$('.brand-name').innerHTML='ZÉNIT <span>IDE</span>';
     const {version,revision}=this.host.platform.state;
@@ -167,29 +169,7 @@ export class LenonStudio {
     const d=this.onboardDraft;if(!skip){const p=this.host.platform;const settings={'general.locale':d.locale,'appearance.theme':d.theme,'appearance.motion':d.motion??true,'files.autoSave':d.autosave??false,'editor.wordWrap':d.style==='web'||d.style==='design','editor.fontSize':d.style==='design'?15:14};await this.host.api('/platform/settings',{settings});Object.assign(p.prefs,settings);p.applyPreferences();this.host.dock.preset(d.layout);if(d.layout==='studio')this.host.dock.move('assistant',d.position);await this.save({displayName:d.name,workspaceStyle:d.style,layout:this.host.dock.snapshot(),onboarded:true});}else{this.host.platform.applyPreferences();await this.save({onboarded:true});}
     $('#onboarding').remove();$('#app').inert=false;this.workspaces?.apply();this.renderHome();$('.home-enter').focus();
   }
-  search(folder=""){
-    this.enter();const p=this.host.platform;
-    const empty=()=>`<div class="search-empty"><span class="search-visual">${icon('folder')}${icon('search')}</span><h3>${this.t('Cada idea tiene un comienzo.','Every idea has a beginning.')}</h3><p>${this.t('Escribe una palabra, un símbolo o el nombre de un archivo.','Type a word, symbol or filename.')}</p></div>`;
-    const folders=[...new Set(this.host.files().flatMap(path=>{const parts=path.split('/');return parts.slice(0,-1).map((_,i)=>parts.slice(0,i+1).join('/'));}))].sort();
-    p.openPage('search',`<div class="search-page"><div class="search-intro"><h2>${this.t('Encuentra el <em>siguiente paso.</em>','Find your <em>next step.</em>')}</h2><p>${this.t('Busca en tu código y archivos para avanzar más rápido.','Search your code and files to move forward faster.')}</p></div><form id="studio-search-form" class="studio-search-field">${icon('search')}<input id="studio-search" placeholder="${this.t('Buscar en el proyecto...','Search project...')}" autocomplete="off" aria-label="${this.t('Buscar en el proyecto','Search project')}"><kbd>Ctrl K</kbd><button class="primary-button" aria-label="Buscar">${icon('arrow-right')}</button></form><div class="search-filters"><button data-search-mode="content" class="active" aria-pressed="true">${this.t('Contenido','Content')} ${icon('chevron-down')}</button><button data-search-mode="files" aria-pressed="false">${this.t('Archivos','Files')} ${icon('chevron-down')}</button><select id="search-type" aria-label="${this.t('Tipo de archivo','File type')}"><option value="">${this.t('Tipo','Type')}</option><option value="code">${this.t('Código','Code')}</option><option value="document">${this.t('Documentos','Documents')}</option></select><select id="search-folder" aria-label="${this.t('Carpeta','Folder')}"><option value="">${this.t('Carpeta','Folder')}</option>${folders.map(path=>`<option value="${esc(path)}" ${path===folder?'selected':''}>${esc(path)}</option>`).join('')}</select><input id="search-extension" aria-label="Filtrar extensión" placeholder="*.cs, *.py..."></div><div class="search-result-heading" hidden><span id="search-result-count" role="status"></span><span>${esc(this.host.service().name)}</span></div><div id="studio-search-results" class="studio-search-results">${empty()}</div></div>`);
-    let mode='content',timer;
-    const search=async()=>{
-      const seq=++this.searchSequence,q=$('#studio-search')?.value.trim()||'',filter=($('#search-extension')?.value||'').replaceAll('*','').trim().toLowerCase();
-      if(!q){$('#studio-search-results').innerHTML=empty();p.workbench.querySelector('.search-result-heading').hidden=true;return;}
-      p.workbench.querySelector('.search-result-heading').hidden=false;$('#search-result-count').textContent=this.t('Buscando…','Searching…');
-      const selectedFolder=$('#search-folder').value,type=$('#search-type').value;
-      const data=await this.host.api('/search?q='+encodeURIComponent(q)+'&folder='+encodeURIComponent(selectedFolder)+(mode==='content'?'&content=1':''));
-      if(seq!==this.searchSequence||p.page!=='search')return;
-      const code=/\.(py|pyw|js|mjs|cjs|ts|tsx|jsx|c|cpp|h|hpp|java|cs|go|rs|kt|nc|n|asm|s|sh|bash|html|css|sql)$/i;
-      const results=data.results.filter(r=>(!filter||filter.split(',').some(f=>r.path.toLowerCase().endsWith(f.trim())))&&(!type||(type==='code'?code.test(r.path):!code.test(r.path))));
-      results.sort((a,b)=>Number(b.path.split('/').pop().toLowerCase().includes(q.toLowerCase()))-Number(a.path.split('/').pop().toLowerCase().includes(q.toLowerCase()))||a.path.localeCompare(b.path)||(a.line||0)-(b.line||0));
-      $('#search-result-count').textContent=results.length+' '+this.t('resultados','results');const groups=new Map();for(const r of results){if(!groups.has(r.path))groups.set(r.path,[]);groups.get(r.path).push(r);}
-      $('#studio-search-results').innerHTML=[...groups].map(([path,hits])=>`<button class="search-hit" data-file="${esc(path)}" data-line="${hits[0].line||1}"><header>${fileIcon(path)}<span><strong>${esc(path.split('/').pop())}</strong><small>${esc(path)}</small></span>${icon('arrow-up-right')}</header>${hits.slice(0,4).map(h=>h.text!==undefined?`<div class="search-code"><span>${h.line}</span><code>${esc(h.text)}</code></div>`:'').join('')}</button>`).join('')||`<div class="search-empty">${icon('search')}<h3>${this.t('Sin coincidencias','No matches')}</h3><p>${this.t('Prueba con otra palabra o cambia el filtro.','Try another word or change the filter.')}</p></div>`;
-    };
-    const delayed=()=>{++this.searchSequence;clearTimeout(timer);timer=setTimeout(()=>this.safe(search),180);};
-    $('#studio-search').oninput=delayed;$('#search-extension').oninput=delayed;$('#search-type').onchange=()=>this.safe(search);$('#search-folder').onchange=()=>this.safe(search);$('#studio-search-form').onsubmit=e=>{e.preventDefault();clearTimeout(timer);this.safe(search);};
-    p.workbench.querySelectorAll('[data-search-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.searchMode;p.workbench.querySelectorAll('[data-search-mode]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b));});this.safe(search);});$('#studio-search').focus();
-  }
+  search(folder=""){this.enter();this.searchView ||= new ProjectSearch(this);return this.searchView.open(folder);}
   async debug(){this.debugWorkspace ||= new DebugWorkspace(this);return this.debugWorkspace.open();}
   async configureLanguages(){
     const data=await this.host.api('/platform/languages');
@@ -202,5 +182,5 @@ export class LenonStudio {
     this.wheel=e=>{if(!this.host.motion.enabled||Math.abs(e.deltaY)<1||performance.now()-this.lastBounce<420)return;let el=e.target instanceof Element?e.target:null;while(el&&el!==document.body){const style=getComputedStyle(el);if(/auto|scroll/.test(style.overflowY)&&el.scrollHeight>el.clientHeight+2){const edge=e.deltaY<0&&el.scrollTop<=0||e.deltaY>0&&el.scrollTop+el.clientHeight>=el.scrollHeight-1;if(edge&&!el.closest('.monaco-editor,.xterm')){this.lastBounce=performance.now();this.host.motion.play(el,[{translate:'0 0'},{translate:'0 '+(e.deltaY<0?7:-7)+'px'},{translate:'0 0'}],380);}return;}el=el.parentElement;}};
     document.addEventListener('wheel',this.wheel,{passive:true});
   }
-  dispose(){this.debugWorkspace?.dispose();cancelAnimationFrame(this.pointerFrame);this.lantern?.dispose();this.disposed=true;clearTimeout(this.layoutTimer);clearTimeout(this.debugTimer);document.removeEventListener('wheel',this.wheel);document.removeEventListener('visibilitychange',this.visibility);for(const scene of this.scenes.values())scene.dispose();this.scenes.clear();}
+  dispose(){this.searchView?.dispose();this.debugWorkspace?.dispose();cancelAnimationFrame(this.pointerFrame);this.lantern?.dispose();this.disposed=true;clearTimeout(this.layoutTimer);clearTimeout(this.debugTimer);document.removeEventListener('wheel',this.wheel);document.removeEventListener('visibilitychange',this.visibility);for(const scene of this.scenes.values())scene.dispose();this.scenes.clear();}
 }

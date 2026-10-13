@@ -16,6 +16,6 @@ export function requestsRealtimeHelp(question){
 // Project/resource requests go through a complete, reviewable disk plan.
 export function requestsFileChanges(question){
   const text=String(question).replace(/```[\s\S]*?(?:```|$)/g,'').replace(/^\s*>.*$/gm,'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-  const direct=/^\s*(?:(?:por favor|puedes|quiero que|necesito que|please|can you)\s+)*(?:crea|crear|genera|generar|escribe|escribir|reescribe|modifica|modificar|edita|editar|actualiza|actualizar|cambia|cambiar|anade|implementa|borra|borrar|elimina|eliminar|suprime|create|generate|write|rewrite|edit|update|change|add|implement|delete|remove)\b/.test(text);
-  return direct&&(/\b(?:archivo[s]?|carpeta[s]?|proyecto[s]?|file[s]?|folder[s]?|project[s]?)\b/.test(text)||/(?:^|[\s"'`(])(?:[\w@-]+[\/\\])*[\w@-]+\.[\w.-]+(?:$|[\s"'`,:)])/.test(text));
+  const direct=/^\s*[¿¡]?\s*(?:(?:por favor|puedes|podrias|quiero que|necesito que|please|can you|could you)\s+)*(?:crea|crear|crees|genera|generar|generes|escribe|escribir|escribas|reescribe|modifica|modificar|modifiques|edita|editar|edites|actualiza|actualizar|actualices|cambia|cambiar|cambies|anade|anadas|implementa|borra|borrar|borres|elimina|eliminar|elimines|suprime|create|generate|write|rewrite|edit|update|change|add|implement|delete|remove)\b/.test(text);
+  return direct&&(/\b(?:archivo[s]?|carpeta[s]?|proyecto[s]?|file[s]?|folder[s]?|project[s]?)\b/.test(text)||/(?:^|[\s"'`(])(?:[\w@-]+[\/\\])*[\w@-]+\.[\w.-]+(?:$|[\s"'`,:).!?])/.test(text));
 }

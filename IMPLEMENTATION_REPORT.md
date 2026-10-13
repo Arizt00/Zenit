@@ -1,3 +1,20 @@
+# Implementación · Zénit 0.5.4 R4
+
+R4 corrige el cierre de menús y la entrada del terminal entre ventanas. Añade
+búsqueda con posiciones exactas, editor exterior completo con controles de
+ejecución y terminal inferior separable, sincronización de cambios y tareas,
+evento de perfil/árbol y ejecución Forge mediante los entornos existentes.
+Las órdenes explícitas de Melody admiten más formas y comparación Monaco.
+
+[PREVIEW_054_R4](docs/PREVIEW_054_R4.md) describe el alcance y
+[VSCODE_PARITY_054_R4](docs/VSCODE_PARITY_054_R4.md) sus límites.
+Validación R4: 325 pruebas Python (320 pasan, 5 omitidas), 102 Node,
+65 archivos con análisis de sintaxis y 90 comprobaciones de interfaz en siete
+suites. Se usa CMD/ConPTY real y Java real con consola y lectura de entrada.
+Las pruebas de propuestas/consejos de IA usan fixtures explícitos.
+
+Las secciones que siguen conservan evidencia histórica de R3/R2.
+
 # Implementación · Zénit 0.5.4 R3
 
 R3 añade el fondo de foto real y difuminada a Tu perfil, sincronizado con el

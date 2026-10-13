@@ -1,0 +1,2234 @@
+{
+  "geometry": {
+    "editor": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "melody": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "welcome": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 917.3333740234375,
+        "display": "block"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 917.3333740234375,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 646,
+        "y": 149.15625,
+        "width": 380,
+        "height": 321.7083435058594,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 471.5,
+        "width": 1672,
+        "height": 269.7395935058594,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 20,
+        "y": 471.5,
+        "width": 1632,
+        "height": 66.69792175292969,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 444.9895935058594,
+        "y": 16,
+        "width": 615.9583740234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 0
+      }
+    },
+    "profile": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "activity": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "search": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 1293,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 1291.666748046875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 1291.666748046875,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 1291.666748046875,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 1292
+      }
+    },
+    "settings": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 356,
+        "y": 98.66667175292969,
+        "width": 960,
+        "height": 740,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "extensions": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 64,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 65,
+        "width": 59,
+        "height": 806.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 83,
+        "y": 65,
+        "width": 250,
+        "height": 806.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 65,
+        "width": 416.32293701171875,
+        "height": 806.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 83.66667175292969,
+        "y": 65.66667175292969,
+        "width": 248.6666717529297,
+        "height": 805,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 343,
+        "y": 65,
+        "width": 886.6771240234375,
+        "height": 806.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 65.66667175292969,
+        "width": 414.9895935058594,
+        "height": 805,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 343.66668701171875,
+        "y": 65.66667175292969,
+        "width": 885.34375,
+        "height": 805,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 151.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 329.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 13,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 343.66668701171875,
+        "y": 65.66667175292969,
+        "width": 885.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 343.66668701171875,
+        "y": 114.66667175292969,
+        "width": 885.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 885
+      }
+    },
+    "laboratory": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 1293,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 1291.666748046875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 1291.666748046875,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 1291.666748046875,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 1292
+      }
+    },
+    "asm": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "debug": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 1293,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 1291.666748046875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 1291.666748046875,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 1291.666748046875,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 1292
+      }
+    },
+    "floating-project": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 90,
+        "y": 658.3333740234375,
+        "width": 1139.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 671.6666870117188,
+        "y": 136.6666717529297,
+        "width": 328.66668701171875,
+        "height": 596.6666870117188,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 90,
+        "y": 71,
+        "width": 1139.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 90.66667175292969,
+        "y": 659,
+        "width": 1138.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 1138.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 90.66667175292969,
+        "y": 120.66667175292969,
+        "width": 1138.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 1138
+      }
+    },
+    "palette": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 363,
+        "y": 658.3333740234375,
+        "width": 866.6771240234375,
+        "height": 213,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 579.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 363.66668701171875,
+        "y": 659,
+        "width": 865.34375,
+        "height": 211.6666717529297,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "forge": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 70,
+        "display": "grid"
+      },
+      ".activity-rail": {
+        "x": 14,
+        "y": 71,
+        "width": 66,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 90,
+        "y": 71,
+        "width": 263,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 1239.6771240234375,
+        "y": 71,
+        "width": 416.32293701171875,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#project-panel": {
+        "x": 90.66667175292969,
+        "y": 71.66667175292969,
+        "width": 261.66668701171875,
+        "height": 799,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 363,
+        "y": 71,
+        "width": 866.6771240234375,
+        "height": 800.3333740234375,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 1240.34375,
+        "y": 71.66667175292969,
+        "width": 414.9895935058594,
+        "height": 799,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 339.66668701171875,
+        "y": 203.6666717529297,
+        "width": 978.6666870117188,
+        "height": 624.6666870117188,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 1347.8333740234375,
+        "y": 157.0625,
+        "width": 200,
+        "height": 178,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 1258.34375,
+        "y": 335.0625,
+        "width": 378.9895935058594,
+        "height": 26.39583396911621,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 461.2708435058594,
+        "y": 16,
+        "width": 604.9271240234375,
+        "height": 38,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 363.66668701171875,
+        "y": 71.66667175292969,
+        "width": 865.34375,
+        "height": 49,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 363.66668701171875,
+        "y": 120.66667175292969,
+        "width": 865.34375,
+        "height": 32,
+        "display": "flex"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 865
+      }
+    },
+    "forge-detached": {
+      ".topbar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".activity-rail": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-left": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-right": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#dock-bottom": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#project-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#editor-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#assistant-panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      "#terminal-panel": {
+        "x": 16,
+        "y": 16,
+        "width": 1640,
+        "height": 885.3333740234375,
+        "display": "flex"
+      },
+      "#platform-page": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "#lumen-home": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      ".welcome-sheet": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-scene": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".welcome-copy h1": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".assistant-hero>.glass-art": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".melody-copy h3": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "block"
+      },
+      ".global-search": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".editor-tabbar": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "flex"
+      },
+      ".breadcrumbs": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "display": "none"
+      },
+      "overflow": {
+        "html": false,
+        "body": false,
+        "topbar": false,
+        "editorWidth": 0
+      }
+    }
+  },
+  "settings": {
+    "contentRetained": true,
+    "navigationRetained": true,
+    "mutations": 51,
+    "scrollRestored": true,
+    "focusRestored": true
+  },
+  "errors": [],
+  "realRuntime": true,
+  "fixture": "Isolated generated source project; no simulated tool results or AI responses."
+}
