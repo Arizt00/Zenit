@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import mimetypes
+import html
 import os
 import platform
 import secrets
@@ -33,7 +34,7 @@ class Application:
         remember_workspace(self.workspace.root, self.features.prefs.directory)
 
     def state(self):
-        return {"version": VERSION, "revision":REVISION, "startup":getattr(self,'startup',{}), "workspace": str(self.workspace.root), "name": self.workspace.root.name,
+        return {"version": VERSION, "revision":REVISION, "desktop":bool(getattr(self,'desktop',False)), "startup":getattr(self,'startup',{}), "workspace": str(self.workspace.root), "name": self.workspace.root.name,
                 "python": platform.python_version(), "platform": platform.system(), "native": self.native.name,
                 "trusted": self.workspace.trusted, "trustSource":self.features.permissions.state(self.workspace.root,direct=not self.features.prefs.get('security.confirmRoutineActions'))['source'],"shell": self.runner.allow_shell,
                 "monaco": (self.project / "web/vendor/monaco/vs/loader.js").is_file(),
@@ -169,7 +170,13 @@ class Handler(BaseHTTPRequestHandler):
                 mime = "text/javascript"
             if file.suffix in (".html", ".css", ".js", ".mjs", ".svg"):
                 mime += "; charset=utf-8"
-            return self.reply(file.read_bytes(), content_type=mime, session=file.name == "index.html")
+            raw=file.read_bytes()
+            if file.name=='index.html':
+                from .startup import appearance
+                initial=appearance(self.app.features.prefs,self.app.features.extensions)
+                marker=('data-theme="'+initial['base']+'" data-initial-theme="'+initial['base']+'" data-initial-extension-theme="'+html.escape(initial['extension'],quote=True)+'"').encode('utf-8')
+                raw=raw.replace(b'data-theme="day"',marker,1)
+            return self.reply(raw, content_type=mime, session=file.name == "index.html")
         except Exception as exc:
             self.failure(exc)
 

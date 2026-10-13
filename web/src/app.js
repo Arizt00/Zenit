@@ -257,11 +257,11 @@ function sessionDialog(){
   $('#revoke-trust').onclick=guard(async()=>{await api('/trust',{trusted:false});service.trusted=false;closeModal();notify('Confianza revocada. Las tareas nuevas necesitan autorización.');});
 }
 function showMenu(anchor,items,label=''){
-  closePopover();popoverAnchor=anchor;
+  closePopover();popoverAnchor=anchor;$('#popover').dataset.overModal=String(!$('#modal-backdrop').classList.contains('hidden'));
   const pop=$('#popover');pop.innerHTML=(label?`<div class="menu-label">${esc(label)}</div>`:'')+items.map((item,i)=>item.separator?'<div class="menu-separator"></div>':`<button class="menu-item" data-menu-index="${i}" role="menuitem" ${item.disabled?'disabled':''} aria-disabled="${!!item.disabled}" aria-label="${esc(item.label)}">${item.theme?`<span class="theme-swatch swatch-${item.theme}"></span>`:icon(item.icon||'code')}<span>${esc(item.label)}</span>${item.shortcut?`<span class="menu-shortcut" aria-hidden="true">${esc(item.shortcut)}</span>`:''}</button>`).join('');
   pop.classList.remove('hidden');motion.enter(pop,-4);const rect=anchor?.getBoundingClientRect?.()||{right:innerWidth/2,left:innerWidth/2,bottom:80};
   const box=pop.getBoundingClientRect();pop.style.left=Math.max(12,Math.min(innerWidth-box.width-12,Math.max(12,rect.right-box.width)))+'px';pop.style.top=Math.max(12,Math.min(innerHeight-box.height-12,rect.bottom+8))+'px';
-  pop.onkeydown=event=>{const items=[...pop.querySelectorAll('[role=menuitem]:not(:disabled)')],index=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const n=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[n]?.focus();}if(event.key==='Escape'){event.preventDefault();closePopover();anchor?.focus();}};
+  pop.onkeydown=event=>{const items=[...pop.querySelectorAll('[role=menuitem]:not(:disabled)')],index=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const n=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[n]?.focus();}if(event.key==='Escape'||event.key==='Tab'){event.preventDefault();event.stopPropagation();closePopover();anchor?.focus();}};
   requestAnimationFrame(()=>pop.querySelector('[role=menuitem]')?.focus());
   pop.querySelectorAll('[data-menu-index]').forEach(button=>button.onclick=guard(async()=>{const item=items[+button.dataset.menuIndex];closePopover();if(item.run)await item.run();else if(item.action)await perform(item.action,anchor);}));
 }
@@ -539,6 +539,7 @@ function setupEvents(){
   document.addEventListener('keydown',event=>{
     if($('#onboarding'))return;
     if(event.key==='Escape'){
+      if(!$('#popover').classList.contains('hidden')){event.preventDefault();const anchor=popoverAnchor;closePopover();anchor?.focus();return;}
       closePopover();if(!$('#modal-backdrop').classList.contains('hidden')){event.preventDefault();closeModal();return;}
       if(!$('#palette-backdrop').classList.contains('hidden')){event.preventDefault();closePalette();return;}
       if(document.documentElement.dataset.screen==='home'&&$('#modal-backdrop').classList.contains('hidden')){event.preventDefault();studio.enter();}return;
@@ -573,12 +574,14 @@ async function initializeDocuments(){
   renderTabs();renderTree();updateDocumentStatus();
 }
 async function start(){
+  try{
+  window.zenitStartup?.phase('shell');
   renderIcons();if(!document.documentElement.dataset.extensionTheme)applyTheme(document.documentElement.dataset.theme,false);else paintThemeChrome(document.documentElement.dataset.theme);setupEvents();
   dock=new DockManager($('#workspace'),motion);
   document.addEventListener('lumen:organize',event=>layoutSettingsDialog(event.detail.panel));
   polish=installInteractions({motion,reorderFile,activateFile,closeFile:guard(closeFile)});
 
-  try{
+    window.zenitStartup?.phase('service');
     const response=await fetch('/api/bootstrap',{credentials:'same-origin',signal:AbortSignal.timeout(25000)});service=await response.json();if(!response.ok)throw new Error(service.error);
     token=service.token;tree=service.tree;
     editor=new LumenEditor($('#editor-mount'),{change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
@@ -596,9 +599,9 @@ async function start(){
       },
       setPluginCommands:items=>{for(let i=commandDefinitions.length-1;i>=0;i--)if(commandDefinitions[i][0].startsWith('plugin.'))commandDefinitions.splice(i,1);for(const item of items)commandDefinitions.push(['plugin.'+item.id,'extensions',item.title,'']);}
     });
-    await platformUI.init();
-    studio=new LenonStudio({api,platform:platformUI,dock,editor,motion,modal,closeModal,notify,ensureTrust,openFile,saveFile,changeWorkspace,palette:openPalette,refreshTree,service:()=>service,files:allFiles});
-    await studio.init();
+    window.zenitStartup?.phase('extensions');await platformUI.init();
+    studio=new LenonStudio({api,platform:platformUI,dock,editor,motion,modal,showMenu,closeModal,notify,ensureTrust,openFile,saveFile,changeWorkspace,palette:openPalette,refreshTree,service:()=>service,files:allFiles});
+    window.zenitStartup?.phase('welcome');await studio.init();
     previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
     platformUI.companion=new MelodyCompanion(platformUI);
     if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
@@ -612,7 +615,8 @@ async function start(){
     $('#engine-label').textContent='Local workspace';
     // Explicitly expose state for repeatable UI smoke tests; no secrets are exposed here.
     window.lumen={get theme(){return document.documentElement.dataset.theme;},get editorKind(){return editor.kind;},get graphicsKind(){return [...(studio?.scenes.values()||[])].some(s=>s.kind==='babylon')?'babylon':'css';},get graphicsAPI(){return document.querySelector('canvas[data-engine]')?.dataset.engine||'CSS';},get activeFile(){return editor.current;},get ready(){return true;},get platformReady(){return !!platformUI?.state;},get platformPage(){return platformUI?.page;},get languageServers(){return platformUI?.lspSessions.size||0;},get layout(){return dock.snapshot();},get motionEnabled(){return motion.enabled;}};
-  }catch(error){document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
+    window.zenitStartup?.ready();
+  }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
 window.addEventListener('pagehide',event=>{if(!event.persisted){productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='\\'){event.preventDefault();guard(()=>perform('split-editor'))();}});

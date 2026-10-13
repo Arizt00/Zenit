@@ -1,0 +1,37 @@
+{
+  "method": "Real WebView2 and DesktopAPI; isolated generated Java project; synchronous test bridge delay.",
+  "bridgeDelaySeconds": 3.0,
+  "records": [
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "undefined",
+      "webview2": true,
+      "boot": null,
+      "screen": "home",
+      "cycle": 1,
+      "elapsedSeconds": 3.484,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    },
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "undefined",
+      "webview2": true,
+      "boot": null,
+      "screen": "home",
+      "cycle": 2,
+      "elapsedSeconds": 3.25,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    }
+  ],
+  "failure": []
+}

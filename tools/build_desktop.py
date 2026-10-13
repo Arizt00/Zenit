@@ -125,7 +125,7 @@ def main():
     outputs=[];prefix=f'Zenit-{VERSION}-R{REVISION}'
     if args.installer:
         if sys.platform=='win32':
-            for name in ('uninstaller','installer'):
+            for name in ('uninstaller','launcher','installer'):
                 subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean',str(ROOT/f'packaging/{name}.spec')],check=True,cwd=ROOT)
             output=ROOT/f'dist/{prefix}-Windows-Setup.exe'
             if not output.is_file():raise RuntimeError('No se generó el instalador .exe.')

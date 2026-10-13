@@ -1417,3 +1417,6 @@
 .workspace[data-page=settings] .platform-open>.editor-mount,.workspace[data-page=settings] .platform-open>.editor-tabbar,.workspace[data-page=settings] .platform-open>.breadcrumbs {
   visibility: visible;
 }
+
+/* Monaco and xterm draw their own tracks; scroll remains available to input. */
+:is(.monaco-scrollable-element,.xterm-scrollable-element)>.scrollbar {visibility:hidden!important;pointer-events:none!important;}

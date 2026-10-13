@@ -80,7 +80,7 @@ export class MelodyCompanion {
     this.panel.querySelector('.companion-focus').after(this.panel.querySelector('footer'));
     this.references=document.createElement('div');this.references.className='companion-references';this.references.hidden=true;this.references.setAttribute('aria-label','Líneas citadas por Melody');this.panel.querySelector('pre').before(this.references);
     this.answer=document.createElement('div');this.answer.className='companion-answer';this.answer.hidden=true;this.panel.querySelector('pre').after(this.answer);
-    this.listen=document.createElement('button');this.listen.className='text-button melody-listen';this.listen.type='button';this.listen.innerHTML=icon('speaker')+'<span>Escuchar consejo</span>';this.listen.hidden=true;this.answer.after(this.listen);this.listen.onclick=()=>p.safe(()=>p.voice.speak(this.spokenAdvice,this));
+    this.listen=document.createElement('button');this.listen.className='text-button melody-listen';this.listen.type='button';this.listen.innerHTML=icon('speaker')+'<span>Escuchar consejo</span>';this.listen.hidden=true;this.answer.after(this.listen);this.listen.onclick=()=>p.safe(()=>{const model=ed.view?.getModel();if(!this.advice||model!==this.advice.model||model.getVersionId()!==this.advice.version)throw Error('Este consejo pertenece a una revisión anterior. Solicita otro antes de escucharlo.');return p.voice.speak(this.spokenAdvice,this);});
     this.accept=document.createElement('button');this.accept.className='secondary-button small-button companion-accept';this.accept.innerHTML=icon('code')+'<span>Insertar sugerencia</span>';this.accept.title='Insertar en el búfer actual · se puede deshacer';this.accept.hidden=true;this.panel.querySelector('pre').after(this.accept);this.accept.onclick=()=>p.safe(()=>this.acceptPrediction());
     this.panel.querySelector('header button').onclick=()=>this.session.stop();this.panel.querySelector('[data-companion=review]').onclick=()=>p.safe(()=>{this.session.lastKey=null;return this.session.review();});this.panel.querySelector('[data-companion=predict]').onclick=()=>p.safe(()=>this.session.review(true));
     this.panel.querySelectorAll('[data-companion-focus]').forEach(button=>button.onclick=()=>{this.focus=button.dataset.companionFocus;this.panel.querySelectorAll('[data-companion-focus]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.session.changed();});
@@ -96,7 +96,7 @@ export class MelodyCompanion {
     if(provider!==p.prefs['ai.provider']||model!==p.prefs['ai.model'])throw Error('El destino cambió. Activa de nuevo la ayuda con el proveedor actual.');
     this.workspace=await p.host.workspace?.();this.session.begin(this.session.snapshot());
   }
-  clearAdvice(){if(this.advice){if(!this.advice.model.isDisposed())this.advice.model.deltaDecorations(this.advice.ids,[]);this.advice=null;}if(this.references?.childElementCount)this.references.replaceChildren();if(this.references)this.references.hidden=true;}
+  clearAdvice(){this.spokenAdvice='';if(this.listen)this.listen.hidden=true;this.platform.voice?.stop(this).catch(()=>{});if(this.advice){if(!this.advice.model.isDisposed())this.advice.model.deltaDecorations(this.advice.ids,[]);this.advice=null;}if(this.references?.childElementCount)this.references.replaceChildren();if(this.references)this.references.hidden=true;}
   clearPrediction(){this.prediction=null;this.accept.hidden=true;this.platform.host.editor.view?.trigger('melody','editor.action.inlineSuggest.hide',{});}
   acceptPrediction(){
     const ed=this.platform.host.editor,p=this.prediction,model=ed.view?.getModel(),position=ed.view?.getPosition();
@@ -115,7 +115,6 @@ export class MelodyCompanion {
     this.panel.querySelector('pre').classList.toggle('is-code',!!state.prediction);
     const rich=state.status==='ready'&&!state.prediction,sections=rich?adviceSections(state.text):[];this.panel.querySelector('pre').hidden=rich;this.answer.hidden=!rich;this.accept.hidden=true;
     if(rich){this.answer.replaceChildren();if(sections.length){for(const section of sections){const block=document.createElement('section'),heading=document.createElement('strong');heading.textContent=section.title;if(section.title)block.append(heading);block.append(renderMarkdown(section.body));this.answer.append(block);}}else this.answer.append(renderMarkdown(state.text||'El proveedor no ha devuelto una sugerencia.'));}
-    this.spokenAdvice=state.status==='ready'&&!state.prediction?state.text:'';this.listen.hidden=!this.spokenAdvice;if(!this.spokenAdvice)this.platform.voice?.stop(this).catch(()=>{});
     if(state.status==='waiting')this.panel.querySelector('pre').textContent='Los consejos aparecerán aquí. Se comprobará la revisión antes de mostrarlos.';
     if(['waiting','analyzing','error','limit'].includes(state.status)){this.clearAdvice();this.clearPrediction();}
     if(state.status==='ready'&&!state.prediction&&state.text?.trim()){
@@ -123,6 +122,7 @@ export class MelodyCompanion {
       if(model&&model.getVersionId()===state.snapshot.version&&line>=1&&line<=model.getLineCount())this.advice={model,version:model.getVersionId(),ids:model.deltaDecorations([],[{range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,linesDecorationsClassName:'melody-advice-mark',hoverMessage:{value:'**Melody · propuesta para esta revisión**\n\n'+state.text.slice(0,1800),isTrusted:false}}}])};
       if(this.advice)for(const target of lines){const button=document.createElement('button');button.className='text-button';button.textContent='Línea '+target;button.onclick=()=>{if(this.advice?.model===ed.view?.getModel()&&this.advice.model.getVersionId()===this.advice.version)ed.showLine(target);};this.references.append(button);this.references.hidden=false;}
     }
+    this.spokenAdvice=state.status==='ready'&&!state.prediction&&this.advice?state.text:'';this.listen.hidden=!this.spokenAdvice;if(!this.spokenAdvice)this.platform.voice?.stop(this).catch(()=>{});
     if(state.prediction){
       const code=state.text.match(/```[^\n]*\n([\s\S]*?)```/)?.[1];if(!code?.trim()||code.trimEnd().split('\n').length>8)return;
       this.panel.querySelector('pre').textContent=code.trimEnd();

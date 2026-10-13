@@ -4,7 +4,7 @@
 .folder-icon .file-type,.tree-root>.file-type {width:18px;height:18px;flex:none;}
 .extension-font-icon {display:grid;place-items:center;line-height:1;}
 :root[data-icon-arrows=hidden] :is(.tree-chevron,.tree-root>.icon:first-child) {visibility:hidden;width:0;}
-.icon-theme-options {display:grid;gap:var(--space-5);margin-top:var(--space-7);max-height:min(380px,50dvh);overflow:auto;scrollbar-width:thin;}
+.icon-theme-options {display:grid;gap:var(--space-5);margin-top:var(--space-7);max-height:min(380px,50dvh);overflow:auto;scrollbar-width:none;}
 .icon-theme-option {display:flex;align-items:center;gap:var(--space-6);border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-control);padding:var(--space-6);text-align:left;transition:background-color var(--motion-fast),border-color var(--motion-fast);min-width:0;}
 .icon-theme-option:hover {background:var(--hover);}
 .icon-theme-option[aria-pressed=true] {border-color:var(--accent);background:var(--accent-soft);}

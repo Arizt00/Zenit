@@ -1,14 +1,14 @@
 /* A quiet, persistent work surface. Extra detail is progressively disclosed. */
 #platform-page[data-page=foundation]>.platform-header { display:none; }
 .workspace[data-page=foundation] { grid-template-columns:var(--rail-width) var(--dock-left-track) minmax(0,1fr) 0; }
-.foundation-page { padding:var(--space-8) var(--space-9); min-width:0; overflow:auto; scrollbar-width:thin; }
+.foundation-page { padding:var(--space-8) var(--space-9); min-width:0; overflow:auto; scrollbar-width:none; }
 .lab-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-6); padding-bottom:var(--space-8); }
 .lab-heading .platform-eyebrow { font-size:var(--type-micro); letter-spacing:2px; margin:0 0 12px; }
 .lab-heading h2 { font-size:clamp(26px,2.2vw,36px); line-height:1.2; letter-spacing:-1px; font-weight:var(--weight-heading); margin:0 0 8px; }
 .lab-heading p { font-size:var(--type-body); color:var(--secondary); margin:0; line-height:1.5; }
 .lab-heading-actions { display:flex; align-items:center; gap:var(--space-2); }
 .lab-inventory-summary { font-size:var(--type-secondary); color:var(--secondary); margin-right:var(--space-3); white-space:nowrap; }
-.lab-navigation { display:flex; gap:var(--space-2); border-bottom:1px solid var(--border); padding-bottom:var(--space-4); overflow-x:auto; scrollbar-width:thin; }
+.lab-navigation { display:flex; gap:var(--space-2); border-bottom:1px solid var(--border); padding-bottom:var(--space-4); overflow-x:auto; scrollbar-width:none; }
 .lab-navigation button { display:flex; align-items:center; gap:8px; flex:none; padding:10px 16px; border-radius:var(--radius-control); color:var(--secondary); font-size:var(--type-body); background:transparent; transition:background-color var(--motion-fast),color var(--motion-fast); }
 .lab-navigation button[aria-selected=true] { background:var(--accent-soft); color:var(--accent); }
 .lab-navigation button:hover { background:var(--hover); }

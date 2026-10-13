@@ -88,6 +88,16 @@ def main():
     parser.add_argument("--allow-shell", action="store_true", help="Enable unrestricted commands after workspace trust; not a sandbox")
     args = parser.parse_args()
     if getattr(sys, 'frozen', False) and not args.no_browser: args.desktop=True
+    if getattr(sys,'frozen',False) and args.desktop:
+        # A taskbar shortcut created from this window may keep its payload path.
+        # Future installs still open the manifest's active revision.
+        from launcher import DIRECTORY,resolve_launch
+        current=Path(sys.executable).resolve()
+        if DIRECTORY.fullmatch(current.parent.name) and (current.parent.parent/'installation.json').is_file():
+            selected=resolve_launch(current.parent.parent)
+            if selected.resolve()!=current:
+                subprocess.Popen([str(selected),*sys.argv[1:]],cwd=selected.parent)
+                return
     if args.workspace is None:
         from backend.session import last_workspace
         from backend.preferences import Preferences
@@ -106,6 +116,7 @@ def main():
         parser.error("El puerto no es válido.")
     try:
         application = Application(ROOT, args.workspace, args.allow_shell)
+        application.desktop = args.desktop
         application.startup={'path':args.open_file}
         if args.draft:
             import json
@@ -149,8 +160,11 @@ def main():
             webview.settings['DRAG_REGION_SELECTOR'] = '[data-native-drag-disabled]'
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
+            from backend.startup import appearance
+            first_theme=appearance(application.features.prefs,application.features.extensions)['base']
+            background={'day':'#F4F6FC','dark':'#191d28','forest':'#15231e'}[first_theme]
             api._window = webview.create_window("Zénit", url, js_api=api, width=1648, height=928,
-                min_size=(1050, 680), frameless=False, easy_drag=False, maximized=True, background_color="#F4F6FC")
+                min_size=(1050, 680), frameless=False, easy_drag=False, maximized=True, background_color=background)
             api._window.events.maximized += lambda: setattr(api, "_maximized", True)
             api._window.events.restored += lambda: setattr(api, "_maximized", False)
             try:

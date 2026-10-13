@@ -5,6 +5,7 @@ import json
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
@@ -24,6 +25,8 @@ def until(check, timeout=8):
 class StudioTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.base=Path(self.temp.name)
+        runtime=self.base/'installer-runtime';runtime.mkdir();(runtime/'Zenit-Launcher.exe').write_bytes(b'MZ-launcher-fixture')
+        launcher_root=patch('installer.ROOT',runtime);launcher_root.start();self.addCleanup(launcher_root.stop)
     def test_profile_survives_server_or_origin_change(self):
         s=StudioState(self.base);s.update({'displayName':'Día 李','onboarded':True,'layout':{'version':3,'sizes':{'right':350}}})
         second=StudioState(self.base)
@@ -42,6 +45,7 @@ class StudioTests(unittest.TestCase):
         self.assertEqual(inst.status()['status'],'finished');self.assertEqual((target/f'app-{VERSION}-R{REVISION}/_internal/test.txt').read_text(),'payload')
         self.assertEqual(len(list(target.glob(f'app-{VERSION}-R{REVISION}-previous-*/old.txt'))),1)
         self.assertEqual(json.loads((target/'installation.json').read_text())['version'],VERSION)
+        if sys.platform=='win32':self.assertEqual((target/'Zenit.exe').read_bytes(),b'MZ-launcher-fixture')
     def test_installer_rejects_unknown_packages_before_start(self):
         inst=Installer(self.base/'payload',self.base/'target')
         with self.assertRaises(ValueError):inst.start({'packages':['arbitrary-command']})

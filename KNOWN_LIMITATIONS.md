@@ -1,4 +1,4 @@
-# Límites reales · Zénit 0.5.4 R1
+# Límites reales · Zénit 0.5.4 R2
 
 1. **Paridad VS Code:** sigue siendo parcial. La activación real de siete de ocho
    paquetes probados no mide cobertura global ni garantiza todos sus comandos.
@@ -164,3 +164,21 @@ OpenAI no se activa en esta revisión. Se mantienen los demás límites de R11.
 - La nueva voz Qwen de Emma, los consejos y predicciones conservan los límites
   documentados de R12/R13. No se implementa aquí voz de ChatGPT por suscripción
   ni un nuevo motor predictivo. No se certifica 90 % global de VS Code.
+
+
+## 0.5.4 R2 · alcance añadido
+
+- Se corrige una carrera UMD/AMD reproducida con WebView2. Los ciclos comprobados
+  no certifican todas las cargas/drivers. Un Retry de la prueba de módulos agotó
+  30 s; la repetición instrumentada pasó. Se conserva el diagnóstico de arranque.
+- Capturas CDP nativas agotaron su tiempo de forma intermitente; la auditoría
+  final usa CapturePreviewAsync y conserva sus PNG físicos. No acredita la causa
+  universal de esos bloqueos. Un muestreo corto Edge/SwiftShader no avanzó el
+  material; el recorrido completo repetido y el perfilado nativo sí lo hicieron.
+- Se migran accesos propios. Abrir un exe anterior a R2 directamente por su ruta
+  antigua sigue abriendo ese exe; no se modifican binarios antiguos ni enlaces ajenos.
+- La portada reconstruida, reflejos artísticos, fuentes y escalado producen
+  diferencias de píxel. Mi actividad sigue las correcciones posteriores de diseño;
+  no sustituye datos reales por los archivos/avatar de las pruebas.
+- Barras ocultas en DOM, Monaco y xterm; los webviews independientes de extensiones
+  conservan su propio CSS. Voz Emma, predicciones y APIs mantienen límites R12/R1.

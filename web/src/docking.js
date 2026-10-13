@@ -1,6 +1,6 @@
 import {icon,escapeHTML} from './icons.js';
 import {outsideViewport} from './document-drag.js';
-import {defaultLayout,normalizeLayout,layoutPreset,movePanel,setCollapsed,sideOf,SIDES,LAYOUT_KEY,PRESET_NAMES} from './layout-state.js';
+import {defaultLayout,normalizeLayout,layoutPreset,movePanel,setCollapsed,sideOf,persistedLayout,SIDES,LAYOUT_KEY,PRESET_NAMES} from './layout-state.js';
 
 const PANEL_LABELS={project:'Proyecto',assistant:'Melody',console:'Consola'};
 const PANEL_ICONS={project:'files',assistant:'sparkles',console:'terminal'};
@@ -38,8 +38,8 @@ export class DockManager {
   }
   listen(target,event,handler,options){target.addEventListener(event,handler,options);this.listeners.push(()=>target.removeEventListener(event,handler,options));}
   read(){try{return normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||localStorage.getItem('lumen.layout.v2')||'null'));}catch(_){return defaultLayout();}}
-  save(){if(new URLSearchParams(location.search).has('panel'))return;try{localStorage.setItem(LAYOUT_KEY,JSON.stringify({...this.state,hidden:this.state.hidden.filter(id=>!this.nativeDetached.has(id))}));}catch(_){/* Session remains usable in storage-restricted webviews. */}}
-  snapshot(){return JSON.parse(JSON.stringify(this.state));}
+  save(){if(new URLSearchParams(location.search).has('panel'))return;try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(this.snapshot({persistent:true})));}catch(_){/* Session remains usable in storage-restricted webviews. */}}
+  snapshot({persistent=false}={}){return persistent?persistedLayout(this.state,[...this.nativeDetached]):JSON.parse(JSON.stringify(this.state));}
   visibleIds(side){return this.state.groups[side].filter(id=>!this.state.hidden.includes(id)&&!this.state.floating[id]);}
   isVisible(id){const side=sideOf(this.state,id),drawerClosed=side==='right'&&matchMedia('(max-width:1099px)').matches&&!this.compactOpen;return !this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!drawerClosed&&!this.state.collapsed.includes(side)&&this.state.active[side]===id));}
   announce(message){document.querySelector('#layout-announcement').textContent=message;}

@@ -70,6 +70,7 @@ def main():
                         assert max(abs(hero['x']-card['x']),abs(toolbar['x']-card['x']),abs(summary['x']-card['x']))<2,(hero,toolbar,summary,card)
                         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
                         for button in page.locator('.extension-card').first.locator('button').all():
+                            if not button.is_visible():continue
                             b=button.bounding_box();assert b['x']>=card['x'] and b['x']+b['width']<=card['x']+card['width']+1,(b,card)
                     page.set_viewport_size({'width':1500,'height':950});page.screenshot(path=str(out/f'catalog-{theme}.png'))
                 passed('Catalog, search, counts and cards share an inset without overflow in three themes and three widths')

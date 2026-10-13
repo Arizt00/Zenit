@@ -1,0 +1,32 @@
+{
+  "checks": [
+    "Welcome covers the whole viewport without a nested card",
+    "Welcome depth responds to pointer input within a four-pixel bound",
+    "Dark and Forest welcome use a subdued landscape without replacing the animated canvas",
+    "One click opens the real local profile; a fresh profile invents no activity",
+    "The actual Babylon shader advances with one render loop",
+    "The render rate is bounded and reduced-motion stops the loop and landscape animation",
+    "A lost WebGL context recovers on the same canvas",
+    "The welcome canvas is retained and both scene and landscape stop while hidden",
+    "File tab nodes survive edits and active-file changes without remounting",
+    "Opening Terminal does not enable Forge even with the old saved preference",
+    "All three separators receive pointer input and resize their actual panels",
+    "Active Melody advice replaces the welcome cards and adds a revision-bound Monaco hint",
+    "An active advice panel keeps the composer visible at 1280x720 and 1366x768",
+    "Melody references navigate to actual bounded lines without editing the buffer",
+    "Explain mode sends the real selection to the authorised provider (fixture transport)",
+    "Structured Melody sections display the actual answer without changing the buffer",
+    "Insert suggestion writes only the current unsaved buffer and is undone in one step",
+    "Melody advice remains read-only and a real Monaco inline suggestion requires explicit acceptance (fixture transport)",
+    "Recent files show real timestamps and reopen the selected buffer",
+    "New project creates and opens a real empty folder",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "animation": {
+    "before": 3.288199999999256,
+    "after": 3.333199999999256,
+    "loops": 1
+  },
+  "aiTransport": "Explicit fixture, not an external model evaluation."
+}

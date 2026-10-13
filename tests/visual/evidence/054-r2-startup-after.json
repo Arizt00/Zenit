@@ -1,0 +1,319 @@
+{
+  "method": "Real WebView2 and DesktopAPI; isolated generated Java project; synchronous test bridge delay.",
+  "bridgeDelaySeconds": 3.0,
+  "records": [
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "object",
+      "webview2": true,
+      "boot": {
+        "complete": true,
+        "failed": false,
+        "phases": [
+          {
+            "name": "shell",
+            "ms": 0
+          },
+          {
+            "name": "shell",
+            "ms": 227
+          },
+          {
+            "name": "service",
+            "ms": 235
+          },
+          {
+            "name": "native",
+            "ms": 251
+          },
+          {
+            "name": "editor",
+            "ms": 3288
+          },
+          {
+            "name": "extensions",
+            "ms": 3747
+          },
+          {
+            "name": "welcome",
+            "ms": 4220
+          },
+          {
+            "name": "ready",
+            "ms": 4268
+          }
+        ]
+      },
+      "screen": "home",
+      "cycle": 1,
+      "elapsedSeconds": 4.547,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    },
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "object",
+      "webview2": true,
+      "boot": {
+        "complete": true,
+        "failed": false,
+        "phases": [
+          {
+            "name": "shell",
+            "ms": 0
+          },
+          {
+            "name": "shell",
+            "ms": 96
+          },
+          {
+            "name": "service",
+            "ms": 98
+          },
+          {
+            "name": "native",
+            "ms": 111
+          },
+          {
+            "name": "editor",
+            "ms": 3115
+          },
+          {
+            "name": "extensions",
+            "ms": 3377
+          },
+          {
+            "name": "welcome",
+            "ms": 3570
+          },
+          {
+            "name": "ready",
+            "ms": 3639
+          }
+        ]
+      },
+      "screen": "home",
+      "cycle": 2,
+      "elapsedSeconds": 3.859,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    },
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "object",
+      "webview2": true,
+      "boot": {
+        "complete": true,
+        "failed": false,
+        "phases": [
+          {
+            "name": "shell",
+            "ms": 0
+          },
+          {
+            "name": "shell",
+            "ms": 145
+          },
+          {
+            "name": "service",
+            "ms": 148
+          },
+          {
+            "name": "native",
+            "ms": 162
+          },
+          {
+            "name": "editor",
+            "ms": 3163
+          },
+          {
+            "name": "extensions",
+            "ms": 3414
+          },
+          {
+            "name": "welcome",
+            "ms": 3652
+          },
+          {
+            "name": "ready",
+            "ms": 3695
+          }
+        ]
+      },
+      "screen": "home",
+      "cycle": 3,
+      "elapsedSeconds": 3.797,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    },
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "object",
+      "webview2": true,
+      "boot": {
+        "complete": true,
+        "failed": false,
+        "phases": [
+          {
+            "name": "shell",
+            "ms": 0
+          },
+          {
+            "name": "shell",
+            "ms": 96
+          },
+          {
+            "name": "service",
+            "ms": 98
+          },
+          {
+            "name": "native",
+            "ms": 106
+          },
+          {
+            "name": "editor",
+            "ms": 3112
+          },
+          {
+            "name": "extensions",
+            "ms": 3292
+          },
+          {
+            "name": "welcome",
+            "ms": 3545
+          },
+          {
+            "name": "ready",
+            "ms": 3587
+          }
+        ]
+      },
+      "screen": "home",
+      "cycle": 4,
+      "elapsedSeconds": 3.797,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    },
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "object",
+      "webview2": true,
+      "boot": {
+        "complete": true,
+        "failed": false,
+        "phases": [
+          {
+            "name": "shell",
+            "ms": 0
+          },
+          {
+            "name": "shell",
+            "ms": 86
+          },
+          {
+            "name": "service",
+            "ms": 88
+          },
+          {
+            "name": "native",
+            "ms": 98
+          },
+          {
+            "name": "editor",
+            "ms": 3104
+          },
+          {
+            "name": "extensions",
+            "ms": 3392
+          },
+          {
+            "name": "welcome",
+            "ms": 3663
+          },
+          {
+            "name": "ready",
+            "ms": 3699
+          }
+        ]
+      },
+      "screen": "home",
+      "cycle": 5,
+      "elapsedSeconds": 3.875,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    },
+    {
+      "ready": true,
+      "editor": "monaco",
+      "bridge": "function",
+      "domJSON": "object",
+      "webview2": true,
+      "boot": {
+        "complete": true,
+        "failed": false,
+        "phases": [
+          {
+            "name": "shell",
+            "ms": 0
+          },
+          {
+            "name": "shell",
+            "ms": 82
+          },
+          {
+            "name": "service",
+            "ms": 84
+          },
+          {
+            "name": "native",
+            "ms": 93
+          },
+          {
+            "name": "editor",
+            "ms": 3094
+          },
+          {
+            "name": "extensions",
+            "ms": 3330
+          },
+          {
+            "name": "welcome",
+            "ms": 3556
+          },
+          {
+            "name": "ready",
+            "ms": 3581
+          }
+        ]
+      },
+      "screen": "home",
+      "cycle": 6,
+      "elapsedSeconds": 3.75,
+      "amd": {
+        "java": true
+      },
+      "errors": []
+    }
+  ],
+  "failure": []
+}

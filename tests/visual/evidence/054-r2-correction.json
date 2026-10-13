@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Real Monaco scroll and selection changes reach the Node extension without saving the edited buffer",
+    "Shadow-root context menu is compact, themed, within the viewport and retains editor commands",
+    "Required dependency plan shows real sizes and licenses and installs persisted VSIX packages together",
+    "Catalog, search, counts and cards share an inset without overflow in three themes and three widths"
+  ],
+  "errors": []
+}

@@ -1,7 +1,8 @@
 import {themeIcon,installIconFonts} from './file-icon-theme.js';
 /** Lumen Line. Original 24-unit vector family; local and theme-aware. */
-export const ICON_NAMES=Object.freeze(["speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
+export const ICON_NAMES=Object.freeze(["clock", "speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
 const paths = {
+  "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
   "cut": '<circle cx="5" cy="6" r="3"/><circle cx="5" cy="18" r="3"/><path d="m8 8 12 12M8 16 20 4"/>',
   "clipboard": '<rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/>',
   "speaker": '<path d="M10 5 5 9H2v6h3l5 4Z"/><path d="M14 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
@@ -104,6 +105,7 @@ export function fileIcon(path) {
   if(ext==='class')return `<span class="file-type file-type-class">${icon('java')}</span>`;
   if(['asm','s'].includes(ext))return `<span class="file-type file-type-${ext}">${icon('assembly')}</span>`;
   if(ext==='java')return `<span class="file-type file-type-java">${icon('java')}</span>`;
+  if(['py','pyw'].includes(ext))return '<img class="file-type file-type-py python" src="/assets/languages/python.svg" alt="" aria-hidden="true">';
   const label = {cs:'C#',js:'JS',mjs:'JS',cjs:'JS',jsx:'JS',ts:'TS',tsx:'TS',py:'Py',cpp:'C++',cc:'C++',c:'C',h:'H',hpp:'H',rs:'Rs',go:'Go',kt:'Kt',kts:'Kt',swift:'Sw',rb:'Rb',php:'Ph',html:'<>',xml:'<>',sql:'DB',s:'ASM',asm:'ASM',n:'nC',nm:'nC',ncp:'nC',nb:'nC',nbb:'nC',json:'{}',css:'#',scss:'#'}[ext];
   if (label) return `<span class="file-type file-type-${ext} ${ext==='py'?'python':''}">${label}</span>`;
   return `<span class="file-type">${icon(['unity','prefab'].includes(ext)?'cube':'file')}</span>`;

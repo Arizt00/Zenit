@@ -26,6 +26,9 @@ def main():
         uninstaller='Uninstall-Zenit.exe'
         assert uninstaller in archive.toc, 'Windows installer is missing its graphical uninstaller'
         assert hashlib.sha256(archive.extract(uninstaller)).hexdigest()==sha256(ROOT/'dist'/uninstaller)
+        launcher='Zenit-Launcher.exe'
+        assert launcher in archive.toc, 'Windows installer is missing its stable launcher'
+        assert hashlib.sha256(archive.extract(launcher)).hexdigest()==sha256(ROOT/'dist'/launcher)
     if sys.platform=='darwin':
         dmg=ROOT/'dist'/manifest['outputs'][0]['name'];subprocess.run(['hdiutil','verify',str(dmg)],check=True)
         with tempfile.TemporaryDirectory(prefix='lumen-dmg-mount-') as temp:

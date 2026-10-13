@@ -1,5 +1,7 @@
 /* Canonical Zénit geometry, colour, material, type and motion. */
 
+* {scrollbar-width:none;}
+
 :root {
   color-scheme: light;
   --space-1: 2px;

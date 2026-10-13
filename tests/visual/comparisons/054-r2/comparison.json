@@ -1,0 +1,29 @@
+{
+  "screens": {
+    "welcome": {
+      "channelMAE": [
+        4.882790373673533,
+        4.800187116424042,
+        5.413947419267907
+      ],
+      "meanMAE": 5.032308303121828,
+      "lowFrequencyMAE": 4.130379307953679,
+      "lumaBlockSSIM": 0.9576242973069329,
+      "overlay": "welcome-overlay.png",
+      "diff": "welcome-diff.png"
+    },
+    "activity": {
+      "channelMAE": [
+        10.887090110795295,
+        9.61843249317381,
+        12.113933817734367
+      ],
+      "meanMAE": 10.873152140567825,
+      "lowFrequencyMAE": 9.611746758199848,
+      "lumaBlockSSIM": 0.6628505248310845,
+      "overlay": "activity-overlay.png",
+      "diff": "activity-diff.png"
+    }
+  },
+  "interpretation": "Welcome follows the night reference. Activity evolves under later explicit composition, alignment and type requests. MAE/SSIM are diagnostics, not fidelity or parity percentages. No stretching of the 1672x941 browser comparisons."
+}

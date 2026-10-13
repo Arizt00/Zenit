@@ -12,3 +12,9 @@ test('Tampered cached CSS and unknown tokens cannot enter the shell',()=>{
   const target=root(),storage={getItem:()=>JSON.stringify({id:'qa:dark',base:'dark',palette})};assert.equal(restoreShellAppearance(target,storage),false);assert.equal(target.style.values.size,0);
  }
 });
+test('A previous browser origin cannot restore a theme different from the current profile',()=>{
+ const storage={getItem:()=>JSON.stringify({id:'qa:old',base:'dark',palette:{editor:'#121212'}})};
+ const target=root();assert.equal(ZenitThemeAppearance.restore(target,storage,''),false);
+ assert.equal(ZenitThemeAppearance.restore(target,storage,'qa:new'),false);assert.equal(target.style.values.size,0);
+ assert.equal(ZenitThemeAppearance.restore(target,storage,'qa:old'),true);
+});

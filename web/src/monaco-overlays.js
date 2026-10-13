@@ -3,7 +3,7 @@
 import {icon} from './icons.js';
 const css = `body>.monaco-menu-container{z-index:140!important}
 .monaco-menu{font-family:var(--font-ui,"Segoe UI",sans-serif)!important}
-.monaco-menu .monaco-action-bar.vertical{box-sizing:border-box;background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:var(--radius-control,10px)!important;padding:5px!important;color:var(--text)!important;box-shadow:var(--shadow-menu,0 8px 26px #0002)!important;max-width:min(360px,calc(100vw - 16px));max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin}
+.monaco-menu .monaco-action-bar.vertical{box-sizing:border-box;background:var(--surface)!important;border:1px solid var(--border)!important;border-radius:var(--radius-control,10px)!important;padding:5px!important;color:var(--text)!important;box-shadow:var(--shadow-menu,0 8px 26px #0002)!important;max-width:min(360px,calc(100vw - 16px));max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:none}
 .monaco-menu .monaco-action-bar.vertical .action-item{border-radius:5px!important;margin:1px 0}
 .monaco-menu .monaco-action-bar.vertical .action-menu-item{color:var(--text)!important;min-height:27px;gap:9px;padding:1px 8px!important;line-height:23px!important}
 .monaco-menu .monaco-action-bar.vertical .action-item.focused{background:var(--hover)!important;color:var(--text)!important}

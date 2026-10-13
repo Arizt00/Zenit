@@ -51,7 +51,7 @@ def inventory(out):
         data['references'].append({'screen':name,'file':str(copy),'size':dim,'sha256':hashlib.sha256(copy.read_bytes()).hexdigest()})
     (out/'audit.json').write_text(json.dumps(data,indent=2),encoding='utf-8')
 
-def capture(page,base,out,core=False,screenshot_scale='css',profile_animation=False):
+def capture(page,base,out,core=False,screenshot_scale='css',profile_animation=False,native_capture=None):
     errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
     def inject(route):
         response=route.fetch();route.fulfill(response=response,body=response.text()+"\nwindow.__zenitQa={get editor(){return editor},get studio(){return studio},get platform(){return platformUI},get dock(){return dock},get desktop(){return desktopUI},get profiles(){return workspaceProfiles},openFile,closeFile,perform,openPalette};")
@@ -72,7 +72,8 @@ def capture(page,base,out,core=False,screenshot_scale='css',profile_animation=Fa
     def snap(name):
         page.wait_for_function('Array.from(document.querySelectorAll("canvas[data-glass]")).filter(c=>c.getClientRects().length&&getComputedStyle(c).visibility!=="hidden").every(c=>c.parentElement.classList.contains("gpu-ready")||c.dataset.graphicsError)',timeout=20000)
         page.evaluate('()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))')
-        page.screenshot(path=str(out/(name+'.png')),scale=screenshot_scale)
+        if native_capture:native_capture(out/(name+'.png'))
+        else:page.screenshot(path=str(out/(name+'.png')),scale=screenshot_scale)
         geometry[name]=page.evaluate('()=>Object.fromEntries([".topbar",".activity-rail","#dock-left","#dock-right","#dock-bottom","#project-panel","#editor-panel","#assistant-panel","#terminal-panel","#platform-page","#lumen-home",".welcome-sheet",".welcome-scene",".welcome-copy",".welcome-copy h1",".assistant-hero>.glass-art",".melody-copy h3",".global-search",".editor-tabbar",".breadcrumbs"].map(s=>{let e=document.querySelector(s),r=e?.getBoundingClientRect();return [s,r?{x:r.x,y:r.y,width:r.width,height:r.height,display:getComputedStyle(e).display}:null]}))')
         geometry[name]['overflow']=page.evaluate('()=>({html:document.documentElement.scrollWidth>innerWidth,body:document.body.scrollWidth>innerWidth,topbar:document.querySelector(".topbar").scrollWidth>innerWidth,editorWidth:document.querySelector("#editor-panel").clientWidth})')
         inspection[name]=page.evaluate('()=>Object.fromEntries([".topbar",".brand-name",".global-search",".activity-rail",".tree-entry",".file-tab",".breadcrumbs",".assistant-heading",".assistant-hero>.glass-art",".melody-copy h3",".ai-action-card",".ai-composer",".terminal-toolbar",".home-sidebar",".profile-photo",".home-sidebar>h1",".home-hero",".hero-copy h2",".recent-section",".recent-file",".search-intro h2",".studio-search-field",".search-filters",".search-empty",".settings-overlay>.platform-page",".settings-layout",".settings-navigation",".settings-content",".preference-row",".extension-hero",".extension-card",".lab-heading",".lab-tools",".lab-tool",".lab-sections",".debug-intro",".lantern-workbench",".lantern-features",".lantern-question",".debug-controls",".debug-card",".forge-dashboard",".floating-panel",".forge-main",".command-palette"].map(selector=>{const e=document.querySelector(selector);if(!e||!e.getClientRects().length)return [selector,null];const r=e.getBoundingClientRect(),s=getComputedStyle(e);return [selector,{bounds:[r.x,r.y,r.width,r.height],font:[s.fontFamily,s.fontSize,s.fontWeight,s.lineHeight],padding:s.padding,gap:s.gap,radius:s.borderRadius,border:s.border,background:s.backgroundColor,color:s.color,opacity:s.opacity,blur:s.backdropFilter,shadow:s.boxShadow}];}))')
@@ -144,6 +145,9 @@ def main():
         try:
             if args.native:
                 import webview
+                # Keep this QA compositor capturable even if the user focuses their own IDE.
+                flags='--disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling'
+                os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS']=(os.environ.get('WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS','')+' '+flags).strip()
                 with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
                 webview.settings['REMOTE_DEBUGGING_PORT']=port
                 api=DesktopAPI();api._application=app;api._url=base;api._window=webview.create_window('Zénit · auditoría visual',base,js_api=api,width=1672,height=965)
@@ -157,11 +161,32 @@ def main():
                                 except Exception:
                                     if time.monotonic()>end:raise
                             page=browser.contexts[0].pages[0];page.wait_for_function('window.lumen?.ready',timeout=45000)
-                            w,h,scale=page.evaluate('[innerWidth,innerHeight,devicePixelRatio]');api._window.resize(round(api._window.width+(1672-w)),round(api._window.height+(917-h)))
-                            # WinForms rounds physical pixels at 150% DPI. Pin the renderer
-                            # viewport through CDP rather than stretching the screenshot.
-                            session=browser.contexts[0].new_cdp_session(page);session.send('Emulation.setDeviceMetricsOverride',{'width':1672,'height':917,'deviceScaleFactor':scale,'mobile':False});page.wait_for_function('innerWidth===1672&&innerHeight===917')
-                            (out/'native-viewport.json').write_text(json.dumps({'hostScale':scale,'rendererViewport':[1672,917],'method':'Real WebView2 + native DesktopAPI, viewport pinned through CDP; CSS-pixel capture.'}),encoding='utf-8');capture(page,base,out,profile_animation=args.profile)
+                            w,h,scale,ow,oh=page.evaluate('[innerWidth,innerHeight,devicePixelRatio,outerWidth,outerHeight]')
+                            print('Native before resize',{'renderer':[w,h],'outer':[ow,oh],'host':[api._window.width,api._window.height],'scale':scale},flush=True)
+                            api._window.resize(round(api._window.width+1672-w),round(api._window.height+917-h)+1)
+                            # Measure the actual renderer/host difference. Emulation can
+                            # remap native clicks at 150% DPI; resize the real host instead.
+                            try:page.wait_for_function('Math.abs(innerWidth-1672)<=2&&Math.abs(innerHeight-917)<=2',timeout=5000)
+                            except Exception:
+                                print('Native after resize',{'renderer':page.evaluate('[innerWidth,innerHeight,outerWidth,outerHeight]'),'host':[api._window.width,api._window.height]},flush=True)
+                                raise
+                            viewport=page.evaluate('[innerWidth,innerHeight]')
+                            def native_capture(path):
+                                # WebView2's native capture avoids intermittent CDP capture hangs.
+                                # Preserve physical pixels, plus a CSS-sized QA copy for comparisons.
+                                from System import Action
+                                from System.IO import MemoryStream
+                                from Microsoft.Web.WebView2.Core import CoreWebView2CapturePreviewImageFormat
+                                stream=MemoryStream();pending=[]
+                                control=api._window.native.webview
+                                control.Invoke(Action(lambda:pending.append(control.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,stream))))
+                                if not pending[0].Wait(20000):raise TimeoutError('Native CapturePreview did not complete')
+                                data=bytes(stream.ToArray());stream.Dispose()
+                                raw=out/'physical';raw.mkdir(exist_ok=True);(raw/path.name).write_bytes(data)
+                                import io
+                                with Image.open(io.BytesIO(data)) as im:
+                                    im.resize(tuple(viewport),Image.Resampling.LANCZOS).save(path)
+                            (out/'native-viewport.json').write_text(json.dumps({'hostScale':scale,'rendererViewport':viewport,'method':'Real WebView2 + native DesktopAPI; physical host resized for Windows DPI. No renderer emulation. Native CapturePreview PNG preserved in physical/; CSS copies for geometry comparisons.'}),encoding='utf-8');capture(page,base,out,profile_animation=args.profile,native_capture=native_capture)
                     except Exception:failed.append(traceback.format_exc())
                     finally:api._window.destroy()
                 webview.start(run,gui='edgechromium')

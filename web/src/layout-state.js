@@ -47,6 +47,13 @@ export function layoutPreset(name) {
 
 export function sideOf(state,id) { return SIDES.find(side=>state.groups[side].includes(id)); }
 
+/** Native children live for one process; hiding their parent pane is not a preference. */
+export function persistedLayout(input,detached=[]){
+  const state=normalizeLayout(input);
+  state.hidden=state.hidden.filter(id=>!detached.includes(id));
+  return normalizeLayout(state);
+}
+
 export function movePanel(input,id,side,index=Infinity) {
   const state=normalizeLayout(input);
   if(!PANEL_IDS.includes(id)||!SIDES.includes(side)) return state;

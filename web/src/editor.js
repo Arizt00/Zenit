@@ -1,5 +1,5 @@
 import {installMonacoOverlays} from './monaco-overlays.js';
-import {waitForQtBridge} from './native-ready.js';
+import {waitForNativeBridge} from './native-ready.js';
 import {themePalette} from './extension-theme.js';
 import {TextMateLanguages,textMateTheme} from './textmate.js';
 import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
@@ -53,6 +53,9 @@ export class LumenEditor {
   }
   async init(state, settings) {
     Object.assign(this.settings,settings);
+    window.zenitStartup?.phase('native');
+    await waitForNativeBridge(window,15000,state.desktop===true);
+    window.zenitStartup?.phase('editor');
     if (state.monaco) {
       try { await this.initMonaco(); return; }
       catch(error) {
@@ -63,7 +66,7 @@ export class LumenEditor {
     this.initBase();
   }
   async initMonaco() {
-    await waitForQtBridge();
+    await waitForNativeBridge();
     await new Promise((resolve,reject)=>{
       const script=document.createElement('script');script.src='/vendor/monaco/vs/loader.js';
       script.onload=resolve;script.onerror=reject;document.head.appendChild(script);

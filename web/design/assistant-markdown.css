@@ -15,10 +15,10 @@
 .message-code>header{display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) var(--space-5);border-bottom:1px solid var(--border);background:var(--field)}
 .message-code>header small{font-size:10px;color:var(--secondary);margin:0}
 .message-code .copy-code{font-size:10px;margin:0;color:var(--accent)}
-.message-code>pre{margin:0!important;padding:var(--space-6)!important;background:transparent!important;border-radius:0!important;overflow:auto;max-height:340px;scrollbar-width:thin}
+.message-code>pre{margin:0!important;padding:var(--space-6)!important;background:transparent!important;border-radius:0!important;overflow:auto;max-height:340px;scrollbar-width:none}
 .message-code>pre>code{display:block;background:none;padding:0;color:var(--text);white-space:pre}
 .message-code .review-code-button{margin:0 var(--space-6) var(--space-6);max-width:calc(100% - 24px)}
-.message-table{overflow:auto;margin:var(--space-6) 0;border:1px solid var(--border);border-radius:var(--radius-control);scrollbar-width:thin}
+.message-table{overflow:auto;margin:var(--space-6) 0;border:1px solid var(--border);border-radius:var(--radius-control);scrollbar-width:none}
 .message-table table{border-collapse:collapse;width:100%;text-align:left;font-size:11px;min-width:240px}
 .message-table :is(th,td){padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border);vertical-align:top}
 .message-table th{font-weight:500;background:var(--field);color:var(--field-text)}

@@ -1,4 +1,5 @@
 /* Popovers and actual detached windows use one material, radius and header. */
+.popover[data-over-modal=true] {z-index:220;}
 
 .popover {
   position: fixed;

@@ -337,7 +337,6 @@ export class LumenPlatform {
   async loadContributions(){
     const sequence=this.contributionSequence=(this.contributionSequence||0)+1;
     const data=await this.api('/extensions/contributions');if(sequence!==this.contributionSequence||this.disposed)return data;this.contributionsReady=true;this.extensionContributions=data;
-    this.host.editor.configureLanguages?.(data.languages,this.development.associations);
     this.host.editor.configureLanguages?.(data.languages,this.development.associations);this.renderExtensionThemes(data.themes||[]);
     try{data.errors.push(...await this.host.editor.configureGrammars?.(data.grammars||[])||[]);}
     catch(error){data.errors.push({id:'textmate',error:error.message});this.host.notify('No se pudo cargar el resaltado TextMate local: '+error.message,'error');}

@@ -40,7 +40,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
       uniform mat4 worldViewProjection;uniform mat4 world;varying vec3 n;varying vec3 p;
       void main(){n=normalize(mat3(world)*normal);p=position;gl_Position=worldViewProjection*vec4(position,1.);}`;
     const fragmentSource=`precision highp float;varying vec3 n;varying vec3 p;
-      uniform float time;uniform float crystal;uniform float shell;
+      uniform float time;uniform float crystal;uniform float shell;uniform float welcomeMode;
       #ifdef LENS
       uniform sampler2D refractionMap;uniform vec2 resolution;
       #endif
@@ -74,7 +74,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         // Clear central window and a denser curved meniscus, rather than a filled gradient.
         float band=exp(-pow((radius-(.73+.055*sin(angle*2.+t*.32)))*9.,2.));
         float colourWeight=.32+.52*radius+.24*band+.19*fresnel;
-        colourWeight+=.13*(p3+p4);
+        colourWeight+=.13*(p3+p4)+welcomeMode*.18;
         vec3 color=mix(vec3(.967,.977,1.),film,clamp(colourWeight,0.,.97));
         #ifdef LENS
         vec2 screen=gl_FragCoord.xy/resolution;
@@ -116,7 +116,7 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         color=mix(color,mix(pearl,ice,.3+.3*sin(angle*2.)),meniscus*.4);
         color=mix(color,vec3(1.,.98,1.),caustic*.35);
         // Reflection increases opacity only at the glass wall.
-        float alpha=.72+fresnel*.13+rim*.10+inner*.04;
+        float alpha=.72+welcomeMode*.18+fresnel*.13+rim*.10+inner*.04;
         alpha=mix(alpha,.36+fresnel*.22,crystal);
         alpha=max(alpha,highlight*.96);alpha=clamp(alpha,0.,.96);
         if(crystal>.5){
@@ -133,8 +133,8 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
         gl_FragColor=vec4(color*alpha,alpha);
       }`;
     const material=(name,crystal=0)=>{
-      const m=new B.ShaderMaterial(name,scene,{vertexSource,fragmentSource},{attributes:['position','normal'],uniforms:['worldViewProjection','world','time','crystal','shell','resolution'],samplers:crystal===0?['refractionMap']:[],defines:crystal===0?['#define LENS']:[],needAlphaBlending:true});
-      m.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;m.setFloat('crystal',crystal);m.setFloat('shell',0);m.backFaceCulling=true;return m;
+      const m=new B.ShaderMaterial(name,scene,{vertexSource,fragmentSource},{attributes:['position','normal'],uniforms:['worldViewProjection','world','time','crystal','shell','welcomeMode','resolution'],samplers:crystal===0?['refractionMap']:[],defines:crystal===0?['#define LENS']:[],needAlphaBlending:true});
+      m.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;m.setFloat('crystal',crystal);m.setFloat('shell',0);m.setFloat('welcomeMode',welcome?1:0);m.backFaceCulling=true;return m;
     };
     const geometry=await loadCrystalGeometry(),meshFrom=data=>{const mesh=new B.Mesh(data.name,scene),vertices=new B.VertexData();Object.assign(vertices,{positions:data.positions,normals:data.normals,indices:data.indices});vertices.applyToMesh(mesh);return mesh;};
     const pearl=geometry?meshFrom(geometry[0]):B.MeshBuilder.CreateSphere('melody',{diameter:2.75,segments:96},scene);canvas.dataset.geometry=geometry?'blender-double-wall':'procedural-fallback';
@@ -160,9 +160,9 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
     }
     if(hero||welcome){
       // The compact welcome retains the glass lens and a single inclined orbit.
-      const orbit=Array.from({length:181},(_,i)=>{const t=i/180*Math.PI*2,x=Math.cos(t)*(welcome?1.55:2.55);return new B.Vector3(x-(welcome?0:.25),Math.sin(t)*.38+x*.34,Math.sin(t)*.85);});
+      const orbit=Array.from({length:181},(_,i)=>{const t=i/180*Math.PI*2,x=Math.cos(t)*(welcome?1.60:2.55);return new B.Vector3(x-(welcome?0:.25),Math.sin(t)*(welcome?.40:.38)+x*.34,Math.sin(t)*.85);});
       ribbon=B.MeshBuilder.CreateTube('liquid-ribbon',{path:orbit,radius:welcome?.009:.015,tessellation:12},scene);
-      const orbitalGlass=new B.StandardMaterial('orbital-glass',scene);orbitalGlass.disableLighting=true;orbitalGlass.emissiveColor=new B.Color3(1,.99,1);orbitalGlass.alpha=.55;orbitalGlass.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;orbitalGlass.backFaceCulling=false;ribbon.material=orbitalGlass;
+      const orbitalGlass=new B.StandardMaterial('orbital-glass',scene);orbitalGlass.disableLighting=true;orbitalGlass.emissiveColor=new B.Color3(1,.99,1);orbitalGlass.alpha=.55;orbitalGlass.alphaMode=B.Engine.ALPHA_PREMULTIPLIED_PORTERDUFF;orbitalGlass.backFaceCulling=false;ribbon.material=orbitalGlass;if(welcome)ribbon.position.y=-.035;
     }
     // An actual offscreen view of the scene behind the lens, never a screen capture.
     const backdrop=B.MeshBuilder.CreatePlane('light-field',{width:18,height:10},scene);backdrop.position.z=-2.8;

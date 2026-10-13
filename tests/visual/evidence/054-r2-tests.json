@@ -1,0 +1,27 @@
+{
+  "python": {
+    "executed": 311,
+    "passed": 306,
+    "skipped": 5
+  },
+  "nodePassed": 100,
+  "syntaxFiles": 64,
+  "uiChecks": {
+    "startup-ui": 14,
+    "icons-ui": 12,
+    "themes": 10,
+    "correction": 4,
+    "voice-ui": 15,
+    "visual-correction": 21
+  },
+  "nativeViews": 13,
+  "matrixCases": 24,
+  "matrixCaptures": 72,
+  "originalReferencesUnchanged": true,
+  "startupCycles": {
+    "normal": 6,
+    "bridgeDelayed3Seconds": 6
+  },
+  "profile": "Disposable Java/Python/JSON and generated portrait; no private user project captures.",
+  "voice": "Replay of separately verified Qwen Emma WAV; fixture prose/audio transport, real model revision expires advice and audio. No model quality claim."
+}

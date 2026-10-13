@@ -1,49 +1,25 @@
-# Comparación visual · 0.5.4 R1
+# Comparacion visual - Zenit 0.5.4 R2
 
-Se conserva cada referencia original. La portada a pantalla completa y las
-mejoras de actividad/ajustes/debug siguen las instrucciones posteriores del
-usuario. No se mide esta evolución como una copia de una composición antigua.
+Inicio se ajusta a la referencia nocturna de 1672x941. Mi actividad sigue las
+correcciones posteriores: cabecera de perfil, identidad centrada, ultimo archivo
+y barra compacta de historial. Mantiene datos reales; las capturas son QA.
 
-## Ciclo realizado
-
-Auditar contratos y CSS → implementar → ejecutar el producto → capturar → revisar
-→ corregir → volver a capturar. Se detectaron el campo de búsqueda con dos bordes
-y los grupos de Apariencia cuadrados; se corrigieron sus selectores sin recrear
-la ventana. La prueba de inserciones tardías cubre el menú de Monaco dentro de
-su ShadowRoot. La captura nativa se hizo con WebView2 y ANGLE/Intel; las pruebas
-de contexto perdido usan Edge/SwiftShader.
-
-## Resultados y límites
-
-Hay 13 vistas nativas, más capturas de Material, selector, actividad, cuenta,
-temas, terminales y Markdown. Se validan 24 casos de viewport/DPI emulado (72
-capturas) sin overflow global. Los cinco pilares geométricos conservan la
-tolerancia de 2 px. No se alteran `tests/visual/references` ni se deforman capturas
-para mejorar una cifra. Las capturas privadas de los proyectos del usuario no
-se añaden al repositorio.
-
-Las comparaciones de evolución se guardan en `tests/visual/comparisons/054-r1`.
-Actividad usa la última captura aportada por el usuario, con el perfil y archivos
-QA; las otras vistas usan capturas QA de R13. MAE es error medio de canal en 0–255;
-SSIM representa bloques de luminancia. Fechas, contenido y distribución pueden
-variar; la nueva actividad es una evolución solicitada. Ninguna
-métrica equivale a un porcentaje de acabado o de paridad.
-
-| Vista | MAE | SSIM por bloques |
+| Vista | MAE (0-255) | SSIM por bloques |
 | --- | ---: | ---: |
-| extensions | 6.377 | 0.6981 |
-| activity | 2.795 | 0.8328 |
-| debug | 1.554 | 0.9205 |
-| welcome | 0.053 | 0.9985 |
+| welcome | 5.032 | 0.9576 |
+| activity | 10.873 | 0.6629 |
 
-Extensiones mantiene la identidad de la hoja y reduce su cabecera. Ajustes usa
-el tema efectivo y un tamaño menor. Actividad elimina rutas dominantes y añade
-filtro y agrupación. Debug conserva sus nodos y reorganiza el espacio vacío.
-Inicio conserva el shader vivo y mejora el control principal; no se presenta
-como un nuevo paisaje tridimensional. Existen diferencias de contenido, óptica,
-iconos oficiales, tipografía y estados respecto a las referencias originales.
-No se certifica todavía correspondencia visual perfecta.
+Las cifras no equivalen a un porcentaje de acabado. Overlays/diferencias en
+tests/visual/comparisons/054-r2. Los ocho goldens iniciales permanecen intactos.
 
-Evidencia: `tests/visual/evidence/054-r1-tests.json`, `054-r1-icons-ui.json`,
-`054-r1-geometry.json`, `054-r1-matrix.json` y `tests/visual/current`.
-Los frame times están en IMPLEMENTATION_REPORT.md; no se declaran 60 FPS constantes.
+Hay 13 vistas nativas WebView2 a DPI Windows 150 %, con PNG fisicos
+conservados y copias CSS de 1672x917. Se redimensiona el host real, sin emular
+coordenadas de clic. Los cinco pilares geometricos pasan la tolerancia de 2 px.
+La captura usa [CapturePreviewAsync](https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2.capturepreviewasync); se observaron timeouts CDP intermitentes, registrados en los limites.
+
+La matriz de 24 casos/72 capturas emula resolucion/escala en Edge; no sustituye
+pruebas fisicas en todos los monitores. La hoja de actividad se comprueba en
+cuatro viewports, incluyendo 640x360, sin overflow global. Rueda/teclado siguen
+funcionando con las barras ocultas. Avatar/fondo usan la misma imagen local.
+
+En la muestra nativa de 3 s hubo 180 renders de la esfera, CPU mediana 0.5 ms y p95 0.7000000029802322 ms; no se midio tiempo GPU. Las superficies ocultas tienen cero bucles. No se garantiza una tasa universal ni animacion perfecta.

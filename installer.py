@@ -164,6 +164,11 @@ class Installer:
             target = self.target.expanduser().resolve()
             if target == Path(target.anchor) or len(target.parts) < 3 or target.is_symlink():
                 raise ValueError('Selecciona una carpeta de instalación válida.')
+            launcher=None
+            if os.name=='nt':
+                launcher=ROOT/'Zenit-Launcher.exe'
+                if not launcher.is_file():launcher=ROOT/'dist/Zenit-Launcher.exe'
+                if not launcher.is_file():raise ValueError('Falta el lanzador estable de Zénit en el paquete.')
             target.mkdir(parents=True, exist_ok=True)
             # Each preview revision has its own payload path. An older running
             # process keeps serving its original files until the user restarts it.
@@ -195,6 +200,10 @@ class Installer:
             try:previous_manifest=json.loads((target/'installation.json').read_text(encoding='utf-8'))
             except (OSError,ValueError):pass
             directories=list(dict.fromkeys([*previous_manifest.get('directories',[]),*([previous_manifest['directory']] if previous_manifest.get('directory') else []),destination.name,*([backup.name] if backup else [])]))
+            if launcher:
+                temporary_launcher=target/'.Zenit-launcher.new'
+                shutil.copy2(launcher,temporary_launcher)
+                temporary_launcher.replace(target/'Zenit.exe')
             atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'es')})
             # The app consumes this only if there is no profile yet.
             atomic_json(destination / 'first-launch.json', {'general.locale': options.get('locale', 'es')})
@@ -219,7 +228,13 @@ class Installer:
         commands = ['$w = New-Object -ComObject WScript.Shell']
         for location in locations:
             name = "(Join-Path ([Environment]::GetFolderPath('Desktop')) 'Zénit.lnk')" if location == 'DESKTOP' else ps_quote(location)
-            commands += [f'$s = $w.CreateShortcut({name})', '$s.TargetPath = ' + ps_quote(destination / 'zenit.exe'), '$s.WorkingDirectory = ' + ps_quote(destination), '$s.Save()']
+            commands += [f'$s = $w.CreateShortcut({name})', '$s.TargetPath = ' + ps_quote(self.target / 'Zenit.exe'), '$s.WorkingDirectory = ' + ps_quote(self.target), '$s.IconLocation = '+ps_quote(self.target/'Zenit.exe'), '$s.Save()']
+        pinned=Path(os.environ['APPDATA'])/'Microsoft/Internet Explorer/Quick Launch/User Pinned/TaskBar'
+        commands += ['$pinned = '+ps_quote(pinned),
+            'if (Test-Path -LiteralPath $pinned) { foreach ($pin in Get-ChildItem -LiteralPath $pinned -Filter *.lnk) {',
+            '$link = $w.CreateShortcut($pin.FullName)',
+            'if ($link.TargetPath.StartsWith('+ps_quote(str(self.target.resolve())+os.sep)+',[StringComparison]::OrdinalIgnoreCase) -and [IO.Path]::GetFileName($link.TargetPath) -ieq "zenit.exe") {',
+            '$link.TargetPath = '+ps_quote(self.target/'Zenit.exe'), '$link.WorkingDirectory = '+ps_quote(self.target), '$link.IconLocation = '+ps_quote(self.target/'Zenit.exe'), '$link.Save()', '} } }']
         # Remove only legacy links owned by this installation after creating its
         # new link. An unrelated shortcut with the same name stays untouched.
         menu=Path(os.environ['APPDATA'])/'Microsoft/Windows/Start Menu/Programs'
@@ -247,7 +262,7 @@ class Installer:
 
     def launch(self):
         if self.status()['status'] != 'finished': raise ValueError('Completa la instalación antes de abrir Zénit.')
-        path = self.target / (f'app-{VERSION}-R{REVISION}') / 'zenit.exe'
+        path = self.target / 'Zenit.exe' if os.name=='nt' else self.target / (f'app-{VERSION}-R{REVISION}') / 'zenit.exe'
         subprocess.Popen([str(path)], cwd=path.parent)
         self.window.destroy()
         return True
