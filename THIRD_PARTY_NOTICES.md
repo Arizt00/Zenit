@@ -2,6 +2,8 @@
 
 The original nC language icon and its alternative SVG are from Arizt00/ncc.
 The MIT license and provenance are retained in `web/assets/languages/nc-NOTICE.md`.
+The original nC extension VSIX, with its upstream MIT OR Apache-2.0 licenses,
+is bundled under `web/assets/extensions`; its factory manifest pins SHA-256.
 
 Provider identity SVGs are from Simple Icons 13.21.0 (CC0-1.0).
 Their sources and trademark notice are retained in `web/assets/providers/NOTICE.md`.

@@ -4,6 +4,20 @@ R7 addresses the clipped Settings controls, unreadable extension surfaces and
 profile hover reported in R6. It adds useful inspection workflows without
 claiming universal VS Code parity or globally unique AI capabilities.
 
+- Clicking Melody or its destination opens an inline model panel with provider
+  selection, a real catalog, search, cached results and keyboard navigation.
+  Settings opens only through Manage account. A catalog does not imply a
+  verified account or a successful generation.
+- The unchanged nC VSIX is included and installed once on first launch. Existing
+  versions and later removal are respected. Its engine still requires workspace
+  authorization; grammar and snippets load declaratively. The actual original
+  Node engine registers hover, completion, symbols, formatting, rename and
+  semantic token providers without unsupported API calls in the regression.
+  Existing icon preferences and icons for other languages remain unchanged.
+- Opening Activity keeps the home scene's parallax position while the overlay
+  covers it. Entering the IDE and returning through the Zénit wordmark share a
+  source-connected view transition. The IDE profile uses the same modal morph.
+
 - Settings navigation has a bounded footer; imports and exports stay inside the
   sidebar. Theme and icon summaries have separate spacing. Appearance, Terminals,
   Extensions and Hardware use the same scrolling and control hierarchy.

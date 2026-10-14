@@ -8,7 +8,7 @@ export class LumenMotion {
   }
   get enabled(){return document.documentElement.dataset.motion!=='off'&&!this.preference.matches;}
   cancelLayout(){this.layoutAnimation?.cancel();this.layoutAnimation=null;document.querySelector('.workspace')?.classList.remove('layout-animating');}
-  cancelAll(){this.cancelLayout();for(const animation of this.running.values())animation.cancel();this.running.clear();}
+  cancelAll(){this.cancelLayout();this.screenTransition?.skipTransition();for(const animation of this.running.values())animation.cancel();this.running.clear();}
   play(element,frames,duration=180) {
     if(!element)return;
     this.running.get(element)?.cancel();
@@ -26,6 +26,14 @@ export class LumenMotion {
     const dx=source.left+source.width/2-rect.left-rect.width/2,dy=source.top+source.height/2-rect.top-rect.height/2;
     const inset=`inset(${(rect.height-source.height)/2}px ${(rect.width-source.width)/2}px round 18px)`;
     this.play(element,[{clipPath:inset,translate:`${dx}px ${dy}px`,opacity:.65},{clipPath:'inset(0px 0px 0px 0px round 24px)',translate:'0 0',opacity:1}],380);
+  }
+  swapScreen(mutate,origin){
+    if(!this.enabled||!document.startViewTransition){mutate();this.enter(document.getElementById('app'),4);return Promise.resolve();}
+    const run=this.screenEpoch=(this.screenEpoch||0)+1;this.screenTransition?.skipTransition();
+    const r=origin?.getBoundingClientRect(),root=document.documentElement;
+    root.style.setProperty('--screen-source',r?`inset(${Math.max(0,r.top)}px ${Math.max(0,innerWidth-r.right)}px ${Math.max(0,innerHeight-r.bottom)}px ${Math.max(0,r.left)}px round 18px)`:'inset(35% 30% round 24px)');
+    const transition=document.startViewTransition(()=>{if(run===this.screenEpoch)mutate();});this.screenTransition=transition;
+    return transition.finished.catch(()=>{}).finally(()=>{if(this.screenTransition===transition)this.screenTransition=null;});
   }
   changeLayout(elements,mutate) {
     const root=elements[0]?.closest('.workspace');

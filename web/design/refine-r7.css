@@ -116,3 +116,9 @@
 @media(prefers-reduced-motion:reduce) {.welcome-sheet .welcome-profile,.welcome-sheet .welcome-profile>span:last-child {transition:none;}}
 @container(max-width:350px) {.ai-actions {grid-template-columns:1fr;}.ai-action-card {min-height:44px;padding:8px 10px;}.ai-action-card small {display:none;}.assistant-hero>.glass-art {width:60px;height:46px;}}
 :root[data-motion=off] .welcome-sheet .welcome-profile,:root[data-motion=off] .welcome-sheet .welcome-profile>span:last-child {transition:none;}
+::view-transition {pointer-events:none;}
+::view-transition-old(root) {animation:screen-settle 380ms cubic-bezier(.22,1,.36,1) both;}
+::view-transition-new(root) {animation:screen-reveal 420ms cubic-bezier(.22,1,.36,1) both;}
+@keyframes screen-reveal {from {clip-path:var(--screen-source);opacity:.7;}to {clip-path:inset(0 0 0 0 round 0);opacity:1;}}
+@keyframes screen-settle {to {opacity:.3;transform:scale(.985);}}
+@media(prefers-reduced-motion:reduce) {::view-transition-old(root),::view-transition-new(root) {animation:none;}}

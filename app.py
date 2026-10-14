@@ -117,6 +117,8 @@ def main():
     try:
         application = Application(ROOT, args.workspace, args.allow_shell)
         application.desktop = args.desktop
+        from backend.factory_extensions import install_factory
+        install_factory(application.features.extensions,ROOT)
         application.startup={'path':args.open_file}
         if args.draft:
             import json

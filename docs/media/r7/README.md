@@ -22,3 +22,10 @@ do not use the user's profile photo or live project.
 | ![Activity](activity.png) | ![Profile expansion](home-profile.png) |
 | Settings | |
 | ![Settings](settings.png) | |
+| Quick model selection | IDE profile |
+| ![Inline model selector](melody-model-picker.png) | ![Profile after its source-connected reveal](profile-morph.png) |
+
+The quick model selector uses a declared catalog fixture to verify selection;
+its labels do not represent a live account or account verification. The original
+nC extension is installed in that isolated demonstration. Capture script:
+`tests/test_latest_r7_ui.py`.

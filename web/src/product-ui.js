@@ -41,7 +41,7 @@ export function installProductUI(host){
   const provider=document.querySelector('.ai-provider-bar');if(provider)subtitle.after(provider);
   let closeProvider=()=>{};
   if(provider){provider.classList.add('melody-provider-details');const name=title.querySelector('h2');name.setAttribute('tabindex','0');name.setAttribute('role','button');name.setAttribute('aria-label','Proveedor y modelo de Melody');name.setAttribute('aria-expanded','false');closeProvider=()=>{provider.classList.remove('is-open');name.setAttribute('aria-expanded','false');};const toggle=()=>{const open=provider.classList.toggle('is-open');name.setAttribute('aria-expanded',String(open));};name.onclick=toggle;name.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle();}};}
-  const providerPointer=event=>{if(!provider?.contains(event.target)&&!title.contains(event.target))closeProvider();};
+  const providerPointer=event=>{if(document.querySelector('.melody-model-picker:not([hidden])')?.contains(event.target))return;if(!provider?.contains(event.target)&&!title.contains(event.target))closeProvider();};
   const providerKey=event=>{if(event.key==='Escape'&&provider?.classList.contains('is-open')){event.stopPropagation();closeProvider();title.querySelector('h2').focus();}};
   document.addEventListener('pointerdown',providerPointer);document.addEventListener('keydown',providerKey);
   const input=document.querySelector('#ai-input');input.placeholder='Escribe un mensaje a Melody…';

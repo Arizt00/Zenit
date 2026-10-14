@@ -1,6 +1,7 @@
 import {icon} from './icons.js';
 import {melodyContext} from './melody-context.js';
 import {installMelodyResearch} from './melody-research.js';
+import {installModelPicker} from './melody-model-picker.js';
 import {providerIcon,providerName} from './provider-identity.js';
 
 /** A visible context, destination, and stop action throughout a conversation. */
@@ -11,7 +12,7 @@ export function installMelodyExperience(host){
   document.querySelector('.melody-tagline').after(status);
   const cancel=document.getElementById('ai-cancel-generation');status.append(cancel);
   cancel.title='Stop response';cancel.setAttribute('aria-label','Stop response');
-  status.querySelector('.melody-destination').onclick=()=>p.safe(()=>p.settings('ai'));
+  const modelPicker=installModelPicker(p,status.querySelector('.melody-destination'));
   const composer=document.querySelector('.ai-composer'),input=document.getElementById('ai-input');
   const modes=document.createElement('div');modes.className='melody-compose-modes';modes.setAttribute('role','group');modes.setAttribute('aria-label','Message mode');
   modes.innerHTML=`<button type="button" data-melody-mode="chat" aria-pressed="true">${icon('sparkles')}<span>Chat</span></button><button type="button" data-melody-mode="edit" aria-pressed="false">${icon('code')}<span>Edit file</span></button><small class="melody-mode-hint"></small>`;
@@ -63,5 +64,5 @@ export function installMelodyExperience(host){
   const observer=new MutationObserver(refresh);observer.observe(document.querySelector('.provider-status-dot'),{attributes:true,attributeFilter:['class']});
   const hero=document.getElementById('assistant-hero');
   const kicker=document.createElement('span');kicker.className='melody-hero-kicker';kicker.textContent=t('TU COMPAÑERA DE CÓDIGO','YOUR CODING COMPANION');hero.querySelector('.melody-copy').prepend(kicker);
-  refresh();return {dispose(){selection?.dispose();observer.disconnect();document.removeEventListener('zenit:provider-state',refresh);}};
+  refresh();return {dispose(){modelPicker.dispose();selection?.dispose();observer.disconnect();document.removeEventListener('zenit:provider-state',refresh);}};
 }

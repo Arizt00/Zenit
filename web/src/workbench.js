@@ -78,14 +78,17 @@ export class LumenPlatform {
     if(themeChanged)for(const content of this.settingPanels?.values()||[])this.refreshSettingValues(content);
   }
   applyFileIcons(){
-    if(!this.contributionsReady)return;const selected=this.prefs['appearance.iconTheme']||'auto',themes=this.extensionContributions.iconThemes||[],theme=selected==='none'?'none':selected==='zenit'?null:selected==='auto'?themes[0]||null:themes.find(t=>t.id===selected)||null,kind=this.host.editor.extensionTheme?.uiTheme?.startsWith('hc-')?'contrast':document.documentElement.dataset.theme==='day'?'light':'dark';
+    if(!this.contributionsReady)return;const selected=this.prefs['appearance.iconTheme']||'auto',themes=this.extensionContributions.iconThemes||[],theme=selected==='none'?'none':selected==='zenit'?null:selected==='auto'?themes.find(t=>t.owner!=='nc-lang.nc-language')||null:themes.find(t=>t.id===selected)||null,kind=this.host.editor.extensionTheme?.uiTheme?.startsWith('hc-')?'contrast':document.documentElement.dataset.theme==='day'?'light':'dark';
     this.iconSignatures ||= new WeakMap();let content=theme;if(theme&&typeof theme==='object'){content=this.iconSignatures.get(theme);if(content===undefined){content=JSON.stringify(theme);this.iconSignatures.set(theme,content);}}
     const signature=kind+':'+content;if(signature===this.appliedIcons)return;this.appliedIcons=signature;setFileIcons(theme,kind,languageFor);this.host.refreshFileViews?.();
     if(!theme&&!['auto','zenit'].includes(selected))this.host.notify(this.t('El tema de iconos guardado no está disponible. Se muestran los iconos de Zénit.','The saved icon theme is unavailable. Zénit icons are shown.'),'info',5000,'icons-unavailable');
   }
   async savePreference(key,value){
-    this.preferenceEpoch=(this.preferenceEpoch||0)+1;
     const updates={[key]:value};if(key==='appearance.theme')updates['appearance.extensionTheme']='';
+    return this.savePreferences(updates);
+  }
+  async savePreferences(updates){
+    this.preferenceEpoch=(this.preferenceEpoch||0)+1;
     const previous=Object.fromEntries(Object.keys(updates).map(k=>[k,this.prefs[k]]));Object.assign(this.prefs,updates);this.applyPreferences();
     // Serialize writes so quickly changing a slider cannot restore an older value.
     this.settingsWrite=this.settingsWrite.catch(()=>{}).then(()=>this.api('/settings',{settings:updates}));

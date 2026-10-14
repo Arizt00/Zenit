@@ -55,6 +55,18 @@
       "sha256": "f9ae037ad6c2fec889d874fbbffdf8e777867793bd8ef0c9320e246834712d69",
       "sourceTest": "ui/settings-terminal-day.png",
       "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "melody-model-picker.png",
+      "sha256": "c37958197b92201835c09b37a63018f03660018bdf404552eb2c13d66e96c4d5",
+      "sourceTest": "tests/test_latest_r7_ui.py",
+      "profile": "Isolated demonstration; explicit model catalog fixture"
+    },
+    {
+      "file": "profile-morph.png",
+      "sha256": "f4a1d5a37f9f1c567ebed9883c31a13d4427e0297159efc61ef19b5951f886f1",
+      "sourceTest": "tests/test_latest_r7_ui.py",
+      "profile": "Isolated demonstration; explicit model catalog fixture"
     }
   ]
 }
