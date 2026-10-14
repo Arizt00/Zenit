@@ -42,11 +42,12 @@ export class LumenMotion {
   swapScreen(mutate,origin,{direction='enter',target}={}){
     if(this.enabled&&this.screenTransition&&this.screenTarget===target)return this.screenTransition.finished.catch(()=>{});
     const run=this.screenEpoch=(this.screenEpoch||0)+1;this.screenTransition?.skipTransition();
-    if(!this.enabled||!document.startViewTransition){this.screenTransition=null;this.screenTarget=null;delete document.documentElement.dataset.screenMotion;document.documentElement.style.removeProperty('--screen-source');mutate();this.enter(document.getElementById('app'),4);return Promise.resolve();}
+    const update=()=>{mutate();this.dialogs.dismissal?.finish();this.surfaces.dismissal?.finish();this.syncBackground();};
+    if(!this.enabled||!document.startViewTransition){this.screenTransition=null;this.screenTarget=null;delete document.documentElement.dataset.screenMotion;document.documentElement.style.removeProperty('--screen-source');update();this.enter(document.getElementById('app'),4);return Promise.resolve();}
     const r=origin?.getBoundingClientRect(),root=document.documentElement;
     root.dataset.screenMotion=direction;this.screenTarget=target;
     root.style.setProperty('--screen-source',r?`inset(${Math.max(0,r.top)}px ${Math.max(0,innerWidth-r.right)}px ${Math.max(0,innerHeight-r.bottom)}px ${Math.max(0,r.left)}px round 18px)`:'inset(35% 30% round 24px)');
-    const transition=document.startViewTransition(()=>{if(run===this.screenEpoch)mutate();});this.screenTransition=transition;
+    const transition=document.startViewTransition(()=>{if(run===this.screenEpoch)update();});this.screenTransition=transition;
     transition.ready.catch(()=>{}); // A deliberately interrupted snapshot rejects ready.
     transition.updateCallbackDone.catch(error=>{if(error.name!=='AbortError')queueMicrotask(()=>{throw error;});});
     return transition.finished.catch(()=>{}).finally(()=>{if(this.screenTransition===transition){this.screenTransition=null;this.screenTarget=null;delete root.dataset.screenMotion;root.style.removeProperty('--screen-source');}});
