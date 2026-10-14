@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Activity opens and closes progressively while the exact background position stays held through dismissal",
+    "Reopening during dismissal resumes from the visible shape without duplicate live forms or layers",
+    "Closing midway through opening starts at the current rendered frame rather than jumping to the full panel",
+    "Activity to Edit profile transfers the surface without returning to the avatar first",
+    "Dismissal preserves actual canvas pixels while copied fields and IDs are isolated from application selectors",
+    "Confirmation result resolves immediately and exactly once while its visual close completes separately",
+    "Keyboard dismissal restores the opener after the return animation",
+    "Settings has matching surface/background opening and dismissal without blocking the editor",
+    "Return home has its own contraction; rapid alternating navigation finishes on the last requested screen",
+    "Resize during dismissal settles and removes visual layers safely",
+    "Reduced motion also interrupts active dismissal and leaves immediate, functional navigation"
+  ],
+  "errors": []
+}

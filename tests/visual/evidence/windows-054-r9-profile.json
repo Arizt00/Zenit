@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "Fullscreen sky has subtle motion and pauses with the motion preference",
+    "Profile cover uses the exact photo crop and follows zoom/drag; actual WebP persists",
+    "Removing a photo clears both previews; cancel keeps the saved identity",
+    "Profile and accepted Activity layout render in light/dark without global overflow",
+    "Named non-active dirty file is actual model context and applies directly without a confirmation; BOM/CRLF persist",
+    "Undo restores both disk bytes and the earlier unsaved Monaco buffer",
+    "Explicit deletion closes the authorized dirty document; undo reopens its unsaved text",
+    "Named binary deletion and recovery work through the actual UI",
+    "An actual external file opened in Monaco updates and undoes with Windows path aliases",
+    "A user edit during generation cancels application and preserves the newer buffer",
+    "No uncaught JavaScript errors"
+  ],
+  "errors": [],
+  "aiTransport": "Deterministic fixture; actual AI quality is not measured."
+}

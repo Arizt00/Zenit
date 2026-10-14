@@ -67,6 +67,8 @@ export class ModalMotion {
       const clone=copies[index];
       if(node.tagName==='CANVAS'){try{clone.getContext('2d')?.drawImage(node,0,0);}catch{/* WebGL surfaces may not be readable. */}}
       if(node.matches('input:not([type=file]),textarea,select'))clone.value=node.value;
+      if(node.matches('input[type=checkbox],input[type=radio]'))clone.checked=node.checked;
+      if(node.tagName==='OPTION')clone.selected=node.selected;
     });
     copy.removeAttribute('role');copy.removeAttribute('aria-modal');copy.removeAttribute('aria-labelledby');copy.inert=true;copy.setAttribute('aria-hidden','true');
     copy.style.width=element.offsetWidth+'px';copy.style.height=element.offsetHeight+'px';copy.style.maxHeight='none';
@@ -82,7 +84,8 @@ export class ModalMotion {
       this.snapshotStyles=new CSSStyleSheet();this.snapshotStyles.replaceSync(collect(document.querySelector('link[href="/design.css"]').sheet));
     }
     shadow.adoptedStyleSheets=[this.snapshotStyles];
-    const layer=document.createElement('div');layer.className=backdrop.className;layer.classList.remove('hidden');layer.classList.add('modal-dismissal');layer.inert=true;layer.setAttribute('aria-hidden','true');layer.append(copy);shadow.append(layer);document.body.append(host);copy.scrollTop=element.scrollTop;
+    const layer=document.createElement('div');layer.className=backdrop.className;layer.classList.remove('hidden');layer.classList.add('modal-dismissal');layer.inert=true;layer.setAttribute('aria-hidden','true');layer.append(copy);shadow.append(layer);document.body.append(host);
+    originals.forEach((node,index)=>{copies[index].scrollTop=node.scrollTop;copies[index].scrollLeft=node.scrollLeft;});
     layer.style.opacity='0';copy.style.opacity='0';
     const animations=[],duration=state?.origin?340:220;
     let resolve;const finished=new Promise(done=>resolve=done);
