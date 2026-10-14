@@ -18,6 +18,8 @@ Settings and navigation between the welcome scene and the editor.
   It resumes after the last overlay disappears, without resetting underneath it.
 - Entering the IDE expands the new screen. Returning home contracts the outgoing
   screen. Rapid alternating navigation honors the last requested destination.
+  The new screen snapshot excludes temporary closing layers, preventing an
+  overlay from disappearing abruptly on the final frame.
 - Closing snapshots retain nested scroll positions, changed checkboxes and
   multiple selections until the surface disappears.
 - Keyboard focus returns after dismissal without stealing focus from a newly

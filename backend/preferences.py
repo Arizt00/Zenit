@@ -70,6 +70,7 @@ SCHEMA = {
  'editor.prediction': ('editor',True,'Predicción local en línea','Local inline prediction','bool'),
  'editor.diagnostics': ('editor',True,'Subrayar diagnósticos','Underline diagnostics','bool'),
  'lantern.lens': ('editor',True,'Lantern Lens: valores junto al código','Lantern Lens: inline values','bool'),
+ 'lantern.followActive': ('editor',True,'Lantern sigue el archivo activo','Lantern follows the active file','bool'),
  'lantern.autoSave': ('editor',False,'Compatibilidad: autoguardado Lantern antiguo (sin efecto)','Legacy Lantern autosave (unused)','bool'),
  'editor.fontSize': ('editor',14,'Tamaño de letra','Font size',[11,28]),
  'editor.fontFamily': ('editor','Consolas, "Cascadia Code", "Liberation Mono", monospace','Fuente del editor','Editor font','font'),

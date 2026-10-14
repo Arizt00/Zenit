@@ -3,6 +3,7 @@ import {melodyContext} from './melody-context.js';
 import {installMelodyResearch} from './melody-research.js';
 import {installModelPicker} from './melody-model-picker.js';
 import {providerIcon,providerName} from './provider-identity.js';
+import {installMelodyWorkflow} from './melody-workflow.js';
 
 /** A visible context, destination, and stop action throughout a conversation. */
 export function installMelodyExperience(host){
@@ -21,6 +22,7 @@ export function installMelodyExperience(host){
   const tasks=document.createElement('div');tasks.className='melody-context-actions';
   tasks.innerHTML=`<button type="button" data-melody-task="diagnostics">${icon('bug')}<span>Review diagnostics</span></button><button type="button" data-melody-task="tests">${icon('flask')}<span>Plan tests</span></button>`;
   modes.before(tasks);installMelodyResearch(host);
+  const workflow=installMelodyWorkflow(p,input);
   tasks.onclick=e=>{const b=e.target.closest('[data-melody-task]');if(!b||b.disabled)return;p.safe(async()=>{
     if(!ed.current)throw Error(t('Abre un archivo primero.','Open a file first.'));
     const items=p.diagnosticMap.get(ed.current)||[];
@@ -52,8 +54,10 @@ export function installMelodyExperience(host){
     tasks.querySelectorAll('button').forEach(b=>b.disabled=busy);
     tasks.querySelector('[data-melody-task=diagnostics] span').textContent=t('Revisar diagnósticos','Review diagnostics');tasks.querySelector('[data-melody-task=tests] span').textContent=t('Plan de pruebas','Plan tests');
     document.getElementById('ai-edit-file').title=t('Editar archivo en vivo','Edit file live');
+    workflow.refresh();
   };
-  modes.onclick=e=>{const button=e.target.closest('[data-melody-mode]');if(!button||button.disabled)return;p.melodyMode=button.dataset.melodyMode;refresh();input.focus();};
+  p.setMelodyMode=mode=>{if(p.aiJob||p.aiStarting)return false;p.melodyMode=mode==='edit'?'edit':'chat';refresh();return true;};
+  modes.onclick=e=>{const button=e.target.closest('[data-melody-mode]');if(!button||button.disabled)return;p.setMelodyMode(button.dataset.melodyMode);input.focus();};
   document.addEventListener('zenit:provider-state',refresh);
   const send=p.sendAI.bind(p);p.sendAI=async(question,options={})=>{try{const promise=send(question,{...options,edit:options.edit===true||p.melodyMode==='edit'});refresh();return await promise;}finally{refresh();}};
   const clear=p.clearAI.bind(p);p.clearAI=async(...args)=>{await clear(...args);p.melodyMode='chat';refresh();};
@@ -64,5 +68,5 @@ export function installMelodyExperience(host){
   const observer=new MutationObserver(refresh);observer.observe(document.querySelector('.provider-status-dot'),{attributes:true,attributeFilter:['class']});
   const hero=document.getElementById('assistant-hero');
   const kicker=document.createElement('span');kicker.className='melody-hero-kicker';kicker.textContent=t('TU COMPAÑERA DE CÓDIGO','YOUR CODING COMPANION');hero.querySelector('.melody-copy').prepend(kicker);
-  refresh();return {dispose(){modelPicker.dispose();selection?.dispose();observer.disconnect();document.removeEventListener('zenit:provider-state',refresh);}};
+  refresh();return {dispose(){modelPicker.dispose();workflow.dispose();delete p.setMelodyMode;selection?.dispose();observer.disconnect();document.removeEventListener('zenit:provider-state',refresh);}};
 }

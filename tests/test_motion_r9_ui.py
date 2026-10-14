@@ -22,6 +22,7 @@ def main():
     def finish_close():page.wait_for_function('!__qa.motion.dialogs.dismissal&&!document.querySelector(".modal-motion-snapshot")')
     page.mouse.move(1150,150);page.wait_for_function('document.querySelector("#lumen-home").style.getPropertyValue("--welcome-x")!==""')
     page.evaluate('__qa.studio.showActivity()');finish_open();frozen=page.locator('.welcome-depth').evaluate('(e)=>getComputedStyle(e).transform')
+    assert page.evaluate('()=>{const c=document.querySelector("canvas[data-glass=welcome]"),e=window.BABYLON?.EngineStore.Instances.find(x=>x.getRenderingCanvas()===c);return !e||e._activeRenderLoops.length===0;}')
     page.mouse.move(200,650);assert page.locator('.welcome-depth').evaluate('(e)=>getComputedStyle(e).transform')==frozen
     page.evaluate('__qa.closeModal()');assert page.locator('#modal-backdrop').evaluate('(e)=>e.classList.contains("hidden")');assert page.locator('.profile-activity').count()==0
     assert page.evaluate('!!__qa.motion.dialogs.dismissal&&document.querySelector(".modal-motion-snapshot").inert&&__qa.motion.dialogs.dismissal.element.getAnimations().length>0')
@@ -29,10 +30,11 @@ def main():
     finish_close();assert not page.evaluate('document.documentElement.dataset.modalMotion');passed('Activity opens and closes progressively while the exact background position stays held through dismissal')
 
     page.evaluate('__qa.studio.showActivity()');finish_open();page.screenshot(path=str(out/'activity-opened.png'));page.evaluate('()=>{__qa.closeModal();const d=__qa.motion.dialogs.dismissal;for(const a of [d.element,...d.element.children,d.layer].flatMap(e=>e.getAnimations())){a.pause();a.currentTime=115;}window.__closingFrame=__qa.motion.dialogs.frame(d.element);}')
+    assert page.evaluate('()=>{const d=__qa.motion.dialogs.dismissal,r=d.element.getBoundingClientRect();return r.width>1000&&Math.abs(r.left+r.width/2-innerWidth/2)<40&&getComputedStyle(d.element).clipPath==="none";}')
     page.screenshot(path=str(out/'activity-closing.png'));page.evaluate('__qa.studio.showActivity();window.__reopenedFrame=__qa.motion.dialogs.state.element.getAnimations()[0].effect.getKeyframes()[0]')
     frames=page.evaluate('({before:__closingFrame,after:__reopenedFrame})');assert frames['before']['clipPath']==frames['after']['clipPath'] and frames['before']['translate']==frames['after']['translate'],frames
     assert page.locator('.modal-motion-snapshot').count()==0;finish_open();passed('Reopening during dismissal resumes from the visible shape without duplicate live forms or layers')
-    page.evaluate('__qa.closeModal()');finish_close();page.evaluate('__qa.studio.showActivity()');page.wait_for_function('__qa.motion.dialogs.state.element.getAnimations().some(a=>a.effect.getTiming().duration===460)')
+    page.evaluate('__qa.closeModal()');finish_close();page.evaluate('__qa.studio.showActivity()');page.wait_for_function('__qa.motion.dialogs.state.element.getAnimations().some(a=>a.effect.getKeyframes()[0].scale==="0.965")')
     page.evaluate('()=>{const e=__qa.motion.dialogs.state.element;for(const a of e.getAnimations()){a.pause();a.currentTime=180;}window.__openingFrame=__qa.motion.dialogs.frame(e);__qa.closeModal();window.__closingStart=__qa.motion.dialogs.dismissal.element.getAnimations()[0].effect.getKeyframes()[0];}')
     frames=page.evaluate('({before:__openingFrame,after:__closingStart})');assert frames['before']['clipPath']==frames['after']['clipPath'] and frames['before']['translate']==frames['after']['translate'],frames
     finish_close();passed('Closing midway through opening starts at the current rendered frame rather than jumping to the full panel')

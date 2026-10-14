@@ -428,7 +428,7 @@ export class LumenPlatform {
     if(this.aiJob||!question.trim())return;
     if(!consult&&requestsRealtimeHelp(question)&&this.companion){if(!this.companion.session.enabled)await this.companion.toggle();if(this.companion.session.enabled)document.getElementById('ai-input').value='';return;}
     this.companion?.session.stop();
-    if(!this.prefs['ai.model']){await this.settings('ai');this.host.notify(this.t('Selecciona el proveedor y un modelo real antes de enviar.','Choose a provider and an actual model before sending.'));return;}
+    if(!this.prefs['ai.model']){if(this.openModelPicker)this.openModelPicker();else await this.settings('ai');this.host.notify(this.t('Selecciona el proveedor y un modelo real antes de enviar.','Choose a provider and an actual model before sending.'));return;}
     const editor=this.host.editor,provider=this.prefs['ai.provider'],model=this.prefs['ai.model'],mode=this.prefs['ai.context'];
     const filePlan=!consult&&edit!==true&&requestsFileChanges(question);
     const live=!consult&&!filePlan&&(edit===true||requestsLiveEdit(question));

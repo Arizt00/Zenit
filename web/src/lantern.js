@@ -1,7 +1,10 @@
 import {icon,escapeHTML as esc} from './icons.js';
 import {languageFor} from './editor.js';
+import {renderLanternReview} from './lantern-review.js';
+import {lanternConsultation} from './lantern-evidence.js';
 const $=s=>document.querySelector(s);
 const labels={idle:'En espera',stopped:'Detenido',preparing:'Preparando',running:'En ejecución',watching:'Escuchando cambios',debouncing:'Esperando estabilidad',waiting:'Esperando código válido',error:'Revisa los errores'};
+const englishLabels={idle:'Idle',stopped:'Stopped',preparing:'Preparing',running:'Running',watching:'Watching changes',debouncing:'Waiting for stable edits',waiting:'Waiting for valid code',error:'Review errors'};
 
 /** Live follows the active buffer; Lens decorations never enter the source model. */
 export class LanternView{
@@ -14,6 +17,7 @@ export class LanternView{
     this.host.platform.lantern=this;this.render();this.poll();
   }
   async action(action){
+    if(action==='pin'){await this.host.platform.savePreference('lantern.followActive',this.host.platform.prefs['lantern.followActive']===false);this.render();if(this.host.platform.prefs['lantern.followActive'])await this.follow();return;}
     if(action==='detach'){await this.studio.desktop.detach('lantern',this.state.path||this.host.editor.current||'');return;}
     if(action==='hide'||action==='show'){await this.host.platform.savePreference('appearance.lanternMonitor',action==='show');this.render();return;}
     if(action==='open'){this.openInline();return;}
@@ -27,8 +31,10 @@ export class LanternView{
       $('#lantern-template').onsubmit=e=>{e.preventDefault();this.studio.safe(async()=>{const path=$('#lantern-template-path').value;await this.host.api('/save',{path,content:template.content,create:true});this.host.closeModal();await this.host.refreshTree();await this.host.openFile(path);});};return;
     }
     if(action==='analyze'){
-      this.host.dock.show('assistant');const input=$('#ai-input');
-      input.value=`Analiza esta sesión Lantern y el código seleccionado. Explica los errores y propón una corrección revisable.\nArchivo: ${this.state.path||this.host.editor.current||''}\nEstado: ${labels[this.state.status]} · revisión ${this.state.revision}\n${(this.state.output||'').slice(-6500)}`;input.focus();return;
+      const p=this.host.platform;if(p.aiJob||p.aiStarting)throw Error(this.studio.t('Detén o espera la respuesta actual.','Stop or wait for the current response.'));
+      this.host.dock.floatPanel('assistant');p.setMelodyMode?.('chat');const input=$('#ai-input');input.value=lanternConsultation(this.state,this.baselineRevision)+'\nThe attached editor scope, if any, is from '+(this.host.editor.current||'no file')+'. The executed file is '+(this.state.path||'not started')+'. Do not assume different files contain the same source.';input.focus();
+      if(!p.prefs['ai.model']){p.openModelPicker?.();return;}
+      await p.sendAI(input.value,{consult:true});return;
     }
     if(action==='start'){
       if(!await this.host.ensureTrust())return;
@@ -43,7 +49,7 @@ export class LanternView{
     this.render();this.renderLens();
   }
   async follow(){
-    if(new URLSearchParams(location.search).has('panel'))return;
+    if(new URLSearchParams(location.search).has('panel')||this.host.platform.prefs['lantern.followActive']===false)return;
     this.clearLens();clearTimeout(this.followTimer);this.followTimer=setTimeout(()=>this.studio.safe(async()=>{
       const path=this.host.editor.current;if(this.enabled===false||(!this.state.active&&!this.enabled))return;
       if(!path){await this.control(()=>this.host.api('/platform/lantern/stop',{}));this.render();return;}
@@ -53,7 +59,7 @@ export class LanternView{
     }),250);
   }
   async control(operation){
-    const epoch=this.controlEpoch=(this.controlEpoch||0)+1;this.controlPending=true;
+    const epoch=this.controlEpoch=(this.controlEpoch||0)+1;this.controlPending=true;this.render();
     const task=(this.controlQueue||Promise.resolve()).catch(()=>{}).then(async()=>{if(epoch!==this.controlEpoch)return;const state=await operation();if(epoch===this.controlEpoch)this.state=state;});
     this.controlQueue=task;try{await task;}finally{if(epoch===this.controlEpoch)this.controlPending=false;}
   }
@@ -77,15 +83,16 @@ export class LanternView{
   }
   render(){
     const s=this.state,monitor=$('#lantern-monitor'),hidden=!this.host.platform.prefs['appearance.lanternMonitor'];if(monitor&&monitor.hidden!==hidden)monitor.hidden=hidden;
-    this.renderedStates ||= new WeakMap();const signature=JSON.stringify([s.status,s.active,s.path,s.revision,s.diagnostics?.length,s.error,s.code,s.output,s.preview]);
+    this.renderedStates ||= new WeakMap();const signature=JSON.stringify([s.status,s.active,s.path,s.revision,s.diagnostics?.length,s.error,s.code,s.output,s.preview,s.history,this.controlPending,this.host.platform.prefs['lantern.followActive']]);
     for(const root of document.querySelectorAll('.lantern-monitor,.lantern-workbench')){
       if(this.renderedStates.get(root)===signature)continue;this.renderedStates.set(root,signature);
       root.dataset.status=s.status;
-      root.querySelectorAll('[data-lantern-status]').forEach(x=>x.textContent=labels[s.status]||s.status);
-      root.querySelectorAll('[data-lantern-path]').forEach(x=>{x.textContent=s.path||'Continuidad para tu código';x.title=s.path||'';});
-      root.querySelectorAll('[data-lantern-summary]').forEach(x=>{x.title=s.error||'';x.textContent=s.active?`Revisión ${s.revision} · ${s.diagnostics?.length||0} diagnósticos${s.code!=null?' · salida '+s.code:''}${s.error?' · '+s.error:''}`:'Ejecuta, edita y revisa cada cambio.';});
+      root.querySelectorAll('[data-lantern-status]').forEach(x=>x.textContent=this.studio.t(labels[s.status]||s.status,englishLabels[s.status]||s.status));
+      root.querySelectorAll('[data-lantern-path]').forEach(x=>{x.textContent=s.path||this.studio.t('Continuidad para tu código','Continuity for your code');x.title=s.path||'';});
+      root.querySelectorAll('[data-lantern-summary]').forEach(x=>{x.title=s.error||'';x.textContent=s.active?this.studio.t('Revisión ','Revision ')+s.revision+' · '+(s.diagnostics?.length||0)+' '+this.studio.t('diagnósticos','diagnostics')+(s.code!=null?' · '+this.studio.t('salida ','exit ')+s.code:'')+(s.error?' · '+s.error:''):this.studio.t('Ejecuta, edita y revisa cada cambio.','Run, edit and review each change.');});
       root.querySelectorAll('[data-lantern=stop],[data-lantern=restart]').forEach(x=>x.disabled=!s.active);
-      root.querySelectorAll('[data-lantern=start]').forEach(x=>x.disabled=s.active);
+      root.querySelectorAll('[data-lantern=start]').forEach(x=>x.disabled=s.active||!!this.controlPending);
+      renderLanternReview(this,root);
       const output=root.querySelector('.lantern-output');if(output&&output.textContent!==s.output){const bottom=output.scrollHeight-output.scrollTop-output.clientHeight<40;output.textContent=s.output||'Inicia Lantern para seguir la ejecución y los errores aquí.';if(bottom)output.scrollTop=output.scrollHeight;}
       const preview=root.querySelector('.lantern-preview');if(preview){preview.hidden=!s.preview;if(s.preview&&preview.dataset.revision!==String(s.revision)){preview.replaceChildren(this.frame(s.preview));preview.dataset.revision=String(s.revision);}}
     }
@@ -94,7 +101,7 @@ export class LanternView{
   changed(){
     if(new URLSearchParams(location.search).has('panel'))return;
     if(!this.state.active)return;this.clearLens();clearTimeout(this.bufferTimer);
-    const buffer=this.capture();if(!buffer.path)return;
+    const buffer=this.capture();if(!buffer.path||buffer.path!==this.state.path)return;
     this.state={...this.state,status:'debouncing',lens:[],diagnostics:[]};this.render();
     // Send revisions in order; the backend handles syntax gating and debounce.
     this.bufferTimer=setTimeout(()=>{this.bufferQueue=(this.bufferQueue||Promise.resolve()).catch(()=>{}).then(async()=>{

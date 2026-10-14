@@ -9,10 +9,10 @@
 **Code, execution and AI assistance in one desktop workspace — even across windows.**
 
 [![Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-7b61ff)](LICENSE)
-[![Public preview](https://img.shields.io/badge/preview-0.5.4_R10-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.10)
-[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.10/Zenit-0.5.4-R10-Windows-Setup.exe)
+[![Public preview](https://img.shields.io/badge/preview-0.5.4_R11-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11)
+[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe)
 
-[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.10) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
+[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
 
 [Read the launch article on DEV Community](https://dev.to/aristote_motehernndez/zenit-a-desktop-workspace-for-code-ai-assistance-and-real-execution-1np8)
 
@@ -27,12 +27,14 @@ sync between the main application and its detached windows.
 
 This is an actively developed **public preview**, not a claim of full VS Code
 compatibility. Windows is the verified binary target for this release. See the
-[release notes](docs/PREVIEW_054_R10.md) and [current boundaries](docs/STATUS.md).
+[release notes](docs/PREVIEW_054_R11.md) and [current boundaries](docs/STATUS.md).
 
-R10 refines opening, dismissal and screen navigation. It includes the paged binary inspector, original nC identity, recoverable editor tabs,
-five local Melody evidence tools, and actual DAP memory/disassembly with pause
-comparison. See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
-and the [R10 verification record](docs/VERIFICATION_054_R10.md).
+R11 brings calmer transitions, visible Melody context and session drafts, and
+Lantern file pinning with execution output comparison. It includes the paged
+binary inspector, original nC identity, recoverable editor tabs, five local
+Melody evidence tools and actual DAP memory/disassembly with pause comparison.
+See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
+and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 
 ## What makes it useful
 
@@ -49,7 +51,7 @@ and the [R10 verification record](docs/VERIFICATION_054_R10.md).
 
 **Windows 10/11 x64** with Microsoft Edge WebView2:
 
-1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.10/Zenit-0.5.4-R10-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.10/Zenit-0.5.4-R10-Windows-Portable.zip).
+1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Portable.zip).
 2. Run the installer, then open **Zénit**. For the portable version, extract the entire ZIP and run `Zenit/zenit.exe`.
 3. Choose **Open project**, select a folder, open a source file and use **Run** or **Forge**.
 
@@ -149,7 +151,7 @@ npm test
 ```
 
 [Contributing](CONTRIBUTING.md) · [Architecture](docs/ARCHITECTURE.md) ·
-[Feature status](docs/STATUS.md) · [R10 notes](docs/PREVIEW_054_R10.md)
+[Feature status](docs/STATUS.md) · [R11 notes](docs/PREVIEW_054_R11.md)
 
 ## Build it with us
 
