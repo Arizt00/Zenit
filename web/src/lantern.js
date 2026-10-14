@@ -83,17 +83,19 @@ export class LanternView{
   }
   render(){
     const s=this.state,monitor=$('#lantern-monitor'),hidden=!this.host.platform.prefs['appearance.lanternMonitor'];if(monitor&&monitor.hidden!==hidden)monitor.hidden=hidden;
-    this.renderedStates ||= new WeakMap();const signature=JSON.stringify([s.status,s.active,s.path,s.revision,s.diagnostics?.length,s.error,s.code,s.output,s.preview,s.history,this.controlPending,this.host.platform.prefs['lantern.followActive']]);
+    this.renderedStates ||= new WeakMap();const signature=JSON.stringify([s.status,s.active,s.path,s.revision,s.diagnostics?.length,s.error,s.code,s.output,s.preview,s.history,this.controlPending,this.host.platform.prefs['lantern.followActive'],this.studio.t('es','en')]);
     for(const root of document.querySelectorAll('.lantern-monitor,.lantern-workbench')){
       if(this.renderedStates.get(root)===signature)continue;this.renderedStates.set(root,signature);
       root.dataset.status=s.status;
+      const input=root.querySelector('form input');if(input){input.placeholder=this.studio.t('Entrada del programa · Enter','Program input · Enter');input.setAttribute('aria-label',this.studio.t('Entrada de Lantern','Lantern input'));}
+      root.querySelector('form button:not([data-lantern])')?.setAttribute('aria-label',this.studio.t('Enviar entrada','Send input'));
       root.querySelectorAll('[data-lantern-status]').forEach(x=>x.textContent=this.studio.t(labels[s.status]||s.status,englishLabels[s.status]||s.status));
       root.querySelectorAll('[data-lantern-path]').forEach(x=>{x.textContent=s.path||this.studio.t('Continuidad para tu código','Continuity for your code');x.title=s.path||'';});
       root.querySelectorAll('[data-lantern-summary]').forEach(x=>{x.title=s.error||'';x.textContent=s.active?this.studio.t('Revisión ','Revision ')+s.revision+' · '+(s.diagnostics?.length||0)+' '+this.studio.t('diagnósticos','diagnostics')+(s.code!=null?' · '+this.studio.t('salida ','exit ')+s.code:'')+(s.error?' · '+s.error:''):this.studio.t('Ejecuta, edita y revisa cada cambio.','Run, edit and review each change.');});
       root.querySelectorAll('[data-lantern=stop],[data-lantern=restart]').forEach(x=>x.disabled=!s.active);
       root.querySelectorAll('[data-lantern=start]').forEach(x=>x.disabled=s.active||!!this.controlPending);
       renderLanternReview(this,root);
-      const output=root.querySelector('.lantern-output');if(output&&output.textContent!==s.output){const bottom=output.scrollHeight-output.scrollTop-output.clientHeight<40;output.textContent=s.output||'Inicia Lantern para seguir la ejecución y los errores aquí.';if(bottom)output.scrollTop=output.scrollHeight;}
+      const output=root.querySelector('.lantern-output');if(output&&output.textContent!==s.output){const bottom=output.scrollHeight-output.scrollTop-output.clientHeight<40;output.textContent=s.output||this.studio.t('Inicia Lantern para seguir la ejecución y los errores aquí.','Start Lantern to follow execution and errors here.');if(bottom)output.scrollTop=output.scrollHeight;}
       const preview=root.querySelector('.lantern-preview');if(preview){preview.hidden=!s.preview;if(s.preview&&preview.dataset.revision!==String(s.revision)){preview.replaceChildren(this.frame(s.preview));preview.dataset.revision=String(s.revision);}}
     }
   }
