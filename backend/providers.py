@@ -138,6 +138,8 @@ class AIRouter:
         self.prefs=prefs;self.vault=CredentialVault();self.jobs={};self.lock=threading.RLock();self.history={};self.history_epoch=0
         from .accounts import Accounts
         self.accounts=Accounts(prefs)
+        from .melody_memory import MelodyMemory
+        self.memory=MelodyMemory(prefs.directory)
     def _authorize(self,provider,consent):
         if provider not in PROVIDERS:raise ValueError('Proveedor no válido.')
         if consent is not True:raise PermissionError('Revisa y autoriza la petición antes de enviarla.')
@@ -186,6 +188,7 @@ class AIRouter:
         provider=body.get('provider',self.prefs.get('ai.provider'));self._authorize(provider,body.get('consent'))
         question=body.get('question','');content=body.get('content','');path=body.get('path','');model=body.get('model',self.prefs.get('ai.model'))
         if not isinstance(question,str) or not 1<=len(question.strip())<=24000:raise ValueError('Pregunta vacía o demasiado larga.')
+        if 'memoryQuestion' in body and (not isinstance(body['memoryQuestion'],str) or len(body['memoryQuestion'])>24000):raise ValueError('Invalid conversation memory question.')
         if not isinstance(content,str) or len(content)>64000:raise ValueError('Selecciona menos de 64000 caracteres de contexto.')
         if not isinstance(path,str) or len(path)>1200:raise ValueError('Ruta de contexto no válida.')
         if content and re.search(r'(^|[/\\])(\.env(?:\.[^/\\]+)?|id_(rsa|ed25519)|credentials[^/\\]*|[^/\\]*\.(pem|p12|key))$',path,re.I):raise PermissionError('No se adjuntan archivos de credenciales. Envía la pregunta sin ese contexto.')
@@ -193,17 +196,25 @@ class AIRouter:
         conversation=body.get('conversation','default')
         if not isinstance(conversation,str) or not re.fullmatch(r'[\w-]{1,80}',conversation):raise ValueError('Conversación no válida.')
         hkey=(conversation,provider,model)
+        memory_key=self.memory.key(body.get('memoryWorkspace'),path,provider) if body.get('memory') is True else None
+        recalled,previous,memory_epoch=self.memory.messages(memory_key) if memory_key else ([],{},0)
+        from .melody_memory import digest
         with self.lock:
             if sum(not j.done for j in self.jobs.values())>=2:raise ValueError('Ya hay dos respuestas en curso.')
             for jid in list(self.jobs):
                 if self.jobs[jid].done and time.monotonic()-self.jobs[jid].created>600:del self.jobs[jid]
             job=AIJob(provider,model);job.history_epoch=self.history_epoch;self.jobs[job.id]=job
             messages=[] if body.get('filePlan') is True else list(self.history.get(hkey,[]))[-12:]
+            if memory_key:messages=recalled
+            job.memory_context=(memory_key,memory_epoch,path,body.get('memoryQuestion',question),digest(content))
         message=(f'Archivo: {path}\n<context>\n{content}\n</context>\n\n' if content else '')+question
         messages.append({'role':'user','content':message})
         # Bound context independently of provider-specific token accounting.
         while len(messages)>1 and sum(len(m['content']) for m in messages)>100000:messages.pop(0)
         system=SYSTEM_ES if self.prefs.get('general.locale')=='es' else SYSTEM_EN
+        if recalled:
+            changed=previous.get('sourceHash')!=digest(content)
+            system+='\nEarlier messages are local conversation memory for this file and provider. Continue the previous task without requiring a new analysis session. The latest attached source is authoritative; historical code may be stale. Never apply an old replacement blindly. Reconcile requested edits with the current source. Memory is bounded and may omit older details. Source changed since the remembered turn: '+str(changed)+'.'
         if body.get('filePlan') is True:
             from .melody_files import FILE_PLAN_SYSTEM
             job.file_workspace=body.get('fileWorkspace')
@@ -250,6 +261,8 @@ class AIRouter:
                     if job.history_epoch!=self.history_epoch:return
                     if len(self.history)>50:self.history.pop(next(iter(self.history)))
                     self.history[hkey]=(messages+[{'role':'assistant','content':job.text}])[-12:]
+                    key,epoch,path,question,source_hash=job.memory_context
+                    self.memory.remember(key,epoch,path,question,job.text,source_hash)
         except urllib.error.HTTPError as e:job.error=f'HTTP {e.code}: comprueba credenciales, permisos, modelo o cuota. No se han aplicado cambios.'
         except Exception as e:
             if not job.cancelled.is_set():job.error=re.sub(r'(sk-[\w-]{8,}|AIza[\w-]+)','[credencial oculta]',str(e))[:700]

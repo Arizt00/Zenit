@@ -23,6 +23,8 @@ MAX_MESSAGE=4_000_000
 
 class LanguageSession:
     def __init__(self,profile,ws):
+        from .dependency_lsp import configure
+        profile=configure(profile,ws)
         self.id=uuid.uuid4().hex;self.profile=profile;self.root=ws.root;self.pending={};self.lock=threading.RLock();self.write_lock=threading.Lock()
         self.sequence=0;self.events=[];self.event_seq=0;self.closed=False;self.stderr=''
         argv=validate_argv(profile['argv'])

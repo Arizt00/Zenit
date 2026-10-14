@@ -29,7 +29,7 @@ License texts are preserved beside web/vendor, in debugger-support and in licens
 
 UI fonts come from the system. Icons are local SVGs. Existing landscape assets come from project references; a full screenshot is not used as a substitute for the interface.
 
-LLVM, GCC, .NET SDK, JDK, Node, Rust, Go, Git, ncc and AI models are external tools with their own licenses and requirements. Credentials, model weights and a copy of the nC repository are not included. Local nC paths are device configuration.
+.NET SDK, JDK, Node, Rust, Go, Git and AI models can be configured separately and retain their own licenses and requirements. The Windows R11 base includes LLVM, GCC, NCC and NASM with the notices described below. Credentials, model weights and a copy of the nC repository are not included. Local nC paths are device configuration.
 
 Zénit’s original code and documentation use Apache-2.0, as provided in LICENSE and NOTICE. The independent tools/asm_worker.py retains GPL-2.0-or-later. Third-party licenses remain independent. Trademarks do not imply affiliation. Provider integrations retain their own terms. The VSIX host supports declarative contributions and a partial Node API, not the full VS Code extension host.
 
@@ -49,7 +49,26 @@ tools (Apache-2.0 with LLVM exception). Windows R11 includes the Python librarie
 in its standalone base, with original notices and unchanged upstream source
 archives for Unicorn and pycdlib under `sdk/foundation/python/sources`.
 `SOURCE_INDEX.json` records their versions, upstream URLs and verified SHA-256.
-LLVM and the other native toolchains remain separate. `tools/prepare_foundation.py`
-prepares a local SDK from installed tools and verified upstream downloads.
+`tools/prepare_foundation.py` prepares the Python base;
+`tools/prepare_native_base.py` prepares the Windows native dependency closure.
 
 TextMate highlighting uses vscode-textmate 9.2.0 (MIT) and the vscode-oniguruma 2.0.1 bindings (MIT), including their Oniguruma WASM. The underlying Oniguruma engine uses the BSD-style notice preserved in `licenses/oniguruma/COPYING`; `SOURCE.json` records the exact upstream submodule commit. The binding license notices are preserved in web/vendor/textmate and web/vendor/oniguruma. These libraries are pinned and checked against npm SHA-512 integrity at asset preparation.
+
+## Windows native base
+
+The native base includes LLVM 22.1.6 (Apache-2.0 with LLVM exception), GCC and
+its runtime libraries (GPL-3.0 and the applicable GCC Runtime Library Exception),
+GDB and GNU binutils (GPL), CMake (BSD), Ninja (Apache-2.0), NCC (MIT OR Apache-2.0)
+and NASM 2.16.03 (BSD-2-Clause). Original notices remain alongside the tools.
+Conan 2.21.0 (MIT) and its Python dependency notices remain in the standalone
+Python environment.
+
+`sdk/foundation/native-sources/PACKAGE_INVENTORY.json` records exact versions and
+license identifiers for the 59 MSYS2 packages in the native dependency closure.
+`SOURCE_INDEX.json` records the official source URLs, sizes and SHA-256 values
+of 57 corresponding source archives. Those archives, including original upstream
+sources, packaging recipes and patches, are distributed with the binary tools.
+They can be extracted with an archive manager supporting their compression.
+LLVM's original license is retained in `sdk/foundation/llvm/LICENSE.TXT`; NCC's
+upstream notices and both license texts accompany its executable. No user's
+project or private package cache is included in the distribution.

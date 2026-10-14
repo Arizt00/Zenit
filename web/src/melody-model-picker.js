@@ -34,6 +34,6 @@ export function installModelPicker(p,destination){
   const outside=e=>{if(e.target.closest('#lumen-options'))return;if(!panel.hidden&&!panel.contains(e.target)&&!title.contains(e.target)&&!destination.contains(e.target))close();};
   const key=e=>{if(e.key==='Escape'&&!panel.hidden){e.preventDefault();e.stopImmediatePropagation();close();anchor.focus();}};
   document.addEventListener('pointerdown',outside);document.addEventListener('keydown',key,true);
-  p.openModelPicker=()=>{if(panel.hidden||closing)open(destination);};
+  p.openModelPicker=()=>{if(panel.hidden||closing)open(title);};
   return {close,dispose(){close();delete p.openModelPicker;panel.remove();document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key,true);}};
 }

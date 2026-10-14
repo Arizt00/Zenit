@@ -4,6 +4,7 @@ import {icon,escapeHTML as esc} from './icons.js';
 import {languageFor} from './editor.js';
 import {DocumentDrag} from './document-drag.js';
 import {ExtensionServicesUI} from './extension-services.js';
+import {EditorContextMenu} from './editor-context-menu.js';
 const $=s=>document.querySelector(s);
 
 export function installPreview(host){return new Preview(host);}
@@ -92,7 +93,7 @@ class Preview{
     document.querySelectorAll('[data-download]').forEach(b=>b.onclick=()=>this.safe(async()=>{await this.host.platform.api('/downloads/'+b.dataset.op,{id:b.dataset.download});await this.renderDownloads();}));this.downloadTimer=setTimeout(()=>this.safe(()=>this.renderDownloads()),1200);
   }
   extensionButtons(){
-    document.querySelectorAll('[data-extension-toggle]').forEach(toggle=>{const card=toggle.closest('.extension-card');if(card.querySelector('[data-extension-execute]'))return;const item=this.host.platform.extensionItems?.find(x=>x.id===toggle.dataset.extensionToggle);if(!item?.supported?.includes('runtime'))return;const b=document.createElement('button');b.className='secondary-button small-button';b.dataset.extensionExecute=item.id;b.textContent=this.runtimeHosts?.some(x=>x.id===item.id&&x.running)?'Detener motor':'Iniciar motor';toggle.before(b);});
+    document.querySelectorAll('[data-extension-toggle]').forEach(toggle=>{const card=toggle.closest('.extension-card');if(card.querySelector('[data-extension-execute]'))return;const item=this.host.platform.extensionItems?.find(x=>x.id===toggle.dataset.extensionToggle);if(!item?.supported?.includes('runtime'))return;const b=document.createElement('button');b.className='secondary-button small-button';b.dataset.extensionExecute=item.id;b.textContent=this.runtimeHosts?.some(x=>x.id===item.id&&x.running)?this.host.platform.t('Detener motor','Stop engine'):this.host.platform.t('Iniciar motor','Start engine');toggle.before(b);});
     if($('.tools-content')&&!$('#download-tools-link')){const b=document.createElement('button');b.id='download-tools-link';b.className='secondary-button';b.textContent='Descargar compilador · hasta 500 GB';b.onclick=()=>this.safe(()=>this.downloads());$('.tools-content .section-heading').append(b);}
   }
   async extensionViews(){
@@ -117,7 +118,7 @@ class Preview{
     const data=await this.host.platform.api('/extensions/runtime/start',{id,consent:true});this.registerExtensions(data.hosts);const engine=data.hosts.find(x=>x.id===id);this.host.notify(engine?.unsupportedApis?.length?'Motor con servicios pendientes: '+engine.unsupportedApis.join(', '):engine?.engine||'Motor iniciado. Comandos disponibles en la paleta.',engine?.unsupportedApis?.length?'error':'info');
   }
   registerExtensions(hosts){
-    for(const p of this.providers)p.dispose?.();this.providers=[];this.runtimeHosts=hosts;document.querySelectorAll('[data-extension-execute]').forEach(b=>b.textContent=hosts.some(x=>x.id===b.dataset.extensionExecute&&x.running)?'Detener motor':'Iniciar motor');const platform=this.host.platform,m=window.monaco,ed=this.host.editor;
+    for(const p of this.providers)p.dispose?.();this.providers=[];this.runtimeHosts=hosts;document.querySelectorAll('[data-extension-execute]').forEach(b=>b.textContent=hosts.some(x=>x.id===b.dataset.extensionExecute&&x.running)?this.host.platform.t('Detener motor','Stop engine'):this.host.platform.t('Iniciar motor','Start engine'));const platform=this.host.platform,m=window.monaco,ed=this.host.editor;
     this.providers.push(explorerDecorations(this.host,hosts.filter(x=>x.running&&x.fileDecorations)));
     const doc=model=>{const path=[...ed.models].find(([,r])=>r.model===model)?.[0]||ed.current;return {path,text:model?.getValue()??ed.getValue(),language:languageFor(path)};};
     const relativeUri=value=>{const raw=typeof value==='string'?value:(value?.fsPath||value?.external||value?.path||'');const absolute=decodeURIComponent(raw.replace(/^file:\/\//,'')).replaceAll('\\','/').replace(/^\/(?:([A-Za-z]:))/, '$1');const root=this.host.service().workspace.replaceAll('\\','/').replace(/\/$/,'');if(absolute.toLowerCase().startsWith(root.toLowerCase()+'/'))return absolute.slice(root.length+1);if(/^(?:[A-Za-z]:|\/)/.test(absolute))throw Error('La definición está fuera del proyecto abierto.');return absolute;};
@@ -202,9 +203,11 @@ class Preview{
   }
   languageFeatures(){
     const m=window.monaco;if(!m)return;
+    this.contextMenu=new EditorContextMenu(this);
     this.editorOpener=m.editor.registerEditorOpener({openCodeEditor:async(source,resource,selection)=>{if(resource.scheme!=='file')return false;const ed=this.host.editor,path=[...ed.models].find(([,r])=>r.model?.uri.toString()===resource.toString())?.[0]||resource.path.replace(/^\/+/, '');await this.host.openFile(path);if(selection?.startLineNumber){ed.view.setSelection(selection);ed.view.revealRangeInCenter(selection);}else if(selection?.lineNumber){ed.view.setPosition(selection);ed.view.revealPositionInCenter(selection);}ed.view.focus();return true;}});
     for(const defaults of [m.languages.typescript?.typescriptDefaults,m.languages.typescript?.javascriptDefaults])defaults?.setInlayHintsOptions?.({includeInlayParameterNameHints:'all',includeInlayVariableTypeHints:true,includeInlayFunctionLikeReturnTypeHints:true,includeInlayPropertyDeclarationTypeHints:true});
     const actions=view=>{
+    this.contextMenu.attach(view);
     view.updateOptions({inlayHints:{enabled:'on'},'semanticHighlighting.enabled':this.host.editor.extensionTheme?.data?.semanticHighlighting!==false});
     view.addAction({id:'lumen.goToDefinition',label:'Ir a definición · F12',keybindings:[m.KeyCode.F12],run:ed=>ed.trigger('lumen','editor.action.revealDefinition',{})});
     for(const [id,label,run] of [

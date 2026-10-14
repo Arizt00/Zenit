@@ -50,6 +50,8 @@ class PlatformServices:
         self.voice=MelodyVoice(self.prefs)
         from .python_packages import PythonPackages
         self.python_packages=PythonPackages(self)
+        from .native_packages import NativePackages
+        self.native_packages=NativePackages(self)
     def restore_trust(self):
         state=self.permissions.state(self.app.workspace.root,direct=not self.prefs.get('security.confirmRoutineActions'))
         self.app.workspace.trusted=state['trusted'];return state
@@ -85,6 +87,11 @@ class PlatformServices:
         q=lambda key,default='':query.get(key,[default])[0]
         if path=='/state':return self.state()
         if path=='/python/packages':return self.python_packages.status(self.app.workspace)
+        if path=='/ai/memory':
+            key=self.ai.memory.key(str(self.app.workspace.root),q('path'),q('provider'))
+            data,_=self.ai.memory.read(key)
+            return {'turns':len(data['turns']),'updated':data.get('updated'),'path':q('path')}
+        if path=='/native/packages':return self.native_packages.status(self.app.workspace)
         if path=='/foundation':
             from .foundation import status
             return status()
@@ -138,6 +145,8 @@ class PlatformServices:
     def post(self,path,body):
         ws=self.app.workspace
         if path=='/python/packages':return self.python_packages.start(ws,body)
+        if path=='/native/packages':return self.native_packages.start(ws,body)
+        if path=='/native/packages/cancel':return self.native_packages.cancel(ws)
         if path=='/python/packages/cancel':return self.python_packages.cancel(ws)
         if path=='/ai/voice/start':return self.voice.start(body.get('text'))
         if path=='/ai/voice/cancel':return self.voice.cancel(body.get('id'))
@@ -270,10 +279,14 @@ class PlatformServices:
         if path=='/ai/models':return self.ai.models(body.get('provider'),body.get('consent'))
         if path=='/ai/start':
             request=dict(body)
+            request['memoryWorkspace']=str(ws.root)
             if request.get('filePlan') is True:
                 self._trusted()
                 request.update(self.melody_files.prepare(ws,request))
             return self.ai.start(request)
+        if path=='/ai/memory/forget':
+            key=self.ai.memory.key(str(ws.root),body.get('path',''),body.get('provider',''))
+            self.ai.memory.forget(key);self.ai.clear_history();return {'forgotten':True}
         if path=='/ai/files/review':self._trusted();return self.melody_files.review(ws,body.get('job'))
         if path=='/ai/files/apply':self._trusted();return self.melody_files.commit(ws,body.get('ticket'),body.get('consent'))
         if path=='/ai/files/undo':self._trusted();return self.melody_files.undo(ws,body.get('receipt'))

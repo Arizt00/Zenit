@@ -30,7 +30,7 @@ export class LenonStudio {
     const {version,revision}=this.host.platform.state;
     $('.brand-tagline').textContent=version+' · R'+revision;
     $('.assistant-heading-title h2').textContent='Melody';$('#assistant-panel').setAttribute('aria-label','Melody');
-    $('#assistant-hero').innerHTML=glassArt('orb','melody-art')+`<div class="melody-copy"><h3>${this.t('Hola, soy Melody.','Hello, I’m Melody.')}</h3><h4>${this.t('¿En qué puedo ayudarte?','How can I help you?')}</h4><p id="assistant-subtitle">${this.t('Te ayudo a construir, entender y mejorar tu código.<br>¿En qué puedo ayudarte hoy?','Turn ideas into reality.<br>Simpler. Further.')}</p></div><span class="handwritten">${this.t('Ideas<br>en movimiento.','Ideas<br>in motion.')}</span>`;
+    $('#assistant-hero').innerHTML=glassArt('welcome','melody-art')+`<div class="melody-copy"><h3>${this.t('Hola, soy Melody.','Hello, I’m Melody.')}</h3><h4>${this.t('¿En qué puedo ayudarte?','How can I help you?')}</h4><p id="assistant-subtitle">${this.t('Te ayudo a construir, entender y mejorar tu código.<br>¿En qué puedo ayudarte hoy?','Turn ideas into reality.<br>Simpler. Further.')}</p></div><span class="handwritten">${this.t('Ideas<br>en movimiento.','Ideas<br>in motion.')}</span>`;
     const actions=$('#ai-actions');actions.append(actions.querySelector('[data-ai-action="refactor"]'),actions.querySelector('[data-ai-action="fix"]'));
     actions.querySelectorAll('button').forEach(b=>b.insertAdjacentHTML('beforeend',icon('chevron-right')));
     $('#ai-form').insertAdjacentHTML('beforeend',`<div class="composer-context"><button type="button" data-action="ai-settings">${icon('plus')} ${this.t('Contexto','Context')}</button><span>${this.t('Tú eliges el modelo','Choose your model')}</span></div>`);

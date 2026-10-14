@@ -290,7 +290,7 @@ export class LumenEditor {
       this.externalDiagnostics=[];
       if(this.kind==='monaco')this.view.setModel(null);
       this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary);
-      this.callbacks.active?.(path);return;
+      this.callbacks.active?.(path);window.dispatchEvent(new Event('lumen:editor-active'));return;
     }
     if(this.kind==='monaco'){
       this.view.setModel(record.model);if(record.viewState)this.view.restoreViewState(record.viewState);
@@ -300,6 +300,7 @@ export class LumenEditor {
     }
     this.updateCursor();
     this.paintBreakpoints();
+    this.callbacks.active?.(path);window.dispatchEvent(new Event('lumen:editor-active'));
   }
   configureLanguages(items=[],associations={}) {
     contributedAssociations=new Map();

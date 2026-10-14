@@ -39,7 +39,14 @@ def bundle_python(bundle):
     preserve_python_sources(source/'python')
     target=bundle/'sdk/foundation';target.mkdir(parents=True,exist_ok=True)
     shutil.copytree(source/'python',target/'python',dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
-    base={'schema':1,'platform':sys.platform,'tools':{'python':'python/python.exe'},'components':[x for x in index['components'] if x['id']=='python']}
+    names=('python','pylsp','gcc','g++','gdb','cmake','ninja','as','ar','clang','clang++','clangd','llvm-objcopy','llvm-objdump','lld','ld.lld','lld-link','ncc','nasm')
+    native_dirs=('native-mingw','native-sources','llvm','nc','nasm')
+    for folder in native_dirs:
+        if not (source/folder).is_dir():raise RuntimeError('Prepare the native base before packaging: '+folder)
+        shutil.copytree(source/folder,target/folder,dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    for name in names:
+        if not (source/index['tools'].get(name,'not-prepared')).is_file():raise RuntimeError('Missing base tool: '+name)
+    base={'schema':1,'platform':sys.platform,'tools':{name:index['tools'][name] for name in names},'components':[x for x in index['components'] if x['id'] in ('python','llvm','gcc','nc','nasm')]}
     (target/'tool-index.json').write_text(json.dumps(base,indent=2),encoding='utf-8')
 
 

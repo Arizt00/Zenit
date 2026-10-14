@@ -76,7 +76,7 @@ def main():
     register('python','python/python.exe')
     environment = {**os.environ, 'PYTHONNOUSERSITE':'1'}
     subprocess.run([tools_path:=str(out/tools['python']),'-m','ensurepip','--upgrade','--default-pip'],check=True,env=environment)
-    subprocess.run([tools_path,'-m','pip','install','unicorn==2.1.4','capstone==5.0.6','pyelftools==0.32','pycdlib==1.14.0',
+    subprocess.run([tools_path,'-m','pip','install','unicorn==2.1.4','capstone==5.0.6','pyelftools==0.32','pycdlib==1.14.0','conan==2.21.0',
                     'requests','pytest','numpy','pandas','matplotlib','python-lsp-server'],check=True,env=environment)
     subprocess.run([tools_path,'-m','pip','check'],check=True,env=environment)
     frozen = subprocess.run([tools_path,'-m','pip','freeze'],check=True,capture_output=True,text=True,env=environment).stdout

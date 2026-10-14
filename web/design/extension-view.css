@@ -1,0 +1,27 @@
+.extension-view-switch{display:flex;align-items:center;border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;margin-left:auto;flex-shrink:0;background:var(--surface)}
+.extension-view-switch .icon-button{position:relative;width:32px;height:30px;border-radius:7px}.extension-view-switch button.active{background:var(--selection);color:var(--text)}.extension-view-switch button.active:after{content:'';position:absolute;width:8px;height:2px;bottom:2px;left:12px;background:var(--accent);border-radius:2px}
+#extension-results[data-view=cards] .extension-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;align-items:stretch}
+#extension-results[data-view=cards] .extension-card{display:flex;flex-direction:column;gap:14px;align-items:stretch;padding:20px;min-height:238px}
+#extension-results[data-view=cards] .extension-card-top{display:flex;gap:14px;grid-column:auto;grid-row:auto;min-width:0}
+#extension-results[data-view=cards] .extension-card>p{display:block;margin:0;flex:1;min-height:36px;line-height:1.6;grid-column:auto;grid-row:auto}
+#extension-results[data-view=cards] .extension-card-tags{display:flex;justify-content:flex-start;flex-wrap:wrap;grid-row:auto;grid-column:auto}
+#extension-results[data-view=cards] .extension-card-actions{display:flex;flex-wrap:wrap;justify-content:flex-start;grid-row:auto;grid-column:auto;margin:0}
+#extension-results[data-view=compact] .extension-card{min-height:64px;padding:9px 14px;gap:8px 18px;border-radius:10px}
+#extension-results[data-view=compact] .extension-logo{width:34px;height:34px;padding:3px;border-radius:9px}#extension-results[data-view=compact] .extension-package-icon{width:28px;height:28px}#extension-results[data-view=compact] .extension-card>p{display:none}#extension-results[data-view=compact] .extension-card-top{grid-row:1/3}#extension-results[data-view=compact] .extension-card-actions{grid-row:1/3}#extension-results[data-view=compact] .extension-card-tags{grid-row:1/3}#extension-results[data-view=compact] .extension-grid{gap:6px}
+.native-language{align-self:flex-start;margin-bottom:18px}.native-tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}.native-tools>span{display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:12px}.native-tools svg{width:14px;height:14px}.native-tools small{color:var(--muted)}.native-tools .available svg{color:var(--success)}.native-tools .missing svg{color:var(--danger)}
+#extension-results[data-view=cards] .extension-card>p {white-space:normal;overflow:visible;text-overflow:clip;}
+#extension-results[data-view=compact] .extension-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+#extension-results[data-view=compact] .extension-card {display:flex;flex-direction:column;align-items:stretch;min-height:142px;padding:14px;gap:10px;}
+#extension-results[data-view=compact] .extension-card-top {gap:10px;}
+#extension-results[data-view=compact] .extension-card h4 {font-size:12px;}
+#extension-results[data-view=compact] .extension-card-tags {display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-start;}
+#extension-results[data-view=compact] .extension-card-actions {display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin-top:auto;}
+.extension-view-switch svg {width:17px;height:17px;}
+
+#extension-results[data-view=list] .extension-grid {display:flex;flex-direction:column;gap:10px;}
+#extension-results[data-view=list] .extension-card {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 24px;padding:16px 20px;min-height:110px;}
+#extension-results[data-view=list] .extension-card-top {grid-column:1;grid-row:1;}
+#extension-results[data-view=list] .extension-card>p {grid-column:1;grid-row:2;margin:0 0 0 68px;}
+#extension-results[data-view=list] .extension-card-tags {grid-column:2;grid-row:1;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin:0;}
+#extension-results[data-view=list] .extension-card-actions {grid-column:2;grid-row:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border:0;padding:0;}
+@media(max-width:800px){#extension-results[data-view=list] .extension-card {grid-template-columns:minmax(0,1fr);gap:12px;}#extension-results[data-view=list] .extension-card-tags,#extension-results[data-view=list] .extension-card-actions {grid-column:1;grid-row:auto;justify-content:flex-start;}}

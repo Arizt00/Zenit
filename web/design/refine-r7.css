@@ -50,7 +50,6 @@
 .melody-research button {display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:9px;padding:8px;min-width:0;text-align:left;font-size:10px;color:var(--text);background:var(--surface);}
 .melody-research button:hover {background:var(--hover);border-color:var(--border-strong);}
 .melody-research .icon {width:14px;height:14px;flex:none;}
-.assistant-panel:has(.melody-research[open]) .assistant-hero>.glass-art,.assistant-panel:has(.melody-research[open]) .melody-copy {display:none;}
 .research-result>small {color:var(--secondary);font-size:11px;}
 .research-result pre {background:var(--editor);color:var(--editor-text,var(--text));padding:18px;border:1px solid var(--border);border-radius:12px;overflow:auto;max-height:46vh;font:12px/1.7 var(--font-code);white-space:pre-wrap;overflow-wrap:anywhere;}
 .research-facts {display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:24px 0;}

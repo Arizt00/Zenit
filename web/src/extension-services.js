@@ -7,6 +7,12 @@ export class ExtensionServicesUI {
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.dependencies.changed'){
+      if(event.workspace!==h.service().workspace)return;
+      for(const session of [...p.lspSessions.values()])if(session.languages.some(x=>event.languages.includes(x))){const profile=session.profile;await p.stopLSP(session.id);await p.startLSP(profile,true);}
+      await p.loadContributions();
+      h.notify(p.t('Dependencias integradas. Las herramientas activas se han actualizado.','Dependencies integrated. Active language tools refreshed.'));return;
+    }
     if(event.command==='zenit.trust.changed'){p.host.setTrusted(event.trusted);p.host.setTrustSource?.(event.source);if(!event.trusted)p.workspaceChanged();return;}
     if(event.command==='zenit.preferences.changed'){await p.syncPreferences();return;}
     if(event.command==='zenit.studio.changed'){await p.host.studio?.syncProfile();return;}

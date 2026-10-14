@@ -66,7 +66,9 @@ class Hacker:
         tools=self.tools()
         if not tools['gcc'] or not tools['gdb']:raise FileNotFoundError('Instala GCC y GDB (MinGW/MSYS2 en Windows) y añade su carpeta bin al PATH. Zénit detecta también C:/msys64/ucrt64/bin.')
         target=folder/('program.exe' if os.name=='nt' else 'program')
-        argv=[tools['gcc'],'-g3','-O0','-Wall','-Wextra','-fno-omit-frame-pointer','-iquote',str(file.parent),str(source),'-o',str(target)]
+        from .native_packages import native_state
+        deps=native_state(ws)
+        argv=[tools['gcc'],'-g3','-O0','-Wall','-Wextra','-fno-omit-frame-pointer','-iquote',str(file.parent),*deps.get('cCompile',deps['compile']),str(source),*deps['link'],'-o',str(target)]
         result=self.features.app.runner.start([argv],ws.root,timeout=120)
         self.builds[result['job']]={'target':target,'gdb':tools['gdb'],'workspace':ws.root,'project':project,'source':source,'name':file.name}
         return {**result,'flags':argv[1:6]}

@@ -29,10 +29,11 @@ This is an actively developed **public preview**, not a claim of full VS Code
 compatibility. Windows is the verified binary target for this release. See the
 [release notes](docs/PREVIEW_054_R11.md) and [current boundaries](docs/STATUS.md).
 
-R11 brings calmer transitions, visible Melody context and session drafts, and
-Lantern file pinning with execution output comparison. Windows now ships a full
-standalone Python base; **Extensions → Python** manages project packages with
-real pip output. It includes the paged
+R11 brings calmer transitions, a quieter Melody panel with the welcome crystal,
+local file memory, and Lantern file pinning with execution output comparison.
+Windows includes Python, C/C++, nC and ASM toolchains. **Extensions** manages
+project dependencies and offers list, card and compact views. The editor has a
+searchable context menu with real language and extension actions. It includes the paged
 binary inspector, original nC identity, recoverable editor tabs, five local
 Melody evidence tools and actual DAP memory/disassembly with pause comparison.
 See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
@@ -43,7 +44,7 @@ and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 | A daily problem | How Zénit helps |
 | --- | --- |
 | Code and execution drift across windows | Detached editors share buffers, saves and appearance; their terminal can sit below the code or return to the main window. |
-| AI requests lack a clear scope | Melody shows the selected model and context. Choose a selection, the whole file, or no code for a question. |
+| AI requests lose context between conversations | Melody keeps bounded local memory for each file and provider, while attaching the current source. Choose selection, file or no code; pause or erase memory from Context and memory. |
 | A snippet replaces too much | Review a selected range before applying; the rest of the file stays intact and the edit can be undone. |
 | Running code requires switching tools | Forge prepares the configured runtime, starts an interactive terminal, and shows elapsed time and exit code. |
 | A project is difficult to navigate | Search with case, whole-word, include/exclude, folder and file-type filters; open an exact matching location. |
@@ -59,8 +60,10 @@ and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 
 Python, pip, venv and base libraries are included. Open **Extensions → Python**
 to add a package or install `requirements.txt` into the project environment.
-Other compilers, language SDKs and AI models are separate: configure them under **Settings → Languages and tools**
-and **Settings → Artificial intelligence**. Provider accounts, availability and
+C/C++, nC and ASM tools are included too; **Extensions → Native** manages their
+project dependencies. Additional language SDKs can be configured under
+**Settings → Languages and tools**. Click **Melody** to select a model or manage
+a provider account. Provider accounts, availability and
 charges depend on the chosen integration. Emma voice requires a compatible local
 voice bridge; a hosted model or voice is not bundled.
 
@@ -83,7 +86,7 @@ Open **Forge**, click **Run Python**, and inspect the real output. **Run again**
 repeats that file; **Stop** ends its running process. **Run buffer** is the Python
 action for executing unsaved editor content.
 
-In Melody, connect a model and try:
+Click the **Melody** title, choose a provider/model, and try:
 
 ```text
 Explain this function and suggest a clearer name.
@@ -102,6 +105,11 @@ File plans provide review, recovery copies and undo. **Edit file** is a separate
 mode for live changes to the active buffer. Automatic assistance and next-code
 suggestions are available through **Live assistance**; generated advice still
 needs your judgment.
+
+<img src="docs/media/r11/melody.png" width="374" alt="Melody with the home crystal, two suggestions and a clear composer">
+
+[R11 capture details](docs/media/r11/README.md). Extra tools and file memory open
+from the small controls button; model selection opens from the Melody title.
 
 ## A workspace that moves with you
 

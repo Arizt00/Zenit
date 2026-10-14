@@ -1,11 +1,19 @@
 # R11 verification — 14 October 2026
 
-- Python: 346 tests run, 341 passed and 5 platform skips.
+- Python: 352 tests run, 347 passed and 5 platform skips.
 - Node: 113 tests passed, including bounded output comparison and revision evidence.
-- Frontend JavaScript syntax: 68 files passed.
+- Frontend JavaScript syntax: 72 files passed.
 - Browser workflows: 12 motion lifecycle groups, 7 new Melody/Lantern groups,
   8 existing model/nC groups, 11 profile/session groups and 12 existing workflow
-  groups, plus 7 real Python package-management groups. Total: 57 groups.
+  groups, plus 7 real Python package-management groups and 9 context-menu,
+  layout and memory groups. Total: 66 groups.
+- Native checks install a real offline Conan header package, compile C/C++,
+  verify clangd hover, preserve dependencies on failed resolution, and execute
+  NASM/GNU assembly. A separate network probe downloads zlib and fmt and runs
+  programs linked against them; NCC package initialization, locking and execution
+  are exercised with the actual compiler.
+- Memory checks verify persistence, scope separation, current-source precedence
+  and forget behavior across new conversations.
 - Python package checks install an explicit offline wheel using real pip, import
   it through Run, Forge, Lantern and debugging, check dependencies and remove
   only the project package. Invalid requirements and pip removal are rejected.

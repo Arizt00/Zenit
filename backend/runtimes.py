@@ -109,15 +109,19 @@ class Runtimes:
                 HTMLParser().feed(file.read_text(encoding='utf-8-sig'))
             return {'language':lang,'commands':[],'target':file,'file':file,'cwd':ws.root,'preview':not check}
         elif lang=='asm':
+            from .native_packages import native_state
+            deps=native_state(ws)
             compiler=self.executable('gcc','clang')
             if file.suffix.lower()=='.asm':
                 nasm=self.executable('nasm');obj=folder/(file.stem+'.obj')
-                commands=[[nasm,'-f','win64' if os.name=='nt' else 'elf64',str(file),'-o',str(obj)],[compiler,str(obj),'-o',str(target)]]
-            else:commands=[[compiler,*(['-g'] if debug else []),str(file),'-o',str(target)]]
+                commands=[[nasm,'-f','win64' if os.name=='nt' else 'elf64',str(file),'-o',str(obj)],[compiler,str(obj),*deps['link'],'-o',str(target)]]
+            else:commands=[[compiler,*(['-g'] if debug else []),*deps['compile'],str(file),*deps['link'],'-o',str(target)]]
             if not check and not debug:commands.append([str(target)])
         elif lang in ('c','cpp'):
+            from .native_packages import native_state
+            deps=native_state(ws)
             compiler=self.executable(*TOOLS[lang]);standard='-std='+custom.get('standard','c++17' if lang=='cpp' else 'c11')
-            commands=[[compiler,standard,'-Wall','-Wextra','-I',str(Path(__file__).resolve().parents[1]/'debugger-support/lantern'),*(['-g','-O0'] if debug else []),*(['-fsyntax-only'] if check else []),str(file),*([] if check else ['-o',str(target)])]]
+            commands=[[compiler,standard,'-Wall','-Wextra','-I',str(Path(__file__).resolve().parents[1]/'debugger-support/lantern'),*deps.get('cppCompile' if lang=='cpp' else 'cCompile',deps['compile']),*(['-g','-O0'] if debug else []),*(['-fsyntax-only'] if check else []),str(file),*([] if check else [*deps['link'],'-o',str(target)])]]
             if not check and not debug:commands.append([str(target)])
         elif lang=='rust':
             compiler=self.executable('rustc');commands=[[compiler,'--edition=2021',*(['-g','-C','opt-level=0'] if debug else []),*(['--emit=metadata'] if check else []),str(file),'-o',str(target)]]
@@ -151,7 +155,11 @@ class Runtimes:
             if not check and not debug:commands.append([dotnet,str(target)])
         elif lang=='nc':
             ncc=self.executable('ncc')
-            if check:commands=[[ncc,'check',str(file)]]
+            manifest=ws.resolve('ncc.package.json',must_exist=False)
+            package=json.loads(manifest.read_text(encoding='utf-8')) if manifest.is_file() and not hasattr(ws,'python_workspace') else {}
+            entry=package.get('targets',{}).get('main')
+            if entry and ws.resolve(entry)==file and not debug:commands=[[ncc,'package','check' if check else 'run','--path',str(ws.root)]]
+            elif check:commands=[[ncc,'check',str(file)]]
             elif debug and file.suffix.lower() in ('.n','.nc'):
                 commands=[[ncc,'compiler','build-native',str(file),'--profile','debug','--out-dir',str(folder),'--out',str(target),'--no-run','--strict']]
             elif not debug:commands=[[ncc,'run',str(file)]]

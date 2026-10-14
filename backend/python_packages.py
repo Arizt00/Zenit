@@ -81,7 +81,10 @@ class PythonPackages:
             previous=self.features.app.runner.jobs.get(self.jobs.get(str(ws.root)))
             if previous and not previous.done:raise ValueError('A Python package operation is already running for this project.')
             task=self.features.app.runner.start(commands,ws.root,timeout=900,env={**tool_environment(),'PIP_REQUIRE_VIRTUALENV':'true','PYTHONUTF8':'1'})
-            self.jobs[str(ws.root)]=task['job'];return task
+            self.jobs[str(ws.root)]=task['job']
+            from .native_packages import dependency_finished
+            dependency_finished(self.features,ws,task,('python',))
+            return task
     def cancel(self,ws):
         if not ws.trusted:raise PermissionError('Trust this project before cancelling its Python task.')
         with self.lock:

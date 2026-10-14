@@ -28,3 +28,7 @@
 @import url('/design/melody-model-picker.css');
 @import url('/design/companion-refine.css');
 @import url('/design/python-packages.css');
+
+@import url('./design/editor-context-menu.css');
+
+@import url('/design/extension-view.css');
