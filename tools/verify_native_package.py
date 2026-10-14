@@ -29,6 +29,15 @@ def main():
         launcher='Zenit-Launcher.exe'
         assert launcher in archive.toc, 'Windows installer is missing its stable launcher'
         assert hashlib.sha256(archive.extract(launcher)).hexdigest()==sha256(ROOT/'dist'/launcher)
+        payload=ROOT/'dist/Zenit'
+        entries={name.replace('\\','/'):name for name in archive.toc}
+        files={file.relative_to(payload).as_posix() for file in payload.rglob('*') if file.is_file()}
+        assert {name.removeprefix('payload/') for name in entries if name.startswith('payload/')}==files, 'Installer payload differs from the application bundle'
+        index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
+        critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
+        critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
+        for name in sorted(critical):
+            assert hashlib.sha256(archive.extract(entries['payload/'+name])).hexdigest()==sha256(payload/name), name
     if sys.platform=='darwin':
         dmg=ROOT/'dist'/manifest['outputs'][0]['name'];subprocess.run(['hdiutil','verify',str(dmg)],check=True)
         with tempfile.TemporaryDirectory(prefix='lumen-dmg-mount-') as temp:
