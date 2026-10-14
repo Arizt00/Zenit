@@ -1,0 +1,47 @@
+{
+  "published": true,
+  "release": "https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11",
+  "sourceCommit": "9e9eb423c717dfec44c96f569783e67f990ecf87",
+  "revision": 11,
+  "signed": false,
+  "remoteDigestsVerified": true,
+  "existingAssetsRetained": true,
+  "assets": [
+    {
+      "name": "Zenit-0.5.4-R11-Windows-Setup.exe",
+      "bytes": 1269132474,
+      "sha256": "37f244a1515f3a4ec4ddc04ef1fa3edc2a47e68c0131d035e4331340cec24b5f",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe",
+      "id": 641609771
+    },
+    {
+      "name": "Zenit-0.5.4-R11-Windows-Portable.zip",
+      "bytes": 1230489067,
+      "sha256": "be3b8919ce615aa32523af04fe522a6b06ffb5003f0fd27f9352463784903154",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Portable.zip",
+      "id": 641612571
+    },
+    {
+      "name": "Zenit-0.5.4-R11-win32-x86_64-manifest.json",
+      "bytes": 558,
+      "sha256": "1043c59d3a5ebac678b3373d8f787af43536f4bdd5c3685c8737b01b66be0724",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-win32-x86_64-manifest.json",
+      "id": 641616020
+    },
+    {
+      "name": "Zenit-0.5.4-R11-win32-x86_64-verification.json",
+      "bytes": 1299,
+      "sha256": "770db87e4116c8b239c25b95334e12026258545f0f7e34f91792ba65e73addc4",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-win32-x86_64-verification.json",
+      "id": 641616045
+    },
+    {
+      "name": "Zenit-0.5.4-R11-win32-x86_64-SHA256.txt",
+      "bytes": 205,
+      "sha256": "d8c4a7fa86a816409e2a658348b8ebd55b9df1fce2859f67fe14dafc5e6f1763",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-win32-x86_64-SHA256.txt",
+      "id": 641616069
+    }
+  ],
+  "publicHTTPStatus": 200
+}
