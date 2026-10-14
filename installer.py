@@ -124,6 +124,8 @@ class Installer:
         winget = shutil.which('winget')
         for index, key in enumerate(selected):
             name, package = PACKAGES[key]
+            if key=='python' and (self.payload/'sdk/foundation/python/python.exe').is_file():
+                self._package_state(key,'available','Python, pip, venv and base libraries are included with Zénit.');continue
             if self.skip.is_set(): self._package_state(key, 'skipped', 'Puedes instalarlo después desde Ajustes.'); continue
             self._progress(87 + int(11 * index / max(1, len(selected))), 'Comprobando ' + name + '…')
             self._package_state(key, 'checking')

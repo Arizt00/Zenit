@@ -27,6 +27,22 @@ def sha256(file):
     return digest.hexdigest()
 
 
+def bundle_python(bundle):
+    """Ship the prepared standalone CPython, never the build environment."""
+    if sys.platform!='win32':return
+    source=ROOT/'sdk/foundation';index=json.loads((source/'tool-index.json').read_text(encoding='utf-8'))
+    python=source/'python/python.exe'
+    if not python.is_file() or not (source/'python/Lib/venv').is_dir():raise RuntimeError('Prepare the standalone Python base before packaging Windows.')
+    env={**__import__('os').environ,'PYTHONNOUSERSITE':'1'}
+    subprocess.run([str(python),'-I','-m','pip','--isolated','check'],check=True,env=env)
+    from tools.prepare_foundation import preserve_python_sources
+    preserve_python_sources(source/'python')
+    target=bundle/'sdk/foundation';target.mkdir(parents=True,exist_ok=True)
+    shutil.copytree(source/'python',target/'python',dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    base={'schema':1,'platform':sys.platform,'tools':{'python':'python/python.exe'},'components':[x for x in index['components'] if x['id']=='python']}
+    (target/'tool-index.json').write_text(json.dumps(base,indent=2),encoding='utf-8')
+
+
 def architecture():
     machine=platform.machine().lower()
     return {'amd64':'x86_64','x64':'x86_64','aarch64':'arm64'}.get(machine,machine)
@@ -122,6 +138,7 @@ def main():
         collect_licenses()
         if sys.platform=='darwin':prepare_mac_icon()
         subprocess.run(command,cwd=ROOT,check=True)
+    bundle_python(ROOT/'dist/Zenit')
     outputs=[];prefix=f'Zenit-{VERSION}-R{REVISION}'
     if args.installer:
         if sys.platform=='win32':

@@ -98,7 +98,7 @@ class Runtimes:
             if check:compile(file.read_bytes(),str(file),'exec')
             elif not debug:
                 from .foundation import python_command
-                commands=[[*python_command(),str(file)]]
+                commands=[[*python_command(ws,self.config.get('tools')),str(file)]]
         elif lang=='bash':
             commands=[[self.executable('bash'),*(['-n'] if check else []),str(file)]]
         elif lang in ('javascript','typescript'):

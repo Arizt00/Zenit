@@ -11,6 +11,7 @@ for package in ('webview','keyring','copilot'):
     if importlib.util.find_spec(package):hidden+=collect_submodules(package)
 data=[(str(ROOT/'web'),'web'),(str(ROOT/'licenses'),'licenses'),(str(ROOT/'README.md'),'.'),(str(ROOT/'LICENSE'),'.'),(str(ROOT/'NOTICE'),'.'),(str(ROOT/'THIRD_PARTY_NOTICES.md'),'.'),(str(ROOT/'LEEME_PRIMERO.txt'),'.'),(str(ROOT/'config/runtime-defaults.json'),'config'),(str(ROOT/'debugger-support'),'debugger-support'),(str(ROOT/'examples/lantern/counter.c'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.cpp'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.n'),'examples/lantern'),(str(ROOT/'backend/LumenJavaDebugger.java'),'backend'),(str(ROOT/'backend/emma_bridge.mjs'),'backend'),(str(ROOT/'backend/lantern_memory.cjs'),'backend'),(str(ROOT/'backend/extension_host.cjs'),'backend'),(str(ROOT/'backend/extension_api.cjs'),'backend')]
 data.append((str(ROOT/'tools/asm_worker.py'),'tools'))
+for name in ('debug_worker.py','lantern_memory.py','lantern_lens.py'):data.append((str(ROOT/'backend'/name),'backend'))
 data.append((str(ROOT/'examples/asm/x86_64_sum.s'),'examples/asm'))
 data.append((str(ROOT/'tools/machine_console.py'),'tools'))
 data.append((str(ROOT/'tools/machine_seed.py'),'tools'))

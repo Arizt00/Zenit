@@ -38,3 +38,24 @@ pins a session across tab changes and resumes following another buffer. AI
 transport and model catalogs in tests are explicit deterministic fixtures.
 
 This remains an unsigned Windows public preview with partial VS Code APIs.
+
+## Python included, project packages in Extensions
+
+Windows installer and portable builds include standalone CPython 3.12.10, its
+standard library, pip, venv and the prepared base libraries with their actual
+transitive dependencies. The base includes requests, pytest, NumPy, pandas,
+Matplotlib, Pillow and python-lsp-server. `pip check` verifies the packaged base.
+This is a defined library set, not every package available on PyPI.
+
+**Extensions → Python** shows actual installed distribution metadata, supports
+package names with version constraints/extras, requirements.txt installation,
+updates, project-local removal, dependency checks, filtering and copying pinned
+project versions. Installer output and cancellation are available in the panel.
+The first installation creates `.venv` and inherits the read-only base libraries;
+additional packages and overrides stay in the project. Existing incomplete
+environments are preserved and reported rather than replaced.
+
+Run, Forge, Lantern and built-in Python debugging automatically use the ready
+project environment. Lantern keeps that interpreter while executing its private
+unsaved source copy. Full custom run profiles retain their explicit commands.
+Other language SDKs and user extension/icon choices are retained.

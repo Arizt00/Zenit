@@ -1,11 +1,14 @@
 # R11 verification — 14 October 2026
 
-- Python: 341 tests run, 336 passed and 5 platform skips.
+- Python: 346 tests run, 341 passed and 5 platform skips.
 - Node: 113 tests passed, including bounded output comparison and revision evidence.
-- Frontend JavaScript syntax: 67 files passed.
+- Frontend JavaScript syntax: 68 files passed.
 - Browser workflows: 12 motion lifecycle groups, 7 new Melody/Lantern groups,
   8 existing model/nC groups, 11 profile/session groups and 12 existing workflow
-  groups. Total: 50 groups.
+  groups, plus 7 real Python package-management groups. Total: 57 groups.
+- Python package checks install an explicit offline wheel using real pip, import
+  it through Run, Forge, Lantern and debugging, check dependencies and remove
+  only the project package. Invalid requirements and pip removal are rejected.
 - New execution checks use actual Python processes and unsaved buffers. They
   verify pin/follow behavior, actual output comparisons, read-only consultation
   and inline model selection without opening Settings.

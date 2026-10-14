@@ -57,10 +57,10 @@ class Hacker:
         source=folder/file.name;source.write_text(content,encoding='utf-8',newline='')
         if mode=='python':
             if file.suffix.lower() not in ('.py','.pyw'):raise ValueError('Abre un archivo Python para esta acción.')
-            frozen=getattr(sys,'frozen',False)
-            executable=self._python_executable()
-            from .foundation import bundled_tool
-            argv=[executable,*(['--python-child'] if frozen and not bundled_tool('python') else ['-u']),str(source)]
+            from .foundation import python_command
+            prefix=python_command(ws,self.features.runtimes.config.get('tools'))
+            if '--python-child' in prefix:prefix=[self._python_executable(),'--python-child']
+            argv=[*prefix,str(source)]
             return {'terminal':self._terminal(argv,'Python · '+file.name,ws.root,{'PYTHONPATH':str(file.parent),'LUMEN_SCRIPT_IMPORT_ROOT':str(file.parent)})}
         if mode!='gdb' or file.suffix.lower()!='.c':raise ValueError('GCC + GDB requiere un archivo .c.')
         tools=self.tools()

@@ -33,7 +33,9 @@ class PythonDebugger:
             if self.process and self.process.poll() is None:
                 raise ValueError('Ya hay una sesión de depuración activa.')
             file = (workspace.root / path).resolve()
-            worker = [sys.executable, '--debug-child'] if getattr(sys, 'frozen', False) else [sys.executable, str(Path(__file__).with_name('debug_worker.py'))]
+            from .foundation import python_command
+            prefix=python_command(workspace)
+            worker = [sys.executable, '--debug-child'] if '--python-child' in prefix else [*prefix,str(Path(__file__).with_name('debug_worker.py'))]
             self.state = {'status': 'running', 'path': path, 'output': '', 'variables': [], 'stack': []}
             process = subprocess.Popen(worker + [str(file), json.dumps(breakpoints)], cwd=workspace.root,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,

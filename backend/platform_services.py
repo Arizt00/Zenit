@@ -48,6 +48,8 @@ class PlatformServices:
         self.extension_services=ExtensionServices(self);self.extension_runtime.services=self.extension_services
         self.melody_files=MelodyFiles(self)
         self.voice=MelodyVoice(self.prefs)
+        from .python_packages import PythonPackages
+        self.python_packages=PythonPackages(self)
     def restore_trust(self):
         state=self.permissions.state(self.app.workspace.root,direct=not self.prefs.get('security.confirmRoutineActions'))
         self.app.workspace.trusted=state['trusted'];return state
@@ -82,6 +84,7 @@ class PlatformServices:
     def get(self,path,query):
         q=lambda key,default='':query.get(key,[default])[0]
         if path=='/state':return self.state()
+        if path=='/python/packages':return self.python_packages.status(self.app.workspace)
         if path=='/foundation':
             from .foundation import status
             return status()
@@ -134,6 +137,8 @@ class PlatformServices:
         raise FileNotFoundError('Ruta de plataforma desconocida.')
     def post(self,path,body):
         ws=self.app.workspace
+        if path=='/python/packages':return self.python_packages.start(ws,body)
+        if path=='/python/packages/cancel':return self.python_packages.cancel(ws)
         if path=='/ai/voice/start':return self.voice.start(body.get('text'))
         if path=='/ai/voice/cancel':return self.voice.cancel(body.get('id'))
         if path=='/simulation/run':return self.simulation.run(ws,body)

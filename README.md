@@ -30,7 +30,9 @@ compatibility. Windows is the verified binary target for this release. See the
 [release notes](docs/PREVIEW_054_R11.md) and [current boundaries](docs/STATUS.md).
 
 R11 brings calmer transitions, visible Melody context and session drafts, and
-Lantern file pinning with execution output comparison. It includes the paged
+Lantern file pinning with execution output comparison. Windows now ships a full
+standalone Python base; **Extensions → Python** manages project packages with
+real pip output. It includes the paged
 binary inspector, original nC identity, recoverable editor tabs, five local
 Melody evidence tools and actual DAP memory/disassembly with pause comparison.
 See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
@@ -55,8 +57,9 @@ and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 2. Run the installer, then open **Zénit**. For the portable version, extract the entire ZIP and run `Zenit/zenit.exe`.
 3. Choose **Open project**, select a folder, open a source file and use **Run** or **Forge**.
 
-The application includes its own Python runtime. Project compilers, language SDKs
-and AI models are separate: configure them under **Settings → Languages and tools**
+Python, pip, venv and base libraries are included. Open **Extensions → Python**
+to add a package or install `requirements.txt` into the project environment.
+Other compilers, language SDKs and AI models are separate: configure them under **Settings → Languages and tools**
 and **Settings → Artificial intelligence**. Provider accounts, availability and
 charges depend on the chosen integration. Emma voice requires a compatible local
 voice bridge; a hosted model or voice is not bundled.

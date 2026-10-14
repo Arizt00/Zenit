@@ -6,6 +6,7 @@ verified against the publisher's checksum. Keep this large payload out of Git.
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import importlib.metadata
 import json
 import os
 from pathlib import Path
@@ -36,6 +37,25 @@ def copy(source, target):
         target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source,target)
     else:raise FileNotFoundError(source)
 
+
+def preserve_python_sources(base):
+    """Keep upstream source archives with the standalone laboratory libraries."""
+    target=base/'sources';target.mkdir(exist_ok=True)
+    record=target/'SOURCE_INDEX.json'
+    try:previous=json.loads(record.read_text(encoding='utf-8'))
+    except (OSError,ValueError):previous=[]
+    items=[]
+    for dist in importlib.metadata.distributions(path=[str(base/'Lib/site-packages')]):
+        name=dist.metadata.get('Name','').lower()
+        if name not in ('unicorn','pycdlib'):continue
+        item=next((x for x in previous if x['name']==name and x['version']==dist.version),None)
+        if item is None:
+            with urllib.request.urlopen(f'https://pypi.org/pypi/{name}/{dist.version}/json',timeout=30) as response:data=json.load(response)
+            source=next(x for x in data['urls'] if x['packagetype']=='sdist')
+            item={'name':name,'version':dist.version,'file':source['filename'],'url':source['url'],'sha256':source['digests']['sha256']}
+        fetch(item['url'],target/item['file'],item['sha256']);items.append(item)
+    record.write_text(json.dumps(items,indent=2),encoding='utf-8')
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('--output',type=Path,default=ROOT/'sdk/foundation')
     p.add_argument('--ncc',type=Path,required=True);a=p.parse_args()
@@ -61,6 +81,7 @@ def main():
     subprocess.run([tools_path,'-m','pip','check'],check=True,env=environment)
     frozen = subprocess.run([tools_path,'-m','pip','freeze'],check=True,capture_output=True,text=True,env=environment).stdout
     (out/'python/requirements-bundled.txt').write_text(frozen,encoding='utf-8')
+    preserve_python_sources(target)
     components.append({'id':'python','version':sys.version.split()[0],'license':'PSF-2.0','includes':['stdlib','pip','venv','pytest','requests','numpy','pandas','matplotlib','python-lsp-server']})
     # LLVM provides five integrated assemblers. MinGW supplies the native CRT,
     # headers, standard libraries and GCC; all installed prefix files are kept.

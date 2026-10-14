@@ -39,6 +39,7 @@ def stage(workspace, path, content, directory, obsolete):
             output = directory / relative; output.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, output)
     shadow = Workspace(directory, workspace.native); shadow.trusted = True
+    shadow.python_workspace=getattr(workspace,'python_workspace',workspace)
     file = shadow.resolve(path, must_exist=False); file.parent.mkdir(parents=True, exist_ok=True)
     file.write_text(content, encoding='utf-8', newline='')
     return shadow
@@ -79,7 +80,8 @@ def runtime_commands(plan, checkpoint, lens):
     commands = plan['commands']
     if plan.get('custom'): return commands
     if plan['language'] == 'python':
-        commands = [[sys.executable, '--lantern-child', str(plan['file']), str(checkpoint)]] if getattr(sys, 'frozen', False) else [[sys.executable, '-u', str(Path(__file__).with_name('lantern_memory.py')), str(plan['file']), str(checkpoint)]]
+        prefix=commands[0][:-1]
+        commands = [[sys.executable,'--lantern-child',str(plan['file']),str(checkpoint)]] if '--python-child' in prefix else [[*prefix,str(Path(__file__).with_name('lantern_memory.py')),str(plan['file']),str(checkpoint)]]
     elif plan['language'] in ('javascript', 'typescript') and commands and Path(commands[0][0]).stem.lower() == 'node':
         commands = [[commands[0][0], '--require', str(Path(__file__).with_name('lantern_memory.cjs')), *commands[0][1:]]]
     return commands

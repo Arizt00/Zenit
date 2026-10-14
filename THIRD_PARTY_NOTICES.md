@@ -33,15 +33,23 @@ LLVM, GCC, .NET SDK, JDK, Node, Rust, Go, Git, ncc and AI models are external to
 
 Zénit’s original code and documentation use Apache-2.0, as provided in LICENSE and NOTICE. The independent tools/asm_worker.py retains GPL-2.0-or-later. Third-party licenses remain independent. Trademarks do not imply affiliation. Provider integrations retain their own terms. The VSIX host supports declarative contributions and a partial Node API, not the full VS Code extension host.
 
+Windows R11 also includes standalone CPython under `sdk/foundation/python`.
+Its `LICENSE.txt`, package metadata and package license files are retained.
+`requirements-bundled.txt` records the actual base library versions separately
+from the IDE's frozen runtime. Project packages are installed into `.venv` and
+are not part of the distributed base.
+
 The baseline includes github-copilot-sdk 1.0.15 and Python dependencies, with notices in licenses/python-packages. Official Codex, Claude Code, Gemini CLI and Copilot CLI clients are installed separately; sessions and credentials are not distributed.
 # Independent ASM laboratory
 
 The source of `tools/asm_worker.py` is GPL-2.0-or-later; see
 `licenses/asm-worker/GPL-2.0.txt`. It runs as an independent Python process using
 Unicorn (GPL-2.0), Capstone (BSD), pyelftools (public domain) and LLVM command-line
-tools (Apache-2.0 with LLVM exception). These development tools are not silently
-included in the public core installer. `tools/prepare_foundation.py` prepares a
-local SDK from installed tools and verified upstream downloads. Redistribution
-of that SDK requires its own corresponding-source and licensing review.
+tools (Apache-2.0 with LLVM exception). Windows R11 includes the Python libraries
+in its standalone base, with original notices and unchanged upstream source
+archives for Unicorn and pycdlib under `sdk/foundation/python/sources`.
+`SOURCE_INDEX.json` records their versions, upstream URLs and verified SHA-256.
+LLVM and the other native toolchains remain separate. `tools/prepare_foundation.py`
+prepares a local SDK from installed tools and verified upstream downloads.
 
 TextMate highlighting uses vscode-textmate 9.2.0 (MIT) and the vscode-oniguruma 2.0.1 bindings (MIT), including their Oniguruma WASM. The underlying Oniguruma engine uses the BSD-style notice preserved in `licenses/oniguruma/COPYING`; `SOURCE.json` records the exact upstream submodule commit. The binding license notices are preserved in web/vendor/textmate and web/vendor/oniguruma. These libraries are pinned and checked against npm SHA-512 integrity at asset preparation.

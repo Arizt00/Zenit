@@ -5,7 +5,7 @@
 Use the installer or portable ZIP from the [R11 release](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11).
 The current binary target is Windows 10/11 x64 with Edge WebView2. The portable
 must be fully extracted; run `Zenit/zenit.exe`. No separate Python installation
-is needed to run the IDE. Project toolchains are separate.
+is needed to run the IDE or Python projects. Other language toolchains are separate.
 
 Checksums are included in the release. Compare the downloaded installer with its
 SHA-256 entry:
@@ -27,6 +27,27 @@ do not represent a newly verified R11 build on those systems.
 
 An interactive program reads from the terminal. Completed Forge executions show
 their exit code; **Run again** repeats that file. **Stop** ends the tracked process.
+
+## Add Python dependencies
+
+Windows builds include standalone CPython 3.12.10, the standard library, pip,
+venv, requests, pytest, NumPy, pandas, Matplotlib, Pillow, python-lsp-server and
+their dependencies. The bundled inventory is visible in **Extensions → Python**.
+
+1. Open your project and select **Extensions → Python**.
+2. Enter a package, such as `rich`, `requests>=2.32` or `httpx[http2]>=0.27`,
+   then select **Install**. Alternatively, use **Install requirements.txt**.
+3. The first installation prepares `.venv`, inheriting the bundled base libraries.
+   The panel shows actual pip output, completion or errors, and a stop action.
+4. Use Run, Forge, Lantern or built-in Python debugging. They automatically use
+   the ready `.venv`, including when Lantern executes an unsaved copy.
+
+The **Project** list supports updates and removal of local packages. Base packages
+remain intact; updating one adds an override to the project. **Check dependencies**
+runs pip's compatibility check. **Copy project versions** copies local package pins.
+Custom run profiles with explicit commands keep those commands. An ordinary shell
+requires environment activation, for example `.venv\Scripts\Activate.ps1` in
+PowerShell. Installing additional packages from the index requires internet access.
 
 ## Work across windows
 

@@ -8,6 +8,7 @@ Zénit 0.5.4 R11 is a public preview. No universal VS Code parity percentage is 
 | Binary inspection | Paged hex/ASCII, byte offsets, endian and numeric interpretation | Read only; no binary editing or full media previews. |
 | Debugging | Native DAP memory/disassembly and observed pause comparison | Adapter-dependent capabilities; no reverse execution or complete instruction trace. |
 | Terminal | Interactive ConPTY, multiple sessions, detachable views | Full VS Code shell integration remains pending. |
+| Python | Included CPython/stdlib/pip/venv, base libraries, real package management in Extensions, automatic project interpreter | Defined library set; extra index packages need internet. Custom run commands remain explicit. |
 | Forge | File runtime, Python buffer, C/GDB, repeat/stop, exit status | Toolchains must be configured; history belongs to the current Forge window. |
 | Melody | Inline models, scope preview, session prompt drafts, live edits, file plans, recovery/undo, five local evidence tools | Providers need configuration; drafts last for the current window; generated code needs review. |
 | Lantern | Unsaved-buffer execution, pin/follow, output comparison, read-only Melody consultation | History/output are bounded; checkpoints require cooperating code. |
