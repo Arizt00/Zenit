@@ -1,0 +1,22 @@
+{
+  "checks": [
+    "Point and button menus close outside Monaco, on Escape, and without missing-method errors",
+    "Every actual match opens its own line and UTF-16 column",
+    "Persistent search filters, exact words, case, and escaped inline highlights",
+    "Search light/dark and three compact sizes; keyboard opens the second match",
+    "Actual ConPTY accepts keyboard input in editor and main while the external editor shares dirty code",
+    "Exterior terminal sits directly below code, resizes by keyboard, detaches, and returns without losing the shell",
+    "Edits, save state, theme, actual editor font, and profile identity synchronize in both directions",
+    "Creating and deleting a file in the exterior window refreshes both project trees",
+    "Full-window exterior editor has Run, mirrored actual Python output, and an option to keep using the main terminal",
+    "Forge shares the live shell, Ctrl J toggles the exterior terminal, and child closing keeps the shell alive",
+    "Absolute external file opened in the current session also has the actual terminal",
+    "Run executes an authorized absolute external file and shares actual output with the main application",
+    "Forge actually compiles Java, provides System.console(), accepts input, and returns program output through ConPTY",
+    "Real Monaco comparison renders and disposes both models on closing (proposal fixture)",
+    "No uncaught browser errors"
+  ],
+  "errors": [],
+  "shell": "Actual Windows ConPTY/CMD; keyboard sent in three separate renderer pages",
+  "aiTransport": "No model request; comparison uses declared proposal fixture"
+}

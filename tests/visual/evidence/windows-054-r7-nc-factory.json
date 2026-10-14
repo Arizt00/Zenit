@@ -1,0 +1,14 @@
+{
+  "id": "nc-lang.nc-language",
+  "version": "1.0.0-21v",
+  "originalVSIXSHA256": "926c4329e7be8756b7e22c72cf26e9d6fac9c852c76e39d6fdfd35575889e0ac",
+  "installed": true,
+  "otherExtensionsPreserved": 16,
+  "profileFilesPreserved": {
+    "settings.json": true,
+    "studio.json": true,
+    "session.json": true
+  },
+  "nodeEngineStarted": false,
+  "existingIconPreferencePreserved": true
+}

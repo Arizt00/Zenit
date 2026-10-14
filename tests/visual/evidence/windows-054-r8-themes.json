@@ -1,0 +1,1430 @@
+{
+  "checks": [
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro",
+        "label": "One Dark Pro"
+      },
+      "ratios": {
+        "text": 7.22197939059332,
+        "secondary": 7.22197939059332,
+        "muted": 7.22197939059332,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "chrome-text": 6.5676782521903485,
+        "selected-text": 9.327638148310466
+      },
+      "actualCardContrast": 7.22197939059332,
+      "border": 1.5786178261620765,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Flat",
+        "label": "One Dark Pro Flat"
+      },
+      "ratios": {
+        "text": 6.5676782521903485,
+        "secondary": 4.969801643928314,
+        "muted": 6.5676782521903485,
+        "field-text": 7.22197939059332,
+        "button-text": 9.34449815586896,
+        "chrome-text": 6.5676782521903485,
+        "selected-text": 9.327638148310466
+      },
+      "actualCardContrast": 6.5676782521903485,
+      "border": 1.4355972794534528,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Darker",
+        "label": "One Dark Pro Darker"
+      },
+      "ratios": {
+        "text": 7.501693797316259,
+        "secondary": 7.501693797316259,
+        "muted": 7.501693797316259,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "chrome-text": 7.031541341654539,
+        "selected-text": 9.327638148310466
+      },
+      "actualCardContrast": 7.501693797316259,
+      "border": 1.6397592563442671,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Mix",
+        "label": "One Dark Pro Mix"
+      },
+      "ratios": {
+        "text": 7.22197939059332,
+        "secondary": 4.863603123559982,
+        "muted": 7.22197939059332,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "chrome-text": 7.22197939059332,
+        "selected-text": 9.327638148310466
+      },
+      "actualCardContrast": 7.22197939059332,
+      "border": 1.5786178261620765,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "zhuangtongfa.material-theme:One Dark Pro Night Flat",
+        "label": "One Dark Pro Night Flat"
+      },
+      "ratios": {
+        "text": 8.272726294070692,
+        "secondary": 8.272726294070692,
+        "muted": 8.272726294070692,
+        "field-text": 7.742247398849005,
+        "button-text": 9.34449815586896,
+        "chrome-text": 8.272726294070692,
+        "selected-text": 9.327638148310466
+      },
+      "actualCardContrast": 8.272726294070692,
+      "border": 1.8082955506339145,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Metallian",
+        "label": "Bearded Theme Monokai Metallian"
+      },
+      "ratios": {
+        "text": 11.39941905106541,
+        "secondary": 5.971665156101624,
+        "muted": 4.508544829187903,
+        "field-text": 9.971416597300664,
+        "button-text": 4.695601604880636,
+        "chrome-text": 12.212974847655152,
+        "selected-text": 8.947302605694711
+      },
+      "actualCardContrast": 11.39941905106541,
+      "border": 1.308659574607757,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Terra",
+        "label": "Bearded Theme Monokai Terra"
+      },
+      "ratios": {
+        "text": 11.477055929692275,
+        "secondary": 6.102308902521769,
+        "muted": 4.519777314516276,
+        "field-text": 9.947077829897667,
+        "button-text": 4.6178907415987,
+        "chrome-text": 12.39515875964077,
+        "selected-text": 9.02509083296974
+      },
+      "actualCardContrast": 11.477055929692275,
+      "border": 1.300668034791881,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Stone",
+        "label": "Bearded Theme Monokai Stone"
+      },
+      "ratios": {
+        "text": 11.188494902524132,
+        "secondary": 6.061315855742775,
+        "muted": 4.506359421599479,
+        "field-text": 9.569614328537035,
+        "button-text": 4.520762689732426,
+        "chrome-text": 12.226970318612025,
+        "selected-text": 9.285526790635503
+      },
+      "actualCardContrast": 11.188494902524132,
+      "border": 1.3018734041045539,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Black",
+        "label": "Bearded Theme Monokai Black"
+      },
+      "ratios": {
+        "text": 11.419532305057569,
+        "secondary": 5.816275372608689,
+        "muted": 4.560815272912372,
+        "field-text": 10.295485686405037,
+        "button-text": 4.845442873551445,
+        "chrome-text": 11.985930200638263,
+        "selected-text": 8.375737047648922
+      },
+      "actualCardContrast": 11.419532305057569,
+      "border": 1.3093789704457424,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Monokai Reversed",
+        "label": "Bearded Theme Monokai Reversed"
+      },
+      "ratios": {
+        "text": 10.71500063282137,
+        "secondary": 5.527631608030182,
+        "muted": 4.504776501600364,
+        "field-text": 10.627640975909209,
+        "button-text": 4.7743599702963575,
+        "chrome-text": 11.419756832985305,
+        "selected-text": 8.614506008480431
+      },
+      "actualCardContrast": 10.71500063282137,
+      "border": 1.3101497745115183,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Solarized",
+        "label": "Bearded Theme Solarized"
+      },
+      "ratios": {
+        "text": 11.45804299018978,
+        "secondary": 6.3993071946016125,
+        "muted": 4.5304802554167205,
+        "field-text": 9.518027609225289,
+        "button-text": 4.507416883809253,
+        "chrome-text": 12.593986575171597,
+        "selected-text": 8.647554871481555
+      },
+      "actualCardContrast": 11.45804299018978,
+      "border": 1.3103543202766363,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Solarized Reversed",
+        "label": "Bearded Theme Solarized Reversed"
+      },
+      "ratios": {
+        "text": 10.95657839598252,
+        "secondary": 6.025118233226282,
+        "muted": 4.515716641603679,
+        "field-text": 10.929207038149023,
+        "button-text": 4.506456738210579,
+        "chrome-text": 11.956077601066585,
+        "selected-text": 8.596086383008108
+      },
+      "actualCardContrast": 10.95657839598252,
+      "border": 1.3037502268358379,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Solarized Light",
+        "label": "Bearded Theme Solarized Light"
+      },
+      "ratios": {
+        "text": 17.97268514897939,
+        "secondary": 11.421602692903669,
+        "muted": 11.421602692903669,
+        "field-text": 19.76872905995244,
+        "button-text": 11.037854004987265,
+        "chrome-text": 15.110657132237302,
+        "selected-text": 17.674134461956033
+      },
+      "actualCardContrast": 17.97268514897939,
+      "border": 1.3016441614985292,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Oceanic",
+        "label": "Bearded Theme Oceanic"
+      },
+      "ratios": {
+        "text": 11.28285001344554,
+        "secondary": 6.1763938305288,
+        "muted": 4.538251034378282,
+        "field-text": 9.564979559290938,
+        "button-text": 4.508655049568876,
+        "chrome-text": 12.322623789535337,
+        "selected-text": 8.24883787365531
+      },
+      "actualCardContrast": 11.28285001344554,
+      "border": 1.3121925196647846,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Oceanic Reversed",
+        "label": "Bearded Theme Oceanic Reversed"
+      },
+      "ratios": {
+        "text": 10.841833397368617,
+        "secondary": 5.914226404207316,
+        "muted": 4.509360013570039,
+        "field-text": 10.721849575939792,
+        "button-text": 4.527302781795947,
+        "chrome-text": 11.781860098993135,
+        "selected-text": 8.667313844370954
+      },
+      "actualCardContrast": 10.841833397368617,
+      "border": 1.305169543406982,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc",
+        "label": "Bearded Theme Arc"
+      },
+      "ratios": {
+        "text": 11.424177353054608,
+        "secondary": 5.974028956651786,
+        "muted": 4.50070789894189,
+        "field-text": 9.953656630961722,
+        "button-text": 4.513341076436415,
+        "chrome-text": 12.29213674440322,
+        "selected-text": 9.058587082456624
+      },
+      "actualCardContrast": 11.424177353054608,
+      "border": 1.300227520072087,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc Eggplant",
+        "label": "Bearded Theme Arc Eggplant"
+      },
+      "ratios": {
+        "text": 10.822574975040075,
+        "secondary": 5.403346938201511,
+        "muted": 4.5061936441854265,
+        "field-text": 9.855706277872098,
+        "button-text": 5.905021870844579,
+        "chrome-text": 11.325385948854027,
+        "selected-text": 8.367737115128277
+      },
+      "actualCardContrast": 10.822574975040075,
+      "border": 1.3029873254883193,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc EolStorm",
+        "label": "Bearded Theme Arc EolStorm"
+      },
+      "ratios": {
+        "text": 11.300750000746158,
+        "secondary": 6.057711858390494,
+        "muted": 4.501380889665019,
+        "field-text": 9.738143907655349,
+        "button-text": 4.520349781446433,
+        "chrome-text": 12.282045582794183,
+        "selected-text": 9.206214070544753
+      },
+      "actualCardContrast": 11.300750000746158,
+      "border": 1.301384567105003,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc Blueberry",
+        "label": "Bearded Theme Arc Blueberry"
+      },
+      "ratios": {
+        "text": 10.658649171515567,
+        "secondary": 5.2459557127715755,
+        "muted": 4.507800662944054,
+        "field-text": 9.785625319025849,
+        "button-text": 5.534845532491169,
+        "chrome-text": 11.112569481530233,
+        "selected-text": 8.307390480638999
+      },
+      "actualCardContrast": 10.658649171515567,
+      "border": 1.3069347845702401,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Arc Reversed",
+        "label": "Bearded Theme Arc Reversed"
+      },
+      "ratios": {
+        "text": 10.692861529995156,
+        "secondary": 5.531425239438291,
+        "muted": 4.529548414649364,
+        "field-text": 10.578212757042428,
+        "button-text": 4.599650290642145,
+        "chrome-text": 11.44619099969837,
+        "selected-text": 8.654798275483435
+      },
+      "actualCardContrast": 10.692861529995156,
+      "border": 1.3070264469813062,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Amethyst",
+        "label": "Bearded Theme Black & Amethyst"
+      },
+      "ratios": {
+        "text": 11.151327358837369,
+        "secondary": 5.694850852159292,
+        "muted": 4.500863882381264,
+        "field-text": 10.134226573587348,
+        "button-text": 5.929640472475462,
+        "chrome-text": 11.691044280098607,
+        "selected-text": 8.340252810296048
+      },
+      "actualCardContrast": 11.151327358837369,
+      "border": 1.3006875443654229,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Amethyst Soft",
+        "label": "Bearded Theme Black & Amethyst Soft"
+      },
+      "ratios": {
+        "text": 10.953386757913611,
+        "secondary": 5.417419072354359,
+        "muted": 4.513913634608301,
+        "field-text": 9.971995406423426,
+        "button-text": 5.638889478862819,
+        "chrome-text": 11.495386879384771,
+        "selected-text": 8.65222443690816
+      },
+      "actualCardContrast": 10.953386757913611,
+      "border": 1.3162453564606127,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Diamond",
+        "label": "Bearded Theme Black & Diamond"
+      },
+      "ratios": {
+        "text": 11.151327358837369,
+        "secondary": 5.694850852159292,
+        "muted": 4.500863882381264,
+        "field-text": 10.134226573587348,
+        "button-text": 4.518517644711529,
+        "chrome-text": 11.691044280098607,
+        "selected-text": 8.340252810296048
+      },
+      "actualCardContrast": 11.151327358837369,
+      "border": 1.3006875443654229,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Diamond Soft",
+        "label": "Bearded Theme Black & Diamond Soft"
+      },
+      "ratios": {
+        "text": 11.33575813220012,
+        "secondary": 5.923850904504586,
+        "muted": 4.523272654808508,
+        "field-text": 10.05125670305059,
+        "button-text": 4.505235977703187,
+        "chrome-text": 12.04786250742013,
+        "selected-text": 8.701458511808305
+      },
+      "actualCardContrast": 11.33575813220012,
+      "border": 1.3089846956462399,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Emerald",
+        "label": "Bearded Theme Black & Emerald"
+      },
+      "ratios": {
+        "text": 11.151327358837369,
+        "secondary": 5.694850852159292,
+        "muted": 4.500863882381264,
+        "field-text": 10.134226573587348,
+        "button-text": 4.506056331648324,
+        "chrome-text": 11.691044280098607,
+        "selected-text": 8.340252810296048
+      },
+      "actualCardContrast": 11.151327358837369,
+      "border": 1.3006875443654229,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Emerald Soft",
+        "label": "Bearded Theme Black & Emerald Soft"
+      },
+      "ratios": {
+        "text": 11.576486152012672,
+        "secondary": 6.243036693833969,
+        "muted": 4.501983142428646,
+        "field-text": 9.995626027559219,
+        "button-text": 4.506724963053442,
+        "chrome-text": 12.527711382177262,
+        "selected-text": 8.685113664455764
+      },
+      "actualCardContrast": 11.576486152012672,
+      "border": 1.3107395572943603,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Gold",
+        "label": "Bearded Theme Black & Gold"
+      },
+      "ratios": {
+        "text": 11.151327358837369,
+        "secondary": 5.694850852159292,
+        "muted": 4.500863882381264,
+        "field-text": 10.134226573587348,
+        "button-text": 4.679330802782498,
+        "chrome-text": 11.691044280098607,
+        "selected-text": 8.340252810296048
+      },
+      "actualCardContrast": 11.151327358837369,
+      "border": 1.3006875443654229,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Gold Soft",
+        "label": "Bearded Theme Black & Gold Soft"
+      },
+      "ratios": {
+        "text": 11.52647613329852,
+        "secondary": 6.124163215212512,
+        "muted": 4.521333650613549,
+        "field-text": 10.013452843611867,
+        "button-text": 4.53093678106468,
+        "chrome-text": 12.318471648244744,
+        "selected-text": 8.648751545454978
+      },
+      "actualCardContrast": 11.52647613329852,
+      "border": 1.304013487030432,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Ruby",
+        "label": "Bearded Theme Black & Ruby"
+      },
+      "ratios": {
+        "text": 11.151327358837369,
+        "secondary": 5.694850852159292,
+        "muted": 4.500863882381264,
+        "field-text": 10.134226573587348,
+        "button-text": 4.5212400506104355,
+        "chrome-text": 11.691044280098607,
+        "selected-text": 8.340252810296048
+      },
+      "actualCardContrast": 11.151327358837369,
+      "border": 1.3006875443654229,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Black & Ruby Soft",
+        "label": "Bearded Theme Black & Ruby Soft"
+      },
+      "ratios": {
+        "text": 11.316508435788025,
+        "secondary": 5.838843626601109,
+        "muted": 4.5117798333396415,
+        "field-text": 10.012186438413481,
+        "button-text": 4.524418243390785,
+        "chrome-text": 12.051532747598518,
+        "selected-text": 8.794733693023518
+      },
+      "actualCardContrast": 11.316508435788025,
+      "border": 1.3041515962602095,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Stained Purple",
+        "label": "Bearded Theme Stained Purple"
+      },
+      "ratios": {
+        "text": 11.238526035167782,
+        "secondary": 5.652949777097305,
+        "muted": 4.541550010981561,
+        "field-text": 10.072054468110714,
+        "button-text": 4.988274865738765,
+        "chrome-text": 11.908533474012977,
+        "selected-text": 8.92241228130971
+      },
+      "actualCardContrast": 11.238526035167782,
+      "border": 1.3035700419162626,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Stained Blue",
+        "label": "Bearded Theme Stained Blue"
+      },
+      "ratios": {
+        "text": 10.972631449524567,
+        "secondary": 5.4571374605531116,
+        "muted": 4.539780094114734,
+        "field-text": 9.935527135172952,
+        "button-text": 5.120261914854544,
+        "chrome-text": 11.479607875792098,
+        "selected-text": 8.51862996874957
+      },
+      "actualCardContrast": 10.972631449524567,
+      "border": 1.3026370636665685,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Vivid Purple",
+        "label": "Bearded Theme Vivid Purple"
+      },
+      "ratios": {
+        "text": 10.731161095241575,
+        "secondary": 5.0608275088335155,
+        "muted": 4.515669492647221,
+        "field-text": 9.973802026706126,
+        "button-text": 6.7244725010470034,
+        "chrome-text": 11.145056183281493,
+        "selected-text": 8.742640127582618
+      },
+      "actualCardContrast": 10.731161095241575,
+      "border": 1.3018897575392536,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Vivid Black",
+        "label": "Bearded Theme Vivid Black"
+      },
+      "ratios": {
+        "text": 11.144825255702196,
+        "secondary": 5.664226949662095,
+        "muted": 4.537690889162286,
+        "field-text": 10.098020480329387,
+        "button-text": 5.07719878772301,
+        "chrome-text": 11.651947795040872,
+        "selected-text": 8.328930521934101
+      },
+      "actualCardContrast": 11.144825255702196,
+      "border": 1.3000028371455208,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Vivid Light",
+        "label": "Bearded Theme Vivid Light"
+      },
+      "ratios": {
+        "text": 14.89446008111696,
+        "secondary": 11.230579566943533,
+        "muted": 8.430010972069605,
+        "field-text": 16.86517987468609,
+        "button-text": 10.128220463608093,
+        "chrome-text": 11.744157211798163,
+        "selected-text": 14.491686795668373
+      },
+      "actualCardContrast": 14.89446008111696,
+      "border": 1.3200857521252602,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Will",
+        "label": "Bearded Theme feat. Will"
+      },
+      "ratios": {
+        "text": 10.083374057822137,
+        "secondary": 6.910991512385915,
+        "muted": 4.517369593082756,
+        "field-text": 9.107151665475884,
+        "button-text": 6.889980816465414,
+        "chrome-text": 10.442261137781728,
+        "selected-text": 7.5346079988676085
+      },
+      "actualCardContrast": 10.083374057822137,
+      "border": 1.3130306352980226,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Gold D Raynh",
+        "label": "Bearded Theme feat. Gold D Raynh"
+      },
+      "ratios": {
+        "text": 10.733926773864672,
+        "secondary": 5.309959835101923,
+        "muted": 4.540196278730425,
+        "field-text": 9.825484956821557,
+        "button-text": 4.525052590041547,
+        "chrome-text": 11.226464320155594,
+        "selected-text": 8.409416037387054
+      },
+      "actualCardContrast": 10.733926773864672,
+      "border": 1.3001934832052595,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Melle Julie",
+        "label": "Bearded Theme feat. Melle Julie"
+      },
+      "ratios": {
+        "text": 11.395099601018462,
+        "secondary": 6.002896516831335,
+        "muted": 4.509315917452036,
+        "field-text": 10.023631233606157,
+        "button-text": 4.505098167771723,
+        "chrome-text": 12.245663403505253,
+        "selected-text": 8.768437281761926
+      },
+      "actualCardContrast": 11.395099601018462,
+      "border": 1.302748829330474,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Melle Julie Light",
+        "label": "Bearded Theme feat. Melle Julie Light"
+      },
+      "ratios": {
+        "text": 16.63794921324018,
+        "secondary": 10.759025704788964,
+        "muted": 10.759025704788964,
+        "field-text": 18.88989887417207,
+        "button-text": 9.597784124253375,
+        "chrome-text": 13.02038424388288,
+        "selected-text": 16.171274675029952
+      },
+      "actualCardContrast": 16.63794921324018,
+      "border": 1.320553882445856,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. Mintshake D Raynh",
+        "label": "Bearded Theme feat. Mintshake D Raynh"
+      },
+      "ratios": {
+        "text": 13.933786957910714,
+        "secondary": 11.332957999117617,
+        "muted": 7.761149744383678,
+        "field-text": 15.770740296006691,
+        "button-text": 10.543935070099963,
+        "chrome-text": 10.996003138824621,
+        "selected-text": 13.546347053901222
+      },
+      "actualCardContrast": 13.933786957910714,
+      "border": 1.3187703946988623,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme feat. WebDevCody",
+        "label": "Bearded Theme feat. WebDevCody"
+      },
+      "ratios": {
+        "text": 14.86998194225523,
+        "secondary": 8.888439898595928,
+        "muted": 4.5161765586552685,
+        "field-text": 12.581285798021382,
+        "button-text": 5.674134665615437,
+        "chrome-text": 15.828612102500818,
+        "selected-text": 7.937885835618777
+      },
+      "actualCardContrast": 14.86998194225523,
+      "border": 1.3036069718047665,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Earth",
+        "label": "Bearded Theme Earth"
+      },
+      "ratios": {
+        "text": 8.026274137429025,
+        "secondary": 4.910483734594415,
+        "muted": 4.513516451238492,
+        "field-text": 7.075107883256507,
+        "button-text": 4.634555546487685,
+        "chrome-text": 8.556118281888976,
+        "selected-text": 6.13437702900345
+      },
+      "actualCardContrast": 8.026274137429025,
+      "border": 1.3089141289597996,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Coffee",
+        "label": "Bearded Theme Coffee"
+      },
+      "ratios": {
+        "text": 8.444075550514173,
+        "secondary": 5.272759028591527,
+        "muted": 4.5119950682325305,
+        "field-text": 7.294628118827093,
+        "button-text": 4.785425317647504,
+        "chrome-text": 9.129599423689742,
+        "selected-text": 5.852572579658545
+      },
+      "actualCardContrast": 8.444075550514173,
+      "border": 1.300498738984822,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Coffee Reversed",
+        "label": "Bearded Theme Coffee Reversed"
+      },
+      "ratios": {
+        "text": 7.962567736496895,
+        "secondary": 4.944563195653222,
+        "muted": 4.539761153013633,
+        "field-text": 7.874925818015877,
+        "button-text": 4.883431482283141,
+        "chrome-text": 8.562667884392644,
+        "selected-text": 5.334920563502513
+      },
+      "actualCardContrast": 7.962567736496895,
+      "border": 1.3023735560272105,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Coffee Cream",
+        "label": "Bearded Theme Coffee Cream"
+      },
+      "ratios": {
+        "text": 10.959079871655398,
+        "secondary": 10.207537470309942,
+        "muted": 6.39573601645946,
+        "field-text": 12.430394823480794,
+        "button-text": 8.797512334909388,
+        "chrome-text": 8.454266545760674,
+        "selected-text": 12.502913057480134
+      },
+      "actualCardContrast": 10.959079871655398,
+      "border": 1.3602847928288975,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Void",
+        "label": "Bearded Theme Void"
+      },
+      "ratios": {
+        "text": 10.725200687677912,
+        "secondary": 5.27218116428945,
+        "muted": 4.500404439794464,
+        "field-text": 9.786526729468411,
+        "button-text": 6.109439736814836,
+        "chrome-text": 11.169362457595916,
+        "selected-text": 8.40448450794325
+      },
+      "actualCardContrast": 10.725200687677912,
+      "border": 1.3110251147351364,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Altica",
+        "label": "Bearded Theme Altica"
+      },
+      "ratios": {
+        "text": 11.263463755512138,
+        "secondary": 5.439958556936606,
+        "muted": 4.540314143813334,
+        "field-text": 10.021300690456918,
+        "button-text": 5.127205292230214,
+        "chrome-text": 11.980642791412736,
+        "selected-text": 8.565864806829634
+      },
+      "actualCardContrast": 11.263463755512138,
+      "border": 1.311978467901293,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Anthracite",
+        "label": "Bearded Theme Anthracite"
+      },
+      "ratios": {
+        "text": 11.352298489888463,
+        "secondary": 5.852218229385695,
+        "muted": 4.503550153762511,
+        "field-text": 10.112997890302275,
+        "button-text": 4.958832299720386,
+        "chrome-text": 12.011560461658002,
+        "selected-text": 8.668191835493653
+      },
+      "actualCardContrast": 11.352298489888463,
+      "border": 1.3062598421524558,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Light",
+        "label": "Bearded Theme Light"
+      },
+      "ratios": {
+        "text": 15.739640714075636,
+        "secondary": 11.202239077594438,
+        "muted": 9.140895644969191,
+        "field-text": 17.878487079174633,
+        "button-text": 11.281914321417913,
+        "chrome-text": 12.348703209471623,
+        "selected-text": 15.278998800312836
+      },
+      "actualCardContrast": 15.739640714075636,
+      "border": 1.3268447949128779,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Surprising Eggplant",
+        "label": "Bearded Theme Surprising Eggplant"
+      },
+      "ratios": {
+        "text": 10.93902466556739,
+        "secondary": 5.411003337494022,
+        "muted": 4.541569412468065,
+        "field-text": 9.958964281072817,
+        "button-text": 4.756304067832857,
+        "chrome-text": 11.441117406679686,
+        "selected-text": 8.06599556382529
+      },
+      "actualCardContrast": 10.93902466556739,
+      "border": 1.3017684435333916,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Surprising Blueberry",
+        "label": "Bearded Theme Surprising Blueberry"
+      },
+      "ratios": {
+        "text": 11.122772013360242,
+        "secondary": 5.64087207912905,
+        "muted": 4.51966368384769,
+        "field-text": 9.94261679503413,
+        "button-text": 4.501299999506238,
+        "chrome-text": 11.740602119942084,
+        "selected-text": 8.31762316426335
+      },
+      "actualCardContrast": 11.122772013360242,
+      "border": 1.3020545663215244,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Surprising Watermelon",
+        "label": "Bearded Theme Surprising Watermelon"
+      },
+      "ratios": {
+        "text": 11.795009618561979,
+        "secondary": 6.438220996168566,
+        "muted": 4.514480049487321,
+        "field-text": 10.0063326317085,
+        "button-text": 4.9004154589704445,
+        "chrome-text": 12.741306403486062,
+        "selected-text": 8.110653110745611
+      },
+      "actualCardContrast": 11.795009618561979,
+      "border": 1.3097924609396125,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Ebony",
+        "label": "Bearded Theme HC Ebony"
+      },
+      "ratios": {
+        "text": 11.162976293164862,
+        "secondary": 5.666909834342091,
+        "muted": 4.534154678228683,
+        "field-text": 10.083954156123365,
+        "button-text": 4.510052868824163,
+        "chrome-text": 11.709155116141863,
+        "selected-text": 8.581347739888574
+      },
+      "actualCardContrast": 11.162976293164862,
+      "border": 1.3098959647345025,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Midnight Void",
+        "label": "Bearded Theme HC Midnight Void"
+      },
+      "ratios": {
+        "text": 11.483775890507122,
+        "secondary": 6.0268623574496045,
+        "muted": 4.514860507663123,
+        "field-text": 9.998214221515555,
+        "button-text": 4.536346256490136,
+        "chrome-text": 12.275486285753438,
+        "selected-text": 8.690180285900517
+      },
+      "actualCardContrast": 11.483775890507122,
+      "border": 1.3103449179190116,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Wonderland Wood",
+        "label": "Bearded Theme HC Wonderland Wood"
+      },
+      "ratios": {
+        "text": 11.51954632637448,
+        "secondary": 5.789780517327132,
+        "muted": 4.502523119027295,
+        "field-text": 10.374333248344772,
+        "button-text": 4.526415825426395,
+        "chrome-text": 12.19599992593712,
+        "selected-text": 7.5386307079654715
+      },
+      "actualCardContrast": 11.51954632637448,
+      "border": 1.3040382727214217,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Brewing Storm",
+        "label": "Bearded Theme HC Brewing Storm"
+      },
+      "ratios": {
+        "text": 11.154845645253484,
+        "secondary": 6.055664824517445,
+        "muted": 4.521363813199858,
+        "field-text": 9.438503620323731,
+        "button-text": 4.538638241029494,
+        "chrome-text": 12.180766108591364,
+        "selected-text": 6.940315939064019
+      },
+      "actualCardContrast": 11.154845645253484,
+      "border": 1.3103960795012055,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Minuit",
+        "label": "Bearded Theme HC Minuit"
+      },
+      "ratios": {
+        "text": 11.138366846476309,
+        "secondary": 5.543343811041538,
+        "muted": 4.513843646599017,
+        "field-text": 10.033394450413434,
+        "button-text": 4.590509530514292,
+        "chrome-text": 11.748789314366878,
+        "selected-text": 6.096847227242234
+      },
+      "actualCardContrast": 11.138366846476309,
+      "border": 1.3115368477844003,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Chocolate Espresso",
+        "label": "Bearded Theme HC Chocolate Espresso"
+      },
+      "ratios": {
+        "text": 8.187954190646579,
+        "secondary": 5.1366058925914695,
+        "muted": 4.5264854823536185,
+        "field-text": 7.0537771431647265,
+        "button-text": 5.287116716296991,
+        "chrome-text": 8.895648184412282,
+        "selected-text": 5.650099604688354
+      },
+      "actualCardContrast": 8.187954190646579,
+      "border": 1.312978499961862,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme HC Flurry",
+        "label": "Bearded Theme HC Flurry"
+      },
+      "ratios": {
+        "text": 11.733179265829508,
+        "secondary": 4.763432463611615,
+        "muted": 6.553796933974885,
+        "field-text": 13.66972079409091,
+        "button-text": 7.585890443862538,
+        "chrome-text": 9.213375687529437,
+        "selected-text": 4.522810582128549
+      },
+      "actualCardContrast": 11.733179265829508,
+      "border": 1.424562271379067,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Raspberry",
+        "label": "Bearded Theme Milkshake Raspberry"
+      },
+      "ratios": {
+        "text": 14.926593008188838,
+        "secondary": 10.485827142076023,
+        "muted": 9.220405195101433,
+        "field-text": 17.226422181737252,
+        "button-text": 7.3116435569270495,
+        "chrome-text": 11.221615771216348,
+        "selected-text": 4.502595942896708
+      },
+      "actualCardContrast": 14.926593008188838,
+      "border": 1.3929909786946555,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Blueberry",
+        "label": "Bearded Theme Milkshake Blueberry"
+      },
+      "ratios": {
+        "text": 12.992241782371469,
+        "secondary": 9.316247765696177,
+        "muted": 8.626981738173223,
+        "field-text": 15.484698430769775,
+        "button-text": 5.833147892776332,
+        "chrome-text": 9.225984457161747,
+        "selected-text": 4.515234387393463
+      },
+      "actualCardContrast": 12.992241782371469,
+      "border": 1.479668399977229,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Mango",
+        "label": "Bearded Theme Milkshake Mango"
+      },
+      "ratios": {
+        "text": 15.329717988468225,
+        "secondary": 10.669071549446851,
+        "muted": 9.386810992436459,
+        "field-text": 17.262911406985427,
+        "button-text": 8.62698256212838,
+        "chrome-text": 12.036210400997657,
+        "selected-text": 4.5251070540903156
+      },
+      "actualCardContrast": 15.329717988468225,
+      "border": 1.3254401252265817,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Mint",
+        "label": "Bearded Theme Milkshake Mint"
+      },
+      "ratios": {
+        "text": 17.35221854106925,
+        "secondary": 11.14010489769402,
+        "muted": 11.14010489769402,
+        "field-text": 19.42157374457026,
+        "button-text": 10.446627029925262,
+        "chrome-text": 13.967471372568037,
+        "selected-text": 4.50661418005996
+      },
+      "actualCardContrast": 17.35221854106925,
+      "border": 1.3026207738368025,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Milkshake Vanilla Banana",
+        "label": "Bearded Theme Milkshake Vanilla Banana"
+      },
+      "ratios": {
+        "text": 15.810915605513461,
+        "secondary": 10.377735587399991,
+        "muted": 10.377735587399991,
+        "field-text": 17.640725350016158,
+        "button-text": 9.05644105372776,
+        "chrome-text": 12.77959601568219,
+        "selected-text": 4.5355222115517355
+      },
+      "actualCardContrast": 15.810915605513461,
+      "border": 1.303607581255244,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Themanopia (Experimental)",
+        "label": "Bearded Themanopia (Experimental)"
+      },
+      "ratios": {
+        "text": 11.399017756108343,
+        "secondary": 5.88679336513492,
+        "muted": 4.500851084149927,
+        "field-text": 10.043368668653962,
+        "button-text": 5.991045604906053,
+        "chrome-text": 12.144737644755189,
+        "selected-text": 8.885293288512656
+      },
+      "actualCardContrast": 11.399017756108343,
+      "border": 1.3024154242414863,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Aquarelle Cymbidium",
+        "label": "Bearded Theme Aquarelle Cymbidium"
+      },
+      "ratios": {
+        "text": 11.382123201463628,
+        "secondary": 6.122669471899443,
+        "muted": 4.524689171820116,
+        "field-text": 9.774674451711228,
+        "button-text": 4.680600183618592,
+        "chrome-text": 12.354605996657604,
+        "selected-text": 9.050279944768263
+      },
+      "actualCardContrast": 11.382123201463628,
+      "border": 1.304315522029422,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Aquarelle Hydrangea",
+        "label": "Bearded Theme Aquarelle Hydrangea"
+      },
+      "ratios": {
+        "text": 11.607035913685586,
+        "secondary": 6.055089590750486,
+        "muted": 4.504920362122472,
+        "field-text": 10.130845963913972,
+        "button-text": 4.780994358124508,
+        "chrome-text": 12.502027978694464,
+        "selected-text": 9.636226651996425
+      },
+      "actualCardContrast": 11.607035913685586,
+      "border": 1.3082727434192678,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme Aquarelle Lilac",
+        "label": "Bearded Theme Aquarelle Lilac"
+      },
+      "ratios": {
+        "text": 11.582107298222452,
+        "secondary": 6.029005802977625,
+        "muted": 4.508165039599092,
+        "field-text": 10.147275127432806,
+        "button-text": 6.321660576113074,
+        "chrome-text": 12.438974458866465,
+        "selected-text": 9.379910833587829
+      },
+      "actualCardContrast": 11.582107298222452,
+      "border": 1.3006054233391626,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "BeardedBear.beardedtheme:Bearded Theme OLED (Experimental)",
+        "label": "Bearded Theme OLED (Experimental)"
+      },
+      "ratios": {
+        "text": 10.015715656764469,
+        "secondary": 4.892356608831516,
+        "muted": 4.557768319672582,
+        "field-text": 9.663731272411473,
+        "button-text": 6.885228783526504,
+        "chrome-text": 10.015715656764469,
+        "selected-text": 7.2177679734630455
+      },
+      "actualCardContrast": 10.015715656764469,
+      "border": 1.3876472191387146,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "nc-lang.nc-language:nC Sovereign Dark",
+        "label": "nC Sovereign Dark"
+      },
+      "ratios": {
+        "text": 17.917573640561372,
+        "secondary": 17.917573640561372,
+        "muted": 4.509621019490161,
+        "field-text": 17.917573640561372,
+        "button-text": 4.5077027546051,
+        "chrome-text": 17.917573640561372,
+        "selected-text": 17.917573640561372
+      },
+      "actualCardContrast": 17.917573640561372,
+      "border": 1.8396302231436619,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "nc-lang.nc-language:nC Source Light",
+        "label": "nC Source Light"
+      },
+      "ratios": {
+        "text": 15.706085342467786,
+        "secondary": 15.706085342467786,
+        "muted": 4.504504244786,
+        "field-text": 15.706085342467786,
+        "button-text": 5.470853775973792,
+        "chrome-text": 15.706085342467786,
+        "selected-text": 15.706085342467786
+      },
+      "actualCardContrast": 15.706085342467786,
+      "border": 1.414133360285862,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "nc-lang.nc-language:nC Aqua Runtime",
+        "label": "nC Aqua Runtime"
+      },
+      "ratios": {
+        "text": 17.917573640561372,
+        "secondary": 17.917573640561372,
+        "muted": 11.236593784435913,
+        "field-text": 17.917573640561372,
+        "button-text": 4.5077027546051,
+        "chrome-text": 17.917573640561372,
+        "selected-text": 17.917573640561372
+      },
+      "actualCardContrast": 17.917573640561372,
+      "border": 1.8396302231436619,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "nc-lang.nc-language:nC Crimson Diagnostics",
+        "label": "nC Crimson Diagnostics"
+      },
+      "ratios": {
+        "text": 17.917573640561372,
+        "secondary": 17.917573640561372,
+        "muted": 4.898522986836623,
+        "field-text": 17.917573640561372,
+        "button-text": 4.5077027546051,
+        "chrome-text": 17.917573640561372,
+        "selected-text": 17.917573640561372
+      },
+      "actualCardContrast": 17.917573640561372,
+      "border": 1.8396302231436619,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "nc-lang.nc-language:nC Systems Spectrum",
+        "label": "nC Systems Spectrum"
+      },
+      "ratios": {
+        "text": 14.34163767086144,
+        "secondary": 14.34163767086144,
+        "muted": 4.504653192620435,
+        "field-text": 14.34163767086144,
+        "button-text": 4.5077027546051,
+        "chrome-text": 14.34163767086144,
+        "selected-text": 14.34163767086144
+      },
+      "actualCardContrast": 14.34163767086144,
+      "border": 1.8682677603441742,
+      "overflow": false,
+      "modelSame": true
+    },
+    {
+      "theme": {
+        "id": "nc-lang.nc-language:nC Polyglot Systems",
+        "label": "nC Polyglot Systems"
+      },
+      "ratios": {
+        "text": 14.34163767086144,
+        "secondary": 14.34163767086144,
+        "muted": 4.504653192620435,
+        "field-text": 14.34163767086144,
+        "button-text": 4.5077027546051,
+        "chrome-text": 14.34163767086144,
+        "selected-text": 14.34163767086144
+      },
+      "actualCardContrast": 14.34163767086144,
+      "border": 1.8682677603441742,
+      "overflow": false,
+      "modelSame": true
+    }
+  ],
+  "errors": []
+}

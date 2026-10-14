@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "All four pictured Settings sections retain controls and contrast in Day/Dark/Forest",
+    "Dragging a lateral panel past its minimum collapses it and allows restoration",
+    "Binary bytes paginate and inspect numeric values; Save leaves the file byte-identical",
+    "Closed binary tabs reopen; keyboard navigation restores the text model",
+    "nC uses its original language-extension icon",
+    "All five Melody tools execute local calculations against unsaved evidence without changing source",
+    "Real Python pauses produce a value comparison and accurately report unavailable machine access",
+    "Real GCC/LLDB session returns native instruction addresses and disassembly",
+    "Real LLDB readMemory exposes bytes from the paused instruction pointer",
+    "Avatar starts compact, expands without a white hover, and opens activity with a source-connected reveal",
+    "Reduced motion bypasses the profile morph"
+  ],
+  "errors": []
+}

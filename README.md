@@ -31,7 +31,8 @@ compatibility. Windows is the verified binary target for this release. See the
 
 R8 adds a paged binary inspector, original nC identity, recoverable editor tabs,
 five local Melody evidence tools, and actual DAP memory/disassembly with pause
-comparison. See the [R8 screenshot gallery](docs/media/r7/README.md).
+comparison. See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
+and the [R8 verification record](docs/VERIFICATION_054_R8.md).
 
 ## What makes it useful
 

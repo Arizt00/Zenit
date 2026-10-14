@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Original factory nC grammar loads; its icon theme is not automatically selected",
+    "nC icon changes leave Python identity unchanged",
+    "Clicking Melody fetches and selects models in a subpanel without opening Settings",
+    "Destination uses cached catalogs, filter and Escape; no false account-verification state",
+    "Opening Activity and leaving the home surface preserves its parallax position",
+    "Entering the IDE and clicking Z\u00e9nit back home use the continuous view transition",
+    "IDE profile opens with the same source-connected morph",
+    "Reduced motion switches screens immediately and all flows have no uncaught errors"
+  ],
+  "errors": [],
+  "catalog": "Explicit deterministic fixture; no account verification claim."
+}

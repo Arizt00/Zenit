@@ -72,7 +72,7 @@ execution or an exhaustive CPU instruction trace. A resumed or replaced session
 invalidates an in-flight machine result.
 
 The development checks include an actual GCC/LLDB process, disassembly and
-memory reads; actual Python pauses and value comparisons; all 69 currently
+memory reads; actual Python pauses and value comparisons; all 75 currently
 installed theme variants; real file I/O and the five local calculations. AI
 regressions use an explicit deterministic transport and do not measure model
 intelligence. Packaged Windows verification is recorded separately.
