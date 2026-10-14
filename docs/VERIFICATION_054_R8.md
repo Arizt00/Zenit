@@ -27,6 +27,9 @@ R8 packages that work alongside the user's active R7 installation.
   Its Node engine was not started in the user's profile. An isolated trusted
   engine regression registered its actual language providers and returned
   semantic tokens without unsupported API calls.
+- The public Windows R8 release contains five assets: installer, portable,
+  manifest, native verification and SHA-256 list. Every remote asset digest
+  matches its local file. Previous releases and their assets are retained.
 
 The quick model selector is tested with an explicitly declared catalog. AI
 consultation tests use deterministic transports to verify scope, read-only

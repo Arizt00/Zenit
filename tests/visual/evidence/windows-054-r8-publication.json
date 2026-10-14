@@ -1,0 +1,46 @@
+{
+  "published": true,
+  "release": "https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.8",
+  "sourceCommit": "4ee4ff2e1fdccd4dff6df232f3928c1303108fb0",
+  "revision": 8,
+  "signed": false,
+  "remoteDigestsVerified": true,
+  "existingAssetsRetained": true,
+  "assets": [
+    {
+      "name": "Zenit-0.5.4-R8-Windows-Setup.exe",
+      "bytes": 130527796,
+      "sha256": "13375b101a9992b9c6abf29ac9455d8be01cea3b64b7501038a0046147f9a079",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.8/Zenit-0.5.4-R8-Windows-Setup.exe",
+      "id": 641107687
+    },
+    {
+      "name": "Zenit-0.5.4-R8-Windows-Portable.zip",
+      "bytes": 78322042,
+      "sha256": "ebdcbe55046beb9d7168c7579d05cee6380607663345657e9c01b871698f1556",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.8/Zenit-0.5.4-R8-Windows-Portable.zip",
+      "id": 641108067
+    },
+    {
+      "name": "Zenit-0.5.4-R8-win32-x86_64-manifest.json",
+      "bytes": 550,
+      "sha256": "6547a8bf837088e40f283de9288d867501e0f06f7078e312e02d9c45ee9ee9ca",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.8/Zenit-0.5.4-R8-win32-x86_64-manifest.json",
+      "id": 641108251
+    },
+    {
+      "name": "Zenit-0.5.4-R8-win32-x86_64-verification.json",
+      "bytes": 1298,
+      "sha256": "b647dc26f661b431d5728743846f5df25c8b5cc4eb31dc0e8e0d8f0a59aded8e",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.8/Zenit-0.5.4-R8-win32-x86_64-verification.json",
+      "id": 641108299
+    },
+    {
+      "name": "Zenit-0.5.4-R8-win32-x86_64-SHA256.txt",
+      "bytes": 203,
+      "sha256": "e19eb722d561680d1f912cff3edd3c23696a583bf9f45a1862a70ed1a5786753",
+      "url": "https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.8/Zenit-0.5.4-R8-win32-x86_64-SHA256.txt",
+      "id": 641108336
+    }
+  ]
+}
