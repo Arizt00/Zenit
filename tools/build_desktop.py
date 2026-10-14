@@ -157,7 +157,7 @@ def main():
             portable=ROOT/f'dist/{prefix}-Windows-Portable.zip'
             with zipfile.ZipFile(portable,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
                 for file in (ROOT/'dist/Zenit').rglob('*'):
-                    if file.is_file():archive.write(file,'Zenit/'+file.relative_to(ROOT/'dist/Zenit').as_posix())
+                    if file.is_file() and '__pycache__' not in file.parts and file.suffix!='.pyc':archive.write(file,'Zenit/'+file.relative_to(ROOT/'dist/Zenit').as_posix())
             outputs.append(portable)
         elif sys.platform=='darwin':outputs=mac_package(prefix)
         elif sys.platform.startswith('linux'):outputs=linux_packages(ROOT/'dist/Zenit',prefix)

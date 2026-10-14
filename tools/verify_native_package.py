@@ -31,7 +31,7 @@ def main():
         assert hashlib.sha256(archive.extract(launcher)).hexdigest()==sha256(ROOT/'dist'/launcher)
         payload=ROOT/'dist/Zenit'
         entries={name.replace('\\','/'):name for name in archive.toc}
-        files={file.relative_to(payload).as_posix() for file in payload.rglob('*') if file.is_file()}
+        files={file.relative_to(payload).as_posix() for file in payload.rglob('*') if file.is_file() and '__pycache__' not in file.parts and file.suffix!='.pyc'}
         assert {name.removeprefix('payload/') for name in entries if name.startswith('payload/')}==files, 'Installer payload differs from the application bundle'
         index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
         critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
