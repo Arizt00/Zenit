@@ -28,7 +28,7 @@ let token='',service=null,editor=null,scene=null,sceneStatus='CSS fallback',acti
 let tree=[],rootExpanded=true,openFolders=new Set(['Assets','Assets/Scripts','Assets/Scenes','Assets/Prefabs','Settings']);
 let cwd='',terminalHistory=[],historyIndex=0,activeJob=null,terminalMode='terminal',lastOutput='';
 let aiBusy=false,aiConsent=false,notifications=[],paletteEntries=[],paletteIndex=0,paletteRequest=0;
-let popoverAnchor=null,modalResolve=null,previousFocus=null;
+let popoverAnchor=null,modalResolve=null,previousFocus=null,modalGeneration=0;
 const defaultSettings={fontSize:12.5,tabSize:4,minimap:true,wordWrap:false,motion:true,density:'comfortable'};
 let settings={...defaultSettings};
 try{Object.assign(settings,JSON.parse(localStorage.getItem('lumen.settings')||'{}'));}catch(_){/* Use defaults if local storage is unavailable. */}
@@ -186,17 +186,19 @@ function updateDiagnostics(items=[]){
 }
 
 function modal(title,content,{wide=false}={}){
-  closePopover();previousFocus=document.activeElement;
+  closePopover();modalGeneration++;
+  if($('#modal-backdrop').classList.contains('hidden')&&(!motion.dialogs.dismissal||document.activeElement!==document.body))previousFocus=document.activeElement;
   $('#modal').classList.toggle('wide',wide);
   $('#modal').innerHTML=`<div class="modal-header"><div><h2 id="modal-title">${esc(title)}</h2></div><button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div>${content}`;
-  $('#modal-backdrop').classList.remove('hidden');motion.enter($('#modal'),7);
-  requestAnimationFrame(()=>($('#modal').querySelector('input:not([type=checkbox]),select,button.primary-button')||$('#modal').querySelector('button'))?.focus());
+  $('#modal-backdrop').classList.remove('hidden');motion.openDialog($('#modal'),$('#modal-backdrop'));
+  const generation=modalGeneration;
+  requestAnimationFrame(()=>{if(generation===modalGeneration&&!$('#modal-backdrop').classList.contains('hidden'))($('#modal').querySelector('input:not([type=checkbox]),select,button.primary-button')||$('#modal').querySelector('button'))?.focus({preventScroll:true});});
 }
 function closeModal(result=false){
-  motion.running.get($('#modal'))?.cancel();
+  const generation=modalGeneration,finished=motion.closeDialog($('#modal'),$('#modal-backdrop'));
   $('#modal-backdrop').classList.add('hidden');$('#modal').replaceChildren();
   if(modalResolve){const resolve=modalResolve;modalResolve=null;resolve(result);}
-  previousFocus?.focus?.();
+  finished.then(()=>{if(generation===modalGeneration&&$('#modal-backdrop').classList.contains('hidden')&&document.activeElement===document.body)previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});});
 }
 function confirmDialog(title,text,positive='Continuar'){
   modal(title,`<p>${esc(text)}</p><div class="modal-actions"><button class="secondary-button" data-action="close-modal">Cancelar</button><button class="primary-button" id="confirm-yes">${esc(positive)}</button></div>`);

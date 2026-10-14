@@ -117,8 +117,19 @@
 @container(max-width:350px) {.ai-actions {grid-template-columns:1fr;}.ai-action-card {min-height:44px;padding:8px 10px;}.ai-action-card small {display:none;}.assistant-hero>.glass-art {width:60px;height:46px;}}
 :root[data-motion=off] .welcome-sheet .welcome-profile,:root[data-motion=off] .welcome-sheet .welcome-profile>span:last-child {transition:none;}
 ::view-transition {pointer-events:none;}
-::view-transition-old(root) {animation:screen-settle 380ms cubic-bezier(.22,1,.36,1) both;}
-::view-transition-new(root) {animation:screen-reveal 420ms cubic-bezier(.22,1,.36,1) both;}
-@keyframes screen-reveal {from {clip-path:var(--screen-source);opacity:.7;}to {clip-path:inset(0 0 0 0 round 0);opacity:1;}}
-@keyframes screen-settle {to {opacity:.3;transform:scale(.985);}}
+::view-transition-group(root) {animation-duration:460ms;}
+::view-transition-image-pair(root) {isolation:isolate;}
+::view-transition-old(root),::view-transition-new(root) {mix-blend-mode:normal;}
+::view-transition-old(root) {animation:screen-settle 460ms cubic-bezier(.2,.85,.2,1) both;}
+::view-transition-new(root) {animation:screen-reveal 460ms cubic-bezier(.2,.85,.2,1) both;}
+:root[data-screen-motion=home]::view-transition-old(root) {z-index:2;animation:screen-return 380ms cubic-bezier(.4,0,.2,1) both;}
+:root[data-screen-motion=home]::view-transition-group(root) {animation-duration:380ms;}
+:root[data-screen-motion=home]::view-transition-new(root) {z-index:1;animation:screen-home 380ms cubic-bezier(.2,.85,.2,1) both;}
+@keyframes screen-reveal {from {clip-path:var(--screen-source);opacity:0;}25% {opacity:1;}to {clip-path:inset(0 0 0 0 round 0);opacity:1;}}
+@keyframes screen-settle {to {opacity:.35;}}
+@keyframes screen-return {from {clip-path:inset(0 0 0 0 round 0);opacity:1;}70% {opacity:.85;}to {clip-path:var(--screen-source);opacity:0;}}
+@keyframes screen-home {from {opacity:.65;}to {opacity:1;}}
+.modal-dismissal {pointer-events:none;z-index:201;}
+.modal-dismissal * {pointer-events:none!important;}
+.modal-motion-snapshot {position:fixed;inset:0;z-index:201;pointer-events:none;}
 @media(prefers-reduced-motion:reduce) {::view-transition-old(root),::view-transition-new(root) {animation:none;}}

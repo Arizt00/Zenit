@@ -2,7 +2,7 @@
 
 ## Install on Windows
 
-Use the installer or portable ZIP from the [R8 release](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.8).
+Use the installer or portable ZIP from the [R9 release](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.9).
 The current binary target is Windows 10/11 x64 with Edge WebView2. The portable
 must be fully extracted; run `Zenit/zenit.exe`. No separate Python installation
 is needed to run the IDE. Project toolchains are separate.
@@ -11,11 +11,11 @@ Checksums are included in the release. Compare the downloaded installer with its
 SHA-256 entry:
 
 ```powershell
-Get-FileHash ./Zenit-0.5.4-R8-Windows-Setup.exe -Algorithm SHA256
+Get-FileHash ./Zenit-0.5.4-R9-Windows-Setup.exe -Algorithm SHA256
 ```
 
 These preview executables are unsigned. Linux/macOS packages from older releases
-do not represent a newly verified R8 build on those systems.
+do not represent a newly verified R9 build on those systems.
 
 ## Open and run a project
 

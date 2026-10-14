@@ -61,16 +61,24 @@ export class LenonStudio {
   }
   enter(){
     const mutate=()=>{$('#lumen-home')?.setAttribute('hidden','');$('#workspace').inert=false;$('.statusbar').hidden=false;document.documentElement.dataset.screen='studio';};
-    if(document.documentElement.dataset.screen==='home')return this.host.motion.swapScreen(mutate,$('.home-enter'));
+    if(document.documentElement.dataset.screen==='home'||this.host.motion.screenTransition)return this.host.motion.swapScreen(mutate,$('.home-enter'),{direction:'enter',target:'studio'});
     mutate();return Promise.resolve();
   }
-  home(){this.host.platform.closePage();return this.host.motion.swapScreen(()=>this.renderHome(),$('.brand'));}
+  home(){return this.host.motion.swapScreen(()=>{this.host.platform.closePage();this.renderHome();},$('.brand'),{direction:'home',target:'home'});}
   renderHome(){
     let home=$('#lumen-home');if(!home){home=document.createElement('section');home.id='lumen-home';home.setAttribute('aria-label','Inicio de Zénit');$('#app').append(home);}
     home.hidden=false;$('#workspace').inert=true;$('.statusbar').hidden=true;document.documentElement.dataset.screen='home';
     if(home.dataset.built==='true'){this.refreshHome();return;}
     home.innerHTML=`<section class="welcome-sheet"><div class="welcome-depth" aria-hidden="true"><div class="welcome-landscape"></div></div><header class="welcome-wordmark"><span class="welcome-z">Z</span><span>ZÉNIT</span></header><button class="welcome-profile" data-studio="activity" aria-label="${this.t('Perfil y archivos recientes','Profile and recent files')}"><span class="welcome-profile-avatar"></span><span>${this.t('Mi actividad','My activity')}</span></button><div class="welcome-scene">${glassArt('welcome')}</div><div class="welcome-copy"><h1>${this.t('Un lugar para lo que viene.','A place for what comes next.')}</h1><p>${this.t('Crea. Explora. Construye. Sin límites.','Create. Explore. Build. Without limits.')}</p><div class="welcome-actions"><button class="primary-button home-enter" data-action="open-workspace">${icon('folder-open')}<span>${this.t('Abrir proyecto','Open project')}</span>${icon('arrow-right')}</button><button class="welcome-new" data-action="new-project">${icon('plus')}<span>${this.t('Nuevo proyecto','New project')}</span>${icon('arrow-right')}</button></div></div><footer class="welcome-footer"><span>${this.t('Ideas en movimiento.','Ideas in motion.')}</span><span>Zénit</span></footer></section>`;
-    home.dataset.built='true';this.homePointer=e=>{if(!this.host.motion.enabled||document.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches)return;this.pointerTarget=[Math.round((e.clientX/innerWidth-.5)*8),Math.round((e.clientY/innerHeight-.5)*6)];if(this.pointerFrame)return;this.pointerFrame=requestAnimationFrame(()=>{this.pointerFrame=0;home.style.setProperty('--welcome-x',this.pointerTarget[0]+'px');home.style.setProperty('--welcome-y',this.pointerTarget[1]+'px');});};home.onpointermove=this.homePointer;home.onpointerleave=()=>{if(!document.querySelector('#modal-backdrop').classList.contains('hidden'))return;cancelAnimationFrame(this.pointerFrame);this.pointerFrame=0;home.style.removeProperty('--welcome-x');home.style.removeProperty('--welcome-y');};home.onclick=e=>{const b=e.target.closest('[data-studio]');if(b)this.safe(()=>this.action(b.dataset.studio));};this.hydrate(home);this.homeLocale=this.host.platform.prefs['general.locale'];this.updateProfile();
+    home.dataset.built='true';
+    this.homePointer=e=>{
+      if(document.documentElement.dataset.modalMotion||!this.host.motion.enabled||document.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      this.pointerTarget=[Math.round((e.clientX/innerWidth-.5)*8),Math.round((e.clientY/innerHeight-.5)*6)];if(this.pointerFrame)return;
+      this.pointerFrame=requestAnimationFrame(()=>{this.pointerFrame=0;if(document.documentElement.dataset.modalMotion)return;home.style.setProperty('--welcome-x',this.pointerTarget[0]+'px');home.style.setProperty('--welcome-y',this.pointerTarget[1]+'px');});
+    };
+    home.onpointermove=this.homePointer;
+    home.onpointerleave=()=>{if(document.documentElement.dataset.modalMotion||!document.querySelector('#modal-backdrop').classList.contains('hidden'))return;cancelAnimationFrame(this.pointerFrame);this.pointerFrame=0;home.style.removeProperty('--welcome-x');home.style.removeProperty('--welcome-y');};
+    home.onclick=e=>{const b=e.target.closest('[data-studio]');if(b)this.safe(()=>this.action(b.dataset.studio));};this.hydrate(home);this.homeLocale=this.host.platform.prefs['general.locale'];this.updateProfile();
     const sky=document.createElement('div');sky.className='welcome-sky';sky.setAttribute('aria-hidden','true');
     for(let i=0;i<18;i++){const star=document.createElement('i');star.style.cssText=`left:${8+(i*37%85)}%;top:${7+(i*19%37)}%;--twinkle-delay:${-i*1.7}s;--twinkle-time:${7+i%6}s`;sky.append(star);}
     home.querySelector('.welcome-depth').append(sky);

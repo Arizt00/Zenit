@@ -132,6 +132,7 @@ export class LumenPlatform {
   openPage(kind,content,preserve=false){
     this.extensionServices?.hide();
     const changed=this.page!==kind;
+    if(this.page==='settings'&&kind!=='settings')this.host.motion.closeSurface(this.workbench,this.settingsOverlay);
     this.previousPageFocus ||= document.activeElement;
     for(const pane of this.host.editor.panes||[]){
       for(const command of ['hideSuggestWidget','closeParameterHints'])pane.view?.trigger('lumen.page',command,{});
@@ -146,10 +147,11 @@ export class LumenPlatform {
     if(kind!=='settings')document.querySelectorAll('.activity-rail .rail-item').forEach(el=>el.classList.toggle('active',(el.dataset.action||el.dataset.view)===(kind==='debug'?'run':kind)));
     for(const selector of ['.editor-tabbar','.breadcrumbs','#editor-mount','#editor-empty']){const el=document.querySelector(selector);if(el)el.inert=true;}
     if(!preserve)this.workbench.innerHTML=`<header class="platform-header"><div class="platform-title"><span class="platform-mark">${this.glyph(kind==='extensions'?'extensions':kind==='tools'?'build':(kind==='hardware'||kind==='foundation')?'cpu':kind==='search'?'search':kind==='debug'?'bug':'settings')}</span><div><span class="platform-eyebrow">ZÉNIT</span><h2>${this.pageTitle(kind)}</h2></div></div><button class="icon-button" data-platform="close-page" aria-label="${this.t('Cerrar y volver al editor','Close and return to editor')}" title="Esc">${this.glyph('close')}</button></header>${content}`;
-    if(changed)this.host.motion.enter(this.workbench,4);this.workbench.querySelector('input,button')?.focus({preventScroll:true});
+    if(changed){if(kind==='settings')this.host.motion.openSurface(this.workbench,this.settingsOverlay);else this.host.motion.enter(this.workbench,4);}this.workbench.querySelector('input,button')?.focus({preventScroll:true});
   }
   closePage(){
     delete document.documentElement.dataset.editorCovered;
+    if(this.page==='settings')this.host.motion.closeSurface(this.workbench,this.settingsOverlay);
     if(this.settingsOverlay)this.settingsOverlay.hidden=true;
     document.getElementById('app').inert=false;delete document.getElementById('workspace').dataset.page;
     this.host.dock.setContext(null);

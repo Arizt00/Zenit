@@ -1,6 +1,6 @@
 # What works today
 
-Zénit 0.5.4 R8 is a public preview. No universal VS Code parity percentage is claimed.
+Zénit 0.5.4 R9 is a public preview. No universal VS Code parity percentage is claimed.
 
 | Area | Available | Boundary |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Zénit 0.5.4 R8 is a public preview. No universal VS Code parity percentage is c
 | Voice | Existing local Emma bridge | Requires a compatible local voice installation. |
 | Search | Literal matching lines, filters, UTF-16 positions | No regex/bulk replace yet; up to 200 visible results. |
 | Extensions | Factory nC package, Open VSX/VSIX, declarative contributions, authorized Node engines, file icon themes | Partial VS Code API; product icon themes remain pending. |
-| Appearance | Three palettes, local profile, reduced motion, native panels | Advanced legacy workflows still have some Spanish messages. R8 presentation uses English. |
+| Appearance | Three palettes, local profile, reduced motion, native panels | Advanced legacy workflows still have some Spanish messages. R9 presentation uses English. |
 | Distribution | Verified Windows installer and portable | Current preview is unsigned; new Linux/macOS builds need platform checks. |
 
 AI tests use deterministic transports to verify scope and file/UI behavior, not
