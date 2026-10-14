@@ -1,5 +1,6 @@
 import {icon} from './icons.js';
 import {melodyContext} from './melody-context.js';
+import {installMelodyResearch} from './melody-research.js';
 import {providerIcon,providerName} from './provider-identity.js';
 
 /** A visible context, destination, and stop action throughout a conversation. */
@@ -18,7 +19,7 @@ export function installMelodyExperience(host){
   const context=document.querySelector('.composer-context>button');
   const tasks=document.createElement('div');tasks.className='melody-context-actions';
   tasks.innerHTML=`<button type="button" data-melody-task="diagnostics">${icon('bug')}<span>Review diagnostics</span></button><button type="button" data-melody-task="tests">${icon('flask')}<span>Plan tests</span></button>`;
-  modes.before(tasks);
+  modes.before(tasks);installMelodyResearch(host);
   tasks.onclick=e=>{const b=e.target.closest('[data-melody-task]');if(!b||b.disabled)return;p.safe(async()=>{
     if(!ed.current)throw Error(t('Abre un archivo primero.','Open a file first.'));
     const items=p.diagnosticMap.get(ed.current)||[];

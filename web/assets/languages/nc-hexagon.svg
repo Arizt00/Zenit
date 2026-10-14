@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 64 64" role="img" aria-label="nC">
+  <path d="M32 5 55 18.5v27L32 59 9 45.5v-27L32 5Z" fill="none" stroke="#111318" stroke-width="4.5" stroke-linejoin="round"/>
+  <text x="32" y="38.5" fill="#111318" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" text-anchor="middle">nC</text>
+</svg>

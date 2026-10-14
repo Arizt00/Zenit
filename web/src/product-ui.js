@@ -24,10 +24,10 @@ export function installProductUI(host){
   compact(document.querySelector('.editor-tabbar'),'.file-tab,.new-tab,.file-group');
   const crumbs=document.createElement('span');crumbs.className='breadcrumbs-actions';
   for(const [action,glyph,label] of [['run','play','Ejecutar archivo'],['debug-view','bug','Depurar archivo'],['settings','settings','Ajustes']]){
-    const button=document.createElement('button');button.className='icon-button';button.type='button';button.title=label;button.setAttribute('aria-label',label);button.innerHTML=icon(glyph);button.onclick=()=>host.perform(action);crumbs.append(button);
+    const button=document.createElement('button');button.className='icon-button';button.type='button';button.title=label;button.setAttribute('aria-label',label);button.innerHTML=icon(glyph);button.dataset.documentAction=action;button.onclick=()=>host.perform(action);crumbs.append(button);
   }
   // Breadcrumbs are updated independently; reuse the same toolbar after each update.
-  const updateCrumbs=()=>document.querySelector('#breadcrumbs')?.append(crumbs);document.addEventListener('zenit:breadcrumbs',updateCrumbs);
+  const updateCrumbs=()=>{const binary=platform.host.editor.models.get(platform.host.editor.current)?.kind==='binary';crumbs.querySelectorAll('button').forEach(b=>b.disabled=b.dataset.documentAction!=='settings'&&binary);document.querySelector('.run-button').disabled=binary;document.querySelector('#breadcrumbs')?.append(crumbs);};document.addEventListener('zenit:breadcrumbs',updateCrumbs);
   document.querySelector('#breadcrumbs')?.append(crumbs);
   const run=document.querySelector('.run-button'),panes=document.querySelector('.pane-switcher');if(run&&panes)run.after(panes);
   const editorMenu=document.querySelector('.editor-tabbar .zenit-tools-menu'),previousMenu=editorMenu?.onclick;if(editorMenu)editorMenu.onclick=()=>host.showMenu(editorMenu,[...Array.from(panes?.querySelectorAll('button')||[]).map(button=>({label:button.title||button.getAttribute('aria-label'),icon:'layout',run:()=>button.click()})),{label:'Más herramientas del editor',icon:'more',run:previousMenu}],'Editor');

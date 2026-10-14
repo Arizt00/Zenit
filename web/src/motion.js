@@ -19,6 +19,14 @@ export class LumenMotion {
     return animation;
   }
   enter(element,offset=5){return this.play(element,[{opacity:0,translate:`0 ${offset}px`},{opacity:1,translate:'0 0'}],180);}
+  revealFrom(element,origin){
+    if(!element||!origin?.getClientRects().length)return this.enter(element);
+    const rect=element.getBoundingClientRect(),source=origin.getBoundingClientRect();
+    // Clip the final surface from its source avatar. Text retains its own scale.
+    const dx=source.left+source.width/2-rect.left-rect.width/2,dy=source.top+source.height/2-rect.top-rect.height/2;
+    const inset=`inset(${(rect.height-source.height)/2}px ${(rect.width-source.width)/2}px round 18px)`;
+    this.play(element,[{clipPath:inset,translate:`${dx}px ${dy}px`,opacity:.65},{clipPath:'inset(0px 0px 0px 0px round 24px)',translate:'0 0',opacity:1}],380);
+  }
   changeLayout(elements,mutate) {
     const root=elements[0]?.closest('.workspace');
     if(!root){mutate();return;}

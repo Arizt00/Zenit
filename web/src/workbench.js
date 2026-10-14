@@ -214,7 +214,7 @@ export class LumenPlatform {
     if(s.rule==='bool')control=`<label class="platform-switch"><input id="${id}" data-preference="${s.key}" type="checkbox" ${value?'checked':''} ${disabled?'disabled':''} aria-label="${this.e(label)}"><span></span></label>`;
     else if(Array.isArray(s.rule)&&!(s.rule.length===2&&s.rule.every(x=>typeof x==='number'))){control=`<select id="${id}" data-preference="${s.key}" ${disabled?'disabled':''} aria-label="${this.e(label)}">${s.rule.map(x=>`<option value="${this.e(x)}" ${value===x?'selected':''}>${this.e(PLATFORM_OPTION_NAMES[x]?this.t(...PLATFORM_OPTION_NAMES[x]):PLATFORM_NAMES[x]||x)}</option>`).join('')}</select>`;}
     else if(Array.isArray(s.rule)){control=`<input id="${id}" data-preference="${s.key}" type="number" ${disabled?'disabled':''} min="${s.rule[0]}" max="${s.rule[1]}" step="${s.key.includes('lineHeight')?'.05':s.key==='editor.fontSize'?'.5':'1'}" value="${value}" aria-label="${this.e(label)}">`;}
-    else control=`<input id="${id}" data-preference="${s.key}" type="text" maxlength="400" value="${this.e(value)}" aria-label="${this.e(label)}">`;
+    else control=`<input id="${id}" data-preference="${s.key}" type="text" maxlength="400" value="${this.e(value)}" ${s.key==='terminal.defaultProfile'?`placeholder="${this.t('Automático','Automatic')}"`:''} aria-label="${this.e(label)}">`;
     if(s.key==='appearance.theme'){const theme=this.extensionThemes?.find(t=>t.id===this.prefs['appearance.extensionTheme']);control=`<button class="secondary-button effective-theme-control" data-platform="effective-theme">${this.glyph('palette')}<span data-effective-theme>${this.e(theme?.label||this.t(...PLATFORM_OPTION_NAMES[value]))}</span>${this.glyph('chevron-down')}</button>`;}
     const hints={
       'general.restoreWorkspace':['Al iniciar Zénit, abrir automáticamente la última carpeta de trabajo.','Reopen the last workspace when Zénit starts.'],
@@ -653,7 +653,7 @@ export class LumenPlatform {
   activeLSP(path=this.host.editor.current){return [...this.lspSessions.values()].find(s=>s.languages.includes(languageFor(path||'')));}
   async syncLSP(s){
     s.syncChain=s.syncChain.catch(()=>{}).then(async()=>{
-      for(const [path,record] of this.host.editor.models){if(!s.languages.includes(languageFor(path)))continue;
+      for(const [path,record] of this.host.editor.models){if(record.kind==='binary'||!s.languages.includes(languageFor(path)))continue;
         const text=path===this.host.editor.current?this.host.editor.getValue():record.value,previous=s.documents.get(path),uri=this.uriFor(s,path);
         if(!previous){await this.api('/lsp/notify',{id:s.id,method:'textDocument/didOpen',params:{textDocument:{uri,languageId:languageFor(path),version:1,text}}});s.documents.set(path,{text,version:1});}
         else if(previous.text!==text){const version=previous.version+1,sync=s.capabilities.textDocumentSync,kind=typeof sync==='number'?sync:sync?.change;
@@ -721,6 +721,7 @@ export class LumenPlatform {
     this.safe(()=>this.startLSP(config.id,true));
   }
   documentChanged(){
+    if(this.host.editor.models.get(this.host.editor.current)?.kind==='binary'){clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);clearTimeout(this.saveTimer);return;}
     if(this.disposed)return;this.autoLanguageServer();this.lantern?.changed();this.companion?.changed();if(this.liveEditingPath===this.host.editor.current){clearTimeout(this.saveTimer);return;}clearTimeout(this.changeTimer);this.changeTimer=this.later(()=>{for(const s of this.lspSessions.values())this.safe(()=>this.syncLSP(s));this.refreshDiagnostics();},220);
     clearTimeout(this.syntaxTimer);const ed=this.host.editor,path=ed.current,text=ed.getValue();
     if(path&&text.length<250000)this.syntaxTimer=this.later(async()=>{try{const result=await this.api('/diagnostics',{path,content:text});if(this.disposed||ed.models.get(path)?.value!==text)return;ed.setDiagnostics(path,result.diagnostics);}catch(_){}},700);

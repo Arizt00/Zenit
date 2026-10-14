@@ -1,0 +1,60 @@
+{
+  "captured": "2026-10-14",
+  "release": "0.5.4 R7",
+  "captures": [
+    {
+      "file": "workspace.png",
+      "sha256": "a6d180cc7f57319f272136849e987978ac206a7dd02e33bb8de172825e53714d",
+      "sourceTest": "r6-regression/workspace-day.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "binary.png",
+      "sha256": "9d15a08a6728909edf97ac225291b73acad68c59d23456e86455acf9d4e47838",
+      "sourceTest": "ui/binary.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "melody-drift.png",
+      "sha256": "1c1a3643e3713e798185a6d4e5f774126aecf3a695526048c3b8b3a0b4d3bf8d",
+      "sourceTest": "ui/melody-drift.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "debug-machine.png",
+      "sha256": "01c2b4cdb46096993fd83d8ce2e24d0b307808fd1b3da14a403027d38c1c9339",
+      "sourceTest": "ui/debug-machine.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "debug-history.png",
+      "sha256": "668917325cbc6a3145db7649737b1df045729429608ec5787555129772443866",
+      "sourceTest": "ui/debug-history.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "activity.png",
+      "sha256": "bd7d0937f387867c2ab7599c5f7a394c5fb205f9c3c239afa64125c2398ab41b",
+      "sourceTest": "ui/activity.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "home-profile.png",
+      "sha256": "1663548143ff1ef9bc8cf52b753399bcb1c1afd88727a6319a4a60a31779ad05",
+      "sourceTest": "ui/home-expanded.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "extensions.png",
+      "sha256": "0bfb2bdf74bfe19f054ff67172601e03115dca3a008e9c49a890544842b74c96",
+      "sourceTest": "themes/extensions-day.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    },
+    {
+      "file": "settings.png",
+      "sha256": "f9ae037ad6c2fec889d874fbbffdf8e777867793bd8ef0c9320e246834712d69",
+      "sourceTest": "ui/settings-terminal-day.png",
+      "profile": "Isolated Aurora/Alex demonstration"
+    }
+  ]
+}

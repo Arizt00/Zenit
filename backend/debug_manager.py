@@ -7,6 +7,9 @@ import shutil
 import socket
 import threading
 import time
+import hashlib
+import json
+import base64
 from .debugger import PythonDebugger
 from .debug_adapters import NodeDebugger,ProtocolDebugger
 from .runtimes import language
@@ -15,6 +18,7 @@ class DebugManager:
     def __init__(self,runtimes,runner):
         self.runtimes=runtimes;self.runner=runner;self.current=PythonDebugger();self.build=None;self.cancelled=False
         self.starting=None;self.generation=0;self.lock=threading.RLock()
+        self.pause_history=[];self.pause_fingerprint=None;self.pause_sequence=0
     @property
     def process(self):return self.current.process
     def snapshot(self):
@@ -22,7 +26,44 @@ class DebugManager:
         state['preparing']=bool(self.starting and self.starting.get('status')=='running')
         state['inputSupported']=(isinstance(self.current,(PythonDebugger,NodeDebugger)) or getattr(self.current,'debuggee',None) is not None or getattr(self.current,'input_pipe',None) is not None) and not state['preparing']
         state['stepOutSupported']=not state['preparing'] and type(self.current).__name__!='JavaDebugger'
+        with self.lock:
+            if state.get('status')=='paused':
+                evidence={k:state.get(k) for k in ('path','line','variables','stack')}
+                fingerprint=hashlib.sha256(json.dumps(evidence,sort_keys=True).encode()).hexdigest()
+                if fingerprint!=self.pause_fingerprint:
+                    self.pause_sequence+=1;self.pause_history.append({'id':self.pause_sequence,'captured':time.time(),**evidence})
+                    self.pause_history=self.pause_history[-24:];self.pause_fingerprint=fingerprint
+            else:self.pause_fingerprint=None
+            state['pauseHistory']=copy.deepcopy(self.pause_history)
+        state.setdefault('machineCapabilities',{'memory':False,'disassembly':False})
         return state
+    def machine(self,body):
+        operation=body.get('operation');reference=body.get('reference');count=body.get('count',64)
+        if operation not in ('memory','disassembly') or not isinstance(reference,str) or not reference.strip() or len(reference)>512 or '\x00' in reference:
+            raise ValueError('Choose memory or disassembly and enter a valid memory reference.')
+        maximum=4096 if operation=='memory' else 256
+        if type(count) is not int or not 1<=count<=maximum:raise ValueError('Invalid inspection count.')
+        with self.lock:
+            current=self.current;state=self.snapshot()
+            if state['status']!='paused':raise ValueError('Pause execution before inspecting the machine.')
+            if not state['machineCapabilities'].get(operation) or type(current) is not ProtocolDebugger:
+                raise ValueError('This adapter does not support '+operation+'. Choose a native DAP adapter with this capability.')
+        args={'memoryReference':reference.strip()}
+        if operation=='memory':args['count']=count
+        else:args.update(instructionCount=count,resolveSymbols=True)
+        pause=state['pauseHistory'][-1]['id']
+        result=current.request('readMemory' if operation=='memory' else 'disassemble',args,timeout=8)
+        with self.lock:
+            latest=self.snapshot()
+            if current is not self.current or latest.get('status')!='paused' or latest['pauseHistory'][-1]['id']!=pause:raise ValueError('The pause ended during inspection. Pause and inspect again.')
+        if operation=='memory':
+            try:data=base64.b64decode(result.get('data',''),validate=True)
+            except (ValueError,TypeError):raise ValueError('The adapter returned invalid memory bytes.')
+            if len(data)>count:raise ValueError('The adapter exceeded the requested memory range.')
+        else:
+            items=result.get('instructions',[])
+            if not isinstance(items,list) or len(items)>count:raise ValueError('The adapter exceeded the requested instruction range.')
+        return {'operation':operation,'reference':reference,'result':result}
     def input(self,text):
         if not isinstance(text,str) or len(text)>65536:raise ValueError('Entrada no válida.')
         if isinstance(self.current,PythonDebugger):return self.current.input(text)
@@ -37,6 +78,7 @@ class DebugManager:
         with self.lock:
             if self.snapshot()['status'] in ('running','paused'):raise ValueError('Detén la sesión de depuración actual.')
             self.current.stop()
+            self.pause_history=[];self.pause_fingerprint=None;self.pause_sequence=0
             lang=language(path)
             if lang=='python':self.current=PythonDebugger();return self.current.start(ws,path,points)
             self.generation+=1;generation=self.generation;self.cancelled=False

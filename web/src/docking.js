@@ -248,8 +248,9 @@ export class DockManager {
         const axis=side==='bottom'?'clientY':'clientX',start=event[axis],sign=side==='left'?1:-1;
         const r=this.slots[side].getBoundingClientRect(),size=side==='bottom'?r.height:r.width;
         handle.setPointerCapture(event.pointerId);document.body.classList.add('resizing');document.body.style.cursor=side==='bottom'?'row-resize':'col-resize';
-        const move=e=>{this.setSize(side,size+(e[axis]-start)*sign,false);};
-        const done=()=>{this.save();document.body.classList.remove('resizing');document.body.style.cursor='';handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);handle.removeEventListener('lostpointercapture',done);};
+        let requested=size,finished=false;const original=this.state.sizes[side];
+        const move=e=>{requested=size+(e[axis]-start)*sign;const pending=side!=='bottom'&&requested<this.limits()[side].min-36;this.slots[side].dataset.collapsePending=String(pending);this.setSize(side,requested,false);};
+        const done=e=>{if(finished)return;finished=true;const collapse=e?.type==='pointerup'&&side!=='bottom'&&requested<this.limits()[side].min-36;delete this.slots[side].dataset.collapsePending;if(e?.type!=='pointerup'&&original!==undefined)this.setSize(side,original,false);document.body.classList.remove('resizing');document.body.style.cursor='';handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',done);handle.removeEventListener('pointercancel',done);handle.removeEventListener('lostpointercapture',done);if(collapse){this.state.sizes[side]=original||this.limits()[side].preferred;this.collapse(side);}else this.save();};
         handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',done);handle.addEventListener('pointercancel',done);handle.addEventListener('lostpointercapture',done);
       });
       this.listen(handle,'dblclick',()=>this.transition(()=>{delete this.state.sizes[side];}));
@@ -258,7 +259,7 @@ export class DockManager {
         if(!keys.includes(event.key))return;event.preventDefault();this.motion.cancelLayout();
         const rect=this.slots[side].getBoundingClientRect(),size=vertical?rect.width:rect.height;
         const step=event.shiftKey?30:10,sign=side==='left'?1:-1;
-        this.setSize(side,size+(event.key===keys[1]?step:-step)*sign);
+        const target=size+(event.key===keys[1]?step:-step)*sign;if(side!=='bottom'&&target<this.limits()[side].min)this.collapse(side);else this.setSize(side,target);
       });
     }
   }

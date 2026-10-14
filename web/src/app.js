@@ -1,5 +1,6 @@
 import {renderMarkdown} from './assistant-markdown.js';
 import {installProductUI} from './product-ui.js';
+import {installTabControls} from './tab-controls.js';
 import {installDiagnostics} from './diagnostics.js';
 import {installExplorerMenu} from './explorer-menu.js';
 import './controls.js';
@@ -151,7 +152,7 @@ function updateDocumentStatus(){
   $('#breadcrumbs').hidden=false;
   const parts=item.path.replaceAll('\\','/').split('/').filter(Boolean);
   $('#breadcrumbs').innerHTML=(/^(?:[A-Za-z]:[\\/]|\/)/.test(item.path)?'':`<span>${esc(service?.name||'')}</span>${icon('chevron-right')}`)+parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
-  $('#newline-status').textContent=item.newline||'LF';$('#language-status').textContent=languageLabel(item.path);
+  $('#newline-status').textContent=item.kind==='binary'?'—':item.newline||'LF';$('#language-status').textContent=item.kind==='binary'?'Binary · read only':languageLabel(item.path);
   $('#target-label').textContent=languageLabel(item.path);
   document.dispatchEvent(new Event('zenit:breadcrumbs'));
   updateDiagnostics(editor.diagnostics());platformUI?.documentChanged();
@@ -159,6 +160,7 @@ function updateDocumentStatus(){
 async function saveFile(path=editor.current,{automatic=false}={}){
   if(typeof path!=='string')path=editor.current;
   const item=editor.models.get(path);if(!item)return;
+  if(item.kind==='binary'){if(!automatic)notify('Binary files are read only.');return;}
   await platformUI?.beforeSave?.(path,automatic);
   let content=path===editor.current?editor.getValue():item.model?.getValue()??item.value;if(platformUI?.prefs['files.trimTrailingWhitespace'])content=content.split('\n').map(line=>line.replace(/[ \t]+$/,'')).join('\n');if(platformUI?.prefs['files.insertFinalNewline']&&!content.endsWith('\n'))content+='\n';if(path===editor.current&&content!==editor.getValue())editor.insertText(content,true);
   item.value=content;
@@ -191,6 +193,7 @@ function modal(title,content,{wide=false}={}){
   requestAnimationFrame(()=>($('#modal').querySelector('input:not([type=checkbox]),select,button.primary-button')||$('#modal').querySelector('button'))?.focus());
 }
 function closeModal(result=false){
+  motion.running.get($('#modal'))?.cancel();
   $('#modal-backdrop').classList.add('hidden');$('#modal').replaceChildren();
   if(modalResolve){const resolve=modalResolve;modalResolve=null;resolve(result);}
   previousFocus?.focus?.();
@@ -321,6 +324,7 @@ async function ensureTrust(){
 }
 async function runCurrent(check=false){
   if(!editor.current){notify('Abre un archivo para ejecutarlo.');return;}
+  if(editor.models.get(editor.current)?.kind==='binary'){notify('Binary inspection is read only.');return;}
   if(activeJob){notify('Ya hay una tarea activa en esta consola. Deténla antes de iniciar otra.');return;}
   if(!await ensureTrust())return;
   if(editor.isDirty())await saveFile();
@@ -589,7 +593,7 @@ async function start(){
     window.zenitStartup?.phase('service');
     const response=await fetch('/api/bootstrap',{credentials:'same-origin',signal:AbortSignal.timeout(25000)});service=await response.json();if(!response.ok)throw new Error(service.error);
     token=service.token;tree=service.tree;
-    editor=new LumenEditor($('#editor-mount'),{change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
+    editor=new LumenEditor($('#editor-mount'),{binary:(path,offset)=>/^(?:[A-Za-z]:[\\/]|\/)/.test(path)?platformUI.api('/extensions/binary?path='+encodeURIComponent(path)+'&offset='+offset):api('/binary?path='+encodeURIComponent(path)+'&offset='+offset),change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
     await editor.init(service,settings);applySettings();
     await initializeDocuments();renderTree();updatePrompt();
     scene={kind:service.babylon?'babylon':'css',setMotion(){},setTheme(){},dispose(){}};
@@ -616,6 +620,7 @@ async function start(){
     new FoundationUI({editor,studio,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
+    installTabControls({editor,openFile,activateFile,closeFile,showMenu,safe:fn=>guard(fn)()});
     installDiagnostics();
     document.documentElement.removeAttribute('data-booting');
     $('#engine-label').textContent='Local workspace';

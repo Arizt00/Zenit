@@ -54,6 +54,7 @@ export class ExtensionServicesUI {
     }
     for(const buffer of change.buffers||[]){
       let record=ed.models.get(buffer.path);
+      if(record?.kind==='binary')continue;
       if(!record){ed.open({path:buffer.path,content:buffer.before},{activate:false});record=ed.models.get(buffer.path);}
       const text=record.model?.getValue()??record.value;
       if(text===buffer.text)continue;

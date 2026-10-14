@@ -147,7 +147,9 @@ class Handler(BaseHTTPRequestHandler):
                 if path == "/api/tree":
                     return self.reply({"tree": ws.tree(), "name": ws.root.name})
                 if path == "/api/file":
-                    return self.reply(ws.read(query.get("path", [""])[0]))
+                    return self.reply(ws.open_file(query.get("path", [""])[0]))
+                if path == "/api/binary":
+                    return self.reply(ws.binary(query.get('path', [''])[0], int(query.get('offset', ['0'])[0]), int(query.get('count', ['512'])[0])))
                 if path == "/api/search":
                     results=ws.search(query.get('q',[''])[0],content=query.get('content',['0'])[0]=='1',folder=query.get('folder',[''])[0],case=query.get('case',['0'])[0]=='1',word=query.get('word',['0'])[0]=='1',include=query.get('include',[''])[0],exclude=query.get('exclude',[''])[0],file_type=query.get('type',[''])[0],limit=201)
                     return self.reply({'results':results[:200],'truncated':len(results)>200})

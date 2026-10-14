@@ -1,5 +1,8 @@
 # Zénit third-party components
 
+The original nC language icon and its alternative SVG are from Arizt00/ncc.
+The MIT license and provenance are retained in `web/assets/languages/nc-NOTICE.md`.
+
 Provider identity SVGs are from Simple Icons 13.21.0 (CC0-1.0).
 Their sources and trademark notice are retained in `web/assets/providers/NOTICE.md`.
 

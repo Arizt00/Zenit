@@ -5,6 +5,7 @@ import {TextMateLanguages,textMateTheme} from './textmate.js';
 import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
 import {assemblyCompletions,assemblySyntax} from './assembly-language.js';
 import {escapeHTML, icon} from './icons.js';
+import {BinaryView} from './binary-view.js';
 // Monaco rejects outstanding worker requests when a model/provider is disposed.
 // Handle only that expected cancellation; other editor failures still surface.
 window.addEventListener('unhandledrejection',event=>{
@@ -133,9 +134,10 @@ export class LumenEditor {
     pane.view.onMouseDown(e=>{const path=this.pathFor(pane.view.getModel());if(e.target.type===monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN&&e.target.position&&path){const lines=this.breakpoints.get(path)||new Set(),line=e.target.position.lineNumber;lines.has(line)?lines.delete(line):lines.add(line);this.breakpoints.set(path,lines);this.paintBreakpoints();}});
     this.callbacks.pane?.(pane.view);
   }
-  pathFor(model){return [...this.models].find(([,r])=>r.model===model)?.[0]||null;}
+  pathFor(model){return model?[...this.models].find(([,r])=>r.model===model)?.[0]||null:null;}
   paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());p.node.querySelector('span').textContent=name||'Elige un archivo';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
   split(path,side='right'){
+    if(this.models.get(path||this.current)?.kind==='binary')throw Error('Binary files use the read-only byte inspector.');
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
     let pane=this.panes[1];
     if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model:null,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
@@ -178,7 +180,7 @@ export class LumenEditor {
       return {items:line?[{insertText:line.trimStart().slice(prefix.trimStart().length),range:new m.Range(pos.lineNumber,pos.column,pos.lineNumber,pos.column)}]:[]};
     },freeInlineCompletions(){}}));
   }
-  paintBreakpoints(){if(this.kind!=='monaco')return;for(const [path,r] of this.models)r.breakpointDecorations=r.model.deltaDecorations(r.breakpointDecorations||[],[...(this.breakpoints?.get(path)||[])].map(line=>({range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,glyphMarginClassName:'lumen-breakpoint',glyphMarginHoverMessage:{value:'Punto de interrupción · pulsa para quitarlo'}}})));}
+  paintBreakpoints(){if(this.kind!=='monaco')return;for(const [path,r] of this.models)if(r.model)r.breakpointDecorations=r.model.deltaDecorations(r.breakpointDecorations||[],[...(this.breakpoints?.get(path)||[])].map(line=>({range:new monaco.Range(line,1,line,1),options:{isWholeLine:true,glyphMarginClassName:'lumen-breakpoint',glyphMarginHoverMessage:{value:'Punto de interrupción · pulsa para quitarlo'}}})));}
   setDiagnostics(path,items,owner='lumen-syntax'){
     const record=this.models.get(path);if(!record)return;record.diagnosticCache??={};const key=JSON.stringify(items);if(record.diagnosticCache[owner]===key)return;record.diagnosticCache[owner]=key;
     if(record.model&&window.monaco)monaco.editor.setModelMarkers(record.model,owner,items.map(x=>({...x,endLineNumber:x.endLineNumber||x.startLineNumber,endColumn:x.endColumn||x.startColumn+1})));
@@ -265,7 +267,7 @@ export class LumenEditor {
   open(item,{activate=true}={}) {
     if (!this.models.has(item.path)) {
       const record={...item,savedValue:item.content,value:item.content,selection:[0,0],scrollTop:0,scrollLeft:0};
-      if(this.kind==='monaco'){
+      if(this.kind==='monaco'&&item.kind!=='binary'){
         record.model=monaco.editor.createModel(item.content,languageFor(item.path),monaco.Uri.parse('file:///'+item.path));
         record.model.onDidChangeContent(()=>{record.value=record.model.getValue();this.callbacks.change?.(record.path,record.value!==record.savedValue);window.dispatchEvent(new Event('lumen:document-changed'));});
       }
@@ -283,6 +285,13 @@ export class LumenEditor {
     this.current=path;
     const record=this.models.get(path);
     if(!record)return;
+    this.binaryView?.dispose();this.binaryView=null;this.mount.classList.toggle('showing-binary',record.kind==='binary');
+    if(record.kind==='binary'){
+      this.externalDiagnostics=[];
+      if(this.kind==='monaco')this.view.setModel(null);
+      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary);
+      this.callbacks.active?.(path);return;
+    }
     if(this.kind==='monaco'){
       this.view.setModel(record.model);if(record.viewState)this.view.restoreViewState(record.viewState);
     }else{
@@ -316,21 +325,22 @@ export class LumenEditor {
     if(syntax)monaco.languages.setMonarchTokensProvider(id,syntax);
   }
   insertText(text,replace=false) {
-    if(!this.current)return;this.focus();
+    if(!this.current||this.models.get(this.current)?.kind==='binary')return;this.focus();
     if(this.kind==='monaco'){
       this.view.pushUndoStop();this.view.executeEdits('lumen.review',[{range:replace?this.view.getModel().getFullModelRange():this.view.getSelection(),text:String(text),forceMoveMarkers:true}]);this.view.pushUndoStop();
     }else this.insert(String(text),replace?0:this.input.selectionStart,replace?this.input.value.length:this.input.selectionEnd);
   }
   getValue() {
-    if(!this.current)return '';
+    if(!this.current||this.models.get(this.current)?.kind==='binary')return '';
     return this.kind==='monaco'?this.view.getValue():this.input.value;
   }
   getSelection() {
-    if(!this.current)return '';
+    if(!this.current||this.models.get(this.current)?.kind==='binary')return '';
     if(this.kind==='monaco')return this.view.getModel().getValueInRange(this.view.getSelection());
     return this.input.value.slice(this.input.selectionStart,this.input.selectionEnd);
   }
   setValue(value) {
+    if(this.models.get(this.current)?.kind==='binary')return;
     if(this.kind==='monaco')this.view.setValue(value);
     else{this.input.value=value;this.changed();this.paint();}
   }
@@ -347,13 +357,14 @@ export class LumenEditor {
   }
   close(path) {
     const item=this.models.get(path);if(!item)return;
+    if(this.current===path){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');}
     if(this.current===path){this.current=null;if(this.kind==='monaco')this.view.setModel(null);else{this.input.value='';this.paint();}}
     for(const p of this.panes||[])if(p.view.getModel()===item.model)p.view.setModel(null);
     if(item.model)item.model.dispose();
     this.models.delete(path);
   }
-  reset(){this.current=null;for(const p of this.panes||[])p.view.setModel(null);for(const item of this.models.values())item.model?.dispose();this.models.clear();if(this.kind==='base'){this.input.value='';this.paint();}}
-  focus(){if(this.kind==='monaco')this.view.focus();else this.input.focus({preventScroll:true});}
+  reset(){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');this.current=null;for(const p of this.panes||[])p.view.setModel(null);for(const item of this.models.values())item.model?.dispose();this.models.clear();if(this.kind==='base'){this.input.value='';this.paint();}}
+  focus(){if(this.binaryView){this.binaryView.node.querySelector('form input').focus();return;}if(this.kind==='monaco')this.view.focus();else this.input.focus({preventScroll:true});}
   changedTheme(){this.defineMonacoTheme();if(this.kind==='base')this.schedulePaint();}
   applySettings(settings) {
     Object.assign(this.settings,settings);
@@ -478,6 +489,7 @@ export class LumenEditor {
     this.input.setSelectionRange(offset,offset);this.showOffset(offset);this.updateCursor();this.focus();
   }
   diagnostics(){
+    if(this.models.get(this.current)?.kind==='binary')return [];
     if(this.kind!=='monaco'||!this.view.getModel())return (this.externalDiagnostics||[]).map(m=>({line:m.startLineNumber,message:m.message,severity:m.severity>=8?'error':'warning'}));
     return monaco.editor.getModelMarkers({resource:this.view.getModel().uri}).map(m=>({line:m.startLineNumber,message:m.message,severity:m.severity>=8?'error':'warning'}));
   }

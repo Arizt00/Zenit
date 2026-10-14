@@ -48,6 +48,8 @@ export function themePalette(theme) {
   palette['editor-text']=readable(text,palette.editor);
   palette['editor-muted']=readable(pick('editorLineNumber.foreground',palette.secondary),palette.editor);
   palette['border-strong']=contrastRatio(opaque(palette['border-strong'],palette.surface),palette.surface)>=1.2?opaque(palette['border-strong'],palette.surface):hex(rgb(palette.surface).map((c,i)=>c*.72+rgb(palette.text)[i]*.28));
+  palette.border=readable(border,palette.surface,1.3);
+  palette['glass-edge']=palette.border;
   palette['chrome-halo']=palette.bg;palette['selection-halo']=palette.selected;
   palette['logo-light']=palette['logo-dark']=palette['chrome-accent'];
   for(const key of ['success','danger','warning'])palette[key]=readable(palette[key],palette.surface);

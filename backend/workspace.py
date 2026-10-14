@@ -94,6 +94,25 @@ class Workspace:
         collect(self.tree())
         return result
 
+    def open_file(self, name: str) -> dict:
+        path = self.resolve(name)
+        if not path.is_file():
+            raise ValueError('Select a file, not a folder.')
+        with path.open('rb') as stream:
+            sample = stream.read(8192)
+        binary = b'\x00' in sample
+        if binary or path.stat().st_size > MAX_FILE:
+            return self.binary(name)
+        try:
+            return self.read(name)
+        except ValueError:
+            return self.binary(name)
+
+    def binary(self, name, offset=0, count=512):
+        from .binary_view import read_binary
+        path = self.resolve(name)
+        return read_binary(path, path.relative_to(self.root).as_posix(), offset, count)
+
     def read(self, name: str) -> dict:
         path = self.resolve(name)
         if not path.is_file():

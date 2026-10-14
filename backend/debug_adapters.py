@@ -127,6 +127,8 @@ class ProtocolDebugger:
         else:stream=self.process.stdout
         threading.Thread(target=self.read,args=(stream,),daemon=True).start()
         capabilities=self.request('initialize',{'clientID':'lumen','clientName':'Zénit','adapterID':'lumen','pathFormat':'path','linesStartAt1':True,'columnsStartAt1':True,'supportsVariableType':True,'supportsRunInTerminalRequest':True})
+        self.capabilities=capabilities
+        self.update(machineCapabilities={'memory':capabilities.get('supportsReadMemoryRequest') is True,'disassembly':capabilities.get('supportsDisassembleRequest') is True})
         launch=dict(launch);entry=launch.pop('_lumenEntry',False);self.entry_function=launch.pop('_lumenEntryFunction',None)
         version=re.search(r'lldb version (\d+)',capabilities.get('$__lldb_version',''))
         if os.name=='nt' and self.lldb and version and int(version[1])>=22 and launch.get('console')=='internalConsole' and 'stdio' not in launch:
@@ -155,10 +157,10 @@ class ProtocolDebugger:
                 scopes=self.request('scopes',{'frameId':stack[0]['id']}).get('scopes',[])
                 for scope in scopes:
                     if scope.get('expensive'):continue
-                    for item in self.request('variables',{'variablesReference':scope['variablesReference']}).get('variables',[])[:100]:variables.append({'name':item['name'],'value':item.get('value','')[:400],'type':item.get('type','')})
+                    for item in self.request('variables',{'variablesReference':scope['variablesReference']}).get('variables',[])[:100]:variables.append({'name':item['name'],'value':item.get('value','')[:400],'type':item.get('type',''),'memoryReference':item.get('memoryReference','')})
                     if variables:break
             self.update(status='paused',line=stack[0].get('line',0) if stack else 0,path=stack[0].get('source',{}).get('path',self.state.get('path','')) if stack else self.state.get('path',''),
-                stack=[{'name':f.get('name',''),'path':f.get('source',{}).get('path',''),'line':f.get('line',0)} for f in stack],variables=variables)
+                stack=[{'name':f.get('name',''),'path':f.get('source',{}).get('path',''),'line':f.get('line',0),'instructionPointerReference':f.get('instructionPointerReference','')} for f in stack],variables=variables)
         except ValueError as exc:self.update(status='error',error=str(exc))
     def command(self,command):
         if command=='stop':self.stop();return self.snapshot()

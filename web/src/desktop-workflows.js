@@ -228,7 +228,7 @@ export class DesktopWorkflows{
   bufferWrite(fn){const request=(this.bufferWrites||Promise.resolve()).catch(()=>{}).then(fn);this.bufferWrites=request;return request;}
   share(path){return this.bufferWrite(()=>this.shareUnlocked(path));}
   async shareUnlocked(path){
-    const r=this.host.editor.models.get(path);if(!r)return;
+    const r=this.host.editor.models.get(path);if(!r||r.kind==='binary')return;
     const all=await this.host.platform.api('/buffers'),old=all.buffers.find(x=>x.path===path);
     const text=r.model?.getValue()??r.value;
     if(old&&old.text!==text&&this.shared.has(path)&&old.sequence!==this.shared.get(path).sequence)throw Error('Hay cambios pendientes de otra ventana. Resuelve la sincronización antes de separarlo.');
@@ -256,7 +256,7 @@ export class DesktopWorkflows{
       for(const remote of data.buffers){
         if(this.remoteBuffers.get(remote.path)?.sequence!==remote.sequence)auxiliaryChanged=true;
         this.remoteBuffers.set(remote.path,remote);
-        const r=this.host.editor.models.get(remote.path);if(!r)continue;
+        const r=this.host.editor.models.get(remote.path);if(!r||r.kind==='binary')continue;
         const old=this.shared.get(remote.path),text=r.model?.getValue()??r.value;
         if(this.pending.has(remote.path)||this.publishing)continue;
         if(old&&remote.sequence<=old.sequence)continue;

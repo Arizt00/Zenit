@@ -104,7 +104,9 @@ class PlatformServices:
         if path=='/extensions/output':self._trusted();return self.extension_services.output(q('extension'),q('key'))
         if path=='/extensions/resource':return self.extension_services.resource(q('panel'),q('path'))
         if path=='/extensions/file':
-            self._trusted();p=file_path(q('path'));item=self.extension_services.file_workspace(p).read(p.name);item.update(path=self.extension_services.key(self.app.workspace,p),name=p.name,external=not p.is_relative_to(self.app.workspace.root));return item
+            self._trusted();p=file_path(q('path'));item=self.extension_services.file_workspace(p).open_file(p.name);item.update(path=self.extension_services.key(self.app.workspace,p),name=p.name,external=not p.is_relative_to(self.app.workspace.root));return item
+        if path=='/extensions/binary':
+            self._trusted();p=file_path(q('path'));item=self.extension_services.file_workspace(p).binary(p.name,int(q('offset','0')),int(q('count','512')));item['path']=self.extension_services.key(self.app.workspace,p);return item
         if path=='/extensions/review':return self.extensions.review_status(q('id'))
         if path=='/extensions/updates':return self.extensions.updates()
         if path=='/languages':return self.runtimes.status()
@@ -190,6 +192,10 @@ class PlatformServices:
             return self.debugger.start(ws,body.get('path',''),body.get('breakpoints',[]))
         if path=='/debug/command':self._trusted();return self.debugger.command(body.get('command'))
         if path=='/debug/input':self._trusted();return self.debugger.input(body.get('text'))
+        if path=='/debug/machine':self._trusted();return self.debugger.machine(body)
+        if path=='/melody/research':
+            from .melody_lab import research
+            return research(ws,body)
         if path=='/settings':
             result=self.prefs.update(body.get('settings',{}),body.get('reset') is True)
             if body.get('reset') is True or 'security.confirmRoutineActions' in body.get('settings',{}):

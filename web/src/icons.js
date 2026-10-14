@@ -99,6 +99,7 @@ export function setFileIcons(theme,kind='dark',language=()=> ''){if(activeFileIc
 export function folderIcon(path,expanded=false,root=false){if(activeFileIcons==='none')return '';return activeFileIcons?themeIcon(activeFileIcons,path,{folder:true,expanded,root,kind:iconKind}):icon(expanded?'folder-open':'folder');}
 export function fileIcon(path) {
   if(activeFileIcons==='none')return '';
+  if(/\.(?:nc|n|nm|ncp|nb|nbb)$/i.test(path))return `<span class="file-type file-type-nc"><img src="/assets/languages/nc.png" alt="" aria-hidden="true" draggable="false"></span>`;
   const themed=themeIcon(activeFileIcons,path,{language:iconLanguage(path),kind:iconKind});if(themed)return themed;
   const ext = path.split('.').pop().toLowerCase();
   if(['html','htm'].includes(ext))return `<span class="file-type file-type-html">${icon('html')}</span>`;

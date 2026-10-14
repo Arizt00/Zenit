@@ -74,6 +74,7 @@ class Preview{
   }
   async saveAs(){
     const ed=this.host.editor;if(!ed.current)return;
+    if(ed.models.get(ed.current)?.kind==='binary'){this.host.notify('Binary inspection is read only.');return;}
     if(window.pywebview?.api?.save_as){const result=await window.pywebview.api.save_as(ed.current,ed.getValue());if(!result)return;await this.host.refreshTree();if(result.relative){const fresh=await this.host.api('/file?path='+encodeURIComponent(result.relative));const existing=ed.models.get(result.relative);if(existing){existing.model?.setValue(fresh.content);existing.value=fresh.content;ed.markSaved(fresh);}await this.host.openFile(result.relative);}this.host.notify('Archivo guardado en '+result.path);return;}
     this.host.modal('Guardar como',`<form id="save-as-form"><label>Ruta dentro del proyecto<input id="save-as-path" value="${esc(ed.current)}" required></label><div class="modal-actions"><button class="primary-button">Guardar copia</button></div></form>`);
     $('#save-as-form').onsubmit=e=>{e.preventDefault();this.safe(async()=>{const path=$('#save-as-path').value.trim();await this.host.api('/save',{path,content:ed.getValue(),create:true});this.host.closeModal();await this.host.refreshTree();await this.host.openFile(path);});};
