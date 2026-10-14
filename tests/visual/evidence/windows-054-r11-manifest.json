@@ -1,0 +1,19 @@
+{
+  "version": "v0.5.4-preview.11",
+  "platform": "win32",
+  "architecture": "x86_64",
+  "sourceCommit": "9e9eb423c717dfec44c96f569783e67f990ecf87",
+  "signed": false,
+  "outputs": [
+    {
+      "name": "Zenit-0.5.4-R11-Windows-Setup.exe",
+      "bytes": 1269132474,
+      "sha256": "37f244a1515f3a4ec4ddc04ef1fa3edc2a47e68c0131d035e4331340cec24b5f"
+    },
+    {
+      "name": "Zenit-0.5.4-R11-Windows-Portable.zip",
+      "bytes": 1230489067,
+      "sha256": "be3b8919ce615aa32523af04fe522a6b06ffb5003f0fd27f9352463784903154"
+    }
+  ]
+}

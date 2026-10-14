@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Melody keeps the model selector in its title and secondary tools behind one control",
+    "Shift F10 opens the themed menu with searchable real editor actions",
+    "Nested menus support keyboard entry, return and dismissal without losing the editor",
+    "The menu stays in the viewport and searches directly into Python dependencies",
+    "Extensions provides language-specific dependency controls for Python, C, C++, nC and ASM",
+    "List, cards and compact layouts animate and tolerate rapid reversals",
+    "The view choice persists across catalog refresh and respects reduced motion",
+    "Melody exposes local file memory with pause and forget controls",
+    "The Melody submenu opens the floating assistant with the requested action ready"
+  ],
+  "errors": []
+}

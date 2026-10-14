@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Extensions opens the Python package manager in its dedicated work surface",
+    "The bundled package inventory and filtering show actual installed distribution metadata",
+    "Install requirements creates .venv and installs the declared offline wheel through actual pip with visible output",
+    "The normal Python run plan imports the package from the environment prepared in Extensions",
+    "Invalid pip options are rejected and the form displays the real validation error",
+    "Project-local removal updates the list while preserving the bundled Python installation",
+    "Returning to VSIX extensions retains the project source and the existing extension catalog"
+  ],
+  "errors": [],
+  "packageSource": "Explicit offline verification wheel; real pip and interpreter, no simulated package installation."
+}

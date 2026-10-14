@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Melody previews actual scoped code and restores prompt drafts in Chat without sending",
+    "Context preview follows the actual No code/Whole file preference",
+    "Two actual Python buffer executions produce a bounded output comparison while disk remains unchanged",
+    "Pinning preserves the executed file and ignores unrelated active-tab edits",
+    "Restoring Follow active file actually starts the other unsaved buffer",
+    "Analyze Lantern opens floating Melody and actually sends a bounded read-only consultation",
+    "Missing model opens the inline picker and preserves the Lantern prompt instead of navigating to Settings"
+  ],
+  "errors": [],
+  "aiTransport": "Declared deterministic fixture; actual Python processes execute the unsaved buffers."
+}

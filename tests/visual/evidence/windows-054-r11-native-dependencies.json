@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "main.c links and executes an actual downloaded library",
+    "main.cpp links and executes an actual downloaded library",
+    "NCC manifest package builds and runs"
+  ],
+  "errors": []
+}

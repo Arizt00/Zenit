@@ -23,6 +23,14 @@
 - Motion checks include current-frame interruption, isolated dismissal, preserved
   canvas/scroll/control state, reduced motion, GPU pause behind overlays and
   bounded panel travel without clipping.
+- Installed Windows application: 40 checks passed in a disposable profile,
+  including the shared home/Melody crystal, local file memory, extension layouts,
+  original language icons, packaged compiler execution and real project packages
+  used by Run, Forge, Lantern and the Python debugger. The stable launcher opens
+  R11; existing profile files and the shared SDK index were preserved.
+- Packaged Windows application: 15 native GUI/runtime checks passed. Installer
+  integrity verification checks its exact payload file set and the hashes of
+  the application, launcher, uninstaller and included tool executables.
 
 Package, installed application and publication receipts are recorded separately
 in `tests/visual/evidence/windows-054-r11-*.json`. The installed verifier reports
