@@ -26,7 +26,7 @@ export class WorkspaceSetup {
     const d=this.draft,t=this.t.bind(this),name=d.name.trim()||t('Tu espacio','Your workspace');
     const labels={studio:t('Equilibrada','Balanced'),code:t('Compacta','Compact'),focus:t('Concentración','Focus'),day:t('Día','Day'),dark:t('Oscuro','Dark'),forest:t('Bosque','Forest')};
     return `<aside class="setup-preview ${personal?'is-personal':''}" aria-label="${t('Vista previa de tu espacio','Your workspace preview')}">
-      <div class="setup-preview-caption"><span>${icon('layout')}${t('TU ESPACIO','YOUR WORKSPACE')}</span><span class="setup-preview-live"><i></i>${t('Vista previa','Preview')}</span></div>
+      <div class="setup-preview-caption"><span>${icon('workspace')}${t('TU ESPACIO','YOUR WORKSPACE')}</span><span class="setup-preview-live"><i></i>${t('Vista previa','Preview')}</span></div>
       ${personal?`<div class="setup-profile-preview"><span class="setup-profile-avatar">${esc([...name][0].toLocaleUpperCase())}</span><h2>${esc(name)}</h2><p>${t('Todo empieza con una idea.','Everything starts with an idea.')}</p></div>`:''}
       <div class="setup-mini" data-layout="${d.layout}" data-position="${d.position}" aria-hidden="true">
         <div class="setup-mini-top"><b>Z</b><span>${esc(personal?name:'Aurora')}</span><i></i>${icon('search')}<span class="setup-mini-avatar">${esc([...name][0].toLocaleUpperCase())}</span></div>
