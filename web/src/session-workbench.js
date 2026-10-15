@@ -35,7 +35,7 @@ export class SessionWorkbench {
       const saved=this.root.querySelector('.session-restore select');if(saved.dataset.signature!==JSON.stringify(state.saved)){const old=saved.value;saved.innerHTML=state.saved.map(f=>`<option>${esc(f)}</option>`).join('');if(state.saved.includes(old))saved.value=old;saved.dataset.signature=JSON.stringify(state.saved);}
       this.root.querySelector('.session-restore button[type=submit]').disabled=!state.saved.length;
       this.root.querySelector('[data-hilo-pending]').textContent=hilo.jobs.filter(j=>['queued','running'].includes(j.state)).length+' '+this.platform.t('pendientes','pending');const jobs=this.root.querySelector('.hilo-jobs');jobs.innerHTML=hilo.jobs.slice(-6).reverse().map(j=>`<div><span><strong>${esc(j.label)}</strong><small>${esc(j.error||j.state)}</small></span>${['queued','running'].includes(j.state)?`<button class="text-button" data-hilo-cancel="${j.id}">Cancel</button>`:icon(j.state==='done'?'check':'info')}</div>`).join('')||'<p class="muted-copy">Ready when needed. No pending maintenance.</p>';
-      jobs.querySelectorAll('[data-hilo-cancel]').forEach(b=>b.onclick=()=>this.operation(()=>this.platform.api('/hilo/cancel',{id:b.dataset.hiloCancel})));
+      jobs.querySelectorAll('[data-hilo-cancel]').forEach(b=>b.onclick=()=>this.platform.safe(async()=>{b.disabled=true;try{await this.platform.api('/hilo/cancel',{id:b.dataset.hiloCancel});await this.refresh();}finally{b.disabled=false;}}));
     }catch(error){if(this.root.isConnected)this.root.querySelector('.session-feedback').textContent=error.message;}
     finally{clearTimeout(this.timer);if(this.root.isConnected)this.timer=setTimeout(()=>this.refresh(),1500);}
   }

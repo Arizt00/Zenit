@@ -167,7 +167,7 @@ def main():
         if sys.platform=='darwin':prepare_mac_icon()
         prepare_windows_bundle_cleanup(ROOT/'dist/Zenit')
         subprocess.run(command,cwd=ROOT,check=True)
-    bundle_python(ROOT/'dist/Zenit')
+    if not args.package_only:bundle_python(ROOT/'dist/Zenit')
     outputs=[];prefix=f'Zenit-{VERSION}-R{REVISION}'
     if args.installer:
         if sys.platform=='win32':

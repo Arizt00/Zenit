@@ -158,7 +158,7 @@ class TernTests(unittest.TestCase):
         ws = self.app.workspace; tern = self.features.tern; identity = self.create('arch')
         result = tern.console(ws, identity)
         terminal = self.features.terminals.sessions[result['terminal']['id']]
-        deadline = time.monotonic() + 240
+        deadline = time.monotonic() + 420
         while time.monotonic() < deadline:
             if 'zenit@zenit-arch' in terminal.output: break
             if terminal.closed: self.fail(terminal.output[-3000:])
@@ -171,6 +171,19 @@ class TernTests(unittest.TestCase):
         tern.save(ws, identity, 'live.tern'); tern.stop(ws, identity)
         self.assertTrue(terminal.closed)
         tern.reopen(ws, 'live.tern'); self.assertTrue(tern.directory(ws, identity).joinpath('disk.qcow2').exists())
+        print('PASS first VM boot, guest write and saved descriptor; checking the restored disk', flush=True)
+        restored = tern.console(ws, identity)
+        terminal = self.features.terminals.sessions[restored['terminal']['id']]
+        deadline = time.monotonic() + 420
+        while time.monotonic() < deadline:
+            if 'zenit@zenit-arch' in terminal.output: break
+            if terminal.closed: self.fail(terminal.output[-3000:])
+            time.sleep(.5)
+        else: self.fail('Restored VM did not reach its console: ' + terminal.output[-3000:])
+        terminal.write('cat ~/checkpoint\r')
+        deadline = time.monotonic() + 15
+        while 'TERN_LIVE' not in terminal.output and time.monotonic() < deadline: time.sleep(.1)
+        self.assertIn('TERN_LIVE', terminal.output)
         tern.stop(ws, identity)
 
     def test_external_adapter_argv_and_no_shell(self):

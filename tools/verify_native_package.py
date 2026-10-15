@@ -14,7 +14,7 @@ from backend.version import VERSION,REVISION
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--bundle',type=Path);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--bundle',type=Path);parser.add_argument('--integrity-only',action='store_true',help='Verify archives without repeating an already completed native GUI test');args=parser.parse_args()
     prefix=f'Zenit-{VERSION}-R{REVISION}'
     manifest=json.loads((ROOT/f'dist/{prefix}-{sys.platform}-{architecture()}-manifest.json').read_text(encoding='utf-8'))
     for item in manifest['outputs']:
@@ -35,6 +35,10 @@ def main():
         assert {name.removeprefix('payload/') for name in entries if name.startswith('payload/')}==files, 'Installer payload differs from the application bundle'
         index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
         critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
+        critical.update('_internal/web/'+name for name in (
+            'src/workbench.js','src/foundation-ui.js','src/session-workbench.js',
+            'src/hover-reveal.js','src/melody-stream.js',
+            'design/workflow-polish.css','design/session-workbench.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
         for name in sorted(critical):
             assert hashlib.sha256(archive.extract(entries['payload/'+name])).hexdigest()==sha256(payload/name), name
@@ -45,11 +49,12 @@ def main():
             try:
                 assert (Path(temp)/'Applications').is_symlink()
                 executable=Path(temp)/'Zenit.app/Contents/MacOS/zenit-python'
-                probe(executable,prefix)
+                if not args.integrity_only:probe(executable,prefix)
             finally:subprocess.run(['hdiutil','detach',temp],check=True)
     else:
         bundle=args.bundle or ROOT/'dist/Zenit'
-        probe(bundle/('zenit-python.exe' if sys.platform=='win32' else 'zenit-python'),prefix)
+        if not args.integrity_only:probe(bundle/('zenit-python.exe' if sys.platform=='win32' else 'zenit-python'),prefix)
+    if args.integrity_only:print('PASS package manifests, hashes and installer payload integrity',flush=True)
 
 
 def probe(executable,prefix):
