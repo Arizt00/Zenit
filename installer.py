@@ -250,17 +250,14 @@ class Installer:
 
     def _register(self, destination):
         if os.name != 'nt': return
-        import winreg
+        from backend.windows_installation import register_uninstaller
         uninstaller = self.target / 'Uninstall-Zenit.exe'
         bundled = ROOT / 'Uninstall-Zenit.exe'
         if not bundled.is_file():
             bundled = Path(__file__).resolve().parent / 'dist/Uninstall-Zenit.exe'
         if not bundled.is_file():raise ValueError('Falta el desinstalador gráfico en el paquete.')
         shutil.copy2(bundled,uninstaller)
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Uninstall\LumenStudio') as key:
-            values = {'DisplayName': 'Zénit', 'DisplayVersion': VERSION, 'Publisher': 'Zénit', 'InstallLocation': str(destination), 'DisplayIcon': str(destination / 'zenit.exe'),
-                'UninstallString': f'"{uninstaller}"'}
-            for name, value in values.items(): winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
+        register_uninstaller(self.target, VERSION)
 
     def launch(self):
         if self.status()['status'] != 'finished': raise ValueError('Completa la instalación antes de abrir Zénit.')

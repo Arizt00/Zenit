@@ -21,7 +21,7 @@ def retire_temporary_launcher():
     quote=lambda value:"'"+str(value).replace("'","''")+"'"
     # Remove only our executable, then the empty directory; never recurse.
     script=f"Wait-Process -Id {os.getpid()} -ErrorAction SilentlyContinue; for($attempt=0;$attempt -lt 30;$attempt++){{Start-Sleep -Milliseconds 500; Remove-Item -LiteralPath {quote(executable)} -Force -ErrorAction SilentlyContinue; if(-not(Test-Path -LiteralPath {quote(executable)})){{Remove-Item -LiteralPath {quote(folder)} -ErrorAction SilentlyContinue;break}}}}"
-    subprocess.Popen(['powershell.exe','-NoProfile','-NonInteractive','-WindowStyle','Hidden','-Command',script],creationflags=subprocess.CREATE_NO_WINDOW,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    subprocess.Popen(['powershell.exe','-NoProfile','-NonInteractive','-WindowStyle','Hidden','-Command',script],cwd=folder.parent,creationflags=subprocess.CREATE_NO_WINDOW,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
 class UninstallerAPI:
     def __init__(self, service): self._service = service; self._window = None
@@ -53,7 +53,10 @@ def main():
         temporary = Path(tempfile.mkdtemp(prefix='LumenUninstall-'))
         relocated = temporary / 'Uninstall-Zenit.exe'
         shutil.copy2(sys.executable, relocated)
-        child = subprocess.Popen([str(relocated), '--target', str(service.root)], creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+        # A copied executable can still keep the installation locked through its
+        # inherited working directory. Both its executable and cwd must relocate.
+        child = subprocess.Popen([str(relocated), '--target', str(service.root)], cwd=temporary,
+                                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
         # This supervisor remains outside all application version folders. The UI
         # may delete the installed launcher only after this process exits.
         return
@@ -61,7 +64,7 @@ def main():
     api = UninstallerAPI(service)
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(Handler, directory=str(ROOT / 'web')))
     threading.Thread(target=server.serve_forever, daemon=True).start()
-    api._window = webview.create_window('Desinstalar Zénit', f'http://127.0.0.1:{server.server_port}/', js_api=api,
+    api._window = webview.create_window('Uninstall Zénit', f'http://127.0.0.1:{server.server_port}/', js_api=api,
         width=960, height=760, min_size=(740, 620), background_color='#F6F7FD')
     api._window.events.closing += lambda: False if service.status()['status'] == 'removing' else None
     try: webview.start()

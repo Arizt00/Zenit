@@ -40,3 +40,36 @@ paused background rendering is expected behavior.
 AI tests use declared deterministic responses and catalogs. They do not certify
 provider intelligence or account entitlement. Theme coverage from R8 is retained
 as historical evidence; no new full theme matrix is claimed by this revision.
+
+## Windows uninstall repair — 15 October 2026
+
+The native toolchain includes read-only SDK files, such as
+`native-mingw/lib/tcl8.6/msgs/af.msg`. The original R11 uninstaller could stop
+with Windows error 5 when removing these files. Removal now clears only the
+read-only attribute of a validated, installer-owned path before retrying.
+Genuine sharing/permission errors still stop removal and allow a retry.
+
+- 19 focused regression checks passed: read-only toolchain and launcher files,
+  actual Windows file locks, retry after partial removal, preserved profiles and
+  projects, rejected junctions, installer upgrades, and real isolated HKCU
+  registration with spaces and Unicode in installation paths.
+- The rebuilt standalone uninstaller passed an actual native GUI run against a
+  disposable installation. It relocated itself and its working directory,
+  removed the read-only SDK fixture and its own installed executable, and kept
+  the profile and both internal and external projects. No JavaScript errors were
+  reported.
+- Registration uses the stable installation root, an explicit uninstall target,
+  and visible/uninstallable Windows metadata. The legacy registry key remains
+  compatible with existing installations; unsupported Modify/Repair actions are
+  disabled.
+- The installed R11 uninstaller was replaced with the verified binary. Windows
+  Programs and Features was checked directly: Zénit 0.5.4 is listed and exposes
+  Uninstall/Change, which opens the corrected review interface. The application
+  was not removed as part of the repair; data deletion remains unchecked by
+  default.
+
+Verified standalone executable SHA-256:
+`e3e293f0373b79fd970e32d27391446944fa9cc4bef419a5a11d881ba5fe5bc9`.
+
+This repair rebuilds the standalone uninstaller and fixes installer source.
+Previously published full R11 installer/portable downloads are unchanged.

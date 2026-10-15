@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import threading
 
 
@@ -16,6 +17,26 @@ def no_links(path):
         if part.is_symlink() or (hasattr(part, 'is_junction') and part.is_junction()):
             raise ValueError('La ruta contiene un enlace o una unión: ' + str(part))
     return path.resolve()
+
+
+def retry_readonly(function, path, exc_info, *, root):
+    """Clear only the Windows read-only attribute, within a validated removal root.
+
+    SDK archives can retain this attribute. ACL failures and sharing violations
+    must still reach the UI; neither permissions nor running processes are changed.
+    """
+    error = exc_info[1]
+    if os.name != 'nt' or not isinstance(error, PermissionError) or function not in (os.unlink, os.remove, os.rmdir):
+        raise error
+    target = no_links(path)
+    boundary = no_links(root)
+    if not target.is_relative_to(boundary):
+        raise ValueError('Removal target is outside the authorized folder.') from error
+    metadata = target.stat()
+    if not metadata.st_file_attributes & stat.FILE_ATTRIBUTE_READONLY:
+        raise error
+    target.chmod(metadata.st_mode | stat.S_IWRITE)
+    function(target)
 
 
 class Uninstaller:
@@ -79,9 +100,18 @@ class Uninstaller:
         for folder, dirs, files in os.walk(target, followlinks=False):
             for name in dirs + files:
                 no_links(Path(folder) / name)
-        shutil.rmtree(target)
+        shutil.rmtree(target, onerror=lambda function, path, error: retry_readonly(function, path, error, root=target))
         with self.lock:
             self.state['removed'].append(str(target))
+
+    def _file(self, path, parent):
+        target = no_links(path)
+        if target.parent != no_links(parent):
+            raise ValueError('Removal target is outside the authorized folder.')
+        try:
+            target.unlink()
+        except PermissionError as error:
+            retry_readonly(os.unlink, target, (type(error), error, error.__traceback__), root=parent)
 
     def _running(self):
         if not self.integrate_windows:
@@ -114,7 +144,7 @@ class Uninstaller:
                             continue
                         no_links(child)
                         if child.is_dir(): self._tree(child, self.data_dir)
-                        else: child.unlink()
+                        else: self._file(child, self.data_dir)
                     if not any(self.data_dir.iterdir()): self.data_dir.rmdir()
             if options.get('deleteData') and self.integrate_windows:
                 import keyring as native
@@ -126,14 +156,19 @@ class Uninstaller:
                             self.state['warnings'].append('No se pudo retirar la credencial de ' + provider + ' del almacén de Windows.')
             with self.lock:
                 self.state.update(progress=85, message='Retirando accesos de Windows…')
+            # Retain the manifest, graphical uninstaller and Windows entry if a
+            # launcher is still locked. A retry can resume a partial removal.
+            for name in ('Zenit.exe', 'Uninstall-Lumen.ps1', 'Uninstall-Lumen.exe', 'Uninstall-Edryvo.exe'):
+                path = no_links(self.root / name)
+                if path.is_file(): self._file(path, self.root)
             if self.integrate_windows and os.name == 'nt':
                 import pythoncom
                 pythoncom.CoInitialize()
                 try:self._windows()
                 finally:pythoncom.CoUninitialize()
-            for name in ('installation.json', 'Zenit.exe', 'Uninstall-Lumen.ps1', 'Uninstall-Lumen.exe', 'Uninstall-Zenit.exe', 'Uninstall-Edryvo.exe'):
+            for name in ('Uninstall-Zenit.exe', 'installation.json'):
                 path = no_links(self.root / name)
-                if path.is_file(): path.unlink()
+                if path.is_file(): self._file(path, self.root)
             # User-added files in the install root are not application files.
             if self.root.exists() and not any(self.root.iterdir()): self.root.rmdir()
             with self.lock:
