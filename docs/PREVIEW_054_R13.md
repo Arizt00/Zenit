@@ -6,6 +6,13 @@ keeps personalisation labels and descriptions separate, and transitions to Home
 through the same interruptible screen motion used by the workspace. A local
 language preview no longer gets overwritten by the legacy chrome translator.
 
+The setup screens have been redesigned around a live miniature workspace.
+Theme, layout and Melody position choices update its panels immediately. The
+personalisation screen has an editable name preview, separate preference cards,
+clearer typography and a responsive two-column composition. Changing the name
+keeps the preview's rendering context and scroll position. Native themes preview
+without overwriting saved appearance data; skipping restores the saved theme.
+
 Laboratory, Forge and Debug form a compact toolbar. Each expands to the left
 with a fixed right edge; the search field resizes continuously. The buttons
 collapse after clicking and respect reduced motion. Melody's header keeps New

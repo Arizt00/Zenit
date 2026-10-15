@@ -61,11 +61,11 @@ export function themePalette(theme) {
   return {palette,colors,dark};
 }
 export function restoreShellAppearance(root=document.documentElement,storage=localStorage){return globalThis.ZenitThemeAppearance.restore(root,storage);}
-export function applyShellTheme(theme,root=document.documentElement,baseTheme='day'){
+export function applyShellTheme(theme,root=document.documentElement,baseTheme='day',{persist=true}={}){
   const resolved=theme?themePalette(theme):null,palette=resolved?.palette||{};if(theme)palette.glass=palette.surface.slice(0,7)+'f0';
   for(const key of (root.dataset.extensionTokens||'').split(' ').filter(Boolean))if(!(key in palette))root.style.removeProperty('--'+key);
   for(const [key,value] of Object.entries(palette))if(root.style.getPropertyValue('--'+key)!==value)root.style.setProperty('--'+key,value);
   if(theme){root.dataset.extensionTokens=Object.keys(palette).join(' ');root.dataset.extensionTheme=theme.id;root.dataset.theme=resolved.dark?'dark':'day';}
   else{delete root.dataset.extensionTheme;delete root.dataset.extensionTokens;root.dataset.theme=baseTheme;}
-  try{if(theme)localStorage.setItem('zenit.themeAppearance',JSON.stringify({id:theme.id,base:root.dataset.theme,palette}));else localStorage.removeItem('zenit.themeAppearance');}catch{}
+  if(persist)try{if(theme)localStorage.setItem('zenit.themeAppearance',JSON.stringify({id:theme.id,base:root.dataset.theme,palette}));else localStorage.removeItem('zenit.themeAppearance');}catch{}
 }

@@ -30,12 +30,27 @@ def main():
                 assert page.locator('#onboarding').evaluate('(e)=>getComputedStyle(e).backgroundColor!=="rgba(0, 0, 0, 0)"')
                 for theme in ('day','dark','forest'):
                     page.locator(f'[data-choice=theme][data-value={theme}]').click()
+                    page.wait_for_timeout(300)
+                    contrast=page.locator('#onboarding .setup-choices>button, #onboard-locale').evaluate_all('''elements=>elements.map(e=>{
+                      const s=getComputedStyle(e),lum=c=>{const [r,g,b]=c.match(/[\\d.]+/g).slice(0,3).map(Number).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4});return r*.2126+g*.7152+b*.0722},a=lum(s.color),b=lum(s.backgroundColor);
+                      return {label:e.textContent.trim(),ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05),color:s.color,background:s.backgroundColor};
+                    })''')
+                    assert all(c['ratio']>=4.5 for c in contrast),(theme,contrast)
                     assert page.locator('#onboarding').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
                     page.screenshot(path=str(out/f'setup-{theme}.png'))
                 passed('Fresh setup owns an opaque screen in all three themes; home cannot overlap')
+                page.locator('[data-choice=layout][data-value=code]').click();expect(page.locator('.setup-mini-melody')).not_to_be_visible()
+                page.locator('[data-choice=layout][data-value=focus]').click();expect(page.locator('.setup-mini-project')).not_to_be_visible();expect(page.locator('.setup-mini-terminal')).not_to_be_visible()
+                page.locator('[data-choice=layout][data-value=studio]').click();page.locator('[data-choice=position][data-value=left]').click()
+                assert page.locator('.setup-mini-melody').bounding_box()['x']<page.locator('.setup-mini-editor').bounding_box()['x']
+                page.locator('[data-choice=position][data-value=bottom]').click();expect(page.locator('.setup-mini-terminal')).not_to_be_visible()
+                page.locator('[data-choice=position][data-value=right]').click();page.locator('#onboard-locale').select_option('en');expect(page.locator('#onboarding-title')).to_have_text('Design your workspace')
+                page.locator('#onboard-locale').select_option('es')
+                passed('Live preview follows all layout and Melody positions; language preview stays local')
                 page.locator('[data-choice=theme][data-value=day]').click();page.locator('#onboard-next').click()
                 page.locator('#onboard-name').fill('Alex');page.locator('#onboard-motion').uncheck();page.locator('#onboard-autosave').check()
-                expect(page.locator('.preference-label small').first).to_be_visible();page.screenshot(path=str(out/'personalize.png'))
+                expect(page.locator('.setup-profile-preview h2')).to_have_text('Alex');assert page.locator('.setup-content').evaluate('(e)=>e.scrollTop')==0
+                expect(page.locator('.preference-label small').first).to_be_visible();page.wait_for_timeout(300);page.screenshot(path=str(out/'personalize.png'))
                 page.locator('#onboard-back').click();page.locator('#onboard-next').click();expect(page.locator('#onboard-name')).to_have_value('Alex');expect(page.locator('#onboard-motion')).not_to_be_checked();expect(page.locator('#onboard-autosave')).to_be_checked()
                 page.locator('#onboard-motion').check();page.locator('#onboard-next').click();page.locator('#onboard-next').click();expect(page.locator('#onboarding')).to_have_count(0)
                 page.wait_for_function('!document.documentElement.dataset.screenMotion');expect(page.locator('.welcome-copy')).to_be_visible();assert not page.locator('#app').evaluate('(e)=>e.inert')
@@ -71,7 +86,8 @@ def main():
                 passed('Failed Hilo work can be reviewed by Melody with actual evidence and inline model selection')
                 page.evaluate('__qa.studio.onboarding()');page.wait_for_function('!document.documentElement.dataset.screenMotion');expect(page.locator('#onboarding')).to_be_visible()
                 page.set_viewport_size({'width':720,'height':700});assert page.locator('#onboarding').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
-                page.screenshot(path=str(out/'setup-small.png'));page.locator('#skip-onboarding').click();expect(page.locator('#onboarding')).to_have_count(0)
+                page.screenshot(path=str(out/'setup-small.png'));page.locator('[data-choice=theme][data-value=forest]').click();page.locator('#skip-onboarding').click();expect(page.locator('#onboarding')).to_have_count(0)
+                assert page.evaluate('document.documentElement.dataset.theme')=='day'
                 page.emulate_media(reduced_motion='reduce');page.evaluate('__qa.studio.onboarding()');page.locator('#skip-onboarding').click();expect(page.locator('#onboarding')).to_have_count(0)
                 assert not errors,errors;passed('Reopening setup, small windows, skip and reduced motion complete without JavaScript errors');browser.close()
         finally:server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()
