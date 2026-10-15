@@ -46,6 +46,8 @@ def main():
                 page.locator('.lab-heading').scroll_into_view_if_needed();page.wait_for_timeout(500);page.screenshot(path=str(out/'lantern-environments.png'));passed('Python environment can be created, activated, saved, closed and restored through the UI')
                 expect(page.locator('[data-lab-section=connections]')).to_have_count(0)
                 page.evaluate('__qa.platform.settings("connections")');expect(page.locator('.connections-grid article')).to_have_count(7);page.wait_for_timeout(750);assert page.locator('[data-setting-category=connections]').get_attribute('aria-current')=='page';page.screenshot(path=str(out/'hilo-connections.png'));passed('Connections exists only in Settings and shows all seven actual application adapters')
+                page.locator('#settings-search').fill('font');expect(page.locator('.settings-category:not([hidden])')).to_contain_text('Results')
+                page.locator('[data-setting-category=connections]').click();expect(page.locator('.connections-grid')).to_be_visible();expect(page.locator('#settings-search')).to_have_value('')
                 page.evaluate('__qa.platform.closePage()')
                 page.evaluate('__qa.editor.insertText("# unsaved main\\n",false);__qa.editor.split("main.py","right")')
                 page.wait_for_selector('.editor-mount.is-split,#editor-mount.is-split');expect(page.locator('.editor-pane')).to_have_count(2)

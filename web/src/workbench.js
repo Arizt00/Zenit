@@ -780,7 +780,7 @@ export class LumenPlatform {
     const target=event.target.closest('button');if(!target)return;
     const d=target.dataset;
     return this.safe(async()=>{
-      if(d.settingCategory)return this.settings(d.settingCategory);
+      if(d.settingCategory){const search=this.workbench.querySelector('#settings-search');if(search)search.value='';return this.settings(d.settingCategory);}
       if(d.provider){await this.savePreference('ai.provider',d.provider);await this.savePreference('ai.model','');this.conversation=crypto.randomUUID?.()||String(Date.now());return this.renderSettingsContent();}
       if(d.iconThemePicker!==undefined)return this.iconThemePicker.open(d.iconThemePicker);
       if(d.themePicker!==undefined)return this.themePicker.open(d.themePicker);
