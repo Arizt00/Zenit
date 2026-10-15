@@ -26,7 +26,7 @@
 #onboarding .setup-heading h1{font-size:clamp(28px,2.6vw,40px);font-weight:600;line-height:1.18;color:var(--text);letter-spacing:-1.2px;margin:14px 0 12px;outline:none;}
 #onboarding .setup-heading p{font-size:14px;color:var(--secondary);margin-bottom:30px;max-width:650px;line-height:1.7;}
 #onboarding .eyebrow{color:var(--accent);font-size:10px;letter-spacing:2px;}
-#onboarding .setup-content{scrollbar-width:none;padding:0 2px 20px;overflow-x:hidden;overflow-anchor:none;}
+#onboarding .setup-content{scrollbar-width:none;padding:0 2px 8px;overflow-x:hidden;overflow-anchor:none;}
 #onboarding .setup-content::-webkit-scrollbar{display:none;}
 .setup-compose{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:24px;align-items:stretch;}
 #onboarding .setup-grid{flex:0;grid-template-columns:1fr 1fr;grid-template-rows:auto;gap:14px;}

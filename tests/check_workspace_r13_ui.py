@@ -54,7 +54,10 @@ def main():
                 page.set_viewport_size({'width':1500,'height':950})
                 page.locator('[data-choice=theme][data-value=day]').click();page.locator('#onboard-next').click()
                 page.locator('#onboard-name').fill('Alex');page.locator('#onboard-motion').uncheck();page.locator('#onboard-autosave').check()
-                expect(page.locator('.setup-profile-preview h2')).to_have_text('Alex');assert page.locator('.setup-content').evaluate('(e)=>e.scrollTop')==0
+                expect(page.locator('.setup-profile-preview h2')).to_have_text('Alex')
+                if page.locator('.setup-content').evaluate('(e)=>e.scrollTop')!=0:
+                    page.screenshot(path=str(out/'unexpected-scroll.png'))
+                    raise AssertionError(page.locator('.setup-content').evaluate('(e)=>({scroll:e.scrollTop,height:e.clientHeight,total:e.scrollHeight})'))
                 expect(page.locator('.preference-label small').first).to_be_visible();page.wait_for_timeout(300)
                 for width in (1500,1100,900):
                     page.set_viewport_size({'width':width,'height':950})

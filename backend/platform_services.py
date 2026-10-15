@@ -151,6 +151,7 @@ class PlatformServices:
     def post(self,path,body):
         ws=self.app.workspace
         if path=='/hilo/refresh':self.hilo.invalidate();return {'connections':self.connections.inventory()}
+        if path=='/hilo/clear':return self.hilo.clear_finished(ws.root)
         if path=='/hilo/cancel':
             self._trusted()
             job=next((j for j in self.hilo.snapshot(ws.root)['jobs'] if j['id']==body.get('id')),None)

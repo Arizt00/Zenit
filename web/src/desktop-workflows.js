@@ -26,7 +26,8 @@ export class DesktopWorkflows{
     for(const [panel,node] of Object.entries(h.dock.panels)){
       const b=document.createElement('button');b.className='icon-button';b.title='Abrir '+{project:'Proyecto',assistant:'asistente',console:'terminal'}[panel]+' en el escritorio';b.setAttribute('aria-label',b.title);b.innerHTML=icon('detach');b.onclick=()=>this.safe(()=>this.detach(panel));node.querySelector(panel==='console'?'.terminal-tools':'.heading-actions').append(b);
     }
-    this.returned=e=>this.restorePanel(e.detail.panel);window.addEventListener('lumen:native-return',this.returned);
+    h.editor.callbacks.detached=path=>this.safe(()=>this.focusEditor(path));
+    this.returned=e=>this.safe(()=>this.restorePanel(e.detail.panel,e.detail.path));window.addEventListener('lumen:native-return',this.returned);
     this.detachEditor=e=>this.safe(()=>this.detach(e.detail?.panel||'editor',e.detail?.path||h.editor.current,e.detail?.position));window.addEventListener('lumen:detach-editor',this.detachEditor);
     h.dock.onDetach=(panel,position)=>this.safe(()=>this.detach(panel,'',position));
     h.commands.push(['split-editor','layout','Editor: ver dos archivos a la vez','Ctrl \\'],['close-split-editor','close','Editor: cerrar división',''],['detach-editor','plus','Editor: sacar al escritorio',''],['forge-window','build','Forge: abrir en otra ventana',''],['forge-terminal','terminal','Forge: abrir en la terminal integrada',''],['hacker','build','Forge: activar / desactivar controles',''],['hacker-python','play','Forge: ejecutar Python desde el búfer',''],['hacker-gdb','bug','Forge: compilar C y abrir GDB integrado',''],['updates','download','Zénit: comprobar actualizaciones de GitHub','']);
@@ -100,7 +101,7 @@ export class DesktopWorkflows{
   async handle(action){
     const h=this.host;
     if(action==='toggle-terminal'&&this.editorShell){await this.toggleEditorTerminal();return true;}
-    if(action==='split-editor'){h.studio.enter();const paths=[...h.editor.models.keys()],path=paths.find(p=>p!==h.editor.current)||h.editor.current;if(!path)throw Error('Abre un archivo para dividir el editor.');h.editor.split(path);return true;}
+    if(action==='split-editor'){h.studio.enter();const paths=h.editor.visiblePaths(),path=paths.find(p=>p!==h.editor.current)||h.editor.current;if(!path)throw Error('Abre un archivo para dividir el editor.');h.editor.split(path);return true;}
     if(action==='close-split-editor'){h.editor.closeSplit();return true;}
     if(action==='detach-editor'){await this.detach('editor',h.editor.current);return true;}
     if(action==='hacker'){this.forgeIntegrated=!this.forgeIntegrated;this.paintHacker();if(this.forgeIntegrated){h.studio.enter();this.showForgeConsole();await this.refreshForgeTools();}return true;}
@@ -137,6 +138,7 @@ export class DesktopWorkflows{
   }
   async detach(panel,path='',position){
     const h=this.host,api=window.pywebview?.api;
+    if(panel==='editor'&&h.editor.detachedPaths.has(path))return this.focusEditor(path);
     if(this.query.has('panel')&&!(this.editorShell&&panel==='console')){await this.returnToApp();return;}
     if(panel==='profile')panel='profile-'+h.studio.profile.workspaceStyle;
     if(panel==='editor'&&!path)throw Error('Abre un archivo para separarlo.');
@@ -149,17 +151,27 @@ export class DesktopWorkflows{
     if(api?.detach_panel){const result=await api.detach_panel(panel,path,position||null);opened=result.opened!==false;}
     else{
       const key=panel==='editor'?panel+':'+path:panel,existing=this.browserChildren.get(key);
-      if(existing&&!existing.closed){existing.close();this.browserChildren.delete(key);this.restorePanel(panel);return;}
+      if(existing&&!existing.closed){existing.close();this.browserChildren.delete(key);await this.restorePanel(panel,path);return;}
       const url=new URL(location.href);url.search=new URLSearchParams({panel,file:path,...(this.editorShell?{parentPanel:'editor'}:{})});
       const child=window.open(url.href,'_blank','width=1060,height=760');if(!child)throw Error('Permite las ventanas emergentes para separar el panel.');this.browserChildren.set(key,child);
-      const timer=setInterval(()=>{if(child.closed){clearInterval(timer);this.browserChildren.delete(key);this.restorePanel(panel);}},400);
+      const timer=setInterval(()=>{if(child.closed){clearInterval(timer);this.browserChildren.delete(key);this.safe(()=>this.restorePanel(panel,path));}},400);
     }
-    if(!opened){this.restorePanel(panel);return;}
+    if(!opened){await this.restorePanel(panel,path);return;}
+    if(panel==='editor'){h.editor.suspend(path);h.renderTabs();}
     if(auxiliary){this.auxiliary.add(panel);if(panel==='lantern')$('#lantern-inline')?.setAttribute('hidden','');else h.studio.workspaces?.setDetached(true,panel);}
     else if(this.editorShell&&panel==='console'){this.editorTerminalDetached=true;this.showEditorTerminal(false);}
     else if(panel!=='editor'){h.dock.nativeDetached.add(panel);h.dock.hide(panel);}
   }
-  restorePanel(panel){
+  async focusEditor(path){
+    const api=window.pywebview?.api;if(api?.focus_panel)return api.focus_panel('editor',path);
+    this.browserChildren.get('editor:'+path)?.focus();
+  }
+  async restorePanel(panel,path){
+    if(panel==='editor'){
+      if(!this.host.editor.detachedPaths.has(path))return;
+      await this.pollBuffers(false);
+      this.host.editor.resume(path);this.host.renderTabs();return;
+    }
     if(this.editorShell&&panel==='console'){this.editorTerminalDetached=false;this.showEditorTerminal(!this.editorTerminalInMain);return;}
     const h=this.host;if(panel==='forge'){this.forgeWindowOpen=false;return;}
     if(this.auxiliary.delete(panel)){if(panel==='lantern'){h.studio.lantern.openInline();$('#lantern-inline')?.removeAttribute('hidden');}else h.studio.workspaces?.setDetached(false);return;}
@@ -175,7 +187,7 @@ export class DesktopWorkflows{
     const panel=this.query.get('panel'),h=this.host;if(!panel)return;
     const header=document.createElement('header');header.className='native-window-heading';
     const titles={project:'Proyecto',assistant:'Melody',console:'Terminal',editor:'Editor',forge:'Forge',preview:'Vista web en vivo',lantern:'Lantern Live','profile-general':'Desarrollo general','profile-web':'Desarrollo web','profile-data':'Ciencia de datos','profile-design':'Diseño y UI','profile-assembly':'Laboratorio ASM'};
-    header.innerHTML=`<span>${icon(panel==='project'?'folder':panel==='lantern'||panel==='assistant'?'sparkles':'layout')}<strong>${esc(titles[panel]||'Zénit')}</strong><small>${panel==='project'?esc(h.service().name):'Búfer compartido · cambios en vivo'}</small></span><div class="native-heading-actions"><button class="secondary-button native-return">${icon('dock-left')}Volver a Zénit</button></div>`;
+    header.innerHTML=`<span>${icon(panel==='editor'?'editor-window':panel==='project'?'folder':panel==='lantern'||panel==='assistant'?'sparkles':'workspace')}<strong>${esc(titles[panel]||'Zénit')}</strong><small>${panel==='project'?esc(h.service().name):'Búfer compartido'}</small></span><div class="native-heading-actions"><button class="secondary-button native-return">${icon('dock-left')}Volver a Zénit</button></div>`;
     if(this.query.get('parentPanel')==='editor')header.querySelector('.native-return').innerHTML=icon('dock-bottom')+'Volver al editor';
     header.querySelector('button').onclick=()=>this.safe(()=>this.returnToApp());
     if(panel==='preview'||panel==='lantern'){
@@ -195,8 +207,10 @@ export class DesktopWorkflows{
   }
   toggleEditorTerminal(){this.editorTerminalInMain=false;return this.editorTerminalDetached?this.detach('console'):this.showEditorTerminal(!this.editorTerminalVisible);}
   installEditorActions(header){
-    const actions=header.querySelector('.native-heading-actions'),run=document.createElement('button');run.className='primary-button native-editor-run';run.dataset.action='run';run.dataset.sessionRun='';run.title='Ejecutar archivo · F5';run.innerHTML=icon('play')+'Ejecutar';actions.prepend(run);
+    const actions=header.querySelector('.native-heading-actions'),run=document.createElement('button');run.className='secondary-button native-editor-run';run.dataset.action='run';run.dataset.sessionRun='';run.title='Ejecutar archivo · F5';run.innerHTML=icon('play')+'<span>Ejecutar</span>';actions.prepend(run);
     const main=document.createElement('button');main.className='text-button native-editor-main-terminal';main.innerHTML=icon('dock-bottom')+'<span>Usar terminal de Zénit</span>';main.setAttribute('aria-label','Usar terminal de Zénit');main.title='Ocultar este terminal y continuar en la aplicación';main.onclick=()=>this.safe(()=>this.useMainTerminal());actions.insertBefore(main,actions.querySelector('.native-return'));
+    const terminal=actions.querySelector('.native-editor-terminal');terminal.innerHTML=icon('terminal')+'<span>Terminal</span>';
+    for(const button of [run,terminal,main]){hoverReveal(button);button.setAttribute('aria-label',button.querySelector('span').textContent);}
   }
   async useMainTerminal(){this.editorTerminalInMain=true;if(this.editorTerminalDetached)await this.detach('console');this.showEditorTerminal(false);this.requestMainTerminal(this.host.platform.showingPTY?this.host.platform.activeTerminal:null,!this.host.platform.showingPTY);if(window.pywebview?.api.focus_main)await window.pywebview.api.focus_main();else window.opener?.focus();}
   requestMainTerminal(id,tasks=false){this.channel.postMessage({type:'terminal-main',id,tasks,workspace:this.host.service().workspace});}
@@ -249,7 +263,7 @@ export class DesktopWorkflows{
       if((r.model?.getValue()??r.value)!==text&&this.shared.has(path))this.pending.add(path);
     }}finally{this.publishing=false;if(this.pending.size)this.publishTimer=setTimeout(()=>this.safe(()=>this.publish()),100);}
   }
-  async pollBuffers(){
+  async pollBuffers(schedule=true){
     if(this.disposed)return;
     try{
       const data=await this.host.platform.api('/buffers');
@@ -268,7 +282,7 @@ export class DesktopWorkflows{
       }
       if(auxiliaryChanged&&this.query.has('panel'))this.host.studio.workspaces?.changed();
     }catch(error){if(!this.disposed)console.warn('Window sync:',error.message);}
-    this.bufferTimer=setTimeout(()=>this.pollBuffers(),this.query.has('panel')?250:400);
+    if(schedule)this.bufferTimer=setTimeout(()=>this.pollBuffers(),this.query.has('panel')?250:400);
   }
   async detached(){
     const panel=this.query.get('panel'),h=this.host;

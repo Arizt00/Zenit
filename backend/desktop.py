@@ -67,6 +67,13 @@ class DesktopAPI:
         self._window.destroy()
         return {'returned':True,'panel':self._panel}
 
+    def focus_panel(self, panel, path=''):
+        key=panel+':'+path if panel=='editor' else panel
+        child=self._children.get(key)
+        if child is None:return {'focused':False}
+        child.restore();child.show()
+        return {'focused':True}
+
     def focus_main(self):
         owner=self
         while owner._owner is not None:owner=owner._owner

@@ -28,6 +28,17 @@ def wait(hilo, identity, timeout=45):
 
 
 class HiloTests(unittest.TestCase):
+    def test_clear_finished_keeps_running_jobs_and_other_workspaces(self):
+        hilo=Hilo(None);started=threading.Event();release=threading.Event()
+        try:
+            first=hilo.submit('Finished',lambda event:None,workspace='one');wait(hilo,first['job'])
+            other=hilo.submit('Other workspace',lambda event:None,workspace='two');wait(hilo,other['job'])
+            active=hilo.submit('Running',lambda event:(started.set(),release.wait(3)),workspace='one');self.assertTrue(started.wait(2))
+            self.assertEqual(hilo.snapshot('one')['counts']['running'],1)
+            self.assertEqual(hilo.clear_finished('one'),{'removed':1})
+            self.assertEqual({j['id'] for j in hilo.snapshot()['jobs']},{other['job'],active['job']})
+        finally:release.set();hilo.shutdown()
+
     def test_queue_priority_dedup_cancellation_and_cache(self):
         hilo = Hilo(None); started = threading.Event(); release = threading.Event(); order = []
         try:

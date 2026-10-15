@@ -38,6 +38,7 @@ def main():
         critical.update('_internal/web/'+name for name in (
             'src/workbench.js','src/foundation-ui.js','src/session-workbench.js',
             'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',
+            'src/desktop-workflows.js','src/editor.js','src/icons.js','src/dependency-layout.js','design/refine-r14.css',
             'design/workflow-polish.css','design/session-workbench.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
         for name in sorted(critical):
@@ -61,7 +62,7 @@ def probe(executable,prefix):
     report=ROOT/f'dist/{prefix}-{sys.platform}-{architecture()}-verification.json'
     env={**os.environ,'QT_QPA_PLATFORM':'xcb','QTWEBENGINE_CHROMIUM_FLAGS':'--disable-gpu','QTWEBENGINE_DISABLE_SANDBOX':'1'}
     subprocess.run([str(executable),'--python-child',str(ROOT/'tests/native_smoke_worker.py'),'--report',str(report)],env=env,check=True,timeout=300)
-    result=json.loads(report.read_text(encoding='utf-8'));assert not result['errors'] and len(result['checks'])==15,result
+    result=json.loads(report.read_text(encoding='utf-8'));assert not result['errors'] and len(result['checks'])==16,result
     print('PASS installer integrity and actual packaged native GUI:',sys.platform,architecture(),flush=True)
 
 if __name__=='__main__':main()

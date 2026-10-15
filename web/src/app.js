@@ -106,6 +106,7 @@ function revealFile(path){
   rootExpanded=true;
 }
 async function openFile(path,line=null){
+  if(editor.detachedPaths.has(path)){await desktopUI?.focusEditor(path);return;}
   if(desktopUI?.query.get('panel')==='project'){desktopUI.openInParent(path);return;}
   studio?.enter();
   previewUI?.services.hide();
@@ -117,12 +118,13 @@ async function openFile(path,line=null){
   studio?.remember(path);previewUI?.activeChanged();desktopUI?.activeFile(path);
 }
 function renderTabs(){
-  const signature=JSON.stringify([...editor.models.keys()].map(path=>[path,path===editor.current,editor.isDirty(path)]));
+  const visiblePaths=editor.visiblePaths(),signature=JSON.stringify(visiblePaths.map(path=>[path,path===editor.current,editor.isDirty(path)]));
   if(signature===tabsSignature)return;tabsSignature=signature;
   const container=$('#file-tabs'),previousTabs=new Map([...container.querySelectorAll('[data-tab]')].map(el=>[el.dataset.tab,el]));
-  for(const [path,tab] of previousTabs)if(!editor.models.has(path))tab.remove();
+  for(const [path,tab] of previousTabs)if(!visiblePaths.includes(path))tab.remove();
   let index=0;
   for(const item of editor.models.values()){
+    if(editor.detachedPaths.has(item.path))continue;
     let tab=previousTabs.get(item.path);
     if(!tab){tab=document.createElement('button');tab.className='file-tab';tab.setAttribute('role','tab');tab.draggable=true;tab.setAttribute('aria-controls','editor-mount');tab.dataset.tab=item.path;tab.title=item.path;tab.innerHTML=`${fileIcon(item.path)}<span class="file-label">${esc(item.path.split('/').pop())}</span><span class="tab-close" data-close-file="${esc(item.path)}" aria-label="Cerrar archivo"></span>`;}
     const active=item.path===editor.current;tab.classList.toggle('active',active);tab.tabIndex=active?0:-1;tab.setAttribute('aria-selected',String(active));
@@ -132,7 +134,7 @@ function renderTabs(){
   }
   previewUI?.renderGroups();
   previewUI?.services.restoreTabs();
-  const empty=editor.models.size===0;$('#editor-empty').classList.toggle('hidden',!empty);
+  const empty=visiblePaths.length===0;$('#editor-empty').classList.toggle('hidden',!empty);
   $('#editor-mount').style.visibility='visible';
   document.title=(editor.current?editor.current.split('/').pop()+' · ':'')+'Zénit';
   const selected=$('#file-tabs .file-tab.active');
@@ -170,13 +172,14 @@ async function saveFile(path=editor.current,{automatic=false}={}){
   return result;
 }
 async function closeFile(path){
+  if(editor.detachedPaths.has(path)){await desktopUI?.focusEditor(path);return;}
   if(editor.isDirty(path)){
     const choice=await confirmDialog('Cambios sin guardar',`${path} tiene cambios. Puedes cancelar el cierre o descartarlos. Guarda antes con Ctrl+S para conservarlos.`,'Descartar y cerrar');
     if(!choice)return;
   }
-  const list=[...editor.models.keys()],index=list.indexOf(path),wasCurrent=path===editor.current;
+  const list=editor.visiblePaths(),index=list.indexOf(path),wasCurrent=path===editor.current;
   editor.close(path);
-  if(wasCurrent&&editor.models.size)editor.activate(list[index+1]||list[index-1]);
+  if(wasCurrent&&editor.visiblePaths().length)editor.activate(list[index+1]||list[index-1]);
   renderTabs();renderTree();updateDocumentStatus();previewUI?.activeChanged();
 }
 function updateDiagnostics(items=[]){
@@ -619,7 +622,7 @@ async function start(){
     previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
     platformUI.companion=new MelodyCompanion(platformUI);
     if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
-    desktopUI=new DesktopWorkflows({api,editor,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
+    desktopUI=new DesktopWorkflows({api,editor,renderTabs,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});

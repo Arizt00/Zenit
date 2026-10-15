@@ -48,7 +48,7 @@ export function highlighted(text, path='') {
 
 export class LumenEditor {
   constructor(mount, callbacks={}) {
-    this.mount=mount; this.callbacks=callbacks; this.models=new Map(); this.current=null;
+    this.mount=mount; this.callbacks=callbacks; this.models=new Map(); this.current=null;this.detachedPaths=new Set();
     this.kind='base'; this.settings={fontSize:12.5,tabSize:4,minimap:true,wordWrap:false};
     this.view=null; this.disposables=[]; this.highlightFrame=0;
   }
@@ -138,6 +138,7 @@ export class LumenEditor {
   pathFor(model){return model?[...this.models].find(([,r])=>r.model===model)?.[0]||null:null;}
   paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());const label=p.node.querySelector('span');label.textContent=name||'Choose a file';label.dataset.paneDocument=name||'';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
   split(path,side='right'){
+    if(this.detachedPaths.has(path||this.current)){this.callbacks.detached?.(path||this.current);return;}
     if(this.models.get(path||this.current)?.kind==='binary')throw Error('Binary files use the read-only byte inspector.');
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
     let pane=this.panes[1];
@@ -199,6 +200,7 @@ export class LumenEditor {
     if (!window.monaco) return;
     const css=getComputedStyle(document.documentElement);
     const c=name=>css.getPropertyValue('--'+name).trim();
+    const interactionColors={'editor.selectionBackground':c('selection'),'editor.inactiveSelectionBackground':c('selection'),'editor.selectionHighlightBackground':c('selected'),'editor.selectionHighlightBorder':'#00000000','editor.wordHighlightBackground':c('hover'),'editor.wordHighlightStrongBackground':c('selected'),'editor.findMatchBackground':c('selection'),'editor.findMatchHighlightBackground':c('hover'),'editor.findMatchBorder':c('focus'),'minimap.selectionHighlight':c('selection')};
     const syntax=Object.fromEntries(['keyword','type','number','string','comment','function'].map(key=>[key,c('syntax-'+key)]));
     const external=this.extensionTheme,themeColors=external?.data?.colors||{},editorBackground=external?themePalette(external).palette.editor:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
     const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},themeEntries(external)));
@@ -233,11 +235,11 @@ export class LumenEditor {
         'input.background':c('field'),'input.foreground':c('text'),'input.border':c('border'),
         'input.placeholderForeground':c('muted'),'keybindingLabel.background':c('field'),
         'keybindingLabel.foreground':c('secondary'),'keybindingLabel.border':c('border'),
-        'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border')},
+        'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border'),...interactionColors},
     });
     if(this.extensionTheme){
       const theme=this.extensionTheme,{colors,dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
-      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors,encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
+      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors:{...colors,...interactionColors},encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
     }else monaco.editor.setTheme('lumen-theme');
     for(const pane of this.panes||[])pane.view?.updateOptions({'semanticHighlighting.enabled':this.extensionTheme?.data?.semanticHighlighting!==false});
   }
@@ -280,6 +282,7 @@ export class LumenEditor {
     if(activate)this.activate(item.path);
   }
   activate(path) {
+    if(this.detachedPaths.has(path)){this.callbacks.detached?.(path);return false;}
     const previous=this.models.get(this.current);
     if(previous){
       previous.value=this.getValue();
@@ -361,6 +364,7 @@ export class LumenEditor {
     this.callbacks.change?.(result.path,record.value!==record.savedValue);
   }
   close(path) {
+    if(this.detachedPaths.has(path)){this.callbacks.detached?.(path);return;}
     const item=this.models.get(path);if(!item)return;
     if(this.current===path){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');}
     if(this.current===path){this.current=null;if(this.kind==='monaco')this.view.setModel(null);else{this.input.value='';this.paint();}}
@@ -368,7 +372,26 @@ export class LumenEditor {
     if(item.model)item.model.dispose();
     this.models.delete(path);
   }
-  reset(){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');this.current=null;for(const p of this.panes||[])p.view.setModel(null);for(const item of this.models.values())item.model?.dispose();this.models.clear();if(this.kind==='base'){this.input.value='';this.paint();}}
+  visiblePaths(){return [...this.models.keys()].filter(path=>!this.detachedPaths.has(path));}
+  suspend(path){
+    const record=this.models.get(path);if(!record||this.detachedPaths.has(path))return;
+    const wasCurrent=this.current===path;
+    if(wasCurrent){record.value=this.getValue();if(this.kind==='monaco')record.viewState=this.view.saveViewState();}
+    this.detachedPaths.add(path);
+    if(this.kind==='monaco'){
+      const remaining=this.panes.filter(p=>p.view.getModel()!==record.model),keep=remaining[0]||this.panes[0];
+      for(const pane of [...this.panes])if(pane!==keep&&pane.view.getModel()===record.model){pane.view.dispose();pane.node.remove();this.panes.splice(this.panes.indexOf(pane),1);}
+      this.view=keep.view;
+      if(keep.view.getModel()===record.model)keep.view.setModel(null);
+      this.current=this.pathFor(keep.view.getModel());
+      if(this.panes.length<2)delete this.mount.dataset.splitAxis;
+      this.paintPaneLabels();
+    }else if(this.current===path){this.current=null;this.input.value='';this.paint();}
+    if(wasCurrent){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');}
+    if(!this.current){const next=this.visiblePaths().at(-1);if(next)this.activate(next);else this.callbacks.active?.(null);}
+  }
+  resume(path){if(!this.detachedPaths.delete(path))return false;this.activate(path);return true;}
+  reset(){this.detachedPaths.clear();this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');this.current=null;for(const p of this.panes||[])p.view.setModel(null);for(const item of this.models.values())item.model?.dispose();this.models.clear();if(this.kind==='base'){this.input.value='';this.paint();}}
   focus(){if(this.binaryView){this.binaryView.node.querySelector('form input').focus();return;}if(this.kind==='monaco')this.view.focus();else this.input.focus({preventScroll:true});}
   changedTheme(){this.defineMonacoTheme();if(this.kind==='base')this.schedulePaint();}
   applySettings(settings) {

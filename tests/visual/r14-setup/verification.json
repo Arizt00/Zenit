@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Fresh setup owns an opaque screen in all three themes; home cannot overlap",
+    "Live preview follows all layout and Melody positions; language preview stays local",
+    "Configuration and preview panels keep identical top and bottom edges while resizing",
+    "Setup preserves drafts going back, saves preferences and transitions to home",
+    "Lab, Forge and Debug expand left with fixed right edges and a fluid search field",
+    "Melody header actions do not overlap; models and floating panel remain accessible",
+    "Lantern creates a clean Python environment from its UI",
+    "Failed Hilo work can be reviewed by Melody with actual evidence and inline model selection",
+    "Reopening setup, small windows, skip and reduced motion complete without JavaScript errors"
+  ],
+  "errors": []
+}

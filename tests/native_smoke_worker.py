@@ -214,6 +214,20 @@ def main():
                     assert runtime.request(app.workspace,{'id':'qa.native-plan','method':'command','command':'qa.nativeSum'})['result']=={'sum':12,'owner':'qa.native-child'}
                 finally:store.inspect_remote=original
                 checks.append('Packaged dependency plan persists packages and shares real function exports with their parent')
+                parent.evaluate_js("document.querySelector('[data-file=\"first.py\"]').click()")
+                until(lambda:parent.evaluate_js("document.querySelector('[data-tab=\"first.py\"]')?.classList.contains('active')"))
+                parent.evaluate_js("window.dispatchEvent(new CustomEvent('lumen:detach-editor',{detail:{panel:'editor',path:'first.py'}}))")
+                external=until(lambda:api._children.get('editor:first.py'))
+                until(lambda:external.evaluate_js('!!window.lumen?.ready'))
+                until(lambda:parent.evaluate_js("!document.querySelector('[data-tab=\"first.py\"]')"))
+                assert external.evaluate_js("document.querySelector('.native-window-heading small').textContent")=='Búfer compartido'
+                external.evaluate_js("monaco.editor.getModels().find(m=>m.uri.path.endsWith('first.py')).setValue('print(\"NATIVE OWNERSHIP\")\\n')")
+                assert api.focus_panel('editor','first.py')['focused'] and api._children.get('editor:first.py') is external
+                external.evaluate_js("document.querySelector('.native-return').click()")
+                until(lambda:'editor:first.py' not in api._children)
+                until(lambda:parent.evaluate_js("document.querySelector('[data-tab=\"first.py\"]')?.classList.contains('active')"))
+                assert parent.evaluate_js("monaco.editor.getModels().find(m=>m.uri.path.endsWith('first.py')).getValue()")=='print("NATIVE OWNERSHIP")\n'
+                checks.append('Native detached editor transfers document visibility, focuses safely and restores its latest unsaved buffer')
                 assert not javascript_errors,javascript_errors
                 print(json.dumps({'checks':checks,'errors':errors}),flush=True)
             except Exception:errors.append(traceback.format_exc());print(errors[-1],flush=True)
@@ -226,6 +240,6 @@ def main():
             server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()
             args.report.parent.mkdir(parents=True,exist_ok=True)
             args.report.write_text(json.dumps({'platform':sys.platform,'revision':REVISION,'checks':checks,'errors':errors,'javascriptErrors':javascript_errors},indent=2),encoding='utf-8')
-    if errors or len(checks)!=15:raise AssertionError('Packaged desktop verification failed')
+    if errors or len(checks)!=16:raise AssertionError('Packaged desktop verification failed')
 
 if __name__=='__main__':main()

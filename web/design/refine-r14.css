@@ -1,0 +1,89 @@
+/* Quiet interaction states, shared by the main and detached workspaces. */
+:root,:root[data-theme]{--focus:#738198!important;--accent-soft:#f1f3f6!important;--selected:#e9edf2!important;--hover:#f4f6f8!important;--pressed:#e2e7ee!important;--selection:#d4dde9!important;--selection-halo:#eef1f5!important;--border-strong:#cbd2dd!important;}
+:root[data-theme=dark]{--focus:#9ca9ba!important;--accent-soft:#2b303b!important;--selected:#343d4b!important;--hover:#272d38!important;--pressed:#3b4657!important;--selection:#425268!important;--selection-halo:#2b303b!important;--border-strong:#505c6d!important;}
+:root[data-theme=forest]{--focus:#a3b8ad!important;--accent-soft:#203c31!important;--selected:#2d4b3e!important;--hover:#19382b!important;--pressed:#345747!important;--selection:#385e4d!important;--selection-halo:#203c31!important;--border-strong:#476a58!important;}
+:root[data-theme]{--selected-text:var(--text)!important;}
+#onboarding .setup-choices>button.selected{border-color:var(--focus);box-shadow:none;}
+.monaco-inputbox.synthetic-focus{border-color:var(--focus)!important;box-shadow:none!important;}
+::selection{background:var(--selection);color:inherit;}
+:focus-visible{outline-color:var(--focus)!important;outline-width:1px!important;}
+input:focus-visible,textarea:focus-visible,select:focus-visible{box-shadow:none!important;}
+:is(.python-install,.platform-search,.palette-input-wrap,.activity-search,.ai-composer):focus-within{border-color:var(--focus)!important;box-shadow:none!important;}
+.python-install>div:focus-within,input:focus,textarea:focus,select:focus{border-color:var(--focus)!important;box-shadow:none!important;}
+:is(.python-install,.platform-search,.palette-input-wrap,.activity-search,.ai-composer) :is(input,textarea):focus-visible{outline:none!important;}
+.monaco-editor textarea.inputarea:focus-visible{outline:none!important;}
+.rail-item{flex:none;transform:none;transition:background-color 180ms,color 180ms;}
+.rail-item.active{background:var(--selected);box-shadow:none!important;}
+.rail-item .icon{transform-origin:center;will-change:transform;}
+.native-window-heading>span>[data-glyph=editor-window]{width:21px;height:21px;stroke-width:1.5;color:var(--secondary);}
+.native-window-heading>span{gap:12px;}
+.native-window-heading small{font-size:11px;line-height:1.4;white-space:nowrap;}
+.native-editor-shell .native-window-heading small{display:inline;}
+.native-heading-actions{gap:8px;flex:none;}
+.native-heading-actions .hover-reveal{display:flex;flex:none;align-items:center;justify-content:flex-end;gap:0;width:36px;min-width:36px;height:34px;min-height:34px;padding:0 9px;overflow:hidden;box-sizing:border-box;transition:width 420ms cubic-bezier(.22,1,.36,1),background-color 180ms,border-color 180ms;}
+.native-heading-actions .hover-reveal>.icon{flex:none;width:16px;height:16px;order:2;}
+.native-heading-actions .hover-reveal>span{display:block!important;order:1;white-space:nowrap;flex:none;opacity:0;max-width:0;margin-right:0;transform:translateX(5px);transition:opacity 150ms,transform 320ms cubic-bezier(.22,1,.36,1),max-width 420ms cubic-bezier(.22,1,.36,1),margin-right 420ms cubic-bezier(.22,1,.36,1);}
+.native-heading-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed){width:var(--reveal-width,104px);}
+.native-heading-actions .native-editor-main-terminal{--reveal-width:208px;border:1px solid var(--border);}
+.native-heading-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span{opacity:1;max-width:170px;margin-right:8px;transform:none;transition-delay:35ms;}
+/* The collection and package managers share one rhythm and typography. */
+#platform-page[data-page=extensions]{font-family:var(--font-ui);}
+#platform-page[data-page=extensions] .platform-header{min-height:66px;padding:16px 24px;}
+.extension-hero{margin:20px 24px 18px!important;padding:22px 24px!important;min-height:0!important;}
+.extension-hero h3{font-size:24px!important;line-height:1.25;letter-spacing:-.65px;margin:0 0 9px!important;font-weight:600;}
+.extension-hero>p{font-size:13px!important;line-height:1.6;max-width:650px;}
+.extension-benefits{display:none!important;}
+.extension-art img{width:64px;height:64px;opacity:.65;}
+.extension-toolbar{align-items:center!important;gap:16px!important;flex-wrap:wrap;padding-inline:0!important;margin-inline:24px!important;}
+.extension-toolbar-start{gap:12px!important;}
+.extension-toolbar .segmented-control,.python-nav{padding:4px;gap:3px;min-height:44px;align-items:center;}
+:is(.extension-toolbar,.python-nav) .segmented-control button,.python-nav button{font-size:12px!important;min-height:34px;padding:8px 14px!important;white-space:nowrap;}
+.extension-toolbar .platform-search{height:44px;max-width:420px;min-width:200px;flex:1;}
+.extension-catalog-summary{padding:16px 0 12px!important;margin-inline:24px!important;}
+.extension-results{padding-inline:24px!important;}
+#extension-results[data-view=list] .extension-card{grid-template-columns:minmax(0,1fr) minmax(220px,310px);grid-template-areas:'identity status' 'description actions';padding:20px 22px;gap:12px 30px;align-items:start;min-height:124px;}
+#extension-results[data-view=list] .extension-card-top{grid-area:identity;display:flex;align-items:center;gap:14px;}
+#extension-results[data-view=list] .extension-card>p{grid-area:description;margin:0 0 0 66px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;white-space:normal;overflow:hidden;font-size:12px;line-height:1.65;}
+#extension-results[data-view=list] .extension-card-tags{grid-area:status;flex-direction:row;justify-content:flex-end;align-items:center;}
+#extension-results[data-view=list] .extension-card-actions{grid-area:actions;gap:8px;align-items:center;align-self:end;}
+.extension-card h4{font-size:14px!important;line-height:1.4;margin:0 0 6px;font-weight:600;letter-spacing:-.15px;}
+.extension-card-top>div:last-child>span{font-size:11px;color:var(--secondary);}
+.extension-card-actions button{min-height:32px;font-size:11px!important;}
+.extension-card-tags>span{font-size:10px;line-height:1.4;padding:4px 7px;border-radius:6px;background:var(--hover);}
+.extension-logo{width:52px;height:52px;padding:8px;border-radius:14px;}
+.dependency-workspace{max-width:none;margin:0;padding:22px 24px 30px;overflow:visible;flex:none;}
+.dependency-workspace .python-nav{margin:0 0 28px;}
+.dependency-workspace .python-heading{align-items:center;gap:16px;margin-bottom:24px;}
+.dependency-mark{display:grid;place-items:center;width:44px;height:44px;flex:none;border:1px solid var(--border);border-radius:14px;background:var(--hover);color:var(--secondary);}
+.dependency-mark .icon{width:22px;height:22px;}
+.dependency-workspace .python-heading>div{flex:1;min-width:0;}
+.dependency-workspace .python-heading h3{font-size:26px;line-height:1.25;letter-spacing:-.65px;margin:7px 0 8px;}
+.dependency-workspace .python-heading p{font-size:13px;}
+.dependency-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:20px;}
+.dependency-setup,.dependency-inventory{min-width:0;padding:24px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
+.dependency-inventory{display:flex;flex-direction:column;gap:18px;}
+.dependency-inventory>h4{display:flex;align-items:center;gap:9px;margin:0;font-size:13px;font-weight:600;}
+.dependency-inventory>h4 .icon{width:17px;height:17px;color:var(--secondary);}
+.dependency-inventory .python-package-list{flex:1;}
+.dependency-workspace .python-environment{grid-template-columns:1fr;gap:10px;}
+.dependency-workspace .python-environment article{padding:14px;border-radius:12px;background:var(--header);}
+.dependency-workspace .python-install{margin:24px 0 18px;}
+.dependency-workspace .python-install>div{min-height:52px;border-radius:12px;}
+.dependency-workspace .python-install input{padding:8px 0;outline:none!important;}
+.dependency-workspace .python-install button{min-height:36px;font-size:12px;}
+.dependency-workspace .python-actions{gap:10px;margin:0 0 8px;}
+.dependency-workspace .python-actions button{min-height:34px;font-size:11px;}
+.dependency-workspace .native-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0;}
+.dependency-workspace .native-tools>span{display:grid;grid-template-columns:18px 1fr;gap:5px 9px;padding:14px;background:var(--header);}
+.dependency-workspace .native-tools:has(>span:only-child){grid-template-columns:1fr;}
+.dependency-workspace .native-tools small{grid-column:2;font-size:10px;}
+.dependency-workspace .python-empty{height:100%;min-height:240px;justify-content:center;border:0;background:var(--header);font-size:13px;}
+.dependency-workspace .python-empty p{max-width:330px;font-size:12px;line-height:1.6;color:var(--secondary);margin:0;}
+.dependency-workspace .python-list-toolbar{margin:0;gap:10px;}
+.dependency-workspace .python-list-toolbar label{margin:0;flex:1;}
+.dependency-workspace .python-list-toolbar input{max-width:none;min-width:100px;width:100%;}
+.dependency-workspace .python-footnote{margin:18px 2px 0;font-size:11px;max-width:1000px;}
+@media(max-width:1050px){.dependency-grid{grid-template-columns:1fr;}.dependency-setup,.dependency-inventory{padding:20px;}#extension-results[data-view=list] .extension-card{grid-template-columns:minmax(0,1fr) minmax(170px,240px);gap:12px 18px;}}
+@media(max-width:700px){.dependency-workspace{padding:16px;}.dependency-workspace .python-nav{display:flex;flex-wrap:wrap;}.dependency-workspace .python-heading h3{font-size:22px;}.dependency-mark{display:none;}#extension-results[data-view=list] .extension-card{grid-template-columns:minmax(0,1fr);grid-template-areas:'identity' 'description' 'status' 'actions';}#extension-results[data-view=list] .extension-card-tags,#extension-results[data-view=list] .extension-card-actions{justify-content:flex-start;}#extension-results[data-view=list] .extension-card>p{margin:0;}.native-editor-shell .native-window-heading>span{display:flex!important;}.native-window-heading small{display:inline!important;}.native-heading-actions .native-return{font-size:10px;padding-inline:8px;}.native-window-heading .hover-reveal{max-width:calc(100vw - 160px);}}
+@media(prefers-reduced-motion:reduce){.native-heading-actions .hover-reveal,.native-heading-actions .hover-reveal>span{transition:none;}}
+html[data-motion=off] .native-heading-actions .hover-reveal,html[data-motion=off] .native-heading-actions .hover-reveal>span{transition:none;}

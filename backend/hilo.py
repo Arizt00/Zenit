@@ -112,6 +112,12 @@ class Hilo:
     def invalidate(self):
         with self.lock: self.cache.clear()
 
+    def clear_finished(self, workspace):
+        with self.lock:
+            finished=[identity for identity,job in self.jobs.items() if job['workspace']==str(workspace) and job['state'] not in ('queued','running')]
+            for identity in finished:del self.jobs[identity]
+        return {'removed':len(finished)}
+
     def snapshot(self, workspace=None):
         with self.lock:
             jobs = [{k: v for k, v in j.items() if k not in ('event', 'cancel', 'key')} for j in self.jobs.values() if workspace is None or j['workspace'] == str(workspace)]
@@ -119,7 +125,8 @@ class Hilo:
         for job in jobs:
             job['queuePosition'] = next((i+1 for i,j in enumerate(pending) if j['id']==job['id']), None)
             job['elapsedMs'] = max(0, round(((job.get('finished') or time.time())-(job['started'] or job['created']))*1000))
-        return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'cacheEntries': len(self.cache)}
+        counts={state:sum(j['state']==state for j in jobs) for state in ('queued','running','done','failed','cancelled')}
+        return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'counts':counts, 'cacheEntries': len(self.cache)}
 
     def shutdown(self):
         self.closed = True

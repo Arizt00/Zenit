@@ -61,14 +61,15 @@ class Preview{
   activeChanged(){this.context.textContent='Contexto actual · '+(this.host.editor.current||'Abre un archivo para adjuntarlo');this.host.studio.lantern.follow();this.renderGroups();}
   toggleGroups(){this.grouped=!this.grouped;this.renderGroups();}
   renderGroups(){
-    const ed=this.host.editor,sets=new Map();for(const path of ed.models.keys()){const key=path.includes('/')?path.slice(0,path.lastIndexOf('/')):'Proyecto';if(!sets.has(key))sets.set(key,[]);sets.get(key).push(path);}
+    const ed=this.host.editor,sets=new Map();for(const path of ed.visiblePaths()){const key=path.includes('/')?path.slice(0,path.lastIndexOf('/')):'Proyecto';if(!sets.has(key))sets.set(key,[]);sets.get(key).push(path);}
     const current=ed.current?.includes('/')?ed.current.slice(0,ed.current.lastIndexOf('/')):'Proyecto';
-    this.groups.hidden=!this.grouped||ed.models.size<2;
-    const signature=JSON.stringify([this.grouped,ed.current,[...ed.models.keys()]]);
+    this.groups.hidden=!this.grouped||ed.visiblePaths().length<2;
+    const signature=JSON.stringify([this.grouped,ed.current,ed.visiblePaths()]);
     if(signature!==this.groupSignature){this.groupSignature=signature;this.groups.innerHTML=[...sets].map(([name,paths])=>`<button class="file-group ${name===current?'active':''}" data-file-group="${esc(name)}" aria-haspopup="menu">${icon('folder')}<span>${esc(name.split('/').at(-1))}</span><small>${paths.length}</small>${icon('chevron-down')}</button>`).join('');this.groups.querySelectorAll('button').forEach(b=>b.onclick=()=>this.host.showMenu(b,sets.get(b.dataset.fileGroup).map(path=>({label:path.split('/').at(-1)+(ed.isDirty(path)?' •':''),icon:'file',run:()=>this.host.openFile(path)})),b.dataset.fileGroup));}
-    $('#file-tabs').classList.toggle('is-grouped',this.grouped&&ed.models.size>1);
+    $('#file-tabs').classList.toggle('is-grouped',this.grouped&&ed.visiblePaths().length>1);
   }
   async newWindow(path='',content){
+    if(path&&content===undefined){if(!this.host.editor.models.has(path))await this.host.openFile(path);return this.host.detachEditor(path);}
     if(path&&content===undefined){const r=this.host.editor.models.get(path);content=r?.model?.getValue()??r?.value;}
     if(window.pywebview?.api?.new_window)return window.pywebview.api.new_window(path,content??null);
     const url=new URL(location.href);url.searchParams.set('file',path);const opened=window.open(url,'_blank');if(!opened)throw Error('Permite abrir ventanas en el navegador o utiliza Zénit Desktop.');
