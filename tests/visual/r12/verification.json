@@ -1,6 +1,7 @@
 {
   "checks": [
     "Laboratory expands on hover and returns to its icon after opening",
+    "Hilo can cancel preparation while the environment form is busy",
     "Python environment can be created, activated, saved, closed and restored through the UI",
     "Connections exists only in Settings and shows all seven actual application adapters",
     "Merge button and real drag back to center preserve both unsaved models",
