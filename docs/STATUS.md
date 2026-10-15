@@ -1,6 +1,6 @@
 # What works today
 
-Zénit 0.5.4 R11 is a public preview. No universal VS Code parity percentage is claimed.
+Zénit 0.5.4 R12 source is a public preview. No universal VS Code parity percentage is claimed.
 
 | Area | Available | Boundary |
 | --- | --- | --- |
@@ -13,6 +13,8 @@ Zénit 0.5.4 R11 is a public preview. No universal VS Code parity percentage is 
 | Forge | File runtime, Python buffer, C/GDB, repeat/stop, exit status | Toolchains must be configured; history belongs to the current Forge window. |
 | Melody | Inline models, bounded local file memory, scope preview, session prompt drafts, live edits, file plans, recovery/undo, five local evidence tools | Providers need configuration; drafts last for the current window; generated code needs review. |
 | Lantern | Unsaved-buffer execution, pin/follow, output comparison, read-only Melody consultation | History/output are bounded; checkpoints require cooperating code. |
+| Hilo | Automatic bounded package queue, discovery cache and seven explicit application adapters | Clients and accounts are separate; not autonomous control of arbitrary applications. |
+| Session environments | Real Python venvs and QEMU/Arch machines, workspace `.tern` descriptors | VM base is optional. Disk checkpoints retain backing files, not RAM. |
 | Voice | Existing local Emma bridge | Requires a compatible local voice installation. |
 | Search | Literal matching lines, filters, UTF-16 positions | No regex/bulk replace yet; up to 200 visible results. |
 | Extensions | List/cards/compact layouts, factory nC package, Open VSX/VSIX, declarative contributions, authorized Node engines, file icon themes | Partial VS Code API; product icon themes remain pending. |

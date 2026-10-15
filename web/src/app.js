@@ -440,6 +440,8 @@ async function updatePalette(){
   paletteIndex=0;renderPalette();
 }
 function renderPalette(){
+  const results=$('#palette-results'),mode=$('#palette-input').value.startsWith('>')?'commands':'files',changed=results.dataset.mode&&results.dataset.mode!==mode;results.dataset.mode=mode;
+  if(changed&&motion.enabled){results.getAnimations().forEach(a=>a.cancel());results.animate([{opacity:.65},{opacity:1}],{duration:160,easing:'ease-out'});}
   $('#palette-count').textContent=paletteEntries.length+' resultados';
   $('#palette-files').classList.toggle('active',!$('#palette-input').value.startsWith('>'));$('#palette-commands').classList.toggle('active',$('#palette-input').value.startsWith('>'));
   $('#palette-results').innerHTML=paletteEntries.map((item,index)=>`<button class="palette-result${index===paletteIndex?' active':''}" data-palette-index="${index}" role="option" aria-selected="${index===paletteIndex}">${item.path?fileIcon(item.path):icon(item.icon)}<span>${esc(item.label)}</span><span class="result-meta">${esc(item.meta||'')}</span></button>`).join('')||'<div class="palette-empty">No se encontraron resultados.</div>';
@@ -619,7 +621,7 @@ async function start(){
     if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
     desktopUI=new DesktopWorkflows({api,editor,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
-    new FoundationUI({editor,studio,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
+    new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
     installTabControls({editor,openFile,activateFile,closeFile,showMenu,safe:fn=>guard(fn)()});

@@ -39,6 +39,12 @@ Melody evidence tools and actual DAP memory/disassembly with pause comparison.
 See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
 and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 
+The source now includes **R12**: recoverable split merging, quieter chrome,
+smooth Melody streaming, `.tern` session environments and Hilo background work.
+See [R12 notes](docs/PREVIEW_054_R12.md) and the
+[Lantern environment guide](docs/SESSION_ENVIRONMENTS.md). The download links
+above continue to point to the published R11 package until R12 is released.
+
 ## What makes it useful
 
 | A daily problem | How Zénit helps |

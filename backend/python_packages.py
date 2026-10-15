@@ -11,7 +11,7 @@ from .runtime_paths import find_tool
 
 
 def environment_python(workspace):
-    folder=workspace.resolve('.venv',must_exist=False)
+    folder=workspace.resolve(getattr(workspace,'environment_path','.venv'),must_exist=False)
     python=folder/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
     return folder,python
 
@@ -33,7 +33,7 @@ class PythonPackages:
         return python
     def status(self,ws):
         base=self.base();folder,python=environment_python(ws)
-        site=ws.resolve('.venv/'+('Lib/site-packages' if os.name=='nt' else f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'),must_exist=False)
+        site=ws.resolve(str(folder.relative_to(ws.root))+'/'+('Lib/site-packages' if os.name=='nt' else f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'),must_exist=False)
         # POSIX project Python may have a different minor version from the host.
         sites=[site] if os.name=='nt' else [p for p in folder.glob('lib/python*/site-packages') if p.resolve().is_relative_to(folder)]
         packages=[item for path in sites for item in installed_packages(path)]
@@ -80,7 +80,7 @@ class PythonPackages:
         with self.lock:
             previous=self.features.app.runner.jobs.get(self.jobs.get(str(ws.root)))
             if previous and not previous.done:raise ValueError('A Python package operation is already running for this project.')
-            task=self.features.app.runner.start(commands,ws.root,timeout=900,env={**tool_environment(),'PIP_REQUIRE_VIRTUALENV':'true','PYTHONUTF8':'1'})
+            task=self.features.app.runner.start(commands,ws.root,timeout=900,scheduler=getattr(self.features,'hilo',None),env={**tool_environment(),'PIP_REQUIRE_VIRTUALENV':'true','PYTHONUTF8':'1'})
             self.jobs[str(ws.root)]=task['job']
             from .native_packages import dependency_finished
             dependency_finished(self.features,ws,task,('python',))

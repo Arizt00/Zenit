@@ -1,3 +1,5 @@
+import {MelodyStream} from './melody-stream.js';
+import {mountConnections} from './session-workbench.js';
 import {extensionReviewHTML,extensionPlanHTML,extensionProgressHTML,updateExtensionProgress} from './extension-installer.js';
 import {ACCOUNT_PROVIDERS,accountPanel,bindAccount} from './accounts.js';
 import {icon,escapeHTML,setFileIcons} from './icons.js';
@@ -20,7 +22,7 @@ import {ExtensionView} from './extension-view.js';
 const PLATFORM_CATEGORIES=[
  ['general','globe','General','General'],['appearance','sun','Apariencia','Appearance'],['editor','code','Editor de texto','Text editor'],
  ['files','files','Archivos','Files'],['terminal','terminal','Terminales','Terminals'],['extensions','extensions','Extensiones','Extensions'],
- ['security','shield','Seguridad','Security'],['ai','sparkles','Inteligencia artificial','Artificial intelligence'],
+ ['security','shield','Seguridad','Security'],['ai','sparkles','Inteligencia artificial','Artificial intelligence'],['connections','globe','Conexiones','Connections'],
  ['development','build','Lenguajes y herramientas','Languages and tools'],['hardware','cpu','Hardware','Hardware'],['keys','keyboard','Atajos de teclado','Keyboard shortcuts']
 ];
 const PLATFORM_NAMES={codex:'ChatGPT · Account', 'claude-code':'Claude · Account','gemini-cli':'Gemini · Account',copilot:'Copilot · Account',emma:'Emma',ollama:'Ollama',openai:'OpenAI · API',anthropic:'Claude · API',gemini:'Gemini · API'};
@@ -186,9 +188,10 @@ export class LumenPlatform {
     for(const [id,node] of this.settingPanels)node.hidden=id!==key;
     if(this.visibleSettingPanel!==key){shell.scrollTop=content._scrollTop||0;this.visibleSettingPanel=key;if(content._focus?.isConnected)content._focus.focus({preventScroll:true});}
     if(!query&&content.dataset.built&&!(key==='ai'&&content.dataset.provider!==this.prefs['ai.provider'])){
-      this.refreshSettingValues(content);return;
+      this.refreshSettingValues(content);if(key==='connections')await content.refreshConnections?.();return;
     }
     content.dataset.built='true';content.dataset.provider=this.prefs['ai.provider'];
+    if(!query&&this.activeCategory==='connections'){await mountConnections({...this.host,platform:this},content);return;}
     const words=query.toLocaleLowerCase();const entries=this.schema.filter(s=>words?`${s.key} ${s.label.es} ${s.label.en}`.toLocaleLowerCase().includes(words):s.category===this.activeCategory||(this.activeCategory==='general'&&['appearance.theme','appearance.motion','appearance.decorations'].includes(s.key)));
     if(!query&&this.activeCategory==='development'){content.innerHTML=this.developmentSettings();this.bindDevelopment();return;}
     if(!query&&this.activeCategory==='keys'){content.innerHTML=this.keybindings();return;}
@@ -460,27 +463,27 @@ export class LumenPlatform {
     this.aiJob=result.id;document.getElementById('ai-input').value='';document.querySelector('.send-button').disabled=true;document.getElementById('ai-cancel-generation').hidden=false;
     document.querySelector('.provider-status-dot').classList.add('generating');
     this.host.appendChat(userQuestion,'user',this.t('TÚ','YOU'));
-    const element=this.host.appendChat('', 'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);const stream=document.createElement('div');stream.className='ai-stream';element.appendChild(stream);
+    const element=this.host.appendChat('', 'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);const stream=document.createElement('div');stream.className='ai-stream';element.appendChild(stream);const smoothStream=new MelodyStream(stream,document.getElementById('chat-messages'));
     let offset=0,text='',completed=false;this.liveEditing=live;this.filePlanRunning=filePlan;this.liveEditingPath=live?file:null;if(live)clearTimeout(this.saveTimer);
     const liveSession=live?new LiveEditSession(editor,snapshot):null;
     if(live){document.getElementById('ai-edit-file').disabled=true;document.querySelector('.ai-live-control').classList.add('is-editing');document.querySelector('.ai-live-control small').textContent='Editando en vivo · '+file;}
     try{
       while(!this.disposed&&this.aiJob===result.id&&generation===this.aiGeneration){
         const update=await this.api('/ai/job?id='+encodeURIComponent(result.id)+'&offset='+offset);offset=update.offset;text+=update.delta||'';liveSession?.apply(text);if(live)this.host.refreshFileViews();
-        stream.textContent=filePlan?'Preparando el plan de archivos · '+text.length+' caracteres recibidos. Ningún archivo se ha modificado.':text||update.message||this.t('Esperando al proveedor… Puedes detener la respuesta.','Waiting for provider… You can stop the response.');
-        const messages=document.getElementById('chat-messages');messages.scrollTop=messages.scrollHeight;
+        smoothStream.update(filePlan?this.t('Preparando el plan de archivos · ','Preparing file plan · ')+text.length+this.t(' caracteres recibidos.',' characters received.'):text||update.message||this.t('Esperando al proveedor… Puedes detener la respuesta.','Waiting for provider… You can stop the response.'));
         if(update.done){
           completed=!update.error&&!update.cancelled;window.dispatchEvent(new Event('zenit:melody-memory'));
-          element.remove();
+          smoothStream.finish();const chat=document.getElementById('chat-messages'),readingTop=chat.scrollTop,follow=smoothStream.follow;element.remove();
           if(text){const answer=this.host.appendChat(filePlan?'Plan recibido. Comprobando rutas y conflictos…':text,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);if(filePlan&&completed){try{await this.melodyFiles.review(result.id,answer);}catch(error){answer.textContent=error.message;}}else if(!filePlan){this.addReviewButtons(answer,text,snapshot);if(completed)this.voice.attach(answer,text);}}
           if(update.error)this.host.appendChat(update.error,'assistant',this.t('ERROR DEL PROVEEDOR','PROVIDER ERROR'));
           if(update.cancelled)this.host.appendChat(this.t('Generación cancelada. El proveedor puede haber procesado parte de la petición.','Generation cancelled. The provider may have processed part of the request.'),'assistant',this.t('CANCELADA','CANCELLED'));
+          if(!follow)chat.scrollTop=readingTop;
           break;
         }
-        await new Promise(resolve=>setTimeout(resolve,160));
+        await new Promise(resolve=>setTimeout(resolve,100));
       }
-    }catch(error){await this.api('/ai/cancel',{id:result.id}).catch(()=>{});stream.textContent=error.message;throw error;}
-    finally{liveSession?.dispose();if(live&&completed){this.host.notify(liveSession.complete?`Edición finalizada en ${file}. Revisa el archivo antes de guardarlo; Ctrl+Z permite deshacer.`:'La respuesta no contiene un archivo completo. Revisa los cambios parciales o usa Ctrl+Z.');}this.liveEditing=false;this.filePlanRunning=false;this.liveEditingPath=null;document.querySelector('.ai-live-control').classList.remove('is-editing');document.querySelector('.ai-live-control small').textContent='Preguntar no modifica tu archivo.';this.aiJob=null;document.querySelector('.send-button').disabled=false;document.getElementById('ai-edit-file').disabled=false;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('.provider-status-dot').classList.remove('generating');}
+    }catch(error){await this.api('/ai/cancel',{id:result.id}).catch(()=>{});smoothStream.update(error.message);smoothStream.finish();throw error;}
+    finally{smoothStream.dispose();liveSession?.dispose();if(live&&completed){this.host.notify(liveSession.complete?`Edición finalizada en ${file}. Revisa el archivo antes de guardarlo; Ctrl+Z permite deshacer.`:'La respuesta no contiene un archivo completo. Revisa los cambios parciales o usa Ctrl+Z.');}this.liveEditing=false;this.filePlanRunning=false;this.liveEditingPath=null;document.querySelector('.ai-live-control').classList.remove('is-editing');document.querySelector('.ai-live-control small').textContent='Preguntar no modifica tu archivo.';this.aiJob=null;document.querySelector('.send-button').disabled=false;document.getElementById('ai-edit-file').disabled=false;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('.provider-status-dot').classList.remove('generating');}
   }
   async cancelAI(){if(this.aiJob)await this.api('/ai/cancel',{id:this.aiJob});}
   async clearAI(){await this.voice?.stop();if(this.aiJob)await this.cancelAI();this.aiGeneration++;this.aiJob=null;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('#ai-form .send-button').disabled=false;await this.api('/ai/clear',{});this.conversation=crypto.randomUUID?.()||String(Date.now());}
@@ -665,6 +668,7 @@ export class LumenPlatform {
   activeLSP(path=this.host.editor.current){return [...this.lspSessions.values()].find(s=>s.languages.includes(languageFor(path||'')));}
   async syncLSP(s){
     s.syncChain=s.syncChain.catch(()=>{}).then(async()=>{
+      if(!this.lspSessions.has(s.id))return;
       for(const [path,record] of this.host.editor.models){if(record.kind==='binary'||!s.languages.includes(languageFor(path)))continue;
         const text=path===this.host.editor.current?this.host.editor.getValue():record.value,previous=s.documents.get(path),uri=this.uriFor(s,path);
         if(!previous){await this.api('/lsp/notify',{id:s.id,method:'textDocument/didOpen',params:{textDocument:{uri,languageId:languageFor(path),version:1,text}}});s.documents.set(path,{text,version:1});}
@@ -700,14 +704,14 @@ export class LumenPlatform {
   relativeURI(s,uri){const prefix=s.rootUri.replace(/\/$/,'')+'/';if(typeof uri!=='string'||!uri.startsWith(prefix))return null;try{return decodeURIComponent(uri.slice(prefix.length));}catch(_){return null;}}
   async pollLSP(s){
     if(this.disposed||!this.lspSessions.has(s.id))return;
-    try{const result=await this.api('/lsp/events?id='+s.id+'&after='+s.offset);s.offset=result.sequence;
+    try{const result=await this.api('/lsp/events?id='+s.id+'&after='+s.offset);if(!this.lspSessions.has(s.id))return;s.offset=result.sequence;
       for(const event of result.events)if(event.method==='textDocument/publishDiagnostics'){
         const p=event.params,path=this.relativeURI(s,p.uri);if(!path)continue;const record=s.documents.get(path);if(p.version!=null&&record&&p.version<record.version)continue;
         const diagnostics=validDiagnostics(p.diagnostics);this.diagnosticMap.set(path,diagnostics);
         if(this.host.editor.kind==='monaco'){const model=this.host.editor.models.get(path)?.model;if(model)window.monaco.editor.setModelMarkers(model,'lumen-lsp',diagnostics.map(d=>({message:String(d.message||''),severity:({1:8,2:4,3:2,4:1})[d.severity]||2,startLineNumber:d.range.start.line+1,startColumn:d.range.start.character+1,endLineNumber:d.range.end.line+1,endColumn:d.range.end.character+1})));}
       }
-      this.refreshDiagnostics();if(result.closed){await this.stopLSP(s.id,false);this.host.notify(this.t('El servidor de lenguaje ha terminado.','Language server exited.'),'warning');return;}
-    }catch(error){await this.stopLSP(s.id,false);this.report(error);return;}
+      this.refreshDiagnostics();if(result.closed){await this.stopLSP(s.id,false);if(!result.retired)this.host.notify(this.t('El servidor de lenguaje ha terminado.','Language server exited.'),'warning');return;}
+    }catch(error){if(!this.lspSessions.has(s.id))return;await this.stopLSP(s.id,false);this.report(error);return;}
     this.later(()=>this.pollLSP(s),document.hidden?1500:400);
   }
   refreshDiagnostics(){this.host.editor.externalDiagnostics=validDiagnostics(this.diagnosticMap.get(this.host.editor.current)).map(d=>({message:String(d.message||''),severity:d.severity===1?8:d.severity===2?4:2,startLineNumber:d.range.start.line+1,startColumn:d.range.start.character+1}));this.host.updateDiagnostics(this.host.editor.diagnostics());}
@@ -724,7 +728,7 @@ export class LumenPlatform {
     }else this.host.modal(this.t('Respuesta del servidor','Language server response'),`<pre class="lsp-response">${this.e(JSON.stringify(result,null,2))}</pre>`);
   }
   autoLanguageServer(){
-    if(!this.host.isTrusted?.()||!this.prefs['editor.autoLanguageServer']||!this.prefs['editor.completion'])return;
+    if(this.languageRefresh||!this.host.isTrusted?.()||!this.prefs['editor.autoLanguageServer']||!this.prefs['editor.completion'])return;
     const language=languageFor(this.host.editor.current||'');if(this.activeLSP())return;
     const config=this.development?.servers?.find(x=>x.languages.includes(language));if(!config)return;
     this.languageAttempts??=new Set();if(this.languageAttempts.has(config.id))return;

@@ -124,9 +124,9 @@ class Runner:
         self.jobs: dict[str, Job] = {}
         self.lock = threading.RLock()
 
-    def start(self, commands: list, cwd: Path, shell=False, timeout=120, env=None, stop_on_output_limit=True) -> dict:
+    def start(self, commands: list, cwd: Path, shell=False, timeout=120, env=None, stop_on_output_limit=True, scheduler=None) -> dict:
         with self.lock:
-            if sum(not j.done for j in self.jobs.values()) >= 2:
+            if not scheduler and sum(not j.done and not getattr(j,'queued',False) for j in self.jobs.values()) >= 2:
                 raise ValueError("Ya hay dos tareas activas. Detén una antes de iniciar otra.")
             if len(self.jobs) > 40:
                 for old in [k for k, v in self.jobs.items() if v.done][:-20]:
@@ -136,7 +136,12 @@ class Runner:
             job.stop_on_output_limit = stop_on_output_limit
             job.extra_env = dict(env or {})
             self.jobs[job.id] = job
-        threading.Thread(target=job.run, daemon=True).start()
+        if scheduler:
+            try: scheduler.schedule_process(job)
+            except Exception:
+                self.jobs.pop(job.id,None)
+                raise
+        else: threading.Thread(target=job.run, daemon=True).start()
         return {"job": job.id}
 
     def task(self, ws: Workspace, name: str, *, check=False) -> dict:

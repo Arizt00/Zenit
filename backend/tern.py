@@ -1,0 +1,191 @@
+"""Session environments, with explicit .tern checkpoints owned by the workspace."""
+from concurrent.futures import CancelledError
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import threading
+import time
+import uuid
+from .preferences import atomic_json
+
+
+class Tern:
+    def __init__(self, features):
+        self.features = features
+        self.sessions = {}
+        self.lock = threading.RLock()
+        self.errors = []
+
+    def directory(self, ws, identity):
+        if not isinstance(identity, str) or not re.fullmatch('[a-f0-9]{32}', identity): raise ValueError('Invalid environment identity.')
+        path = ws.resolve('.lumen/tern/' + identity, must_exist=False)
+        # Reject NTFS junctions too, including parents not yet present on creation.
+        for candidate in (path, *path.parents):
+            if candidate == ws.root: break
+            if candidate.exists() and getattr(candidate.lstat(), 'st_file_attributes', 0) & 0x400:
+                raise PermissionError('Environment folders cannot use reparse points.')
+        return path
+
+    def owned(self, ws, identity):
+        directory = self.directory(ws, identity)
+        marker = directory / 'owner.json'
+        if not marker.is_file() or marker.is_symlink(): raise ValueError('This environment has no Zénit ownership record.')
+        record = json.loads(marker.read_text(encoding='utf-8'))
+        if record.get('id') != identity or record.get('schema') != 1: raise ValueError('Environment ownership does not match.')
+        return directory, record
+
+    def snapshot(self, ws):
+        with self.lock:
+            for session in self.sessions.values():
+                terminal = self.features.terminals.sessions.get(session.get('terminal'))
+                if session['state'] == 'running' and (not terminal or terminal.closed): session['state'] = 'ready'
+            sessions = [{k: v for k, v in s.items() if k not in ('workspace', 'ws', 'profile')} for s in self.sessions.values() if s['workspace'] == str(ws.root)]
+        state = self.features.machines.snapshot()
+        return {'sessions': sessions, 'saved': [p.name for p in ws.root.glob('*.tern') if p.is_file() and not p.is_symlink()][:100],
+                'python': bool(self.features.python_packages.base()), 'vm': state['templates'][0]['available'],
+                'errors': self.errors[-5:]}
+
+    def create(self, ws, body, event):
+        if not ws.trusted: raise PermissionError('Trust this workspace before creating an environment.')
+        kind = body.get('kind', 'python')
+        if kind not in ('python', 'arch'): raise ValueError('Choose Python or Arch Linux.')
+        name = body.get('name') or ('Python session' if kind == 'python' else 'Arch session')
+        if not isinstance(name, str) or not name.strip() or len(name) > 80: raise ValueError('Use an environment name of 1–80 characters.')
+        with self.lock:
+            if len(self.sessions) >= 8: raise ValueError('Keep at most eight session environments.')
+        identity = uuid.uuid4().hex; directory = self.directory(ws, identity)
+        directory.mkdir(parents=True)
+        atomic_json(directory / 'owner.json', {'schema': 1, 'id': identity, 'kind': kind})
+        try:
+            session = dict(id=identity, name=name.strip(), kind=kind, saved=None, state='ready', terminal=None, created=time.time(), workspace=str(ws.root), ws=ws)
+            if kind == 'python':
+                executable = self.features.python_packages.base()
+                if not executable: raise ValueError('Python is not installed.')
+                task = self.features.app.runner.start([[executable, '-I', '-m', 'venv', '--system-site-packages', str(directory / 'environment')]], ws.root, timeout=180)
+                job = self.features.app.runner.jobs[task['job']]
+                while not job.done:
+                    if event.wait(.1): job.cancel()
+                if event.is_set(): raise CancelledError()
+                if job.code != 0: raise ValueError('Python environment creation failed. ' + job.output[-2000:])
+            else:
+                session['profile'] = self.features.machines.create_arch(directory=directory, identity=identity, name=name, persistent=False)
+            if event.is_set() or not ws.trusted: raise CancelledError()
+            with self.lock: self.sessions[identity] = session
+            return {'environment': identity}
+        except BaseException:
+            self.remove_owned(ws, identity)
+            raise
+
+    def get(self, ws, identity):
+        session = self.sessions.get(identity)
+        if not session or session['workspace'] != str(ws.root): raise ValueError('This environment is not open in this workspace.')
+        self.owned(ws, identity)
+        return session
+
+    def activate(self, ws, identity):
+        if not ws.trusted: raise PermissionError('Trust this workspace before activating an environment.')
+        session = self.get(ws, identity)
+        if session['kind'] != 'python': raise ValueError('Virtual machines run through their own console.')
+        directory, _ = self.owned(ws, identity)
+        ws.environment_path = str((directory / 'environment').relative_to(ws.root))
+        self.refresh_interpreter(ws)
+        for current in self.sessions.values():
+            if current['workspace'] == str(ws.root): current['active'] = current is session
+        return {'active': identity, 'python': str(self.python(directory))}
+
+    def refresh_interpreter(self, ws):
+        manager = self.features.lsp
+        profiles = []
+        for identity, session in list(manager.sessions.items()):
+            if 'python' in session.profile.get('languages', []):
+                profiles.append(session.profile['id']); manager.stop(identity)
+        self.features.hilo.invalidate()
+        self.features.extension_services.emit('zenit.dependencies.changed', workspace=str(ws.root), languages=['python'], profiles=profiles)
+
+    @staticmethod
+    def python(directory): return directory / 'environment' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+
+    def console(self, ws, identity):
+        if not ws.trusted: raise PermissionError('Trust this workspace before opening its environment.')
+        session = self.get(ws, identity)
+        old = self.features.terminals.sessions.get(session.get('terminal'))
+        if old and not old.closed: return {'terminal': {'id': old.id, 'profile': old.profile, 'kind': old.kind}}
+        directory, _ = self.owned(ws, identity)
+        if session['kind'] == 'arch':
+            terminal = self.features.machines.start(ws, identity, profile=session['profile'])
+        else:
+            self.activate(ws, identity)
+            terminal = self.features.hacker._terminal([str(self.python(directory)), '-i'], session['name'], ws.root, {'VIRTUAL_ENV': str(directory / 'environment')})
+        session['terminal'] = terminal['id']; session['state'] = 'running'
+        return {'terminal': terminal}
+
+    def save(self, ws, identity, filename):
+        session = self.get(ws, identity)
+        if not ws.trusted: raise PermissionError('Trust this workspace before saving an environment.')
+        if not isinstance(filename, str) or not re.fullmatch(r'[\w -]{1,80}\.tern', filename): raise ValueError('Use a filename such as experiment.tern in the workspace root.')
+        if session['saved'] == filename: return {'file': filename}
+        descriptor = {'schema': 1, 'type': 'zenit-environment', 'id': identity, 'kind': session['kind'], 'name': session['name'], 'created': session['created']}
+        # create=True never replaces an existing workspace file.
+        ws.save(filename, json.dumps(descriptor, ensure_ascii=False, indent=2) + '\n', None, create=True)
+        session['saved'] = filename
+        return {'file': filename}
+
+    def reopen(self, ws, filename):
+        if not ws.trusted: raise PermissionError('Trust this workspace before restoring an environment.')
+        path = ws.resolve(filename)
+        if path.suffix != '.tern' or path.stat().st_size > 16384: raise ValueError('Invalid .tern descriptor.')
+        data = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(data, dict) or data.get('schema') != 1 or data.get('type') != 'zenit-environment': raise ValueError('Unsupported .tern format.')
+        identity = data.get('id'); directory, record = self.owned(ws, identity)
+        if data.get('kind') not in ('python', 'arch') or data['kind'] != record.get('kind'): raise ValueError('Environment type does not match its files.')
+        with self.lock:
+            if identity in self.sessions:
+                self.get(ws, identity)
+                return {'environment': identity}
+            if len(self.sessions) >= 8: raise ValueError('Keep at most eight session environments.')
+        session = dict(id=identity, name=str(data.get('name', 'Environment'))[:80], kind=data['kind'], saved=path.name, state='ready', terminal=None, created=data.get('created'), workspace=str(ws.root), ws=ws)
+        if session['kind'] == 'arch':
+            if not all((directory / file).is_file() and not (directory / file).is_symlink() for file in ('disk.qcow2', 'seed.iso')): raise ValueError('The saved VM disk or seed is missing.')
+            session['profile'] = {'id': identity, 'name': session['name'], 'type': 'arch', 'disk': str(directory / 'disk.qcow2'), 'seed': str(directory / 'seed.iso'), 'memory': 2048, 'cpus': 1}
+        elif not self.python(directory).is_file(): raise ValueError('The Python environment files are missing.')
+        with self.lock: self.sessions[identity] = session
+        return {'environment': identity}
+
+    def remove_owned(self, ws, identity):
+        directory, _ = self.owned(ws, identity)
+        expected = ws.root / '.lumen' / 'tern' / identity
+        if directory != expected.resolve() or not directory.is_relative_to(ws.root): raise PermissionError('Environment cleanup left its workspace.')
+        # shutil does not traverse directory junctions; the checked root is never a link.
+        shutil.rmtree(directory)
+
+    def stop(self, ws, identity):
+        session = self.get(ws, identity)
+        directory, _ = self.owned(ws, identity)
+        if session['kind'] == 'arch': self.features.machines.stop(identity)
+        else:
+            terminal = self.features.terminals.sessions.get(session.get('terminal'))
+            if terminal and not terminal.closed: terminal.close()
+        if session.get('active'):
+            self.features.lantern.stop(); self.features.debugger.stop()
+            ws.environment_path = '.venv'; self.refresh_interpreter(ws)
+        def uses_environment(argv):
+            return any(isinstance(arg, str) and Path(arg).is_absolute() and Path(arg).resolve().is_relative_to(directory) for arg in argv)
+        for terminal in list(self.features.terminals.sessions.values()):
+            if not terminal.closed and uses_environment(terminal.profile.get('argv', [])): terminal.close()
+        for job in list(self.features.app.runner.jobs.values()):
+            if not job.done and any(isinstance(command, list) and uses_environment(command) for command in job.commands):
+                job.cancel()
+                deadline = time.monotonic() + 5
+                while not job.done and time.monotonic() < deadline: time.sleep(.03)
+                if not job.done: raise ValueError('An environment task is still closing. Retry in a moment.')
+        if not session['saved']: self.remove_owned(ws, identity)
+        del self.sessions[identity]
+        return {'closed': identity, 'retained': bool(session['saved'])}
+
+    def close_workspace(self, ws):
+        for identity, session in list(self.sessions.items()):
+            if session['workspace'] != str(ws.root): continue
+            try: self.stop(ws, identity)
+            except Exception as error: self.errors.append(str(error))

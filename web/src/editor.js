@@ -120,9 +120,10 @@ export class LumenEditor {
   }
   createPane(){
     const node=document.createElement('section');node.className='editor-pane';
-    node.innerHTML='<header class="editor-pane-heading"><span></span><button class="icon-button" title="Separar este editor en otra ventana" aria-label="Separar este editor en otra ventana">'+icon('layout')+'</button></header><div class="editor-pane-content"></div>';
+    node.innerHTML='<header class="editor-pane-heading"><span draggable="true"></span><button class="icon-button" data-merge-editor title="Merge editors" aria-label="Merge editors">'+icon('minus')+'</button><button class="icon-button" data-detach-editor title="Open in another window" aria-label="Open in another window">'+icon('detach')+'</button></header><div class="editor-pane-content"></div>';
     this.mount.append(node);const pane={node,content:node.lastElementChild};this.panes.push(pane);
-    node.querySelector('button').onclick=()=>{pane.view.focus();window.dispatchEvent(new CustomEvent('lumen:detach-editor'));};return pane;
+    node.querySelector('[data-merge-editor]').onclick=()=>this.closeSplit(this.pathFor(pane.view.getModel()));
+    node.querySelector('[data-detach-editor]').onclick=()=>{pane.view.focus();window.dispatchEvent(new CustomEvent('lumen:detach-editor'));};return pane;
   }
   bindPane(pane){
     pane.view.onDidFocusEditorText(()=>{
@@ -135,7 +136,7 @@ export class LumenEditor {
     this.callbacks.pane?.(pane.view);
   }
   pathFor(model){return model?[...this.models].find(([,r])=>r.model===model)?.[0]||null:null;}
-  paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());p.node.querySelector('span').textContent=name||'Elige un archivo';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
+  paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());const label=p.node.querySelector('span');label.textContent=name||'Choose a file';label.dataset.paneDocument=name||'';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
   split(path,side='right'){
     if(this.models.get(path||this.current)?.kind==='binary')throw Error('Binary files use the read-only byte inspector.');
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
@@ -145,9 +146,12 @@ export class LumenEditor {
     pane.node.style.order=['left','top'].includes(side)?'-1':'1';
     pane.view.setModel(this.models.get(path||this.current)?.model||null);this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();pane.view.focus();this.callbacks.active?.(this.current);
   }
-  closeSplit(){
+  closeSplit(path=this.current){
     if((this.panes?.length||0)<2)return;
-    const second=this.panes.pop(),first=this.panes[0];second.view.dispose();second.node.remove();this.view=first.view;this.current=this.pathFor(first.view.getModel());this.paintPaneLabels();this.focus();this.callbacks.active?.(this.current);
+    const selected=this.panes.find(p=>this.pathFor(p.view.getModel())===path),state=selected?.view.saveViewState();
+    const second=this.panes.pop(),first=this.panes[0];second.view.dispose();second.node.remove();this.view=first.view;
+    if(this.models.get(path)?.model)first.view.setModel(this.models.get(path).model);if(state)first.view.restoreViewState(state);
+    this.current=this.pathFor(first.view.getModel());delete this.mount.dataset.splitAxis;this.paintPaneLabels();this.focus();this.callbacks.active?.(this.current);
   }
   registerLocalIntelligence(){
     const m=monaco;

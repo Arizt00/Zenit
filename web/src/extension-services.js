@@ -9,9 +9,13 @@ export class ExtensionServicesUI {
     const h=this.host,p=h.platform,ed=h.editor;
     if(event.command==='zenit.dependencies.changed'){
       if(event.workspace!==h.service().workspace)return;
-      for(const session of [...p.lspSessions.values()])if(session.languages.some(x=>event.languages.includes(x))){const profile=session.profile;await p.stopLSP(session.id);await p.startLSP(profile,true);}
-      await p.loadContributions();
-      h.notify(p.t('Dependencias integradas. Las herramientas activas se han actualizado.','Dependencies integrated. Active language tools refreshed.'));return;
+      const profiles=new Set(event.profiles||[]);p.languageRefresh=true;
+      try{
+        for(const session of [...p.lspSessions.values()])if(session.languages.some(x=>event.languages.includes(x))){profiles.add(session.profile);await p.stopLSP(session.id);}
+        await p.loadContributions();
+        for(const profile of profiles)if(![...p.lspSessions.values()].some(s=>s.profile===profile))await p.startLSP(profile,true);
+      }finally{p.languageRefresh=false;}
+      if(!event.profiles)h.notify(p.t('Dependencias integradas. Las herramientas activas se han actualizado.','Dependencies integrated. Active language tools refreshed.'));return;
     }
     if(event.command==='zenit.trust.changed'){p.host.setTrusted(event.trusted);p.host.setTrustSource?.(event.source);if(!event.trusted)p.workspaceChanged();return;}
     if(event.command==='zenit.preferences.changed'){await p.syncPreferences();return;}

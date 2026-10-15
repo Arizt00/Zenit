@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Laboratory expands on hover and returns to its icon after opening",
+    "Python environment can be created, activated, saved, closed and restored through the UI",
+    "Connections exists only in Settings and shows all seven actual application adapters",
+    "Merge button and real drag back to center preserve both unsaved models",
+    "Editor submenu has a 12px gap and keyboard navigation returns to its parent",
+    "Both collapsed panels retain rounded corners",
+    "Settings has no top separator or visible scrollbars and no horizontal overflow",
+    "Dark and Forest retain settings geometry without overflow",
+    "Files/commands switching keeps palette geometry stable",
+    "Streaming preserves Unicode and the reading position",
+    "Reduced-motion preference disables hover animation"
+  ],
+  "errors": []
+}

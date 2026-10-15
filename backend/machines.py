@@ -19,20 +19,44 @@ class Machines:
         self.index=self.root/'profiles.json';self.lock=threading.RLock();self.active={}
         try:self.profiles=json.loads(self.index.read_text(encoding='utf-8'))
         except (ValueError,OSError):self.profiles=[]
+        self.base_index=self.root/'vm-base.json'
+        try:self.base_root=json.loads(self.base_index.read_text(encoding='utf-8')).get('directory')
+        except (ValueError,OSError):self.base_root=None
+    def vm_base(self,directory=None):
+        root,data=inventory()
+        if directory or self.base_root:
+            root=Path(directory or self.base_root).resolve()
+            data=json.loads((root/'tool-index.json').read_text(encoding='utf-8'))
+        if not root:return {'qemu':None,'qimg':None,'image':None,'directory':None}
+        def file(relative):
+            if not isinstance(relative,str):return None
+            path=(root/relative).resolve()
+            return str(path) if path.is_relative_to(root) and path.is_file() else None
+        arch=next((x for x in data.get('components',[]) if x.get('id')=='arch'),{})
+        return {'qemu':file(data.get('tools',{}).get('qemu-system-x86_64')) or find_tool('qemu-system-x86_64'),
+                'qimg':file(data.get('tools',{}).get('qemu-img')) or find_tool('qemu-img'),
+                'image':file(arch.get('file')),'directory':str(root)}
+    def configure_base(self,directory):
+        if not isinstance(directory,str) or not Path(directory).is_absolute():raise ValueError('Choose an absolute prepared SDK folder.')
+        base=self.vm_base(directory)
+        if not all(base[k] for k in ('qemu','qimg','image')):raise ValueError('This SDK needs QEMU, qemu-img and the Arch base image in tool-index.json.')
+        atomic_json(self.base_index,{'directory':base['directory']});self.base_root=base['directory']
+        return self.snapshot()
     def snapshot(self):
-        root,data=inventory();arch=next((x for x in data.get('components',[]) if x['id']=='arch'),None)
-        return {'profiles':self.profiles,'active':self.active,'qemu':find_tool('qemu-system-x86_64'),
-                'archImage':str(root/arch['file']) if root and arch else None,
-                'templates':[{'id':'arch','name':'Arch Linux','mode':'Local · consola serie','available':bool(arch)},
+        try:base=self.vm_base()
+        except (OSError,ValueError):base={'qemu':None,'qimg':None,'image':None,'directory':self.base_root}
+        return {'profiles':self.profiles,'active':self.active,'qemu':base['qemu'],
+                'archImage':base['image'],'baseDirectory':base['directory'],
+                'templates':[{'id':'arch','name':'Arch Linux','mode':'Local · consola serie','available':bool(base['image'] and base['qemu'] and base['qimg'])},
                              {'id':'macos','name':'macOS','mode':'SSH a una máquina Mac','available':False,'note':'La virtualización macOS requiere hardware Apple; conecta un Mac o su VM por SSH.'},
                              {'id':'windows7','name':'Windows 7','mode':'SSH a una VM existente','available':False,'note':'Requiere una imagen con licencia y un servidor SSH configurado en la máquina.'}]}
-    def create_arch(self):
+    def create_arch(self, *, directory=None, identity=None, name="Arch Linux", persistent=True):
         with self.lock:
             existing=next((p for p in self.profiles if p['type']=='arch' and p.get('mode')!='ssh'),None)
-            if existing:return self.snapshot()
-            state=self.snapshot();image=state['archImage'];qimg=find_tool('qemu-img')
+            if existing and persistent:return self.snapshot()
+            base=self.vm_base();image=base['image'];qimg=base['qimg']
             if not image or not Path(image).is_file() or not qimg:raise ValueError('La base de Zénit debe incluir QEMU y la imagen oficial de Arch.')
-            directory=self.root/'arch';directory.mkdir(exist_ok=True);disk=directory/'disk.qcow2'
+            directory=Path(directory) if directory is not None else self.root/'arch';directory.mkdir(parents=True,exist_ok=True);disk=directory/'disk.qcow2'
             if disk.exists():raise ValueError('Ya hay un disco Arch sin perfil; se conserva. Revisa la carpeta de máquinas.')
             result=subprocess.run([qimg,'create','-f','qcow2','-F','qcow2','-b',image,str(disk),'16G'],capture_output=True,timeout=30,
                                   env=child_environment(),creationflags=0x08000000 if os.name=='nt' else 0)
@@ -81,7 +105,8 @@ ethernets:
                                   capture_output=True,timeout=20,env=child_environment(),creationflags=0x08000000 if os.name=='nt' else 0)
             if result.returncode:
                 raise ValueError('No se pudo preparar el arranque Arch. El runtime del SDK necesita pycdlib. '+result.stderr.decode('utf-8','replace')[-1000:])
-            profile={'id':uuid.uuid4().hex,'name':'Arch Linux','type':'arch','disk':str(disk),'seed':str(seed),'memory':2048,'cpus':1}
+            profile={'id':identity or uuid.uuid4().hex,'name':name,'type':'arch','disk':str(disk),'seed':str(seed),'memory':2048,'cpus':1}
+            if not persistent:return profile
             candidate=[*self.profiles,profile];atomic_json(self.index,candidate);self.profiles=candidate
             return self.snapshot()
     def save_ssh(self,body):
@@ -96,10 +121,10 @@ ethernets:
         with self.lock:
             candidate=[*self.profiles,profile];atomic_json(self.index,candidate);self.profiles=candidate
         return self.snapshot()
-    def start(self,ws,key):
+    def start(self,ws,key,profile=None):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de abrir su consola.')
         with self.lock:
-            profile=next((x for x in self.profiles if x['id']==key),None)
+            profile=profile or next((x for x in self.profiles if x['id']==key),None)
             if not profile:raise ValueError('Máquina desconocida.')
             old=self.active.get(key);session=self.features.terminals.sessions.get(old)
             if session and not session.closed:return {'id':session.id,'profile':session.profile,'kind':session.kind}
@@ -109,7 +134,7 @@ ethernets:
                 # SSH retains host-key verification and prompts in the real PTY.
                 argv=[ssh,'-tt','-p',str(profile['port']),'-l',profile['user'],profile['host']]
             else:
-                qemu=find_tool('qemu-system-x86_64')
+                qemu=self.vm_base()['qemu']
                 if not qemu:raise ValueError('Prepara QEMU en la base de Zénit.')
                 with socket.socket() as probe:
                     probe.bind(('127.0.0.1',0));control_port=probe.getsockname()[1]

@@ -53,7 +53,7 @@ export class EditorContextMenu {
         item(t('Guardar','Save'),()=>h.saveFile(h.editor.current),'check','Ctrl S'),
         item(t('Guardar como…','Save As…'),()=>this.preview.saveAs(),'file'),
         item(t('Copiar ruta relativa','Copy Relative Path'),()=>navigator.clipboard.writeText(h.editor.current),'copy'),
-        item(t('Abrir en otra ventana','Open in Another Window'),()=>this.preview.newWindow(h.editor.current),'arrow-up-right')]),
+        item(t('Abrir en otra ventana','Open in Another Window'),()=>this.preview.newWindow(h.editor.current),'detach')]),
       extensionActions.length?{separator:true}:null,extensionActions.length?group(t('Extensiones activas','Active Extensions'),'extensions',extensionActions):null,
       {separator:true},item(t('Paleta de comandos…','Command Palette…'),()=>h.studio.host.palette('>'),'search','Ctrl Shift P')
     ].filter(Boolean);
@@ -77,7 +77,7 @@ export class EditorContextMenu {
     items.forEach((item,i)=>{
       if(item.separator){if(!previousSeparator&&items.slice(i+1).some(x=>!x.separator)){const hr=document.createElement('hr');hr.setAttribute('role','separator');list.append(hr);}previousSeparator=true;return;}previousSeparator=false;
       const b=document.createElement('button');b.type='button';b.setAttribute('role','menuitem');b.tabIndex=-1;b.innerHTML=icon(item.glyph||'code')+'<span>'+esc(item.label)+'</span>'+(item.children?icon('chevron-right'):'<kbd>'+esc(item.shortcut||'')+'</kbd>');list.append(b);
-      const expand=()=>{if(!b.isConnected)return;this.trim(level+1);if(!item.children)return;const r=b.getBoundingClientRect();const child=this.render(item.children,level+1,r.right+5,r.top);b.setAttribute('aria-expanded','true');if(r.right+5+child.offsetWidth>innerWidth-8)child.style.left=Math.max(8,r.left-child.offsetWidth-5)+'px';};
+      const expand=()=>{if(!b.isConnected)return;this.trim(level+1);if(!item.children)return;const r=b.getBoundingClientRect(),parent=this.levels[level].getBoundingClientRect(),gap=12;const child=this.render(item.children,level+1,parent.right+gap,r.top);b.setAttribute('aria-expanded','true');if(parent.right+gap+child.offsetWidth>innerWidth-8)child.style.left=Math.max(8,parent.left-child.offsetWidth-gap)+'px';};
       if(item.children){b.setAttribute('aria-haspopup','menu');b.setAttribute('aria-expanded','false');b.expand=expand;}
       b.onpointerenter=()=>{clearTimeout(this.hover);this.hover=setTimeout(()=>{if(item.children){const previous=document.activeElement;expand();previous?.focus();}else this.trim(level+1);},140);};
       b.onclick=()=>{clearTimeout(this.hover);if(item.children)return expand();this.close();this.preview.safe(item.run);};

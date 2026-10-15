@@ -6,8 +6,10 @@ import hashlib
 import importlib.metadata
 import importlib.util
 import json
+import os
 import platform
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -25,6 +27,25 @@ def sha256(file):
     with file.open('rb') as stream:
         for block in iter(lambda:stream.read(1024*1024),b''):digest.update(block)
     return digest.hexdigest()
+
+
+def prepare_windows_bundle_cleanup(bundle):
+    """Let PyInstaller replace its own output containing read-only SDK files."""
+    if os.name != 'nt':return
+    from backend.uninstall import no_links
+    target=no_links(bundle)
+    if target != no_links(ROOT/'dist')/'Zenit':raise ValueError('Build cleanup must stay inside dist/Zenit.')
+    if not target.exists():return
+    paths=[target]
+    for folder,dirs,files in os.walk(target,followlinks=False):
+        paths.extend(no_links(Path(folder)/name) for name in dirs+files)
+    # Validate the complete tree before changing any attributes.
+    for path in paths:
+        if not path.is_relative_to(target):raise ValueError('Build output contains an external path.')
+    for path in paths:
+        metadata=path.stat()
+        if metadata.st_file_attributes & stat.FILE_ATTRIBUTE_READONLY:
+            path.chmod(metadata.st_mode | stat.S_IWRITE)
 
 
 def bundle_python(bundle):
@@ -144,6 +165,7 @@ def main():
                 if not (ROOT/'web/vendor'/path).is_file():parser.error('Falta '+path+'. Ejecuta tools/setup_assets.py.')
         collect_licenses()
         if sys.platform=='darwin':prepare_mac_icon()
+        prepare_windows_bundle_cleanup(ROOT/'dist/Zenit')
         subprocess.run(command,cwd=ROOT,check=True)
     bundle_python(ROOT/'dist/Zenit')
     outputs=[];prefix=f'Zenit-{VERSION}-R{REVISION}'

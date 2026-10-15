@@ -1,0 +1,37 @@
+/* Shared chrome, independent of the active extension theme. */
+.settings-overlay .platform-header {border-bottom:0;background:transparent;}
+.settings-content {overflow-x:hidden;overflow-y:auto;scrollbar-width:none;}
+.settings-content::-webkit-scrollbar,.settings-navigation::-webkit-scrollbar {display:none;}
+.settings-content :is(.settings-category,.preference-list,.preference-row,.preference-label,.preference-control) {min-width:0;max-width:100%;}
+.settings-content .preference-label {overflow-wrap:anywhere;}
+.settings-content .preference-control {flex-shrink:0;}
+.settings-content :is(input,select,.glass-select-trigger) {max-width:100%;}
+.settings-content pre {white-space:pre-wrap;overflow-wrap:anywhere;}
+.dock-slot.is-collapsed {border:1px solid var(--border);border-radius:var(--radius-panel,18px);background:var(--surface);overflow:hidden;box-shadow:var(--shadow-panel);}
+.dock-slot.is-collapsed .dock-collapsed-rail {border-radius:inherit;background:transparent;}
+.collapsed-tool.active:before {display:none;}
+.sidebar-section {display:flex;flex-wrap:wrap;align-items:center;gap:12px;}
+.sidebar-section>h3 {flex-basis:100%;}
+:is(.account-actions,.heading-actions,.forge-tools,.lantern-toolbar,.debug-toolbar,.platform-actions,.extension-card-tags) {gap:10px;}
+:is(.lab-workflow,.tool-installer,.provider-detail)>:is(button,form)+:is(button,small,p) {margin-top:12px;}
+.top-actions .hover-reveal {display:flex;align-items:center;justify-content:flex-start;gap:0;box-sizing:border-box;width:40px;min-width:40px;height:40px;overflow:hidden;padding:0 10px;border-radius:13px;transition:width 420ms cubic-bezier(.22,1,.36,1),border-color 180ms,background-color 180ms;}
+.top-actions .hover-reveal>.icon {flex:none;width:18px;height:18px;}
+.top-actions .hover-reveal>span {flex:none;white-space:nowrap;opacity:0;max-width:0;margin-left:0;transform:translateX(-5px);transition:opacity 150ms,transform 320ms cubic-bezier(.22,1,.36,1),max-width 420ms cubic-bezier(.22,1,.36,1),margin-left 420ms cubic-bezier(.22,1,.36,1);}
+.top-actions .hover-reveal>.icon:last-child:not(:first-child) {display:none;}
+.top-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed) {width:var(--reveal-width,138px);}
+.top-actions .forge-toggle.hover-reveal {--reveal-width:92px;}
+.top-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span {opacity:1;max-width:100px;margin-left:9px;transform:none;transition-delay:35ms;}
+.editor-pane-heading {gap:10px;}
+.editor-pane-heading>span {flex:1;cursor:grab;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.editor-pane-heading .icon-button {flex:none;}
+.editor-pane.focused>.editor-pane-heading {border-bottom-color:var(--border);box-shadow:none;}
+.editor-pane-heading .icon {width:15px;height:15px;}
+.command-palette .palette-results {height:min(360px,45dvh);min-height:0;flex:none;contain:layout;}
+.palette-modes button {transition:color 140ms,background-color 140ms;}
+.extension-logo {display:grid;place-items:center;flex:none;width:52px;height:52px;border-radius:15px;padding:8px;border:1px solid var(--border);background:var(--surface);overflow:hidden;box-shadow:0 2px 6px #00000005;}
+.extension-package-icon {max-width:100%;max-height:100%;object-fit:contain;border-radius:5px;}
+:is(.icon-button,.secondary-button,.text-button)>.icon {flex-shrink:0;stroke-linecap:round;stroke-linejoin:round;}
+.ai-stream {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;}
+@media(max-width:760px){.settings-content .preference-row {flex-wrap:wrap;}.settings-content .preference-control {flex-shrink:1;}}
+@media(prefers-reduced-motion:reduce){.top-actions .hover-reveal,.top-actions .hover-reveal>span,.palette-modes button {transition:none;}}
+html[data-motion=off] :is(.hover-reveal,.hover-reveal>span,.palette-modes button) {transition:none;}

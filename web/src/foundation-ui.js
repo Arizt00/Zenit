@@ -1,6 +1,8 @@
+import {SessionWorkbench} from './session-workbench.js';
+import {hoverReveal} from './hover-reveal.js';
 import {icon,escapeHTML as esc} from './icons.js';
 
-const SECTIONS=[['languages','code','Lenguajes'],['project','folder','Proyecto'],['assembly','cpu','Assembly'],['containers','cube','Contenedores'],['machines','split','Máquinas']];
+const SECTIONS=[['languages','code','Lenguajes'],['project','folder','Proyecto'],['assembly','cpu','Assembly'],['containers','cube','Contenedores'],['machines','split','Máquinas'],['sessions','sparkles','Lantern']];
 const NAMES={python:'Python',gcc:'C · GCC','g++':'C++ · GCC',clang:'LLVM · ASM',java:'Java',javac:'Compilador Java',bash:'Bash',ncc:'nC',node:'Node · extensiones',docker:'Docker CLI','qemu-system-x86_64':'QEMU',mvn:'Maven',gradle:'Gradle'};
 const BRANDS={python:'python',gcc:'c','g++':'cplusplus',clang:'llvm',java:'openjdk',docker:'docker',mvn:'apachemaven',gradle:'gradle'};
 const GROUPS={languages:['python','gcc','g++','clang','java','javac','ncc','node'],project:['mvn','gradle','bash'],containers:['docker'],machines:['qemu-system-x86_64']};
@@ -10,9 +12,9 @@ const action=(id,name,glyph='play')=>`<button class="secondary-button" data-lab-
 export class FoundationUI{
   constructor(host){
     this.host=host;this.section='languages';this.generation=0;
-    const button=document.createElement('button');button.className='foundation-toggle secondary-button';button.title='Lenguajes, dependencias, Docker y máquinas';button.innerHTML=icon('cpu')+'<span>Laboratorio</span>';button.onclick=()=>host.platform.safe(()=>this.open());document.querySelector('.top-actions').prepend(button);
-    host.commands.push(['foundation','cpu','Zénit: abrir laboratorio y dependencias','']);
-    const handle=host.desktop.handle.bind(host.desktop);host.desktop.handle=async command=>command==='foundation'?(await this.open(),true):handle(command);
+    const button=document.createElement('button');button.className='foundation-toggle secondary-button';button.title='Lenguajes, dependencias, Docker y máquinas';button.innerHTML=icon('cpu')+'<span>Laboratorio</span>';button.onclick=()=>host.platform.safe(()=>this.open());document.querySelector('.top-actions').prepend(hoverReveal(button));
+    host.commands.push(['foundation','cpu','Zénit: abrir laboratorio y dependencias',''],['lantern-environments','sparkles','Lantern: session environments and .tern checkpoints','']);
+    const handle=host.desktop.handle.bind(host.desktop);host.desktop.handle=async command=>['foundation','lantern-environments'].includes(command)?(await this.open(),command==='lantern-environments'&&this.selectSection('sessions'),true):handle(command);
   }
   async open(){
     const h=this.host;if(h.platform.page==='foundation'&&this.root?.isConnected)return;
@@ -50,6 +52,7 @@ export class FoundationUI{
     page.querySelector('#lab-assembly').onclick=()=>h.platform.safe(async()=>{await h.studio.save({workspaceStyle:'assembly'});h.platform.closePage();h.profiles.apply();});
     page.querySelector('#lab-create-arch').onclick=e=>this.operation(e.currentTarget,async()=>{if(!await h.ensureTrust())return false;this.machines=await h.platform.api('/machines/create',{type:'arch'});if(page.isConnected)this.updateMachines();},'Perfil Arch preparado.');
     page.querySelector('#lab-ssh').onsubmit=e=>{e.preventDefault();this.operation(e.submitter,async()=>{if(!await h.ensureTrust())return false;const body=Object.fromEntries(new FormData(e.target));body.port=Number(body.port);this.machines=await h.platform.api('/machines/create',body);if(page.isConnected)this.updateMachines();},'Conexión añadida.');};
+    const section=document.createElement('section');section.dataset.labPanel='sessions';section.id='lab-section-sessions';section.setAttribute('role','tabpanel');section.setAttribute('aria-labelledby','lab-tab-sessions');section.hidden=true;page.querySelector('.lab-content').append(section);this.sessions=new SessionWorkbench(h);this.sessions.mount(section);
     this.addProjectWorkflow();this.updateTools();this.updateMachines();this.selectSection(this.section);
   }
   addProjectWorkflow(){
@@ -63,13 +66,13 @@ export class FoundationUI{
   selectSection(id){
     if(!SECTIONS.some(s=>s[0]===id))return;this.section=id;
     this.root.querySelectorAll('[data-lab-panel]').forEach(panel=>panel.hidden=panel.dataset.labPanel!==id);
-    this.root.querySelectorAll('[data-lab-section]').forEach(button=>{const selected=button.dataset.labSection===id;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
+    this.root.querySelectorAll('[data-lab-section]').forEach(button=>{const selected=button.dataset.labSection===id;button.setAttribute('aria-selected',String(selected));button.classList.toggle('active',selected);button.tabIndex=selected?0:-1;});
   }
   updateTools(){
     for(const container of this.root.querySelectorAll('[data-lab-tools]')){
       const ids=GROUPS[container.dataset.labTools];container.innerHTML=this.sdk.tools.filter(t=>ids.includes(t.id)).map(t=>`<article class="lab-tool ${t.path?'available':'missing'}" data-lab-tool="${esc(t.id)}"><span class="lab-tool-glyph">${BRANDS[t.id]?`<img src="/assets/languages/${BRANDS[t.id]}.svg" alt="">`:icon(({javac:'layout',bash:'terminal',ncc:'cpu',node:'code','qemu-system-x86_64':'split'})[t.id]||'cpu')}</span><div><strong>${NAMES[t.id]||esc(t.id)}</strong><span class="lab-tool-state">${t.path?(t.bundled?'Base de Zénit':'Ruta del sistema'):'No detectado'}</span><details><summary>${t.path?'Ver ubicación':'Configurar herramienta'}</summary>${t.path?`<code>${esc(t.path)}</code>`:'<p>Configura su ruta en Ajustes · Lenguajes y herramientas.</p>'}</details></div></article>`).join('');
     }
-    const found=this.sdk.tools.filter(t=>t.path).length;this.root.querySelector('.lab-inventory-summary').textContent=`${found} de ${this.sdk.tools.length} rutas detectadas`;this.filterTools();
+    const found=this.sdk.tools.filter(t=>t.path).length;this.root.querySelector('.lab-inventory-summary').textContent=this.host.platform.t(`${found} de ${this.sdk.tools.length} rutas detectadas`,`${found} of ${this.sdk.tools.length} tools detected`);this.filterTools();
   }
   filterTools(){
     const query=this.root.querySelector('.lab-filter input').value.trim().toLocaleLowerCase();let count=0;

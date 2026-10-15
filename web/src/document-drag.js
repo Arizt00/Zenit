@@ -16,13 +16,13 @@ export class DocumentDrag{
     this.overlay.innerHTML='<div class="document-drop-hint">Soltar en un borde divide el editor · fuera de Zénit abre otra ventana</div>'+['top','left','center','right','bottom'].map(side=>`<div data-document-side="${side}">${icon(side==='center'?'file':'split')}<span>${{top:'Dividir arriba',left:'Dividir a la izquierda',center:'Abrir aquí',right:'Dividir a la derecha',bottom:'Dividir abajo'}[side]}</span></div>`).join('');
     host.panel.append(this.overlay);
     this.listen(document,'dragstart',e=>{
-      const tab=e.target.closest('[data-tab]'),file=e.target.closest('.tree-row[data-file]');const path=tab?.dataset.tab||file?.dataset.file;
-      if(!path)return;this.start={path,handled:false};
+      const tab=e.target.closest('[data-tab]'),file=e.target.closest('.tree-row[data-file]');const pane=e.target.closest('[data-pane-document]'),path=tab?.dataset.tab||file?.dataset.file||pane?.dataset.paneDocument;
+      if(!path)return;this.start={path,handled:false,editor:!!(tab||pane)};
       const r=host.editor.models.get(path);e.dataTransfer.setData(DOCUMENT_TYPE,JSON.stringify({path,workspace:host.service().workspace,content:r?.model?.getValue()??r?.value}));e.dataTransfer.effectAllowed='copyMove';
-      host.onStart?.(path);
+      this.overlay.querySelector('[data-document-side=center] span').textContent=this.start.editor&&host.editor.panes?.length>1?'Merge editors here':'Open here';host.onStart?.(path);
     });
     this.listen(host.panel,'dragover',e=>{
-      if(!e.dataTransfer.types.includes(DOCUMENT_TYPE))return;e.preventDefault();e.dataTransfer.dropEffect='copy';this.overlay.hidden=false;
+      if(!e.dataTransfer.types.includes(DOCUMENT_TYPE))return;e.preventDefault();e.dataTransfer.dropEffect='move';this.overlay.hidden=false;
       const side=dropSide(e.clientX,e.clientY,host.editor.mount.getBoundingClientRect());this.side=side;
       this.overlay.querySelectorAll('[data-document-side]').forEach(el=>el.classList.toggle('active',el.dataset.documentSide===side));
     });
@@ -31,7 +31,7 @@ export class DocumentDrag{
       if(!e.dataTransfer.types.includes(DOCUMENT_TYPE))return;e.preventDefault();e.stopPropagation();if(this.start)this.start.handled=true;
       const side=dropSide(e.clientX,e.clientY,host.editor.mount.getBoundingClientRect());this.overlay.hidden=true;
       const data=JSON.parse(e.dataTransfer.getData(DOCUMENT_TYPE)),internal=!!this.start;
-      host.safe(()=>this.receive(data,side,internal));
+      host.safe(()=>this.receive(data,side,internal,!!this.start?.editor));
     });
     this.listen(document,'drop',()=>{if(this.start)this.start.handled=true;},true);
     this.listen(document,'keydown',e=>{if(e.key==='Escape'&&this.start){this.start.cancelled=true;this.overlay.hidden=true;}},true);
@@ -41,11 +41,12 @@ export class DocumentDrag{
     });
   }
   listen(node,name,fn,capture=false){node.addEventListener(name,fn,capture);this.listeners.push(()=>node.removeEventListener(name,fn,capture));}
-  async receive(data,side='center',internal=false){
+  async receive(data,side='center',internal=false,fromEditor=false){
     const h=this.host;if(!data?.path||data.workspace!==h.service().workspace)throw Error('Arrastra archivos de este mismo proyecto.');
     const previous=h.editor.current,existing=h.editor.models.get(data.path);
     // Within one window the live model wins over the drag snapshot.
     if(!internal&&existing&&typeof data.content==='string'&&h.editor.isDirty(data.path)&&!await h.confirmDialog('Recibir archivo','El búfer de destino tiene cambios. ¿Reemplazarlo por el de la otra ventana?','Reemplazar búfer'))return;
+    if(side==='center'&&internal&&fromEditor)h.editor.closeSplit(data.path);
     await h.openFile(data.path);
     if(!internal&&typeof data.content==='string'&&data.content.length<=2_000_000)h.editor.insertText(data.content,true);
     if(side!=='center'){

@@ -29,6 +29,8 @@ from .machines import Machines
 from .melody_files import MelodyFiles
 from .melody_voice import MelodyVoice
 from .permissions import WorkspacePermissions
+from .hilo import Hilo, Connections
+from .tern import Tern
 
 
 class PlatformServices:
@@ -52,6 +54,7 @@ class PlatformServices:
         self.python_packages=PythonPackages(self)
         from .native_packages import NativePackages
         self.native_packages=NativePackages(self)
+        self.hilo=Hilo(self);self.connections=Connections(self);self.tern=Tern(self)
     def restore_trust(self):
         state=self.permissions.state(self.app.workspace.root,direct=not self.prefs.get('security.confirmRoutineActions'))
         self.app.workspace.trusted=state['trusted'];return state
@@ -65,7 +68,7 @@ class PlatformServices:
         return {'version':VERSION,'revision':REVISION,'preferences':self.prefs.export(),'providers':self.ai.vault.state(),
                 'xterm':(web/'xterm/xterm.js').is_file() and (web/'xterm-fit/addon-fit.js').is_file(),
                 'installedExtensions':len(self.extensions.installed),'dataDirectory':str(self.prefs.directory),
-                'development':self.tools.discover_servers(),'commandSequence':self.command_seq}
+                'development':self.hilo.cached('language-servers',self.tools.discover_servers),'commandSequence':self.command_seq}
     def _trusted(self):
         if not self.app.workspace.trusted:raise PermissionError('El proyecto no es de confianza. Autorízalo antes de continuar.')
     def execution_workspace(self,ws,path):
@@ -86,6 +89,9 @@ class PlatformServices:
     def get(self,path,query):
         q=lambda key,default='':query.get(key,[default])[0]
         if path=='/state':return self.state()
+        if path=='/hilo':return self.hilo.snapshot(self.app.workspace.root)
+        if path=='/hilo/connections':return {'connections':self.connections.inventory()}
+        if path=='/lantern/environments':return self.tern.snapshot(self.app.workspace)
         if path=='/python/packages':return self.python_packages.status(self.app.workspace)
         if path=='/ai/memory':
             key=self.ai.memory.key(str(self.app.workspace.root),q('path'),q('provider'))
@@ -134,7 +140,7 @@ class PlatformServices:
         if path=='/ai/voice/job':return self.voice.snapshot(q('id'))
         if path=='/ai/account':return self.ai.accounts.status(q('provider'))
         if path=='/ai/job':return self.ai.get(q('id')).state(int(q('offset','0')))
-        if path=='/lsp/events':self._trusted();return self.lsp.get(q('id')).poll(int(q('after','0')))
+        if path=='/lsp/events':self._trusted();return self.lsp.poll(q('id'),int(q('after','0')))
         if path=='/ui/events':
             after=int(q('after','0'))
             with self.command_lock:return {'events':[x for x in self.command_events if x['seq']>after],'sequence':self.command_seq}
@@ -144,6 +150,23 @@ class PlatformServices:
         raise FileNotFoundError('Ruta de plataforma desconocida.')
     def post(self,path,body):
         ws=self.app.workspace
+        if path=='/hilo/refresh':self.hilo.invalidate();return {'connections':self.connections.inventory()}
+        if path=='/hilo/cancel':
+            self._trusted()
+            job=next((j for j in self.hilo.snapshot(ws.root)['jobs'] if j['id']==body.get('id')),None)
+            if not job:raise ValueError('Task is not in this workspace.')
+            return self.hilo.cancel(body['id'])
+        if path=='/hilo/connect':return self.connections.launch(ws,body)
+        if path=='/machines/base':self._trusted();return self.machines.configure_base(body.get('directory'))
+        if path.startswith('/lantern/environments/'):
+            self._trusted();action=path.rsplit('/',1)[-1]
+            if action=='create':return self.hilo.submit('Lantern · create environment',lambda event:self.tern.create(ws,body,event),workspace=ws.root,key='tern-create:'+str(ws.root))
+            if action=='restore':return self.tern.reopen(ws,body.get('file',''))
+            if action=='save':return self.tern.save(ws,body.get('id'),body.get('file'))
+            if action=='activate':return self.tern.activate(ws,body.get('id'))
+            if action in ('console','stop'):
+                return self.hilo.submit('Lantern · '+action,lambda event:getattr(self.tern,action)(ws,body.get('id')),workspace=ws.root,key='tern:'+str(body.get('id')),priority=0)
+            raise ValueError('Unknown environment action.')
         if path=='/python/packages':return self.python_packages.start(ws,body)
         if path=='/native/packages':return self.native_packages.start(ws,body)
         if path=='/native/packages/cancel':return self.native_packages.cancel(ws)
@@ -303,6 +326,9 @@ class PlatformServices:
             return {'queued':True,'sequence':self.command_seq,'command':command}
         raise FileNotFoundError('Operación de plataforma desconocida.')
     def workspace_changed(self):
+        self.hilo.cancel_workspace(self.app.workspace.root)
+        self.tern.close_workspace(self.app.workspace)
+        self.hilo.invalidate()
         self.voice.stop()
         self.buffers.clear()
         self.extension_runtime.shutdown()
@@ -312,6 +338,7 @@ class PlatformServices:
             if not job.done:job.cancel()
         self.ai.clear_history()
     def shutdown(self):
+        self.hilo.shutdown()
         self.voice.shutdown()
         self.updates.shutdown()
         self.workspace_changed();self.ai.shutdown();self.extensions.shutdown();self.downloads.shutdown()

@@ -26,7 +26,7 @@ already={Path(source).name for source,destination in data if destination=='backe
 for name in ('emma_voice_bridge.mjs','emma_voice_worker.py'):data.append((str(ROOT/'backend'/name),'backend'))
 for source in (ROOT/'backend').glob('extension_*.cjs'):
     if source.name not in already:data.append((str(source),'backend'))
-for name in ('PREVIEW_054_R5.md','VSCODE_PARITY_054_R5.md','GETTING_STARTED.md','STATUS.md','ROADMAP.md','PREVIEW_054_R4.md','VSCODE_PARITY_054_R4.md','PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
+for name in ('PREVIEW_054_R12.md','SESSION_ENVIRONMENTS.md','PREVIEW_054_R5.md','VSCODE_PARITY_054_R5.md','GETTING_STARTED.md','STATUS.md','ROADMAP.md','PREVIEW_054_R4.md','VSCODE_PARITY_054_R4.md','PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
     data.append((str(ROOT/'docs'/name),'docs'))
 data.extend([(str(ROOT/'CONTRIBUTING.md'),'.'),(str(ROOT/'docs/media'),'docs/media')])
 # Only the shipped examples belong in the bundle, never compiler/profile caches.

@@ -148,7 +148,7 @@ class LanguageSession:
 
 
 class LanguageServers:
-    def __init__(self,prefs,toolchains):self.prefs=prefs;self.toolchains=toolchains;self.sessions={};self.lock=threading.RLock()
+    def __init__(self,prefs,toolchains):self.prefs=prefs;self.toolchains=toolchains;self.sessions={};self.retired=[];self.lock=threading.RLock()
     def start(self,ws,profile_id,consent=False):
         if not ws.trusted or consent is not True:raise PermissionError('Autoriza este ejecutable LSP en un proyecto de confianza.')
         profile=next((p for p in self.toolchains.config['servers'] if p['id']==profile_id),None)
@@ -167,9 +167,17 @@ class LanguageServers:
         s=self.get(sid);return {'result':s.request(method,s.validate_params(params))}
     def notify(self,sid,method,params):
         if method not in NOTIFICATIONS:raise PermissionError('Notificación LSP no admitida.')
+        if sid in self.retired:return {'ok':True,'retired':True}
         s=self.get(sid);s.notify(method,s.validate_params(params));return {'ok':True}
+    def poll(self,sid,after):
+        with self.lock:
+            if sid in self.retired:return {'sequence':after,'events':[],'closed':True,'retired':True}
+            session=self.get(sid)
+        return session.poll(after)
     def stop(self,sid):
-        with self.lock:s=self.sessions.pop(sid,None)
+        with self.lock:
+            s=self.sessions.pop(sid,None)
+            if s:self.retired=(self.retired+[sid])[-64:]
         if s:s.close()
         return {'stopped':bool(s)}
     def shutdown(self):
