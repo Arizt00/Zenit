@@ -20,7 +20,7 @@ export function installProductUI(host){
     menu.onclick=()=>host.showMenu(menu,hidden.map(button=>({label:button.getAttribute('aria-label')||button.title||button.textContent.trim(),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'settings',disabled:button.disabled,run:()=>button.click()})),'Acciones');
   }
   compact(document.querySelector('#project-panel .heading-actions'),'[data-action="new-file"],[data-action="project-menu"],[data-collapse-panel],[title*="escritorio"]');
-  compact(document.querySelector('#assistant-panel .heading-actions'),'[title*="escritorio"],.melody-selection-voice');
+  compact(document.querySelector('#assistant-panel .heading-actions'),'[data-panel-float]');
   compact(document.querySelector('.editor-tabbar'),'.file-tab,.new-tab,.file-group');
   const crumbs=document.createElement('span');crumbs.className='breadcrumbs-actions';
   for(const [action,glyph,label] of [['run','play','Ejecutar archivo'],['debug-view','bug','Depurar archivo'],['settings','settings','Ajustes']]){

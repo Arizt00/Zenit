@@ -15,7 +15,7 @@ export function installMelodyExperience(host){
   const cancel=document.getElementById('ai-cancel-generation');status.append(cancel);
   cancel.title='Stop response';cancel.setAttribute('aria-label','Stop response');
   const modelPicker=installModelPicker(p,status.querySelector('.melody-destination'));
-  document.querySelector('.assistant-heading').append(status.querySelector('.melody-new-chat'),cancel);
+  document.querySelector('.assistant-heading .heading-actions').prepend(status.querySelector('.melody-new-chat'),cancel);
   const composer=document.querySelector('.ai-composer'),input=document.getElementById('ai-input');
   const modes=document.createElement('div');modes.className='melody-compose-modes';modes.setAttribute('role','group');modes.setAttribute('aria-label','Message mode');
   modes.innerHTML=`<button type="button" data-melody-mode="chat" aria-pressed="true">${icon('sparkles')}<span>Chat</span></button><button type="button" data-melody-mode="edit" aria-pressed="false">${icon('code')}<span>Edit file</span></button><small class="melody-mode-hint"></small>`;

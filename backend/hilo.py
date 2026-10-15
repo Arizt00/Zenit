@@ -34,7 +34,7 @@ class Hilo:
                 if existing: return {'job': existing['id']}
             identity = uuid.uuid4().hex
             event = threading.Event()
-            job = dict(id=identity, label=label, workspace=str(workspace), key=key, state='queued', created=time.time(), result=None, error=None, event=event, cancel=cancel)
+            job = dict(id=identity, label=label, workspace=str(workspace), key=key, state='queued', stage='Waiting', priority=priority, created=time.time(), started=None, result=None, error=None, event=event, cancel=cancel)
             self.sequence += 1
             self.jobs[identity] = job
             try: self.queue.put_nowait((priority, self.sequence, identity, operation))
@@ -56,7 +56,7 @@ class Hilo:
             result = None; error = None
             try:
                 if job['event'].is_set(): raise CancelledError()
-                with self.lock: job['state'] = 'running'
+                with self.lock: job.update(state='running', stage='Preparing', started=time.time())
                 result = operation(job['event'])
                 state = 'cancelled' if job['event'].is_set() else 'done'
             except CancelledError: state = 'cancelled'
@@ -74,6 +74,13 @@ class Hilo:
                 job['event'].set()
                 if job['cancel']: job['cancel']()
             return {'cancelled': job['event'].is_set()}
+
+    def report(self, event, stage):
+        with self.lock:
+            for job in self.jobs.values():
+                if job['event'] is event and job['state'] == 'running':
+                    job['stage'] = str(stage)[:160]
+                    break
 
     def cancel_workspace(self, workspace):
         for identity, job in list(self.jobs.items()):
@@ -108,6 +115,10 @@ class Hilo:
     def snapshot(self, workspace=None):
         with self.lock:
             jobs = [{k: v for k, v in j.items() if k not in ('event', 'cancel', 'key')} for j in self.jobs.values() if workspace is None or j['workspace'] == str(workspace)]
+        pending = sorted((j for j in jobs if j['state'] == 'queued'), key=lambda j:(j['priority'],j['created']))
+        for job in jobs:
+            job['queuePosition'] = next((i+1 for i,j in enumerate(pending) if j['id']==job['id']), None)
+            job['elapsedMs'] = max(0, round(((job.get('finished') or time.time())-(job['started'] or job['created']))*1000))
         return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'cacheEntries': len(self.cache)}
 
     def shutdown(self):
@@ -149,6 +160,8 @@ class Connections:
         if not argv: raise ValueError('Install the official application or configure its executable in Languages and tools.')
         if name in ('codex', 'claude-code', 'gemini-cli'):
             # Reuse the same provider-owned profile as Melody's sign-in panel.
+            from .accounts import interactive_argv
+            argv = interactive_argv(name, argv)
             environment, home = self.features.ai.accounts.environment(name)
             if name == "codex": environment["CODEX_HOME"] = str(self.features.ai.accounts.codex.home)
             return {'terminal': self.features.hacker._terminal(argv, self.NAMES[name], ws.root, environment)}

@@ -6,6 +6,9 @@ export function installModelPicker(p,destination){
   const panel=document.createElement('section');panel.id='melody-model-picker';panel.className='melody-model-picker';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Melody models');
   panel.innerHTML=`<header><strong>${icon('sparkles')}Melody models</strong><button type="button" class="icon-button" data-model-close aria-label="Close model picker">${icon('close')}</button></header><label>Provider<select data-model-provider>${PROVIDERS.map(id=>`<option value="${id}">${providerName(id)}</option>`).join('')}</select></label><div class="model-picker-tools"><input data-model-search type="search" placeholder="Find a model…" aria-label="Find a model"><button type="button" class="icon-button" data-model-refresh title="Refresh models">${icon('refresh')}</button></div><p data-model-status role="status"></p><div class="model-picker-list" role="group" aria-label="Available models"></div><footer><button type="button" class="text-button" data-model-account>${icon('settings')}Manage account</button><small>Account access determines availability</small></footer>`;
   document.getElementById('assistant-panel').append(panel);
+  const heading=document.querySelector('.assistant-heading');
+  const position=()=>{panel.style.top=(heading.offsetTop+heading.offsetHeight+8)+'px';panel.style.maxHeight=`calc(100% - ${heading.offsetTop+heading.offsetHeight+24}px)`;};
+  const resize=new ResizeObserver(position);resize.observe(heading);position();
   const title=document.querySelector('.assistant-heading-title h2'),provider=panel.querySelector('select'),search=panel.querySelector('[data-model-search]'),list=panel.querySelector('.model-picker-list'),status=panel.querySelector('[data-model-status]'),cache=new Map();let epoch=0,anchor=title,closing=false;
   const busy=()=>p.aiStarting||p.aiJob;
   const close=()=>{
@@ -35,5 +38,5 @@ export function installModelPicker(p,destination){
   const key=e=>{if(e.key==='Escape'&&!panel.hidden){e.preventDefault();e.stopImmediatePropagation();close();anchor.focus();}};
   document.addEventListener('pointerdown',outside);document.addEventListener('keydown',key,true);
   p.openModelPicker=()=>{if(panel.hidden||closing)open(title);};
-  return {close,dispose(){close();delete p.openModelPicker;panel.remove();document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key,true);}};
+  return {close,dispose(){resize.disconnect();close();delete p.openModelPicker;panel.remove();document.removeEventListener('pointerdown',outside);document.removeEventListener('keydown',key,true);}};
 }

@@ -51,6 +51,9 @@ class Tern:
         if not ws.trusted: raise PermissionError('Trust this workspace before creating an environment.')
         kind = body.get('kind', 'python')
         if kind not in ('python', 'arch'): raise ValueError('Choose Python or Arch Linux.')
+        resources = self.resources(body) if kind == 'arch' else {}
+        inherit = body.get('inherit', True)
+        if not isinstance(inherit, bool): raise ValueError('Choose whether to include the bundled Python packages.')
         name = body.get('name') or ('Python session' if kind == 'python' else 'Arch session')
         if not isinstance(name, str) or not name.strip() or len(name) > 80: raise ValueError('Use an environment name of 1–80 characters.')
         with self.lock:
@@ -61,22 +64,35 @@ class Tern:
         try:
             session = dict(id=identity, name=name.strip(), kind=kind, saved=None, state='ready', terminal=None, created=time.time(), workspace=str(ws.root), ws=ws)
             if kind == 'python':
+                self.features.hilo.report(event, 'Creating Python environment')
                 executable = self.features.python_packages.base()
                 if not executable: raise ValueError('Python is not installed.')
-                task = self.features.app.runner.start([[executable, '-I', '-m', 'venv', '--system-site-packages', str(directory / 'environment')]], ws.root, timeout=180)
+                session['inherit'] = inherit
+                task = self.features.app.runner.start([[executable, '-I', '-m', 'venv', *(['--system-site-packages'] if inherit else []), str(directory / 'environment')]], ws.root, timeout=180)
                 job = self.features.app.runner.jobs[task['job']]
                 while not job.done:
                     if event.wait(.1): job.cancel()
                 if event.is_set(): raise CancelledError()
                 if job.code != 0: raise ValueError('Python environment creation failed. ' + job.output[-2000:])
             else:
+                self.features.hilo.report(event, 'Preparing virtual machine disk')
                 session['profile'] = self.features.machines.create_arch(directory=directory, identity=identity, name=name, persistent=False)
+                session['profile'].update(resources)
+                session['resources'] = resources
             if event.is_set() or not ws.trusted: raise CancelledError()
             with self.lock: self.sessions[identity] = session
             return {'environment': identity}
         except BaseException:
             self.remove_owned(ws, identity)
             raise
+
+    @staticmethod
+    def resources(body):
+        if not isinstance(body, dict): raise ValueError('Invalid virtual machine resources.')
+        memory, cpus = body.get('memory', 2048), body.get('cpus', 1)
+        if type(memory) is not int or memory not in (1024, 2048, 4096, 8192): raise ValueError('Choose 1, 2, 4 or 8 GB of VM memory.')
+        if type(cpus) is not int or cpus not in (1, 2, 4): raise ValueError('Choose 1, 2 or 4 virtual CPUs.')
+        return {'memory': memory, 'cpus': cpus}
 
     def get(self, ws, identity):
         session = self.sessions.get(identity)
@@ -127,6 +143,8 @@ class Tern:
         if not isinstance(filename, str) or not re.fullmatch(r'[\w -]{1,80}\.tern', filename): raise ValueError('Use a filename such as experiment.tern in the workspace root.')
         if session['saved'] == filename: return {'file': filename}
         descriptor = {'schema': 1, 'type': 'zenit-environment', 'id': identity, 'kind': session['kind'], 'name': session['name'], 'created': session['created']}
+        if session['kind'] == 'arch': descriptor['resources'] = session.get('resources', self.resources({}))
+        else: descriptor['inherit'] = session.get('inherit', True)
         # create=True never replaces an existing workspace file.
         ws.save(filename, json.dumps(descriptor, ensure_ascii=False, indent=2) + '\n', None, create=True)
         session['saved'] = filename
@@ -147,9 +165,11 @@ class Tern:
             if len(self.sessions) >= 8: raise ValueError('Keep at most eight session environments.')
         session = dict(id=identity, name=str(data.get('name', 'Environment'))[:80], kind=data['kind'], saved=path.name, state='ready', terminal=None, created=data.get('created'), workspace=str(ws.root), ws=ws)
         if session['kind'] == 'arch':
+            session['resources'] = self.resources(data.get('resources', {}))
             if not all((directory / file).is_file() and not (directory / file).is_symlink() for file in ('disk.qcow2', 'seed.iso')): raise ValueError('The saved VM disk or seed is missing.')
-            session['profile'] = {'id': identity, 'name': session['name'], 'type': 'arch', 'disk': str(directory / 'disk.qcow2'), 'seed': str(directory / 'seed.iso'), 'memory': 2048, 'cpus': 1}
+            session['profile'] = {'id': identity, 'name': session['name'], 'type': 'arch', 'disk': str(directory / 'disk.qcow2'), 'seed': str(directory / 'seed.iso'), **session['resources']}
         elif not self.python(directory).is_file(): raise ValueError('The Python environment files are missing.')
+        else: session['inherit'] = data.get('inherit', True) is True
         with self.lock: self.sessions[identity] = session
         return {'environment': identity}
 

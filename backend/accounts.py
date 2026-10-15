@@ -6,6 +6,7 @@ No browser cookies, consumer-site scraping, or subscription-to-API conversion.
 """
 from __future__ import annotations
 import json
+from functools import lru_cache
 import os
 from pathlib import Path
 import queue
@@ -48,6 +49,27 @@ def client_argv(provider):
         if node and script.is_file(): return [node, str(script)]
         raise ValueError('No se encuentra la entrada del cliente oficial. Reinstala su distribución oficial de Node.js.')
     return [exe]
+
+
+@lru_cache(maxsize=16)
+def _supports_no_daemon(argv, signature):
+    """Probe help only, never start a server or sign in while detecting a client."""
+    try:
+        result = subprocess.run([*argv, '--help'], capture_output=True, text=True,
+                                encoding='utf-8', errors='replace', timeout=8, creationflags=FLAGS)
+        return result.returncode == 0 and '--no-daemon' in result.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def interactive_argv(provider, argv=None):
+    args = list(argv or client_argv(provider))
+    if provider == 'codex':
+        # The desktop CLI can run directly even without the shared daemon package.
+        # Older releases do not know this option, so detect it from their own help.
+        signature = tuple((str(p), p.stat().st_mtime_ns, p.stat().st_size) for item in args if (p := Path(item)).is_file())
+        if _supports_no_daemon(tuple(args), signature): args.append('--no-daemon')
+    return args
 
 class CodexAccount:
     def __init__(self, directory):

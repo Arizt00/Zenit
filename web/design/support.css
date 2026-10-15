@@ -747,7 +747,7 @@ input[type=checkbox]:disabled{cursor:default;}
 }
 /* Ancillary contracts from continuity.css */
 .sidebar,.platform-page,.setup-card,.terminal-profile,.tool-installer,.tool-sections>section,.provider-detail,.provider-card,.hardware-metrics>div,.platform-notice{background:var(--glass);border-color:var(--glass-edge);box-shadow:var(--inset);}
-.setup-shell,.onboarding,.installer-app{background:radial-gradient(ellipse at 80% 40%,var(--ambient-b),transparent 65%),var(--bg);}
+.setup-shell,.onboarding,.installer-app{background:radial-gradient(ellipse at 80% 40%,var(--ambient-b,var(--accent-soft)),transparent 65%),var(--bg);}
 .setup-sidebar{background:transparent;border-color:var(--border);}
 .setup-brand{background:var(--glass);border-color:var(--border);}
 .setup-card{min-width:0;}

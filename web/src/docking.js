@@ -29,7 +29,7 @@ export class DockManager {
     this.listen(this.scrim,'click',()=>{this.compactOpen=false;this.render();});
     for(const [id,panel] of Object.entries(this.panels)) {
       const actions=panel.querySelector(id==='console'?'.terminal-tools':'.heading-actions');
-      actions.insertAdjacentHTML('beforeend',`<button class="icon-button pane-float" data-panel-float="${id}" title="Dejar ${PANEL_LABELS[id]} flotante" aria-label="Dejar ${PANEL_LABELS[id]} flotante">${icon('layout')}</button>${id!=='console'?`<button class="icon-button pane-close" data-dock-hide="${id}" title="Cerrar panel ${PANEL_LABELS[id]}" aria-label="Cerrar panel ${PANEL_LABELS[id]}">${icon('close')}</button>`:''}`);
+      actions.insertAdjacentHTML('beforeend',`<button class="icon-button pane-float" data-panel-float="${id}" title="Dejar ${PANEL_LABELS[id]} flotante" aria-label="Dejar ${PANEL_LABELS[id]} flotante">${icon('float')}</button>${id!=='console'?`<button class="icon-button pane-close" data-dock-hide="${id}" title="Cerrar panel ${PANEL_LABELS[id]}" aria-label="Cerrar panel ${PANEL_LABELS[id]}">${icon('close')}</button>`:''}`);
       if(id==='console')continue;
       const button=document.createElement('button');button.className='icon-button pane-collapse';button.dataset.collapsePanel=id;
       panel.querySelector('.heading-actions').appendChild(button);

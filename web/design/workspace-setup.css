@@ -1,0 +1,41 @@
+/* Setup is an opaque screen. A theme's optional ambient color cannot erase it. */
+#onboarding {background-color:var(--bg,#f4f5f8);background-image:radial-gradient(ellipse at 85% 0%,var(--accent-soft,#f0edf9),transparent 65%);color:var(--text);isolation:isolate;}
+:root[data-screen=setup] #app {visibility:hidden;}
+#onboarding .setup-brand {height:76px;min-height:76px;border:0;padding:0 32px;gap:14px;}
+.setup-logo {font-size:32px;font-weight:800;color:var(--accent);letter-spacing:-3px;}
+#onboarding .setup-brand strong {font-size:20px;letter-spacing:-.4px;}
+#onboarding .setup-brand strong span {font-weight:350;color:var(--secondary);}
+#onboarding .setup-edition {font-size:10px;color:var(--muted);}
+#skip-onboarding {margin-left:auto;display:flex;align-items:center;gap:10px;}
+#onboarding .setup-shell {background:transparent;grid-template-columns:220px minmax(0,1fr);width:min(1280px,100%);margin:0 auto;}
+#onboarding .setup-sidebar {border:0;padding:36px 24px;}
+.setup-signature {margin-top:auto;padding-top:30px;color:var(--secondary);font-size:14px;line-height:1.7;}
+.setup-signature>.glass-art {width:130px;height:115px;margin-left:-6px;}
+.setup-step .icon {width:14px;height:14px;}
+#onboarding .setup-main {padding:24px 32px 0;}
+#onboarding .setup-heading h1 {font-size:clamp(26px,2.5vw,36px);font-weight:600;color:var(--text);margin:12px 0;outline:none;}
+#onboarding .setup-heading p {font-size:13px;color:var(--secondary);margin-bottom:26px;}
+#onboarding .eyebrow {color:var(--accent);}
+#onboarding .setup-content {scrollbar-width:none;padding:0 2px 20px;}
+#onboarding .setup-content::-webkit-scrollbar {display:none;}
+#onboarding .setup-grid {flex:0;grid-template-rows:auto;gap:16px;}
+#onboarding .setup-card {background:var(--surface);padding:22px;border:1px solid var(--border);border-radius:18px;box-shadow:0 4px 16px #00000003;}
+#onboarding .setup-card h3 {font-size:14px;gap:10px;margin-bottom:8px;}
+#onboarding .setup-card h3>.icon {width:19px;height:19px;color:var(--secondary);}
+#onboarding .setup-card p {font-size:12px;color:var(--secondary);margin-bottom:16px;}
+#onboarding .setup-choices>button {min-height:80px;background:var(--header);box-shadow:none;font-size:11px;border-radius:12px;transition:background-color 180ms,border-color 180ms;}
+#onboarding .setup-choices>button.selected {color:var(--accent);border-color:var(--accent);background:var(--accent-soft);box-shadow:none;}
+#onboarding .setup-wide .setup-choices {margin-top:18px;}
+#onboarding .setup-personal {width:100%;max-width:650px;margin:12px auto;}
+#onboarding .setup-personal>label {margin:24px 0;}
+#onboarding .setup-personal .preference-row {padding:20px 0;border:0;border-top:1px solid var(--border);gap:24px;background:transparent;}
+#onboarding .preference-label {display:flex;flex:1;flex-direction:column;gap:6px;min-width:0;}
+#onboarding .preference-label strong {font-size:13px;font-weight:550;}
+#onboarding .preference-label small {font-size:12px;line-height:1.5;color:var(--secondary);}
+#onboarding .setup-local {display:flex;align-items:center;gap:10px;margin:14px 0 0;font-size:11px;}
+#onboarding .setup-ready>.glass-art {width:180px;height:160px;}
+#onboarding .setup-footer {border:0;padding:20px 0 24px;}
+.setup-feedback {flex:1;font-size:12px;color:var(--danger);}
+#onboarding .setup-footer button {display:flex;align-items:center;gap:10px;min-height:42px;padding-inline:18px;}
+@media(max-width:800px){#onboarding .setup-shell{grid-template-columns:1fr;}#onboarding .setup-sidebar{display:none;}#onboarding .setup-main{padding:16px 24px 0;}#onboarding .setup-card{padding:16px;}}
+@media(max-width:540px){#onboarding .setup-grid{grid-template-columns:1fr;}#onboarding .setup-brand{padding-inline:20px;}#onboarding .setup-edition{display:none;}#onboarding .setup-main{padding-inline:16px;}}

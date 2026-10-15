@@ -37,7 +37,7 @@ def main():
         critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
         critical.update('_internal/web/'+name for name in (
             'src/workbench.js','src/foundation-ui.js','src/session-workbench.js',
-            'src/hover-reveal.js','src/melody-stream.js',
+            'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',
             'design/workflow-polish.css','design/session-workbench.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
         for name in sorted(critical):
