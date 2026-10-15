@@ -12,6 +12,8 @@ personalisation screen has an editable name preview, separate preference cards,
 clearer typography and a responsive two-column composition. Changing the name
 keeps the preview's rendering context and scroll position. Native themes preview
 without overwriting saved appearance data; skipping restores the saved theme.
+Configuration and preview columns share their top and bottom edges, including
+when the window is resized or the content height changes.
 
 Laboratory, Forge and Debug form a compact toolbar. Each expands to the left
 with a fixed right edge; the search field resizes continuously. The buttons

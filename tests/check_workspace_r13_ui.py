@@ -47,10 +47,21 @@ def main():
                 page.locator('[data-choice=position][data-value=right]').click();page.locator('#onboard-locale').select_option('en');expect(page.locator('#onboarding-title')).to_have_text('Design your workspace')
                 page.locator('#onboard-locale').select_option('es')
                 passed('Live preview follows all layout and Melody positions; language preview stays local')
+                for width in (1500,1100,900):
+                    page.set_viewport_size({'width':width,'height':950})
+                    options=page.locator('.setup-grid').bounding_box();preview=page.locator('.setup-preview').bounding_box()
+                    assert abs(options['y']-preview['y'])<1 and abs(options['height']-preview['height'])<1,(width,options,preview)
+                page.set_viewport_size({'width':1500,'height':950})
                 page.locator('[data-choice=theme][data-value=day]').click();page.locator('#onboard-next').click()
                 page.locator('#onboard-name').fill('Alex');page.locator('#onboard-motion').uncheck();page.locator('#onboard-autosave').check()
                 expect(page.locator('.setup-profile-preview h2')).to_have_text('Alex');assert page.locator('.setup-content').evaluate('(e)=>e.scrollTop')==0
-                expect(page.locator('.preference-label small').first).to_be_visible();page.wait_for_timeout(300);page.screenshot(path=str(out/'personalize.png'))
+                expect(page.locator('.preference-label small').first).to_be_visible();page.wait_for_timeout(300)
+                for width in (1500,1100,900):
+                    page.set_viewport_size({'width':width,'height':950})
+                    options=page.locator('.setup-personal').bounding_box();preview=page.locator('.setup-preview').bounding_box()
+                    assert abs(options['y']-preview['y'])<1 and abs(options['height']-preview['height'])<1,(width,options,preview)
+                page.set_viewport_size({'width':1500,'height':950});page.screenshot(path=str(out/'personalize.png'))
+                passed('Configuration and preview panels keep identical top and bottom edges while resizing')
                 page.locator('#onboard-back').click();page.locator('#onboard-next').click();expect(page.locator('#onboard-name')).to_have_value('Alex');expect(page.locator('#onboard-motion')).not_to_be_checked();expect(page.locator('#onboard-autosave')).to_be_checked()
                 page.locator('#onboard-motion').check();page.locator('#onboard-next').click();page.locator('#onboard-next').click();expect(page.locator('#onboarding')).to_have_count(0)
                 page.wait_for_function('!document.documentElement.dataset.screenMotion');expect(page.locator('.welcome-copy')).to_be_visible();assert not page.locator('#app').evaluate('(e)=>e.inert')
