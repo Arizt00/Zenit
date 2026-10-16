@@ -8,6 +8,7 @@ from backend.workspace import Workspace
 from backend.preferences import Preferences
 from backend.runtimes import Runtimes
 from backend.runner import Runner
+from backend.buffers import Buffers
 
 class NasmTests(unittest.TestCase):
  def setUp(self):
@@ -66,5 +67,22 @@ class NasmTests(unittest.TestCase):
   finally:runner.shutdown()
  def test_llvm_engine_keeps_its_original_syntax(self):
   r=self.sim.run(self.ws,{'engine':'llvm','architecture':'x86_64','source':'.intel_syntax noprefix\n.text\nmov rax,12\n','steps':10});self.assertEqual(r['status'],'complete',r);self.assertEqual(r['registers']['rax'],'0xc')
+ def test_detached_buffer_hydration_preserves_disk_revision_and_unsaved_text(self):
+  from backend.native import NativeCore
+  self.ws.native=NativeCore(Path(__file__).resolve().parents[1])
+  hub=Buffers();file=self.root/'draft.asm';file.write_text('disk\n');hub.update(self.ws,{'path':file.name,'text':'unsaved\n','saved':False})
+  data=hub.document(self.ws,file.name);self.assertEqual(data['file']['content'],'disk\n');self.assertEqual(data['buffer']['text'],'unsaved\n');self.assertTrue(data['file']['revision'])
+  file.unlink();data=hub.document(self.ws,file.name);self.assertTrue(data['file']['transient']);self.assertIsNone(data['file']['revision']);self.assertEqual(data['file']['content'],'unsaved\n');self.assertFalse(file.exists())
+  with self.assertRaises(FileNotFoundError):hub.document(self.ws,'unknown.asm')
+  with self.assertRaises(PermissionError):hub.document(self.ws,'../escape.asm')
+  with self.assertRaises(PermissionError):hub.document(self.ws,str(self.root.parent/'unknown.asm'))
+ def test_native_detach_can_open_a_known_diskless_buffer_but_not_an_unknown_path(self):
+  from unittest.mock import MagicMock,patch
+  from types import SimpleNamespace
+  from backend.desktop import DesktopAPI
+  hub=Buffers();hub.update(self.ws,{'path':'draft.asm','text':'mov eax,8','saved':False});api=DesktopAPI();api._url='http://127.0.0.1:1';api._window=MagicMock();api._application=SimpleNamespace(workspace=self.ws,features=SimpleNamespace(buffers=hub))
+  with patch('webview.create_window') as create:
+   self.assertTrue(api.detach_panel('profile-assembly','draft.asm')['opened']);self.assertIn('file=draft.asm',create.call_args.args[1])
+   with self.assertRaises(FileNotFoundError):api.detach_panel('profile-assembly','unknown.asm')
 
 if __name__=="__main__":unittest.main()

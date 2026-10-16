@@ -31,10 +31,13 @@ class DesktopAPI:
                 app=self._application
                 target=Path(path).resolve()
                 known={os.path.normcase(str(Path(b['path']).resolve())) for b in app.features.buffers.snapshot()['buffers'] if Path(b['path']).is_absolute()}
-                if not app.workspace.trusted or os.path.normcase(str(target)) not in known or not target.is_file():
+                if not app.workspace.trusted or os.path.normcase(str(target)) not in known or target.exists() and not target.is_file():
                     raise PermissionError('Abre el archivo en la sesión antes de separarlo.')
                 path=str(target)
-            else:self._application.workspace.resolve(path)
+            else:
+                target=self._application.workspace.resolve(path,must_exist=False)
+                if not target.is_file() and (target.exists() or path not in self._application.features.buffers.items):
+                    raise FileNotFoundError('Abre el archivo o su búfer compartido antes de separarlo.')
         key=panel+':'+path if panel=='editor' else panel
         if key in self._children:
             self._children[key].destroy()

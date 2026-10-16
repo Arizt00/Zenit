@@ -19,7 +19,7 @@ def main():
    with sync_playwright() as pw:
     browser=pw.chromium.launch(channel='msedge',headless=True);page=browser.new_page(viewport={'width':1600,'height':1000});page.on('pageerror',lambda e:errors.append(str(e)))
     def inject(route):
-     response=route.fetch();route.fulfill(response=response,body=response.text()+'\nwindow.__qa={get editor(){return editor},get profiles(){return workspaceProfiles},openFile};')
+     response=route.fetch();route.fulfill(response=response,body=response.text()+'\nwindow.__qa={get editor(){return editor},get profiles(){return workspaceProfiles},get desktop(){return desktopUI},get platform(){return platformUI},openFile};')
     page.route('**/src/app.js',inject);page.goto(f'http://127.0.0.1:{server.server_port}');page.wait_for_function('window.lumen?.ready')
     page.evaluate('__qa.openFile("linux.asm")');page.wait_for_function('__qa.profiles.assembly?.catalog')
     def field(name):return page.locator('select[aria-label="'+name+'"]')
@@ -36,6 +36,36 @@ def main():
     assert page.locator('.asm-controls').evaluate('e=>{const r=e.getBoundingClientRect();return [...e.children].filter(n=>getComputedStyle(n).display!=="none").every(n=>{const b=n.getBoundingClientRect();return b.left>=r.left-1&&b.right<=r.right+1})}')
     passed('NASM controls wrap inside the laboratory at a compact window size')
     page.evaluate('__qa.openFile("broken.asm")');page.locator('[data-asm="run"]').click();expect(page.locator('.lab-error')).to_contain_text('buffer.asm:4');passed('Invalid source reports the NASM filename and exact line')
+    starts=[];simulations=[]
+    page.on('request',lambda r:starts.append(r.url) if '/hacker/start' in r.url else simulations.append(r.url) if '/simulation/run' in r.url else None)
+    page.set_viewport_size({'width':1600,'height':1000});page.evaluate('__qa.openFile("windows.asm")');field('Sistema NASM').select_option('windows');field('Destino de ejecución ASM').select_option('native')
+    expect(page.locator('[data-asm="step"]')).to_be_disabled();expect(page.locator('.asm-native-mode')).to_contain_text('Máquina real');page.locator('[data-asm="run"]').click()
+    page.wait_for_function('__qa.platform.terminals.get(__qa.desktop.forgeRun?.terminal)?.closed',timeout=30000)
+    assert page.evaluate('__qa.platform.terminals.get(__qa.desktop.forgeRun.terminal).code')==8
+    assert len(starts)==1 and len(simulations)==0,(starts,simulations)
+    page.mouse.move(40,80);expect(page.locator('[data-asm="run"]')).to_be_enabled();page.wait_for_timeout(650);page.screenshot(path=str(out/'nasm-native.png'));passed('Machine mode builds and executes a real Windows process once, exits with 8 and never calls the simulator')
+    page.evaluate('__qa.openFile("linux.asm")');page.locator('[data-asm="run"]').click();expect(page.locator('.toast').last).to_contain_text('WSL');assert len(starts)==1 and not simulations
+    field('Destino de ejecución ASM').select_option('simulation');page.locator('[data-asm="run"]').click();expect(page.locator('.asm-status')).to_contain_text('salida 8');assert len(simulations)==1
+    passed('Linux ABI is refused on a real Windows host; switching back to simulation executes the same unchanged buffer')
+    # The original CLI file may have been removed after the main app started.
+    # A child must use its URL and shared text, rather than replay that stale path.
+    app.startup={'path':'deleted-original.s'}
+    changed=files['linux.asm'].replace('mov rax, 5','mov rax, 7')
+    assert changed!=files['linux.asm']
+    page.evaluate('(text)=>__qa.editor.insertText(text,true)',changed)
+    with page.expect_popup() as popup:page.evaluate('__qa.desktop.detach("profile-assembly","linux.asm")')
+    child=popup.value;child.route('**/src/app.js',inject);child.on('pageerror',lambda e:errors.append(str(e)));child.wait_for_function('window.lumen?.ready')
+    # The popup can request its module before the page-specific route is ready.
+    if not child.evaluate('!!window.__qa'):child.reload();child.wait_for_function('window.lumen?.ready')
+    assert child.evaluate('__qa.editor.current')=='linux.asm';assert child.evaluate('__qa.editor.getValue()')==changed;assert child.evaluate('__qa.editor.isDirty()')
+    child.locator('[data-asm="run"]').click();expect(child.locator('.asm-status')).to_contain_text('salida 10');assert (ws/'linux.asm').read_text(encoding='utf-8')==files['linux.asm']
+    child.screenshot(path=str(out/'nasm-detached.png'));child.close();passed('Detached laboratory ignores a deleted original startup file and simulates the latest unsaved shared buffer')
+    page.evaluate('__qa.openFile("windows32.asm")');page.evaluate('__qa.desktop.share("windows32.asm")');(ws/'windows32.asm').unlink()
+    with page.expect_popup() as popup:page.evaluate('__qa.desktop.detach("profile-assembly","windows32.asm")')
+    child=popup.value;child.route('**/src/app.js',inject);child.on('pageerror',lambda e:errors.append(str(e)));child.wait_for_function('window.lumen?.ready')
+    if not child.evaluate('!!window.__qa'):child.reload();child.wait_for_function('window.lumen?.ready')
+    assert child.evaluate('__qa.editor.isDirty()');child.locator('[data-asm="run"]').click();expect(child.locator('.asm-status')).to_contain_text('salida 8');assert not (ws/'windows32.asm').exists();child.close()
+    (ws/'windows32.asm').write_text(files['windows32.asm'],encoding='utf-8');passed('An open shared buffer remains available in a detached laboratory even when its disk file was removed')
     for name,code in files.items():assert (ws/name).read_text(encoding='utf-8')==code
     assert not (ws/'CMakeLists.txt').exists();browser.close()
   finally:server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()

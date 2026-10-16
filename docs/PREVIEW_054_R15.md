@@ -193,3 +193,15 @@ sintaxis sin enlazar cuando solo se comprueba, usa CRT para `main` y admite
 en un equipo Windows se dirige al laboratorio, Linux/WSL o una VM en lugar de
 intentar enlazarlo como `WinMain`. Las toolchains nativas de 32 bits se configuran
 por separado; el laboratorio simula ambas anchuras sin requerirlas.
+
+El selector visible **Simulación / Máquina real** cambia la acción principal del
+laboratorio. En Máquina real se guarda el archivo, se ensambla y se ejecuta en
+una terminal propia mediante el mismo ejecutor nativo de Zénit, sin lanzar
+también la simulación. El paso a paso permanece reservado al motor simulado.
+Cambiar el destino invalida los resultados de la ejecución anterior.
+
+El laboratorio separado carga el archivo indicado por su ventana y el búfer
+compartido actual, incluidos los cambios sin guardar. No vuelve a abrir el
+archivo de inicio del proceso principal, que puede haberse borrado o cambiado.
+Si el archivo abierto ya no existe en disco, el búfer compartido sigue disponible
+para editar y simular; permanece marcado sin guardar hasta que se conserve.

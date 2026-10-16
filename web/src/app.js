@@ -107,13 +107,13 @@ function revealFile(path){
   const parts=path.split('/');parts.pop();let parent='';for(const part of parts){parent=parent?parent+'/'+part:part;openFolders.add(parent);}
   rootExpanded=true;
 }
-async function openFile(path,line=null){
+async function openFile(path,line=null,sharedDocument=null){
   if(editor.detachedPaths.has(path)){await desktopUI?.focusEditor(path);return;}
   if(desktopUI?.query.get('panel')==='project'){desktopUI.openInParent(path);return;}
   studio?.enter();
   previewUI?.services.hide();
   if(platformUI?.page)platformUI.closePage();
-  if(!editor.models.has(path)){const external=/^(?:[A-Za-z]:[\\/]|\/)/.test(path);const item=await (external?platformUI.api('/extensions/file?path='+encodeURIComponent(path)):api('/file?path='+encodeURIComponent(path)));editor.open(item);}
+  if(!editor.models.has(path)){const external=/^(?:[A-Za-z]:[\\/]|\/)/.test(path);const item=sharedDocument||await (external?platformUI.api('/extensions/file?path='+encodeURIComponent(path)):api('/file?path='+encodeURIComponent(path)));editor.open(item);if(item.transient)editor.models.get(path).savedValue=null;}
   else editor.activate(path);
   revealFile(path);renderTabs();renderTree();updateDocumentStatus();
   if(line)editor.showLine(line);
@@ -643,7 +643,9 @@ async function start(){
     window.zenitStartup?.phase('welcome');await studio.init();
     previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
     platformUI.companion=new MelodyCompanion(platformUI);
-    if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
+    // Child panels have their own explicit file and live buffer. Replaying the
+    // original process argument can fail after that original file was deleted.
+    if(service.startup?.path&&!new URLSearchParams(location.search).has('panel')){try{await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}catch(error){notify(error.message,'error');}}
     desktopUI=new DesktopWorkflows({api,editor,renderTabs,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,setRunState:updateTaskUI,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});

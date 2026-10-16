@@ -112,6 +112,7 @@ class PlatformServices:
         if path=='/hacker':return self.hacker.tools()
         if path=='/updates':return self.updates.snapshot()
         if path=='/buffers':return self.buffers.snapshot()
+        if path=='/buffers/document':return self.buffers.document(self.app.workspace,q('path'))
         if path=='/settings':return self.prefs.describe()
         if path=='/studio':return self.studio.export()
         if path=='/debug':return self.debugger.snapshot()

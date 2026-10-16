@@ -309,9 +309,9 @@ export class DesktopWorkflows{
     if(!['project','assistant','console','editor','forge','preview','lantern','profile-general','profile-web','profile-data','profile-design','profile-assembly'].includes(panel))return;
     h.studio.enter();document.documentElement.dataset.detachedPanel=panel;
     if(this.query.get('file')){
-      await h.openFile(this.query.get('file'));
-      const data=await h.platform.api('/buffers'),remote=data.buffers.find(x=>x.path===h.editor.current);
-      if(remote){this.shared.set(remote.path,remote);this.applying=true;h.editor.insertText(remote.text,true);this.applying=false;}
+      const path=this.query.get('file'),data=await h.platform.api('/buffers/document?path='+encodeURIComponent(path)),remote=data.buffer;
+      await h.openFile(path,null,data.file);
+      if(remote){this.shared.set(remote.path,remote);this.applying=true;try{h.editor.insertText(remote.text,true);}finally{this.applying=false;}}
     }
     if(h.dock.panels[panel==='forge'?'console':panel]){const node=h.dock.panels[panel==='forge'?'console':panel];node.classList.add('native-detached-content');node.hidden=false;node.inert=false;node.removeAttribute('aria-hidden');$('#app').append(node);}
     if(panel==='forge'){const button=this.hackerBar.querySelector('.forge-placement');button.dataset.action='forge-terminal';button.innerHTML=icon('dock-bottom')+'<span>Integrar en Zénit</span>';this.paintHacker();}
