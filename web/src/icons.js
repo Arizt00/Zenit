@@ -10,7 +10,7 @@ const paths = {
   "undo": '<path d="M5 5v5h5M5 10a7 7 0 1 1 1 8"/>',
 
   "editor-window": '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 8h18m-13 4-2 2 2 2m8-4 2 2-2 2"/>',
-  "workspace": '<rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M12 17v4m-4 0h8"/>',
+  "workspace": '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M9 9v11"/>',
   "float": '<path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/><rect x="7" y="7" width="10" height="10" rx="2"/>',
   "detach": '<rect x="9" y="3" width="12" height="12" rx="2.5"/><path d="M5 8H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-1"/>',
   "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',

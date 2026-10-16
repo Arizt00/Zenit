@@ -10,6 +10,9 @@ test('CPU suggestions exclude registers from other architectures',()=>{
 test('Current buffer labels and 32 bit operands are usable suggestions',()=>{
   const list=assemblyCompletions('x86','loop_here:\n jmp loop_here\n');assert.equal(list.filter(x=>x.label==='loop_here').length,1);assert.match(list.find(x=>x.label==='mov').insertText,/eax/);assert.doesNotMatch(list.find(x=>x.label==='mov').insertText,/rax/);
 });
+test('Educational CPU suggestions use their own registers and word width',()=>{
+  const rv=assemblyCompletions('riscv32'),mips=assemblyCompletions('mips');assert.ok(rv.some(x=>x.label==='lw'));assert.ok(!rv.some(x=>x.label==='ld'));assert.ok(mips.some(x=>x.label==='$a0'));assert.ok(mips.some(x=>x.label==='syscall'));assert.match(mips.find(x=>x.label==='li').insertText,/\\\$a0/);
+});
 test('TextMate theme preserves parent selectors and explicit empty font styles',()=>{
   const theme=textMateTheme({text:'#202020',editor:'#ffffff',comment:'#334433'},[{scope:'source.python comment',settings:{foreground:'#abcdef',fontStyle:''}}]);assert.deepEqual(theme.settings.at(-1),{scope:'source.python comment',settings:{foreground:'#abcdef',fontStyle:''}});
 });

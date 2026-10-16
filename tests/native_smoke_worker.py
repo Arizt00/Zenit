@@ -93,6 +93,10 @@ def main():
         from backend.coco_tunnel import InternetTunnel,VERSION as tunnel_version
         assert tunnel_version=='2026.10.1' and (root/'licenses/cloudflared/LICENSE').is_file()
         assert InternetTunnel(app.features,'http://127.0.0.1:1/').status()['phase']=='preparing'
+        from backend.educational_asm import RARS_EXAMPLE,MARS_EXAMPLE
+        for engine,architecture,code in [('rars','riscv32',RARS_EXAMPLE),('mars','mips',MARS_EXAMPLE)]:
+            simulated=app.features.simulation.run(app.workspace,{'engine':engine,'architecture':architecture,'source':code,'steps':10000})
+            assert simulated['status']=='complete' and '7 + 5 = 12' in simulated['output'],simulated
         app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.showWelcome':False,'updates.automatic':False,'appearance.motion':False})
         grammar_vsix=io.BytesIO()
         with zipfile.ZipFile(grammar_vsix,'w') as z:

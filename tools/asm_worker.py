@@ -17,7 +17,7 @@ def simulate(request):
     from elftools.elf.elffile import ELFFile
     import unicorn as u
     import capstone as c
-    from unicorn import x86_const as x, arm_const as a, arm64_const as aa, riscv_const as r
+    from unicorn import x86_const as x, arm_const as a, arm64_const as aa, riscv_const as r, mips_const as m
     definitions={
         'x86':('i386-none-elf',u.UC_ARCH_X86,u.UC_MODE_32,c.CS_ARCH_X86,c.CS_MODE_32,x.UC_X86_REG_EIP,x.UC_X86_REG_ESP,
                {name:getattr(x,'UC_X86_REG_'+name.upper()) for name in ('eax','ebx','ecx','edx','esi','edi','esp','ebp')}),
@@ -27,6 +27,10 @@ def simulate(request):
                {**{'r'+str(i):getattr(a,'UC_ARM_REG_R'+str(i)) for i in range(13)},'sp':a.UC_ARM_REG_SP,'lr':a.UC_ARM_REG_LR}),
         'arm64':('aarch64-none-elf',u.UC_ARCH_ARM64,u.UC_MODE_ARM,c.CS_ARCH_ARM64,c.CS_MODE_ARM,aa.UC_ARM64_REG_PC,aa.UC_ARM64_REG_SP,
                  {**{'x'+str(i):getattr(aa,'UC_ARM64_REG_X'+str(i)) for i in range(16)},'sp':aa.UC_ARM64_REG_SP}),
+        'mips':('mipsel-none-elf',u.UC_ARCH_MIPS,u.UC_MODE_MIPS32,c.CS_ARCH_MIPS,c.CS_MODE_MIPS32|c.CS_MODE_LITTLE_ENDIAN,m.UC_MIPS_REG_PC,m.UC_MIPS_REG_SP,
+                {name:getattr(m,'UC_MIPS_REG_'+name.upper()) for name in ('v0','v1','a0','a1','sp','t0','t1','t2','s0','s1','ra')}),
+        'riscv32':('riscv32-none-elf',u.UC_ARCH_RISCV,u.UC_MODE_RISCV32,c.CS_ARCH_RISCV,c.CS_MODE_RISCV32,r.UC_RISCV_REG_PC,r.UC_RISCV_REG_SP,
+                   {name:getattr(r,'UC_RISCV_REG_'+name.upper()) for name in ('ra','sp','t0','t1','t2','s0','s1','a0','a1','a2')}),
         'riscv64':('riscv64-none-elf',u.UC_ARCH_RISCV,u.UC_MODE_RISCV64,c.CS_ARCH_RISCV,c.CS_MODE_RISCV64,r.UC_RISCV_REG_PC,r.UC_RISCV_REG_SP,
                    {name:getattr(r,'UC_RISCV_REG_'+name.upper()) for name in ('ra','sp','t0','t1','t2','s0','s1','a0','a1','a2')})}
     architecture=request.get('architecture')
@@ -39,7 +43,7 @@ def simulate(request):
     with tempfile.TemporaryDirectory(prefix='zenit-asm-') as folder:
         folder=Path(folder);file=folder/'buffer.s';obj=folder/'buffer.o';image=folder/'buffer.elf'
         file.write_text(source,encoding='utf-8')
-        flags=['-march=rv64im'] if architecture=='riscv64' else []
+        flags=['-march=rv64im'] if architecture=='riscv64' else ['-march=rv32im'] if architecture=='riscv32' else ['-mno-abicalls','-fno-pic'] if architecture=='mips' else []
         for argv in ([request['clang'],'-target',triple,*flags,'-c',str(file),'-o',str(obj)],
                      [request['linker'],'--image-base=0x10000','-Ttext=0x100000','--entry=0x100000',str(obj),'-o',str(image)]):
             result=subprocess.run(argv,capture_output=True,timeout=15,creationflags=0x08000000 if sys.platform=='win32' else 0)

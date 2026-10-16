@@ -3,6 +3,13 @@
 R15 corrige el destino de las ejecuciones y añade una primera implementación
 funcional de trabajo en equipo. No se afirma paridad completa con VS Code.
 
+Los espacios de trabajo comparten un icono de ventana con dos áreas, un selector
+con identidad propia, acciones alineadas y controles que se adaptan al ancho
+del editor. El mismo icono aparece en la vista previa de configuración. Las
+herramientas se abren con una transición breve que respeta movimiento reducido.
+Assembly agrupa ejemplos y entrada en una sección plegable y muestra la salida
+del motor en su propio bloque, sin superponer los controles de destino.
+
 - Ejecutar conserva su icono y etiqueta durante el cambio a Detener. En una
   ventana externa, la terminal local recibe su ejecución; «Usar terminal de
   Zénit» envía las siguientes ejecuciones a la ventana principal. Se retiró la
@@ -96,3 +103,29 @@ clases/JAR; los ELF se ejecutan en Linux con permiso de ejecución. Los archivos
 de datos, objetos y DLL requieren un programa anfitrión y se indican como tales.
 CoCo comparte por ahora archivos de texto; los parches binarios no se fusionan
 mediante CRDT.
+
+## Assembly: motor simulado, equipo y máquina virtual
+
+Laboratorio ASM permite elegir el motor y filtra sus arquitecturas. LLVM/Unicorn
+admite x86 de 32 y 64 bits, ARM32, ARM64 y RISC-V32/64. RARS 1.6 añade el entorno
+educativo RISC-V32/64 con sus servicios de consola; MARS 4.5 incorpora MIPS32.
+Los dos JAR originales están incluidos y verificados por SHA-256; requieren
+Java detectado en el equipo. Se admiten dependencias `.include` dentro del
+proyecto, entrada del programa y salida real del motor. No se afirma soporte
+para todas las ISA existentes: el catálogo se amplía mediante adaptadores y
+toolchains concretos, sin presentar un compilador universal.
+
+La simulación tiene límites de 10.000 instrucciones, 128 MiB de heap Java,
+12 segundos y 2 MB de salida. Paso reinicia RARS o Unicorn hasta la instrucción
+seleccionada; MARS usa ejecución acotada completa y no expone paso en este
+adaptador. PC, traza y memoria no publicados por los CLI educativos se indican
+como no disponibles. Sus servicios de archivo pueden acceder al sistema con
+los permisos del usuario: simular una CPU no equivale a aislar código no fiable.
+
+«Ejecutar en este equipo» utiliza la toolchain nativa, el ABI y la terminal de
+Zénit, sin motor simulado. El código educativo RISC-V/MIPS ya no se envía a NASM
+por la extensión `.asm`. Los perfiles personalizados de compilación conservan
+prioridad. «Máquinas de Lantern» abre la creación y restauración de entornos
+`.tern`, incluida la VM Arch x86-64 cuando su base QEMU/imagen está preparada.
+Otras máquinas existentes pueden conectarse por SSH. Esta revisión no instala
+imágenes de todas las arquitecturas ni arranca kernels en el sistema anfitrión.

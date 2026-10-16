@@ -12,15 +12,21 @@ EXAMPLES={
  'x86_64':'.intel_syntax noprefix\n.text\nmov rax, 7\nadd rax, 5\nmov rbx, rax\n',
  'arm':'.syntax unified\n.text\nmov r0, #7\nadd r0, r0, #5\nmov r1, r0\n',
  'arm64':'.text\nmov x0, #7\nadd x0, x0, #5\nmov x1, x0\n',
- 'riscv64':'.text\naddi a0, zero, 7\naddi a0, a0, 5\naddi a1, a0, 0\n'}
+ 'riscv32':'.text\naddi a0, zero, 7\naddi a0, a0, 5\naddi a1, a0, 0\n',
+ 'riscv64':'.text\naddi a0, zero, 7\naddi a0, a0, 5\naddi a1, a0, 0\n',
+ 'mips':'.set noreorder\n.text\naddiu $a0, $zero, 7\naddiu $a0, $a0, 5\naddu $a1, $a0, $zero\n'}
 
 class Simulation:
     def __init__(self,features):self.features=features
     def status(self):
+        import platform
+        host_arch={'AMD64':'x86_64','x86_64':'x86_64','aarch64':'arm64','ARM64':'arm64','i386':'x86','i686':'x86'}.get(platform.machine(),platform.machine())
         source=Path(__file__).resolve().parents[1]/'examples/asm/x86_64_sum.s'
         examples={key:[{'label':'7 + 5 · registros','source':EXAMPLES[key]}] for key in ARCHITECTURES}
         if source.is_file():examples['x86_64'].append({'label':'Suma 1…10 · bucle y pila','source':source.read_text(encoding='utf-8')})
-        return {'architectures':[{'id':key,'label':{'x86':'x86 · 32 bits','x86_64':'x86-64','arm':'ARM · 32 bits','arm64':'ARM64','riscv64':'RISC-V · 64 bits'}[key],'example':EXAMPLES[key],'examples':examples[key]} for key in ARCHITECTURES],
+        from .educational_asm import ENGINES
+        return {'nativeArchitecture':host_arch,'engines':[{'id':'llvm','label':'LLVM + Unicorn · CPU','architectures':[a for a in ARCHITECTURES if a!='mips'],'step':True},*[{'id':key,**value} for key,value in ENGINES.items()]],
+                'architectures':[{'id':key,'label':{'x86':'x86 · 32 bits','x86_64':'x86-64','arm':'ARM · 32 bits','arm64':'ARM64','riscv32':'RISC-V · 32 bits','riscv64':'RISC-V · 64 bits','mips':'MIPS · 32 bits (little endian)'}[key],'example':EXAMPLES[key],'examples':examples[key]} for key in ARCHITECTURES],
                 'assembler':find_tool('clang'),'linker':find_tool('ld.lld'),'python':find_tool('python'),
                 'description':'Registros, memoria, instrucciones y ejecución paso a paso en una CPU emulada.'}
     def run(self,ws,body):
@@ -28,6 +34,12 @@ class Simulation:
         if body.get('architecture') not in ARCHITECTURES:raise ValueError('Arquitectura desconocida.')
         source=body.get('source')
         if not isinstance(source,str) or len(source.encode())>131072:raise ValueError('ASM admite hasta 128 KiB.')
+        engine=body.get('engine','llvm')
+        if engine in ('rars','mars'):
+            from .educational_asm import simulate
+            return simulate(body,ws)
+        if engine!='llvm':raise ValueError('Motor de simulación desconocido.')
+        if body['architecture']=='mips':raise ValueError('Selecciona MARS para MIPS; el LLVM incluido no incorpora ese ensamblador.')
         clang=find_tool('clang');linker=find_tool('ld.lld')
         if not clang or not linker:raise ValueError('Prepara LLVM con Clang y ld.lld en la base de Zénit.')
         python=find_tool('python') or (sys.executable if not getattr(sys,'frozen',False) else None)

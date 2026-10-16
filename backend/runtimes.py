@@ -109,6 +109,9 @@ class Runtimes:
                 HTMLParser().feed(file.read_text(encoding='utf-8-sig'))
             return {'language':lang,'commands':[],'target':file,'file':file,'cwd':ws.root,'preview':not check}
         elif lang=='asm':
+            source=file.read_text(encoding='utf-8-sig')
+            if re.search(r'(?m)^\s*(?:ecall\b|(?:li|la|addi)\s+(?:a[0-7]|t[0-6]|zero)\b|[a-z]+\s+\$(?:a[0-3]|v[01]|t[0-9]|zero)\b)',source):
+                raise ValueError('Este ASM usa registros o servicios RISC-V/MIPS. Abre Laboratorio ASM y selecciona RARS o MARS para simularlo, o compila con la toolchain de su máquina virtual. No es ASM nativo del equipo.')
             from .native_packages import native_state
             deps=native_state(ws)
             compiler=self.executable('gcc','clang')

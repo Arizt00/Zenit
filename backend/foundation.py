@@ -6,7 +6,7 @@ import sys
 
 C_STANDARDS = ('c89', 'c90', 'c99', 'c11', 'c17', 'c23', 'gnu89', 'gnu99', 'gnu11', 'gnu17', 'gnu23')
 CPP_STANDARDS = ('c++98', 'c++03', 'c++11', 'c++14', 'c++17', 'c++20', 'c++23', 'c++26')
-ARCHITECTURES = ('x86', 'x86_64', 'arm', 'arm64', 'riscv64')
+ARCHITECTURES = ('x86', 'x86_64', 'arm', 'arm64', 'riscv32', 'riscv64', 'mips')
 
 def roots():
     candidates = []

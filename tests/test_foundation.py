@@ -9,10 +9,11 @@ from backend.extension_dependencies import dependency_graph
 ROOT=Path(__file__).resolve().parents[1]
 
 class FoundationTest(unittest.TestCase):
- def test_five_cpu_architectures_compute_real_registers(self):
+ def test_six_cpu_architectures_compute_real_registers(self):
   if not bundled_tool('python') or not bundled_tool('clang'):self.skipTest('Requires the prepared SDK')
-  registers={'x86':'eax','x86_64':'rax','arm':'r0','arm64':'x0','riscv64':'a0'}
+  registers={'x86':'eax','x86_64':'rax','arm':'r0','arm64':'x0','riscv32':'a0','riscv64':'a0','mips':'a0'}
   for arch,source in EXAMPLES.items():
+   if arch=='mips':continue # The bundled LLVM omits MIPS; the real MARS adapter covers it.
    with self.subTest(architecture=arch):
     result=Simulation(None).run(SimpleNamespace(trusted=True),{'architecture':arch,'source':source,'steps':100})
     self.assertEqual(result['status'],'complete',result);self.assertEqual(result['registers'][registers[arch]],'0xc');self.assertEqual(result['executed'],3)

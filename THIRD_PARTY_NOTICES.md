@@ -94,3 +94,10 @@ service or included in the base SDK. Its Apache-2.0 license and upstream source
 reference are retained in `licenses/cloudflared`. Cloudflare Quick Tunnels are
 an external temporary development/testing service with their own terms and
 availability limits; they do not imply affiliation or end-to-end encryption.
+
+The Assembly laboratory bundles unchanged RARS 1.6 and MARS 4.5 Java archives
+from their original maintainers. Both retain their original MIT notices in
+`licenses/rars` and `licenses/mars`, as well as inside the archives themselves.
+`tools/simulators/SOURCE.json` records upstream release/source URLs and SHA-256.
+They run as separate Java processes and simulate their guest architectures;
+their educational file services are not a security sandbox.
