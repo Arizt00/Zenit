@@ -18,11 +18,13 @@ class Host:
     def __init__(self, node, root, entry, workspace, options, services=None):
         self.lock=threading.Lock();self.write_lock=threading.Lock();self.responses=queue.Queue();self.logs=''
         self.services=services;self.workspace=workspace;self.extension_id=options['extensionId'];self.extension_root=Path(root)
+        self.extension_ids={self.extension_id,*[x['id'] for x in options.get('dependencies',[])]}
         self.extension_roots=[self.extension_root,*[Path(x['root']) for x in options.get('dependencies',[])]]
         self.process=subprocess.Popen([node,str(Path(__file__).with_name('extension_host.cjs'))],cwd=workspace.root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=child_environment(),creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
         threading.Thread(target=self.read,daemon=True).start();threading.Thread(target=self.read_errors,daemon=True).start()
         try:self.capabilities=self.request({'method':'activate','entry':str(entry),'root':str(root),'workspace':str(workspace.root),**options})
-        except Exception:self.close();raise
+        except Exception as error:
+            self.close();error.add_note(self.logs[-8000:]);raise
 
     def read(self):
         try:
@@ -156,7 +158,7 @@ class ExtensionRuntime:
                 try:extensions.append({'id':item['id'],'root':str(other),'manifest':localized_manifest(other,self.store.prefs.get('general.locale'))})
                 except (OSError,ValueError):pass
             profiles=terminal_profiles()
-            options={'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None,'iconTheme':self.services.icon_state()['configurationId'] if self.services else 'zenit','themeKind':self.services.theme_state()['kind'] if self.services else 1,'themeLabel':self.services.theme_state()['label'] if self.services else 'Zénit Día'}
+            options={'installedAt':self.store.prefs.directory.stat().st_ctime*1000,'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None,'iconTheme':self.services.icon_state()['configurationId'] if self.services else 'zenit','themeKind':self.services.theme_state()['kind'] if self.services else 1,'themeLabel':self.services.theme_state()['label'] if self.services else 'Zénit Día'}
             self.stop(eid);self.hosts[eid]=Host(node,root,entry,workspace,options,self.services)
             self.approve(workspace,eid,graph)
             self.store.prefs.audit('extension.execute',extension=eid)
@@ -166,7 +168,7 @@ class ExtensionRuntime:
         host=self.hosts.get(body.get('id'))
         if not host:raise ValueError('Inicia el motor de la extensión primero.')
         method=body.get('method')
-        if method not in ('command','provide','virtual','willSave','didSave','tree','resolveAction','decorations','webviewMessage','webviewDispose','ports','debugVisualization'):raise ValueError('Operación no válida.')
+        if method not in ('command','provide','virtual','willSave','didSave','tree','resolveAction','decorations','webviewMessage','webviewDispose','ports','debugVisualization','treeCheckbox','editSessionIdentity','terminalLinks','terminalLink'):raise ValueError('Operación no válida.')
         if method=='decorations':
             paths=body.get('paths')
             if not isinstance(paths,list) or len(paths)>300:raise ValueError('Lista de decoraciones no válida.')
@@ -180,7 +182,7 @@ class ExtensionRuntime:
                 from .extension_services import file_path
                 file_path(str(candidate))
             else:workspace.resolve(document['path'],must_exist=False)
-        return host.request({k:body[k] for k in ('method','command','kind','document','position','range','uri','arguments','reason','newName','view','element','context','options','character','positions','color','action','paths','revision','panel','message','ports','visualization') if k in body})
+        return host.request({k:body[k] for k in ('method','command','kind','document','position','range','uri','arguments','reason','newName','view','element','context','options','character','positions','color','action','paths','revision','panel','message','ports','visualization','checkboxState','scheme','identity1','identity2','line','terminal','link') if k in body})
     def stop(self,eid,forget=False):
         with self.lock:
             if forget:

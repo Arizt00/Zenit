@@ -23,10 +23,11 @@ export function glassArt(kind='orb', extra='') {
 export async function createLumenScene(canvas, available=true, onStatus=()=>{}) {
   const fallback={kind:'css',setTheme(){},setMotion(){},dispose(){}};
   if(!canvas||!available)return fallback;
+  canvas.parentElement.classList.add('gpu-pending');
   let engine,scene,cleanup=()=>{};
   try {
     const B=await loadBabylon();
-    if(!canvas.isConnected||!B.Engine.IsSupported)return fallback;
+    if(!canvas.isConnected||!B.Engine.IsSupported){canvas.parentElement?.classList.remove('gpu-pending');return fallback;}
     engine=new B.Engine(canvas,true,{alpha:true,stencil:false,preserveDrawingBuffer:false,powerPreference:'default',disableWebGL2Support:false},false);
     // Decorative glass does not need to consume every refresh on a 240 Hz display.
     engine.maxFPS=60;
@@ -196,8 +197,8 @@ export async function createLumenScene(canvas, available=true, onStatus=()=>{}) 
     const restored=engine.onContextRestoredObservable.add(()=>{canvas.parentElement.classList.add('gpu-ready');resize();schedule();});
     cleanup=()=>{disposed=true;appearance.disconnect();observer.disconnect();intersection.disconnect();document.removeEventListener('visibilitychange',schedule);reduced.removeEventListener('change',schedule);canvas.removeEventListener('webglcontextlost',lost);engine.onContextRestoredObservable.remove(restored);engine.stopRenderLoop(render);};
     let readyTimer;try{await Promise.race([scene.whenReadyAsync(),new Promise((_,reject)=>{readyTimer=setTimeout(()=>reject(new Error('El motor gráfico no respondió a tiempo')),12000);})]);}finally{clearTimeout(readyTimer);}if(!canvas.isConnected){cleanup();scene.dispose();engine.dispose();return fallback;}ready=true;resize();visible=canvas.getClientRects().length>0;render();
-    canvas.parentElement.classList.add('gpu-ready');schedule();onStatus(`${geometry?'Blender + ':''}Babylon.js · ${canvas.dataset.engine} · Zénit Glass`);
+    canvas.parentElement.classList.remove('gpu-pending');canvas.parentElement.classList.add('gpu-ready');schedule();onStatus(`${geometry?'Blender + ':''}Babylon.js · ${canvas.dataset.engine} · Zénit Glass`);
     return {kind:'babylon',renderer:canvas.dataset.engine,setTheme(){render();},setMotion(value){enabled=value;schedule();},dispose(){const gl=engine._gl;cleanup();scene.dispose();engine.dispose();gl?.getExtension('WEBGL_lose_context')?.loseContext();}};
-  }catch(error){cleanup();scene?.dispose();engine?.dispose();canvas.dataset.graphicsError=error.message;onStatus('Cristal CSS · '+error.message);return fallback;}
+  }catch(error){canvas.parentElement.classList.remove('gpu-pending');cleanup();scene?.dispose();engine?.dispose();canvas.dataset.graphicsError=error.message;onStatus('Cristal CSS · '+error.message);return fallback;}
 }
 

@@ -1,0 +1,7 @@
+<idea-plugin>
+  <id>studio.zenit.team</id><name>Co-Code</name><version>0.1.0</version>
+  <vendor>Zénit</vendor><description>Edición simultánea con Zénit mediante un editor Monaco/Yjs dentro de la ventana Equipo. Los archivos y la ejecución permanecen en el anfitrión.</description>
+  <idea-version since-build="252"/>
+  <depends>com.intellij.modules.platform</depends>
+  <extensions defaultExtensionNs="com.intellij"><toolWindow id="Co-Code" anchor="right" factoryClass="studio.zenit.team.TeamToolWindow"/></extensions>
+</idea-plugin>

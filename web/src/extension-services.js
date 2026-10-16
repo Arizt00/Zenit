@@ -1,12 +1,22 @@
 import {ExtensionOutputUI} from './extension-output.js';
 import {escapeHTML as esc,icon} from './icons.js';
 import {ExtensionQuickInputUI} from './extension-quickinput.js';
+import {EditorDecorations} from './editor-decorations.js';
 
 export class ExtensionServicesUI {
-  constructor(host){this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
+  constructor(host){this.owner=crypto.randomUUID();this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.editor.close'){
+      if(event.owner!==this.owner)return;
+      for(const path of event.paths)if(ed.models.has(path))await h.closeFile(path);
+      await p.api('/extensions/pick',{id:event.id,value:event.paths.every(path=>!ed.models.has(path))});return;
+    }
+    if(event.command==='zenit.editor.reveal'){
+      if(ed.current!==event.path)return;const r=event.range,range={startLineNumber:r.start.line+1,startColumn:r.start.character+1,endLineNumber:r.end.line+1,endColumn:r.end.character+1},view=ed.activeView?.()||ed.view;
+      if(event.revealType===1)view?.revealRangeInCenter(range);else if(event.revealType===2)view?.revealRangeInCenterIfOutsideViewport(range);else if(event.revealType===3)view?.revealRangeAtTop(range);else view?.revealRange(range);return;
+    }
     if(event.command==='zenit.dependencies.changed'){
       if(event.workspace!==h.service().workspace)return;
       const profiles=new Set(event.profiles||[]);p.languageRefresh=true;
@@ -89,7 +99,9 @@ export class ExtensionServicesUI {
   async poll(){
     if(this.disposed)return;
     try{
-      const {panels,quickinputs=[],statusItems=[],outputs=[]}=await this.host.platform.api('/extensions/services');
+      const {panels,quickinputs=[],statusItems=[],outputs=[],editorDecorations=[]}=await this.host.platform.api('/extensions/services');
+      this.editorDecorations ||= new EditorDecorations(this.host);this.editorDecorations.sync(editorDecorations);
+      this.syncTerminalLinks();
       this.status(statusItems);this.outputUI.sync(outputs);
       await this.syncEditors();
       if(!this.quickinput.root)for(const input of quickinputs)if(input.visible)this.quickinput.update(input);
@@ -122,13 +134,27 @@ export class ExtensionServicesUI {
     const covered=document.documentElement.dataset.editorCovered==='true',editors=[];
     const pos=(line,column)=>({line:line-1,character:column-1});
     if(!covered)for(const [index,pane] of (ed.panes||[]).entries()){
-      const view=pane.view,model=view?.getModel(),path=ed.pathFor(model);if(!path||!pane.node.getClientRects().length)continue;
+      const view=pane.view,model=view?.getModel(),path=ed.pathFor(model);if(!path||path.startsWith('.team/')||!pane.node.getClientRects().length)continue;
       const opts=model.getOptions();editors.push({id:String(index),path,version:model.getVersionId(),language:model.getLanguageId(),active:view===ed.view,
         visibleRanges:view.getVisibleRanges().map(r=>({start:pos(r.startLineNumber,r.startColumn),end:pos(r.endLineNumber,r.endColumn)})),
         selections:view.getSelections().map(s=>({anchor:pos(s.selectionStartLineNumber,s.selectionStartColumn),active:pos(s.positionLineNumber,s.positionColumn)})),options:{tabSize:opts.tabSize,insertSpaces:opts.insertSpaces}});
     }
-    const key=JSON.stringify(editors);if(key===this.editorKey&&Date.now()-this.editorSent<1500)return;
-    await h.platform.api('/extensions/editor-state',{editors});this.editorKey=key;this.editorSent=Date.now();
+    const tabs=ed.visiblePaths().filter(path=>!path.startsWith('.team/')).map(path=>({path,column:(editors.findIndex(e=>e.path===path)+1)||1,active:ed.current===path,dirty:ed.isDirty(path)}));const key=JSON.stringify({editors,tabs});if(key===this.editorKey&&Date.now()-this.editorSent<1500)return;
+    await h.platform.api('/extensions/editor-state',{editors,tabs,owner:this.owner});this.editorKey=key;this.editorSent=Date.now();
+  }
+  syncTerminalLinks(){
+    this.terminalRegistrations ||= new Map();const hosts=this.terminalLinkHosts||[],signature=hosts.map(x=>x.id).join(','),wanted=new Set();
+    for(const terminal of this.host.platform.terminals.values()){
+      if(!terminal.xterm?.registerLinkProvider||terminal.closed||!hosts.length)continue;wanted.add(terminal.id);const old=this.terminalRegistrations.get(terminal.id);if(old?.signature===signature)continue;old?.provider.dispose();
+      const provider=terminal.xterm.registerLinkProvider({provideLinks:(y,callback)=>{
+        const buffer=terminal.xterm.buffer.active.getLine(y-1),line=buffer?.translateToString(true)||'';if(!line){callback(undefined);return;}
+        Promise.allSettled(hosts.map(async ext=>{const result=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'terminalLinks',terminal:terminal.id,line});return (result.items||[]).map(link=>{
+          const cell=offset=>{let units=0;for(let column=0;column<buffer.length;column++){if(units>=offset)return column+1;units+=buffer.getCell(column)?.getChars().length||0;}return buffer.length;};
+          return {text:line.slice(link.startIndex,link.startIndex+link.length),range:{start:{x:cell(link.startIndex),y},end:{x:Math.max(1,cell(link.startIndex+link.length)-1),y}},activate:()=>this.host.platform.safe(async()=>{const data=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'terminalLink',link:link.id});for(const effect of data.effects||[]){if(effect.open)await this.host.openFile(effect.open);if(effect.message)this.host.notify(effect.message);if(effect.url){const url=new URL(effect.url);if(['https:','http:'].includes(url.protocol))window.open(url.href,'_blank','noopener,noreferrer');}}})};
+        });})).then(results=>callback(results.flatMap(r=>r.status==='fulfilled'?r.value:[])));
+      }});this.terminalRegistrations.set(terminal.id,{provider,signature});
+    }
+    for(const [id,value] of this.terminalRegistrations)if(!wanted.has(id)){value.provider.dispose();this.terminalRegistrations.delete(id);}
   }
   restoreTabs(){for(const state of this.panels.values())if(state.tab&&!state.tab.isConnected)document.getElementById('file-tabs').append(state.tab);}
   title(state){if(state.tab)state.tab.querySelector('span').textContent=state.panel.title;if(state.node)state.node.querySelector('strong').textContent=state.panel.title;}
@@ -150,5 +176,5 @@ export class ExtensionServicesUI {
   }
   show(state){for(const value of this.panels.values()){if(value.node){value.node.hidden=true;value.node.classList.remove('active');}value.tab?.classList.remove('active');}this.host.platform.closePage();state.node.hidden=false;state.node.classList.add('active');state.tab.classList.add('active');document.documentElement.dataset.editorCovered='true';}
   async receive(event){const id=event.data?.zenitWebview,state=this.panels.get(id);if(!state||event.source!==state.frame?.contentWindow)return;if(event.data.stateUpdate){state.savedState=event.data.state;return;}try{await this.host.platform.api('/extensions/runtime/request',{id:state.panel.extension,method:'webviewMessage',panel:id,message:event.data.message});}catch(error){this.host.notify(error.message,'error');}}
-  dispose(){this.disposed=true;this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
+  dispose(){this.disposed=true;this.editorDecorations?.dispose();for(const value of this.terminalRegistrations?.values()||[])value.provider.dispose();this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
 }

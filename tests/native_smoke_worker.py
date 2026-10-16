@@ -79,6 +79,29 @@ def main():
             z.writestr('extension/package.json',json.dumps({'publisher':'qa','name':'native-grammar','version':'1.0.0','license':'MIT','contributes':{'languages':[{'id':'qa-native','extensions':['.tm']}],'grammars':[{'language':'qa-native','scopeName':'source.qa-native','path':'grammar.json'}]}}))
             z.writestr('extension/grammar.json',json.dumps({'scopeName':'source.qa-native','patterns':[{'name':'keyword.control.native','match':'ZENIT_TOKEN'},{'name':'comment.block.native','begin':'/\\*','end':'\\*/'}]}))
         app.features.extensions.install(app.features.extensions.inspect_bytes(grammar_vsix.getvalue())['ticket'],True)
+        # Exercise the frozen Rust CRDT extension and the shipped peer resources.
+        team=app.features.team;shared=team.start(app.workspace,{'documents':[{'path':'first.py'}]})
+        from pycrdt import Doc,Text
+        from backend.team import decode
+        doc=Doc({'text':Text()});doc.apply_update(decode(team.request({'peer':'native','vectors':{}})['updates']['first.py']))
+        assert str(doc['text'])=='print("DISK")\n'
+        with urlopen(shared['invitation'].split('#')[0],timeout=5) as response:assert b'Z' in response.read()
+        team.stop();checks.append('Frozen pycrdt converges shared buffers and serves the embedded multi-IDE client')
+        for target in ('vscode','jetbrains'):
+            package=team.connector(target);assert hashlib.sha256(decode(package['data'])).hexdigest()==package['sha256']
+        checks.append('Frozen distribution includes verified VSIX and JetBrains connector archives')
+        binary=workspace/'native-binary.exe';binary.write_bytes(b'\0placeholder')
+        (workspace/'native-binary.c').write_text('#include <stdio.h>\nint main(){puts("NATIVE_BINARY_R15");return 0;}\n',encoding='utf-8')
+        from backend.binary_view import revision as binary_revision
+        result=app.features.binary_tools.build({'path':binary.name,'source':'native-binary.c','revision':binary_revision(binary)})
+        until(lambda:app.runner.jobs[result['job']].done)
+        assert app.runner.jobs[result['job']].code==0,app.runner.jobs[result['job']].output
+        app.features.binary_tools.finish(result);raw=binary.read_bytes();offset=raw.index(b'NATIVE_BINARY_R15')
+        import base64
+        result=app.features.binary_tools.save({'path':binary.name,'revision':binary_revision(binary),'patches':[{'offset':offset,'before':base64.b64encode(b'NATIVE_BINARY_R15').decode(),'after':base64.b64encode(b'PATCHED_BINARY_15').decode()}]})
+        assert Path(result['backup']).is_file();checks.append('Frozen binary tools compile real C and atomically patch bytes with an original backup')
+        result=app.features.hacker.start(app.workspace,binary.name,'','binary');terminal=app.features.terminals.get(result['terminal']['id'])
+        until(lambda:terminal.closed);assert 'PATCHED_BINARY_15' in terminal.read()['data'];checks.append('Frozen runtime executes the edited binary in its own actual PTY')
         server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
         url=f'http://127.0.0.1:{server.server_port}';api=DesktopAPI();api._application=app;api._url=url
         # Qt exits when its last visible child closes if the parent stays hidden.
@@ -240,6 +263,6 @@ def main():
             server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()
             args.report.parent.mkdir(parents=True,exist_ok=True)
             args.report.write_text(json.dumps({'platform':sys.platform,'revision':REVISION,'checks':checks,'errors':errors,'javascriptErrors':javascript_errors},indent=2),encoding='utf-8')
-    if errors or len(checks)!=16:raise AssertionError('Packaged desktop verification failed')
+    if errors or len(checks)!=20:raise AssertionError('Packaged desktop verification failed')
 
 if __name__=='__main__':main()

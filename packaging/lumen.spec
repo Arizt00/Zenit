@@ -7,7 +7,7 @@ ROOT=Path(SPECPATH).parent
 hidden=['lumen','backend.server','backend.platform_services','backend.preferences','backend.extensions','backend.terminals','backend.hardware','backend.toolchains','backend.lsp','backend.providers','backend.studio','backend.debugger','backend.debug_worker','psutil','keyring.backends']
 if sys.platform=='win32':hidden+=['winpty']
 if sys.platform.startswith('linux'):hidden+=['qtpy','PySide6.QtWebEngineWidgets','PySide6.QtWebEngineCore','PySide6.QtWebChannel']
-for package in ('webview','keyring','copilot'):
+for package in ('webview','keyring','copilot','pycrdt'):
     if importlib.util.find_spec(package):hidden+=collect_submodules(package)
 data=[(str(ROOT/'web'),'web'),(str(ROOT/'licenses'),'licenses'),(str(ROOT/'README.md'),'.'),(str(ROOT/'LICENSE'),'.'),(str(ROOT/'NOTICE'),'.'),(str(ROOT/'THIRD_PARTY_NOTICES.md'),'.'),(str(ROOT/'LEEME_PRIMERO.txt'),'.'),(str(ROOT/'config/runtime-defaults.json'),'config'),(str(ROOT/'debugger-support'),'debugger-support'),(str(ROOT/'examples/lantern/counter.c'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.cpp'),'examples/lantern'),(str(ROOT/'examples/lantern/counter.n'),'examples/lantern'),(str(ROOT/'backend/LumenJavaDebugger.java'),'backend'),(str(ROOT/'backend/emma_bridge.mjs'),'backend'),(str(ROOT/'backend/lantern_memory.cjs'),'backend'),(str(ROOT/'backend/extension_host.cjs'),'backend'),(str(ROOT/'backend/extension_api.cjs'),'backend')]
 data.append((str(ROOT/'tools/asm_worker.py'),'tools'))
@@ -20,13 +20,15 @@ data.append((str(ROOT/'backend/extension_views.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_services.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_quickinput.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_editors.cjs'),'backend'))
+data.append((str(ROOT/'backend/vendor'),'backend/vendor'))
+data.append((str(ROOT/'dist/integrations'),'integrations'))
 # Extension API modules are loaded with require at runtime, not Python imports.
 # Keep every module in the frozen app so newly added services cannot be omitted.
 already={Path(source).name for source,destination in data if destination=='backend'}
 for name in ('emma_voice_bridge.mjs','emma_voice_worker.py'):data.append((str(ROOT/'backend'/name),'backend'))
 for source in (ROOT/'backend').glob('extension_*.cjs'):
     if source.name not in already:data.append((str(source),'backend'))
-for name in ('PREVIEW_054_R14.md','PREVIEW_054_R12.md','SESSION_ENVIRONMENTS.md','PREVIEW_054_R5.md','VSCODE_PARITY_054_R5.md','GETTING_STARTED.md','STATUS.md','ROADMAP.md','PREVIEW_054_R4.md','VSCODE_PARITY_054_R4.md','PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
+for name in ('PREVIEW_054_R15.md','TEAM.md','PREVIEW_054_R14.md','PREVIEW_054_R12.md','SESSION_ENVIRONMENTS.md','PREVIEW_054_R5.md','VSCODE_PARITY_054_R5.md','GETTING_STARTED.md','STATUS.md','ROADMAP.md','PREVIEW_054_R4.md','VSCODE_PARITY_054_R4.md','PREVIEW_054_R3.md','VSCODE_PARITY_054_R3.md','PREVIEW_053_R6.md','PREVIEW_053_R5.md','PREVIEW_053_R4.md','PREVIEW_053_R3.md','PREVIEW_053_R2.md','PREVIEW_053_R1.md','PREVIEW_R9.md','PREVIEW_R8.md','PREVIEW_R7.md','PREVIEW_R6.md','PREVIEW_R5.md','LENGUAJES.md','EXTENSIONES.md','SEGURIDAD.md'):
     data.append((str(ROOT/'docs'/name),'docs'))
 data.extend([(str(ROOT/'CONTRIBUTING.md'),'.'),(str(ROOT/'docs/media'),'docs/media')])
 # Only the shipped examples belong in the bundle, never compiler/profile caches.

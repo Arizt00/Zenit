@@ -64,7 +64,7 @@ async function request(message){
     for(const command of manifest.contributes?.commands||[])if(commands.has(command.command))commands.get(command.command).title=command.title;
     const capabilities=providers.map(({kind,language,legend,triggers})=>({kind,language,legend,triggers}));
     for(const item of authorised){const b=bridges.get(path.resolve(item.root).toLowerCase());if(b.diagnosticCollections.size)for(const language of item.manifest.contributes?.languages||[])capabilities.push({kind:'diagnostics',language:language.id});}
-    return {commands:[...commands].map(([id,c])=>({id,title:c.title})),providers:capabilities,tokens,views:[...bridges.values()].flatMap(b=>b.treeViews.snapshot()),fileDecorations:[...bridges.values()].some(b=>b.hasFileDecorations()),unsupportedApis:[...new Set([...bridges.values()].flatMap(b=>[...b.unsupportedApis]))],dependencies:authorised.slice(0,-1).map(x=>x.id)};
+    return {commands:[...commands].map(([id,c])=>({id,title:c.title})),providers:capabilities,tokens,views:[...bridges.values()].flatMap(b=>b.treeViews.snapshot()),fileDecorations:[...bridges.values()].some(b=>b.hasFileDecorations()),terminalLinks:[...bridges.values()].some(b=>b.terminalLinks.count),unsupportedApis:[...new Set([...bridges.values()].flatMap(b=>[...b.unsupportedApis]))],dependencies:authorised.slice(0,-1).map(x=>x.id)};
   }
   if(!loaded)throw Error('Extensión no activada.');
   if(message.method==='debugVisualization')return bridge.services.visualize(message.visualization);
@@ -76,6 +76,10 @@ async function request(message){
   if(message.method==='didSave'){for(const b of bridges.values())b.didSave();return {ok:true};}
   if(message.method==='virtual'){for(const b of bridges.values())if(b.hasVirtual(message.uri))return {text:await b.readVirtual(message.uri)};throw Error('Documento virtual no registrado.');}
   if(message.method==='decorations'){if(bridges.size===1)return bridge.fileDecorations(message.paths,message.revision);const items=[];let revision=0;for(const b of bridges.values()){const r=await b.fileDecorations(message.paths);items.push(...r.items||[]);revision+=r.revision||0;}return {items,revision};}
+  if(message.method==='terminalLinks'){const items=[];for(const b of bridges.values())items.push(...(await b.terminalLinks.provide(message)).items);return {items};}
+  if(message.method==='terminalLink'){for(const b of bridges.values())if(b.terminalLinks.has(message.link)){await b.terminalLinks.activate(message.link);break;}return {effects};}
+  if(message.method==='editSessionIdentity')return bridge.editSessionIdentity(message);
+  if(message.method==='treeCheckbox'){const b=[...bridges.values()].find(x=>x.treeViews.snapshot().some(v=>v.id===message.view));return b.treeViews.checkbox(message.view,message.element,message.checkboxState);}
   if(message.method==='tree'){const b=[...bridges.values()].find(x=>x.treeViews.snapshot().some(v=>v.id===message.view));if(message.view&&!b)throw Error('Vista de extensión no registrada: '+message.view);return message.view?b.treeViews.children(message.view,message.element):{views:[...bridges.values()].flatMap(x=>x.treeViews.snapshot())};}
   if(message.method==='command'){
     const c=commands.get(message.command);if(!c)throw Error('Comando no registrado.');
@@ -105,5 +109,5 @@ readline.createInterface({input:process.stdin}).on('line',line=>{
   let message;try{message=JSON.parse(line);}catch{return;}
   if(message.type==='serviceResult'){const p=pendingServices.get(message.id);if(p){pendingServices.delete(message.id);clearTimeout(p.timer);message.error?p.reject(Error(message.error)):p.resolve(message.result);}return;}
   if(message.type==='serviceEvent'){for(const b of bridges.values()){b.uiEvent?.(message.name,message.value);b.services?.event(message.name,message.value);}return;}
-  queue=queue.then(async()=>{let m;try{m=JSON.parse(line);const result=await request(m);const text=JSON.stringify({id:m.id,result},(_,v)=>v instanceof Uint32Array?[...v]:v);if(Buffer.byteLength(text)>2000000)throw Error('Respuesta de extensión demasiado grande.');write(text+'\n');}catch(error){write(JSON.stringify({id:m?.id,error:error.message})+'\n');}});
+  queue=queue.then(async()=>{let m;try{m=JSON.parse(line);const result=await request(m);const text=JSON.stringify({id:m.id,result},(_,v)=>v instanceof Uint32Array?[...v]:v);if(Buffer.byteLength(text)>2000000)throw Error('Respuesta de extensión demasiado grande.');write(text+'\n');}catch(error){console.error(error.stack||error.message);write(JSON.stringify({id:m?.id,error:error.message})+'\n');}});
 });

@@ -31,6 +31,8 @@ from .melody_voice import MelodyVoice
 from .permissions import WorkspacePermissions
 from .hilo import Hilo, Connections
 from .tern import Tern
+from .team import TeamService
+from .binary_tools import BinaryTools
 
 
 class PlatformServices:
@@ -55,6 +57,7 @@ class PlatformServices:
         from .native_packages import NativePackages
         self.native_packages=NativePackages(self)
         self.hilo=Hilo(self);self.connections=Connections(self);self.tern=Tern(self)
+        self.team=TeamService(self);self.binary_tools=BinaryTools(self)
     def restore_trust(self):
         state=self.permissions.state(self.app.workspace.root,direct=not self.prefs.get('security.confirmRoutineActions'))
         self.app.workspace.trusted=state['trusted'];return state
@@ -89,6 +92,9 @@ class PlatformServices:
     def get(self,path,query):
         q=lambda key,default='':query.get(key,[default])[0]
         if path=='/state':return self.state()
+        if path=='/binary/info':return self.binary_tools.info(q('path'))
+        if path=='/team':return self.team.status()
+        if path=='/team/connector':return self.team.connector(query.get('target',['vscode'])[0])
         if path=='/hilo':return self.hilo.snapshot(self.app.workspace.root)
         if path=='/hilo/connections':return {'connections':self.connections.inventory()}
         if path=='/lantern/environments':return self.tern.snapshot(self.app.workspace)
@@ -129,7 +135,10 @@ class PlatformServices:
         if path=='/extensions':return {'extensions':self.extensions.list()}
         if path=='/extensions/search':return self.extensions.search(q('q'),int(q('offset','0')))
         if path=='/extensions/icon':return self.extensions.catalog_icon(q('url'))
-        if path=='/extensions/contributions':return self.extensions.contributions()
+        if path=='/extensions/contributions':
+            stamp=self.extensions.index.stat().st_mtime_ns if self.extensions.index.exists() else 0
+            key=f'contributions:{stamp}:{self.prefs.get("general.locale")}:{self.prefs.get("extensions.loadContributions")}'
+            return self.hilo.cached(key,self.extensions.contributions,ttl=30)
         if path=='/terminals/profiles':return self.terminals.profiles()
         if path=='/terminals':return {'sessions':self.terminals.list()}
         if path=='/terminals/read':return self._terminal(q('id')).read(int(q('offset','0')))
@@ -150,6 +159,19 @@ class PlatformServices:
         raise FileNotFoundError('Ruta de plataforma desconocida.')
     def post(self,path,body):
         ws=self.app.workspace
+        if path=='/binary/save':return self.binary_tools.save(body)
+        if path=='/binary/build':return self.binary_tools.build(body)
+        if path=='/binary/finish':return self.binary_tools.finish(body)
+        if path=='/team/start':return self.team.start(ws,body)
+        if path=='/team/join':return self.team.join(ws,body.get('invitation',''))
+        if path=='/team/stop':return self.team.stop()
+        if path=='/team/request':
+            self._trusted();return self.team.request(body)
+        if path=='/extensions/uri':
+            self._trusted();uri=body.get('uri','');from urllib.parse import urlsplit
+            parsed=urlsplit(uri)
+            if parsed.scheme!='lumen' or parsed.netloc not in self.extension_runtime.hosts:raise ValueError('No hay un controlador activo para este enlace.')
+            self.extension_runtime.hosts[parsed.netloc].event('uri',{'uri':uri});return {'delivered':True}
         if path=='/hilo/refresh':self.hilo.invalidate();return {'connections':self.connections.inventory()}
         if path=='/hilo/clear':return self.hilo.clear_finished(ws.root)
         if path=='/hilo/cancel':
@@ -192,7 +214,7 @@ class PlatformServices:
         if path=='/extensions/webview/document':self._trusted();return self.extension_services.webview_document(body['panel'],body['html'])
         if path=='/extensions/save':
             self._trusted();p=file_path(body['path']);item=self.extension_services.file_workspace(p).save(p.name,body['content'],body.get('revision'),newline=body.get('newline','LF'),bom=body.get('bom',False));item.update(path=str(p),saved=True);return item
-        if path=='/hacker/start':return self.hacker.start(ws,body.get('path',''),body.get('content'),body.get('mode'))
+        if path=='/hacker/start':return self.hacker.start(ws,body.get('path',''),body.get('content'),body.get('mode'),body.get('args'))
         if path=='/hacker/attach':return self.hacker.attach(ws,body.get('job'))
         if path=='/updates/check':return self.updates.check(body.get('download') is True)
         if path=='/updates/download':return self.updates.download()
@@ -327,6 +349,7 @@ class PlatformServices:
             return {'queued':True,'sequence':self.command_seq,'command':command}
         raise FileNotFoundError('Operación de plataforma desconocida.')
     def workspace_changed(self):
+        self.team.stop()
         self.hilo.cancel_workspace(self.app.workspace.root)
         self.tern.close_workspace(self.app.workspace)
         self.hilo.invalidate()
@@ -339,6 +362,7 @@ class PlatformServices:
             if not job.done:job.cancel()
         self.ai.clear_history()
     def shutdown(self):
+        self.team.stop()
         self.hilo.shutdown()
         self.voice.shutdown()
         self.updates.shutdown()

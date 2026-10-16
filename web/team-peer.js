@@ -1,0 +1,27 @@
+import * as Y from '/team-vendor/yjs.mjs';
+const $=s=>document.querySelector(s),key=location.hash.slice(1),peer=crypto.randomUUID?.()||Math.random().toString(36).slice(2),files=new Map();let current,editor,busy=false,running=false,applying=false,timer,pending=new Map();
+const encode=bytes=>{let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s);},decode=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function request(body){const response=await fetch('/v1',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body)}),result=await response.json();if(!response.ok)throw Error(result.error||'Conexión rechazada.');return result;}
+function status(text){$('#status').textContent=text;}
+function language(path){return {py:'python',cpp:'cpp',c:'c',nc:'nc',asm:'asm',java:'java',js:'javascript',ts:'typescript',json:'json'}[path.split('.').at(-1)]||'plaintext';}
+function choose(path){current=path;editor.setModel(files.get(path).model);for(const b of $('#files').children)b.setAttribute('aria-pressed',String(b.dataset.path===path));}
+async function sync(){
+  clearTimeout(timer);if(busy||!running)return;busy=true;const sent=pending;pending=new Map();
+  try{
+    const result=await request({action:'sync',peer,name:$('#name').value,path:current,cursor:editor.getPosition(),vectors:Object.fromEntries([...files].map(([path,e])=>[path,encode(Y.encodeStateVector(e.doc))])),updates:Object.fromEntries([...sent].map(([path,updates])=>[path,encode(Y.mergeUpdates(updates))]))});
+    for(const [path,value] of Object.entries(result.updates)){
+      let entry=files.get(path);if(!entry){const doc=new Y.Doc();entry={doc,text:doc.getText('text')};entry.undo=new Y.UndoManager(entry.text,{trackedOrigins:new Set(['local'])});files.set(path,entry);doc.on('update',(u,origin)=>{if(origin==='remote')return;if(!pending.has(path))pending.set(path,[]);pending.get(path).push(u);clearTimeout(timer);timer=setTimeout(sync,60);});}
+      Y.applyUpdate(entry.doc,decode(value),'remote');const text=entry.text.toString();
+      if(!entry.model){entry.model=monaco.editor.createModel(text,language(path));entry.model.onDidChangeContent(event=>{if(applying)return;entry.doc.transact(()=>{for(const edit of [...event.changes].sort((a,b)=>b.rangeOffset-a.rangeOffset)){if(edit.rangeLength)entry.text.delete(edit.rangeOffset,edit.rangeLength);if(edit.text)entry.text.insert(edit.rangeOffset,edit.text);}},'local');});const b=document.createElement('button');b.textContent=path;b.dataset.path=path;b.onclick=()=>choose(path);$('#files').append(b);}
+      else if(entry.model.getValue()!==text){const before=entry.model.getValue();let start=0,end=0;while(start<before.length&&start<text.length&&before[start]===text[start])start++;while(end<before.length-start&&end<text.length-start&&before.at(-1-end)===text.at(-1-end))end++;const a=entry.model.getPositionAt(start),b=entry.model.getPositionAt(before.length-end);applying=true;try{entry.model.applyEdits([{range:new monaco.Range(a.lineNumber,a.column,b.lineNumber,b.column),text:text.slice(start,text.length-end)}]);}finally{applying=false;}}
+    }
+    if(!current&&files.size)choose(files.keys().next().value);
+    $('#environment').textContent=result.environment.workspace+' · '+result.environment.host+' · '+result.environment.runtime;$('#peers').replaceChildren();for(const person of result.peers){const node=document.createElement('div');node.textContent=person.name+(person.path?' · '+person.path:'');$('#peers').append(node);}$('#run').disabled=!result.allowRun;$('#save').disabled=!result.allowRun;$('#undo').disabled=false;status('Conectado · cambios sincronizados');
+  }catch(error){for(const [path,updates] of sent)pending.set(path,[...updates,...pending.get(path)||[]]);status('Reconectando. Se conservan tus cambios. '+error.message);}
+  finally{busy=false;timer=setTimeout(sync,pending.size?60:document.hidden?1800:500);}
+}
+$('#connect').onclick=async()=>{try{if(key.length<32)throw Error('Necesitas la invitación completa, incluido el fragmento después de #.');if(!editor){window.require.config({paths:{vs:'/vendor/monaco/vs'}});await new Promise((resolve,reject)=>window.require(['vs/editor/editor.main'],resolve,reject));editor=monaco.editor.create($('#editor'),{automaticLayout:true,theme:matchMedia('(prefers-color-scheme:dark)').matches?'vs-dark':'vs',fontSize:14,minimap:{enabled:false},padding:{top:20},smoothScrolling:true});editor.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyZ,()=>files.get(current)?.undo.undo());}running=true;await sync();$('#connect').disabled=true;}catch(error){status(error.message);}};
+async function flush(){while(busy)await new Promise(r=>setTimeout(r,20));await sync();if(pending.size)throw Error('Aún quedan cambios sin confirmar.');}
+$('#save').onclick=async()=>{try{await flush();await request({action:'save',path:current});status('Guardado en el anfitrión.');}catch(e){status(e.message);}};
+$('#run').onclick=async()=>{try{await flush();const {job}=await request({action:'run',path:current});let offset=0;$('#output').textContent='';while(running){const data=await request({action:'job',job,offset});offset=data.offset;$('#output').textContent+=data.output;if(data.done)break;await new Promise(r=>setTimeout(r,300));}}catch(e){status(e.message);}};
+$('#undo').onclick=()=>files.get(current)?.undo.undo();window.addEventListener('pagehide',()=>{running=false;clearTimeout(timer);});

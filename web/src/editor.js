@@ -5,7 +5,7 @@ import {TextMateLanguages,textMateTheme} from './textmate.js';
 import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
 import {assemblyCompletions,assemblySyntax} from './assembly-language.js';
 import {escapeHTML, icon} from './icons.js';
-import {BinaryView} from './binary-view.js';
+import {BinaryView,binaryPatches,binaryState} from './binary-view.js';
 // Monaco rejects outstanding worker requests when a model/provider is disposed.
 // Handle only that expected cancellation; other editor failures still surface.
 window.addEventListener('unhandledrejection',event=>{
@@ -139,7 +139,7 @@ export class LumenEditor {
   paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());const label=p.node.querySelector('span');label.textContent=name||'Choose a file';label.dataset.paneDocument=name||'';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
   split(path,side='right'){
     if(this.detachedPaths.has(path||this.current)){this.callbacks.detached?.(path||this.current);return;}
-    if(this.models.get(path||this.current)?.kind==='binary')throw Error('Binary files use the read-only byte inspector.');
+    if(this.models.get(path||this.current)?.kind==='binary')throw Error('Usa el editor hexadecimal para modificar los bytes de este archivo.');
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
     let pane=this.panes[1];
     if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model:null,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
@@ -296,7 +296,7 @@ export class LumenEditor {
     if(record.kind==='binary'){
       this.externalDiagnostics=[];
       if(this.kind==='monaco')this.view.setModel(null);
-      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary);
+      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary,{changed:()=>this.callbacks.change?.(path,this.isDirty(path)),save:()=>this.callbacks.save?.(path),build:()=>this.callbacks.binaryBuild?.(path),run:()=>this.callbacks.binaryRun?.(path),info:()=>this.callbacks.binaryInfo?.(path)});
       this.callbacks.active?.(path);window.dispatchEvent(new Event('lumen:editor-active'));return;
     }
     if(this.kind==='monaco'){
@@ -357,7 +357,15 @@ export class LumenEditor {
     record.value=this.getValue();
     this.callbacks.change?.(record.path,record.value!==record.savedValue);
   }
-  isDirty(path=this.current){const item=this.models.get(path);return item?item.value!==item.savedValue:false;}
+  isDirty(path=this.current){const item=this.models.get(path);return item?.kind==='binary'?!!item.binaryState?.patches.size:item?item.value!==item.savedValue:false;}
+  async saveBinary(path){
+    const record=this.models.get(path),state=binaryState(record);if(!state.patches.size)return record;if(state.saving)throw Error('El guardado sigue en curso.');
+    state.saving=true;this.binaryView?.paintControls();
+    try{const result=await this.callbacks.binarySave({path,revision:state.revision,patches:binaryPatches(state),offset:this.current===path?this.binaryView.item.offset:0});
+      if(this.current===path)this.binaryView.saved(result);else{Object.assign(record,result);state.revision=result.revision;state.patches.clear();state.undo=[];state.redo=[];}this.callbacks.change?.(path,false);return result;
+    }finally{state.saving=false;this.binaryView?.paintControls();}
+  }
+  refreshBinary(path,result){const record=this.models.get(path);if(!record)return;Object.assign(record,result);if(this.current===path)this.binaryView.saved(result);else{record.binaryState={revision:result.revision,patches:new Map(),undo:[],redo:[],saving:false};}this.callbacks.change?.(path,false);}
   markSaved(result) {
     const record=this.models.get(result.path);if(!record)return;
     record.savedValue=result.content;record.revision=result.revision;record.newline=result.newline;record.bom=result.bom;

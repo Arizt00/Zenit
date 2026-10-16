@@ -164,6 +164,8 @@ def main():
             for path in ('monaco/vs/loader.js','babylon/babylon.js','xterm/xterm.js','xterm-fit/addon-fit.js','three/three.core.js','textmate/main.js','oniguruma/main.js','oniguruma/onig.wasm'):
                 if not (ROOT/'web/vendor'/path).is_file():parser.error('Falta '+path+'. Ejecuta tools/setup_assets.py.')
         collect_licenses()
+        from tools.build_team_integrations import build_all
+        build_all()
         if sys.platform=='darwin':prepare_mac_icon()
         prepare_windows_bundle_cleanup(ROOT/'dist/Zenit')
         subprocess.run(command,cwd=ROOT,check=True)

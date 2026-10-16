@@ -17,6 +17,7 @@ import {LumenPlatform} from './workbench.js';
 import {DesktopWorkflows} from './desktop-workflows.js';
 import {WorkspaceProfiles} from './workspace-profiles.js';
 import {FoundationUI} from './foundation-ui.js';
+import {TeamUI} from './team.js';
 import {MelodyCompanion} from './melody-companion.js';
 
 const motion=new LumenMotion();
@@ -24,6 +25,7 @@ let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=n
 
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
+let teamUI=null;
 let token='',service=null,editor=null,scene=null,sceneStatus='CSS fallback',activeView='explorer';
 let tree=[],rootExpanded=true,openFolders=new Set(['Assets','Assets/Scripts','Assets/Scenes','Assets/Prefabs','Settings']);
 let cwd='',terminalHistory=[],historyIndex=0,activeJob=null,terminalMode='terminal',lastOutput='';
@@ -59,7 +61,7 @@ function notify(message,type='info',duration=5000,key=''){
 const guard=fn=>(...args)=>{try{return Promise.resolve(fn(...args)).catch(error=>notify(error.message,'error',6500));}catch(error){notify(error.message,'error',6500);}};
 function allFiles(nodes=tree){return nodes.flatMap(node=>node.directory?allFiles(node.children||[]):[node.path]);}
 function currentRecord(){return editor?.models.get(editor.current);}
-function closePopover(){$('#popover').classList.add('hidden');popoverAnchor?.setAttribute?.('aria-expanded','false');popoverAnchor=null;}
+function closePopover(animated=true){const pop=$('#popover');if(animated&&motion.enabled&&!pop.classList.contains('hidden')){const ghost=pop.cloneNode(true);ghost.removeAttribute('id');ghost.inert=true;ghost.setAttribute('aria-hidden','true');ghost.style.pointerEvents='none';document.body.append(ghost);ghost.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -3px'}],{duration:110,easing:'ease-out'}).finished.finally(()=>ghost.remove());}pop.classList.add('hidden');popoverAnchor?.setAttribute?.('aria-expanded','false');popoverAnchor=null;}
 
 function applyTheme(theme,persistTheme=true) {
   if(persistTheme&&platformUI&&(platformUI.prefs['appearance.theme']!==theme||platformUI.prefs['appearance.extensionTheme']))return guard(()=>platformUI.savePreference('appearance.theme',theme))();
@@ -152,17 +154,19 @@ function updateDocumentStatus(){
   const item=currentRecord();
   if(!item){$('#breadcrumbs').replaceChildren();$('#breadcrumbs').hidden=true;$('#language-status').textContent='';$('#target-label').textContent='';$('#cursor-status').textContent='';return;}
   $('#breadcrumbs').hidden=false;
-  const parts=item.path.replaceAll('\\','/').split('/').filter(Boolean);
-  $('#breadcrumbs').innerHTML=(/^(?:[A-Za-z]:[\\/]|\/)/.test(item.path)?'':`<span>${esc(service?.name||'')}</span>${icon('chevron-right')}`)+parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
-  $('#newline-status').textContent=item.kind==='binary'?'—':item.newline||'LF';$('#language-status').textContent=item.kind==='binary'?'Binary · read only':languageLabel(item.path);
+  const parts=item.path.startsWith('.team/')?['Equipo',...item.path.split('/').slice(2)]:item.path.replaceAll('\\','/').split('/').filter(Boolean);
+  $('#breadcrumbs').innerHTML=((/^(?:[A-Za-z]:[\\/]|\/)/.test(item.path)||item.path.startsWith('.team/'))?'':`<span>${esc(service?.name||'')}</span>${icon('chevron-right')}`)+parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
+  $('#newline-status').textContent=item.kind==='binary'?'—':item.newline||'LF';$('#language-status').textContent=item.kind==='binary'?'Binario · hexadecimal':languageLabel(item.path);
   $('#target-label').textContent=languageLabel(item.path);
   document.dispatchEvent(new Event('zenit:breadcrumbs'));
   updateDiagnostics(editor.diagnostics());platformUI?.documentChanged();
 }
 async function saveFile(path=editor.current,{automatic=false}={}){
   if(typeof path!=='string')path=editor.current;
+  if(teamUI?.owns(path))return teamUI.save(path);
+  if(path?.startsWith('.team/'))throw Error('Este búfer pertenece a un equipo desconectado. Vuelve a unirte o usa Guardar como para conservar una copia.');
   const item=editor.models.get(path);if(!item)return;
-  if(item.kind==='binary'){if(!automatic)notify('Binary files are read only.');return;}
+  if(item.kind==='binary'){if(!await ensureTrust())return;return editor.saveBinary(path);}
   await platformUI?.beforeSave?.(path,automatic);
   let content=path===editor.current?editor.getValue():item.model?.getValue()??item.value;if(platformUI?.prefs['files.trimTrailingWhitespace'])content=content.split('\n').map(line=>line.replace(/[ \t]+$/,'')).join('\n');if(platformUI?.prefs['files.insertFinalNewline']&&!content.endsWith('\n'))content+='\n';if(path===editor.current&&content!==editor.getValue())editor.insertText(content,true);
   item.value=content;
@@ -265,11 +269,12 @@ function sessionDialog(){
   $('#revoke-trust').onclick=guard(async()=>{await api('/trust',{trusted:false});service.trusted=false;closeModal();notify('Confianza revocada. Las tareas nuevas necesitan autorización.');});
 }
 function showMenu(anchor,items,label=''){
-  closePopover();popoverAnchor=anchor;$('#popover').dataset.overModal=String(!$('#modal-backdrop').classList.contains('hidden'));
+  if(popoverAnchor===anchor&&!$('#popover').classList.contains('hidden')){closePopover();return;}
+  closePopover(false);popoverAnchor=anchor;$('#popover').dataset.overModal=String(!$('#modal-backdrop').classList.contains('hidden'));
   const pop=$('#popover');pop.innerHTML=(label?`<div class="menu-label">${esc(label)}</div>`:'')+items.map((item,i)=>item.separator?'<div class="menu-separator"></div>':`<button class="menu-item" data-menu-index="${i}" role="menuitem" ${item.disabled?'disabled':''} aria-disabled="${!!item.disabled}" aria-label="${esc(item.label)}">${item.theme?`<span class="theme-swatch swatch-${item.theme}"></span>`:icon(item.icon||'code')}<span>${esc(item.label)}</span>${item.shortcut?`<span class="menu-shortcut" aria-hidden="true">${esc(item.shortcut)}</span>`:''}</button>`).join('');
   pop.setAttribute('role','menu');popoverAnchor?.setAttribute?.('aria-expanded','true');
   pop.classList.remove('hidden');motion.enter(pop,-4);const rect=anchor?.getBoundingClientRect?.()||{right:innerWidth/2,left:innerWidth/2,bottom:80};
-  const box=pop.getBoundingClientRect(),left=anchor instanceof Element?rect.right-box.width:rect.left+4;pop.style.left=Math.max(12,Math.min(innerWidth-box.width-12,left))+'px';pop.style.top=Math.max(12,Math.min(innerHeight-box.height-12,rect.bottom+8))+'px';
+  const box=pop.getBoundingClientRect(),left=anchor instanceof Element?rect.right-box.width:rect.left+4;pop.style.left=Math.max(12,Math.min(innerWidth-box.width-12,left))+'px';pop.style.top=Math.max(12,Math.min(innerHeight-box.height-12,rect.bottom+16))+'px';
   pop.onkeydown=event=>{const items=[...pop.querySelectorAll('[role=menuitem]:not(:disabled)')],index=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const n=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[n]?.focus();}if(event.key==='Escape'||event.key==='Tab'){event.preventDefault();event.stopPropagation();closePopover();anchor?.focus?.();}};
   requestAnimationFrame(()=>{if(!pop.classList.contains('hidden'))pop.querySelector('[role=menuitem]:not(:disabled)')?.focus();});
   pop.querySelectorAll('[data-menu-index]').forEach(button=>button.onclick=guard(async()=>{const item=items[+button.dataset.menuIndex];closePopover();if(item.run)await item.run();else if(item.action)await perform(item.action,anchor);}));
@@ -327,19 +332,35 @@ async function ensureTrust(){
   if(yes){const state=await api('/trust',{trusted:true});service.trusted=state.trusted;service.trustSource=state.source||state.trustSource;if(activeView==='run')setView('run');}
   return yes;
 }
+async function runBinary(path=editor.current){
+  if(!await ensureTrust())return;if(editor.isDirty(path))await saveFile(path);
+  const args=editor.models.get(path)?.binaryArguments||[];
+  if(desktopUI.editorTerminalInMain)return desktopUI.runInMain(path,false,true,args);
+  return desktopUI.runBinary(path,args);
+}
+async function rebuildBinary(path=editor.current){
+  if(!await ensureTrust())return;if(editor.isDirty(path))await saveFile(path);const info=await platformUI.api('/binary/info?path='+encodeURIComponent(path));
+  modal('Recompilar binario',`<p>Selecciona el código fuente de este artefacto. Se compila primero y se conserva una copia del binario antes de sustituirlo.</p><form id="binary-build-form"><label class="field-label">Código fuente<input name="source" required value="${esc(info.source||'')}" list="binary-sources" placeholder="src/main.c" autocomplete="off"></label><datalist id="binary-sources">${info.sources.map(p=>`<option value="${esc(p)}"></option>`).join('')}</datalist><p>No se reconstruye el código fuente a partir de los bytes. Puedes elegir C, C++, ASM, Rust, Go, Java o nC.</p><div class="modal-actions"><button type="button" class="secondary-button" data-action="close-modal">Cancelar</button><button class="primary-button">${icon('build')}Recompilar</button></div></form>`);
+  $('#binary-build-form').onsubmit=guard(async e=>{e.preventDefault();const source=new FormData(e.target).get('source');if(editor.models.has(source)&&editor.isDirty(source))await saveFile(source);const result=await platformUI.api('/binary/build',{path,source,revision:editor.models.get(path).revision});closeModal();showTerminal('terminal',{forceConsole:true});await watchJob(result.job,path);const built=await platformUI.api('/binary/finish',{job:result.job});editor.refreshBinary(path,built);notify('Binario recompilado. Se conserva la copia anterior.');});
+}
 async function runCurrent(check=false){
+  const path=editor.current,workspace=service.workspace;
+  if(teamUI?.owns(path))return teamUI.run(path);
   if(!editor.current){notify('Abre un archivo para ejecutarlo.');return;}
-  if(editor.models.get(editor.current)?.kind==='binary'){notify('Binary inspection is read only.');return;}
+  if(editor.models.get(path)?.kind==='binary'){if(check)return rebuildBinary(path);return runBinary(path);}
   if(activeJob){notify('Ya hay una tarea activa en esta consola. Deténla antes de iniciar otra.');return;}
   if(!await ensureTrust())return;
-  if(editor.isDirty())await saveFile();
+  if(editor.isDirty(path))await saveFile(path);
+  if(service.workspace!==workspace)throw Error('El proyecto cambió antes de ejecutar. Vuelve a intentarlo en el proyecto actual.');
+  if(desktopUI?.editorTerminalInMain)return desktopUI.runInMain(path,check);
+  if(!check&&desktopUI)return desktopUI.runFile(path);
   showTerminal('terminal',{forceConsole:true});termWrite('\n','term-muted');lastOutput='';
-  let result;try{result=await api('/task',{path:editor.current,check});}catch(error){lastOutput=error.message;termWrite(error.message+'\n','term-error');notify(error.message,'error');return;}
-  if(result.preview){studio.lantern.showPreview(result.preview);termWrite('Vista previa: '+result.preview.url+'\n','term-success');}else if(result.job)await watchJob(result.job);else{termWrite(result.output,'term-success');lastOutput=result.output;}
+  let result;try{result=await api('/task',{path,check});}catch(error){lastOutput=error.message;termWrite(error.message+'\n','term-error');notify(error.message,'error');return;}
+  if(result.preview){studio.lantern.showPreview(result.preview);termWrite('Vista previa: '+result.preview.url+'\n','term-success');}else if(result.job)await watchJob(result.job,path);else{termWrite(result.output,'term-success');lastOutput=result.output;}
 }
 function updateTaskUI(running){
   const button=$('.run-button');button.innerHTML=icon(running?'stop':'play');button.dataset.action=running?'stop-task':'run';
-  for(const external of document.querySelectorAll('[data-session-run]')){external.dataset.action=running?'stop-task':'run';external.innerHTML=icon(running?'stop':'play')+(running?'Detener':'Ejecutar');external.setAttribute('aria-busy',String(running));}button.classList.toggle('task-running',running);button.setAttribute('aria-label',running?'Detener tarea':'Ejecutar archivo activo');
+  for(const external of document.querySelectorAll('[data-session-run]')){external.dataset.action=running?'stop-task':'run';external.innerHTML=icon(running?'stop':'play')+'<span>'+(running?'Detener':'Ejecutar')+'</span>';external.setAttribute('aria-label',running?'Detener tarea':'Ejecutar archivo');external.setAttribute('aria-busy',String(running));}button.classList.toggle('task-running',running);button.setAttribute('aria-label',running?'Detener tarea':'Ejecutar archivo activo');
   button.dataset.tooltip=running?'Detener tarea (Shift+F5)':'Ejecutar archivo activo (F5)';button.setAttribute('aria-busy',String(running));
 }
 async function watchJob(id,path=editor.current){
@@ -454,6 +475,7 @@ function renderPalette(){
 async function choosePalette(index){const item=paletteEntries[index];if(!item)return;closePalette();if(item.path){await openFile(item.path);if(item.line)editor.showLine(item.line);}else if(item.category)await platformUI.settings(item.category);else await perform(item.action);}
 
 async function perform(action,anchor=null){
+  if(action==='team')return teamUI?.open();
   if(desktopUI&&await desktopUI.handle(action))return;
   if(action==='lantern')return studio?.lantern.action('start');
   if(action==='lantern-monitor')return studio?.lantern.action(platformUI.prefs['appearance.lanternMonitor']?'hide':'show');
@@ -600,12 +622,12 @@ async function start(){
     window.zenitStartup?.phase('service');
     const response=await fetch('/api/bootstrap',{credentials:'same-origin',signal:AbortSignal.timeout(25000)});service=await response.json();if(!response.ok)throw new Error(service.error);
     token=service.token;tree=service.tree;
-    editor=new LumenEditor($('#editor-mount'),{binary:(path,offset)=>/^(?:[A-Za-z]:[\\/]|\/)/.test(path)?platformUI.api('/extensions/binary?path='+encodeURIComponent(path)+'&offset='+offset):api('/binary?path='+encodeURIComponent(path)+'&offset='+offset),change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
+    editor=new LumenEditor($('#editor-mount'),{binarySave:body=>platformUI.api('/binary/save',body),binaryBuild:rebuildBinary,binaryRun:runBinary,binaryInfo:path=>platformUI.api('/binary/info?path='+encodeURIComponent(path)),binary:(path,offset)=>/^(?:[A-Za-z]:[\\/]|\/)/.test(path)?platformUI.api('/extensions/binary?path='+encodeURIComponent(path)+'&offset='+offset):api('/binary?path='+encodeURIComponent(path)+'&offset='+offset),change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
     await editor.init(service,settings);applySettings();
     await initializeDocuments();renderTree();updatePrompt();
     scene={kind:service.babylon?'babylon':'css',setMotion(){},setTheme(){},dispose(){}};
     sceneStatus=service.babylon?'Babylon.js + Three.js · Lenon Glass':'Cristal CSS';
-    await checkWorkspace(false);
+    termWrite('Tu espacio está listo. Usa Comprobar proyecto cuando lo necesites.\n','term-muted');
     renderTerminalContent();
     platformUI=new LumenPlatform({api,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
       isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},setTrustSource:value=>{service.trustSource=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
@@ -622,10 +644,11 @@ async function start(){
     previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
     platformUI.companion=new MelodyCompanion(platformUI);
     if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
-    desktopUI=new DesktopWorkflows({api,editor,renderTabs,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
+    desktopUI=new DesktopWorkflows({api,editor,renderTabs,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,setRunState:updateTaskUI,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
+    teamUI=new TeamUI({platform:platformUI,editor,modal,closeModal,ensureTrust});commandDefinitions.push(['team','coco','Co-Code: compartir archivo o unirme','']);
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
     installTabControls({editor,openFile,activateFile,closeFile,showMenu,safe:fn=>guard(fn)()});
     installDiagnostics();
@@ -636,7 +659,7 @@ async function start(){
     window.zenitStartup?.ready();
   }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
-window.addEventListener('pagehide',event=>{if(!event.persisted){productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
+window.addEventListener('pagehide',event=>{if(!event.persisted){teamUI?.dispose();productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='\\'){event.preventDefault();guard(()=>perform('split-editor'))();}});
 $('#retry-connection').onclick=()=>location.reload();
 start();

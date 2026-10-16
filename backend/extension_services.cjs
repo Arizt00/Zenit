@@ -7,7 +7,7 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   const terminal=(opts={},shellPath,shellArgs)=>{
     if(typeof opts==='string')opts={name:opts,shellPath,shellArgs};
     const id=uid(),t={_id:id,name:opts.name||'Terminal',creationOptions:opts,state:{isInteractedWith:false},exitStatus:undefined};
-    const ready=call('terminal.create',{id,options:{...opts,pty:!!opts.pty}}).then(info=>{t._pid=info.pid;event('terminalOpen').fire(t);if(opts.pty)opts.pty.open(info.dimensions);return info;});
+    const ready=call('terminal.create',{id,options:{...opts,pty:!!opts.pty}}).then(info=>{t._pid=info.pid;t._sessionId=info.id;event('terminalOpen').fire(t);if(opts.pty)opts.pty.open(info.dimensions);return info;});
     t.processId=ready.then(info=>info.pid);t._ready=ready;
     const invoke=(method,params={})=>ready.then(()=>call(method,{id,...params})).catch(e=>host.notify(e.message));
     t.sendText=(text,addNewLine=true)=>{t.state.isInteractedWith=true;invoke('terminal.write',{text:String(text)+(addNewLine?'\r':'')});};

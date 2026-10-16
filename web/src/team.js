@@ -1,0 +1,76 @@
+import {icon,escapeHTML as esc} from './icons.js';
+
+/** Peers keep their own CRDT state and send only missing changes. */
+export class TeamUI {
+  constructor(host){this.host=host;this.files=new Map();this.pending=new Map();this.peer=crypto.randomUUID();this.running=false;this.applying=false;this.errors=0;this.pollTimer=0;this.requestQueue=Promise.resolve();this.name=host.platform.host.studio?.profile.displayName||'Programador';this.key=e=>{if(!(e.ctrlKey||e.metaKey)||e.altKey||e.key.toLowerCase()!=='z'||!e.target.closest?.('.monaco-editor'))return;const entry=this.files.get(host.editor.current);if(!this.running||!entry)return;e.preventDefault();e.stopImmediatePropagation();e.shiftKey?entry.undo.redo():entry.undo.undo();};document.addEventListener('keydown',this.key,true);}
+  api(path,body){return this.host.platform.api('/team'+path,body);}
+  async open(){
+    const status=await this.api('');this.state=status;
+    this.host.modal('Co-Code',`<section class="team-workbench"><header><span class="team-mark">${icon('coco')}</span><div><h3>CoCo. Un código, muchas perspectivas.</h3><p>Edición simultánea y un entorno de ejecución en el equipo anfitrión.</p></div></header><div class="team-intro" ${status.active?'hidden':''}><label>Tu nombre<input data-team-name maxlength="80" value="${esc(this.name)}"></label><div class="team-start"><section><h4>Compartir el archivo actual</h4><p>Comparte el búfer, incluidos sus cambios sin guardar. Puedes revocar la invitación al terminar.</p><label><input type="checkbox" data-team-network> Permitir conexiones desde mi red</label><label><input type="checkbox" data-team-run> Permitir guardar y ejecutar en mi equipo</label><button class="primary-button" data-team-host>${icon('plus')}Crear sesión CoCo</button></section><section><h4>Unirte a Co-Code</h4><p>Introduce la invitación completa del anfitrión.</p><input data-team-invite placeholder="http://equipo:puerto/#invitación" aria-label="Invitación"><button class="secondary-button" data-team-join>${icon('arrow-right')}Unirme</button></section></div></div><div data-team-active ${status.active?'':'hidden'}><label>Invitación<input data-team-link readonly value="${esc(status.invitation||'')}"></label><button class="secondary-button" data-team-copy>${icon('copy')}Copiar invitación</button><p class="team-environment"></p><div class="team-peers" aria-label="Participantes"></div><div class="team-files"></div><div class="team-tools"><button class="secondary-button" data-team-save>${icon('check')}Guardar compartido</button><button class="secondary-button" data-team-execute>${icon('play')}Ejecutar en el anfitrión</button><button class="secondary-button" data-team-undo>${icon('undo')}Deshacer mi último cambio</button><button class="text-button" data-team-leave>Terminar conexión</button></div><details class="team-review"><summary>Puntos de control y revisión</summary><div class="team-tools"><button class="secondary-button" data-team-checkpoint>Guardar punto compartido</button><button class="secondary-button" data-team-review>Revisar cambios con Melody</button></div><div class="team-checkpoints"></div></details><pre class="team-output" tabindex="0" aria-label="Salida compartida"></pre></div><details class="team-connectors"><summary>Conectar desde otra IDE</summary><p>VS Code y editores compatibles: instala el VSIX y ejecuta «Co-Code: unirme». En JetBrains, instala el ZIP y abre la herramienta Co-Code; utiliza el editor compartido integrado.</p><div class="team-tools"><button class="secondary-button" data-team-connector="vscode">Descargar VSIX</button><button class="secondary-button" data-team-connector="jetbrains">Descargar para JetBrains</button></div></details><p role="status" class="team-status"></p><footer>La invitación da acceso a los archivos compartidos. No hay límite fijo de participantes; la capacidad depende del anfitrión y de la red. Para equipos remotos, utiliza una red privada o un túnel seguro.</footer></section>`,{wide:true});
+    this.root=document.querySelector('.team-workbench');const safe=fn=>this.host.platform.safe(fn),root=this.root;
+    root.querySelector('[data-team-host]').onclick=()=>safe(async()=>{if(!await this.host.ensureTrust())return;const path=this.host.editor.current,record=this.host.editor.models.get(path);if(!record||record.kind==='binary')throw Error('Abre un archivo de texto para compartirlo.');this.name=root.querySelector('[data-team-name]').value.trim()||this.name;this.state=await this.api('/start',{documents:[{path,text:this.host.editor.getValue()}],network:root.querySelector('[data-team-network]').checked,allowRun:root.querySelector('[data-team-run]').checked});await this.connect();await this.open();});
+    root.querySelector('[data-team-join]').onclick=()=>safe(async()=>{if(!await this.host.ensureTrust())return;this.name=root.querySelector('[data-team-name]').value.trim()||this.name;this.state=await this.api('/join',{invitation:root.querySelector('[data-team-invite]').value.trim()});await this.connect();await this.open();});
+    root.querySelector('[data-team-copy]').onclick=()=>safe(()=>navigator.clipboard.writeText(this.state.invitation));root.querySelector('[data-team-leave]').onclick=()=>safe(async()=>{await this.stop();await this.open();});
+    root.querySelector('[data-team-save]').onclick=()=>safe(()=>this.save(this.host.editor.current));root.querySelector('[data-team-execute]').onclick=()=>safe(()=>this.run(this.host.editor.current));root.querySelector('[data-team-undo]').onclick=()=>{this.files.get(this.host.editor.current)?.undo.undo();};
+    root.querySelector('[data-team-checkpoint]').onclick=()=>safe(async()=>{await this.flush();await this.api('/request',{action:'checkpoint',label:this.name+' · '+new Date().toLocaleTimeString()});await this.sync();});
+    root.querySelector('[data-team-review]').onclick=()=>safe(()=>this.review());
+    for(const button of root.querySelectorAll('[data-team-connector]'))button.onclick=()=>safe(async()=>{const result=await this.api('/connector?target='+button.dataset.teamConnector),blob=new Blob([this.decode(result.data)],{type:'application/octet-stream'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=result.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);this.status('Conector preparado · SHA-256 '+result.sha256);});
+    if(status.active){if(!this.running)await this.connect();this.paint();}
+  }
+  async connect(){
+    this.Y ||= await import('/team-vendor/yjs.mjs');this.running=true;this.generation=(this.generation||0)+1;this.room=this.state.room;await this.sync();
+  }
+  owns(path){return this.running&&this.files.has(path);}
+  async sync(){
+    clearTimeout(this.pollTimer);if(!this.running||this.busy)return;this.busy=true;const generation=this.generation,sent=this.pending;this.pending=new Map();
+    try{
+      const Y=this.Y,vectors={};for(const entry of this.files.values())vectors[entry.path]=this.encode(Y.encodeStateVector(entry.doc));
+      const active=this.files.get(this.host.editor.current),cursor=this.host.editor.view?.getPosition?.();
+      const response=await this.api('/request',{action:'sync',peer:this.peer,name:this.name,path:active?.path||'',cursor,vectors,updates:Object.fromEntries([...sent].map(([path,updates])=>[path,this.encode(Y.mergeUpdates(updates))]))});
+      if(!this.running||generation!==this.generation)return;this.room=response.room;this.snapshot=response;this.errors=0;
+      for(const [path,value] of Object.entries(response.updates)){
+        const local=this.state.hosting?path:'.team/'+response.room+'/'+path;let entry=this.files.get(local);
+        if(!entry){const doc=new Y.Doc();entry={path,local,doc,text:doc.getText('text'),listeners:[]};this.files.set(local,entry);entry.undo=new Y.UndoManager(entry.text,{trackedOrigins:new Set(['local'])});doc.on('update',(update,origin)=>{if(origin==='remote')return;if(!this.pending.has(path))this.pending.set(path,[]);this.pending.get(path).push(update);this.schedule(60);});}
+        Y.applyUpdate(entry.doc,this.decode(value),'remote');entry.seed??=entry.text.toString();this.bind(entry);
+      }
+      this.paint();
+    }catch(error){if(!this.running||generation!==this.generation)return;for(const [path,updates] of sent)this.pending.set(path,[...updates,...(this.pending.get(path)||[])]);this.errors++;this.lastError=error.message;this.status('Conexión pendiente. Tus cambios se conservan localmente. '+error.message);}
+    finally{this.busy=false;this.schedule(this.errors?Math.min(8000,500*2**this.errors):this.pending.size?60:document.hidden?1800:450);}
+  }
+  bind(entry){
+    const ed=this.host.editor;let record=ed.models.get(entry.local);const value=entry.text.toString();
+    if(!record){ed.open({path:entry.local,content:value,revision:null},{activate:this.files.size===1});record=ed.models.get(entry.local);}
+    if(entry.model===record.model)return;
+    for(const listener of entry.listeners)listener.dispose();entry.listeners=[];entry.model=record.model;
+    if(!record.model)throw Error('La edición en equipo requiere el motor de editor integrado.');
+    // Existing host text seeded the server; joining buffers have their own namespace.
+    this.applying=true;try{if(record.model.getValue()!==value)record.model.setValue(value);}finally{this.applying=false;}
+    if(entry.observer)entry.text.unobserve(entry.observer);
+    entry.observer=event=>{if(event.transaction.origin==='local')return;const model=entry.model;if(model.isDisposed())return;let offset=0;const edits=[];for(const delta of event.delta){if(delta.retain)offset+=delta.retain;if(delta.delete){const a=model.getPositionAt(offset),b=model.getPositionAt(offset+delta.delete);edits.push({range:new monaco.Range(a.lineNumber,a.column,b.lineNumber,b.column),text:''});offset+=delta.delete;}if(delta.insert){const p=model.getPositionAt(offset);edits.push({range:new monaco.Range(p.lineNumber,p.column,p.lineNumber,p.column),text:String(delta.insert)});}}this.applying=true;try{model.applyEdits(edits);}finally{this.applying=false;}};
+    entry.text.observe(entry.observer);
+    entry.listeners.push(record.model.onDidChangeContent(event=>{if(this.applying)return;entry.doc.transact(()=>{for(const change of [...event.changes].sort((a,b)=>b.rangeOffset-a.rangeOffset)){if(change.rangeLength)entry.text.delete(change.rangeOffset,change.rangeLength);if(change.text)entry.text.insert(change.rangeOffset,change.text);}},'local');}));
+  }
+  schedule(delay){clearTimeout(this.pollTimer);if(this.running)this.pollTimer=setTimeout(()=>this.sync(),delay);}
+  encode(bytes){let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s);}
+  decode(value){return Uint8Array.from(atob(value),c=>c.charCodeAt(0));}
+  async flush(){while(this.busy)await new Promise(resolve=>setTimeout(resolve,20));await this.sync();if(this.errors)throw Error('No se ha confirmado la sincronización. Se conserva el búfer.');}
+  async save(local){const entry=this.files.get(local);if(!entry)throw Error('Selecciona un archivo del equipo.');await this.flush();const result=await this.api('/request',{action:'save',path:entry.path});const record=this.host.editor.models.get(local);record.savedValue=result.text;record.revision=result.revision;this.host.editor.callbacks.change?.(local,this.host.editor.isDirty(local));this.status('Guardado en el anfitrión: '+entry.path);return {...result,path:local};}
+  async run(local){const entry=this.files.get(local);if(!entry)throw Error('Selecciona un archivo del equipo.');await this.flush();const result=await this.api('/request',{action:'run',path:entry.path});this.job=result.job;let offset=0;this.output='';while(this.running&&this.job===result.job){const data=await this.api('/request',{action:'job',job:result.job,offset});offset=data.offset;this.output+=data.output;this.paint();if(data.done){this.status('Ejecución terminada · código '+data.code);break;}await new Promise(resolve=>setTimeout(resolve,250));}}
+  status(text){if(this.root?.isConnected)this.root.querySelector('.team-status').textContent=text;}
+  paint(){
+    const root=this.root;if(!root?.isConnected||!this.snapshot)return;const s=this.snapshot;
+    root.querySelector('.team-environment').textContent=s.environment.workspace+' · '+s.environment.host+' · '+s.environment.runtime;
+    const peers=root.querySelector('.team-peers'),peerSignature=JSON.stringify(s.peers);if(peers.dataset.signature!==peerSignature){peers.dataset.signature=peerSignature;peers.innerHTML=s.peers.map(p=>`<span>${icon('person')}<strong>${esc(p.name)}</strong><small>${esc(p.path)}</small></span>`).join('');}
+    const list=root.querySelector('.team-files'),fileSignature=JSON.stringify([...this.files.keys()]);if(list.dataset.signature!==fileSignature){list.dataset.signature=fileSignature;list.replaceChildren();for(const [local,entry] of this.files){const button=document.createElement('button');button.className='secondary-button';button.textContent=entry.path;button.onclick=()=>{this.bind(entry);this.host.editor.activate(local);this.host.closeModal();};list.append(button);}}
+    const checkpointList=root.querySelector('.team-checkpoints'),signature=JSON.stringify(s.checkpoints);if(checkpointList.dataset.signature!==signature){checkpointList.dataset.signature=signature;checkpointList.replaceChildren();for(const item of s.checkpoints||[]){const button=document.createElement('button');button.className='secondary-button';button.textContent=item.label;button.disabled=!this.state.hosting;button.title='Restaurar este punto sin escribir en disco';button.onclick=()=>this.host.platform.safe(async()=>{await this.flush();await this.api('/request',{action:'restore',id:item.id});await this.sync();});checkpointList.append(button);}}
+    root.querySelector('[data-team-execute]').disabled=!s.allowRun;root.querySelector('.team-output').textContent=this.output||'La salida de ejecución aparecerá aquí.';
+  }
+  async review(){
+    await this.flush();const changes=[...this.files.values()].filter(e=>e.seed!==e.text.toString()).map(e=>({file:e.path,before:e.seed,after:e.text.toString()}));if(!changes.length){this.status('No hay cambios desde que te uniste.');return;}
+    const question='Revisa los cambios de esta sesión compartida. Explica los efectos, posibles conflictos y pruebas necesarias. No atribuyas líneas a una persona sin evidencia ni afirmes que se han ejecutado pruebas.\n'+JSON.stringify(changes).slice(0,60000);
+    this.host.closeModal();this.host.platform.host.studio.host.dock.show('assistant');this.host.platform.setMelodyMode?.('chat');document.getElementById('ai-input').value=question;await this.host.platform.sendAI(question,{consult:true});
+  }
+  async stop(){this.generation++;this.running=false;clearTimeout(this.pollTimer);await this.api('/stop',{});this.disposeFiles();}
+  disposeFiles(){for(const entry of this.files.values()){entry.listeners.forEach(x=>x.dispose());entry.undo.destroy();entry.doc.destroy();}this.files.clear();this.pending.clear();}
+  dispose(){document.removeEventListener('keydown',this.key,true);this.generation++;this.running=false;clearTimeout(this.pollTimer);this.disposeFiles();}
+}

@@ -29,6 +29,7 @@ class Hacker:
         if not self.features.prefs.get('security.terminals'):raise PermissionError('Activa las terminales en Ajustes.')
         with manager.lock:
             if sum(not s.closed for s in manager.sessions.values())>=6:raise ValueError('Cierra una terminal antes de abrir otra.')
+            for identity in [k for k,s in manager.sessions.items() if s.closed][:-12]:del manager.sessions[identity]
             profile={'id':'hacker','label':label,'argv':argv,'kind':'hacker'}
             # GCC/GDB depend on companion DLLs next to their executables on Windows.
             from .foundation import tool_environment
@@ -37,11 +38,14 @@ class Hacker:
             manager.sessions[s.id]=s
             return {'id':s.id,'profile':profile,'kind':s.kind}
 
-    def start(self, ws, path, content, mode):
+    def start(self, ws, path, content, mode, args=None):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto para ejecutar su código.')
-        project=ws.root;ws,path=self.features.execution_workspace(ws,path)
+        project=ws.root
+        if mode=='binary':ws,path,_=self.features.binary_tools.scope(path)
+        else:ws,path=self.features.execution_workspace(ws,path)
         file=ws.resolve(path)
         if not isinstance(content,str) or len(content)>2_000_000:raise ValueError('El búfer admite hasta 2 MB.')
+        if mode=='binary':return {'terminal':self._terminal(self.features.binary_tools.run_plan(ws,path,args),'Binario · '+file.name,ws.root)}
         if mode=='file':
             from .runtimes import language
             plan=self.features.runtimes.plan(ws,path)

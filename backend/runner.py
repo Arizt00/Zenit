@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from .workspace import Workspace
@@ -123,15 +124,20 @@ class Runner:
         self.allow_shell = allow_shell
         self.jobs: dict[str, Job] = {}
         self.lock = threading.RLock()
+        self.parallelism = max(1,min(4,(os.cpu_count() or 2)//2))
+        self.pool = ThreadPoolExecutor(max_workers=self.parallelism,thread_name_prefix='zenit-run')
+        self.closing = False
 
     def start(self, commands: list, cwd: Path, shell=False, timeout=120, env=None, stop_on_output_limit=True, scheduler=None) -> dict:
         with self.lock:
-            if not scheduler and sum(not j.done and not getattr(j,'queued',False) for j in self.jobs.values()) >= 2:
-                raise ValueError("Ya hay dos tareas activas. Detén una antes de iniciar otra.")
+            if self.closing:raise ValueError('El ejecutor se está cerrando.')
+            if not scheduler and sum(not j.done and not getattr(j,'background',False) for j in self.jobs.values()) >= self.parallelism+16:
+                raise ValueError('La cola de ejecución está llena. Espera o detén una tarea.')
             if len(self.jobs) > 40:
                 for old in [k for k, v in self.jobs.items() if v.done][:-20]:
                     del self.jobs[old]
             job = Job(uuid.uuid4().hex, commands, cwd, shell)
+            job.background=bool(scheduler)
             job.timeout = timeout
             job.stop_on_output_limit = stop_on_output_limit
             job.extra_env = dict(env or {})
@@ -141,8 +147,16 @@ class Runner:
             except Exception:
                 self.jobs.pop(job.id,None)
                 raise
-        else: threading.Thread(target=job.run, daemon=True).start()
-        return {"job": job.id}
+        else:
+            job.queued = True
+            def execute():
+                job.queued = False
+                job.run()
+            self.pool.submit(execute)
+        return {"job": job.id,"queued":getattr(job,'queued',False)}
+
+    def snapshot(self):
+        with self.lock:return {'parallelism':self.parallelism,'queueLimit':16,'running':sum(not j.done and not getattr(j,'background',False) and not getattr(j,'queued',False) for j in self.jobs.values()),'queued':sum(not j.done and not getattr(j,'background',False) and getattr(j,'queued',False) for j in self.jobs.values()),'retained':len(self.jobs)}
 
     def task(self, ws: Workspace, name: str, *, check=False) -> dict:
         if not ws.trusted:
@@ -247,6 +261,8 @@ class Runner:
         raise ValueError("Comando no habilitado. Escribe help. La consola no interpreta tuberías ni redirecciones en modo protegido.")
 
     def shutdown(self):
+        self.closing=True
         for job in self.jobs.values():
             if not job.done:
                 job.cancel()
+        self.pool.shutdown(wait=True)

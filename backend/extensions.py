@@ -185,9 +185,19 @@ def color_theme(root,relative,seen=None):
     return data
 
 
-def icon_theme(root,declaration,owner):
+def icon_theme(root,declaration,owner,preview=False):
     theme_path=(root/str(safe_member(declaration.get('path','')))).resolve()
     data=json_resource(root,declaration.get('path'));definitions={};fonts=[];size=0;rejected=0
+    if preview:
+        # Read just the five sample associations, not every icon in a large pack.
+        names={'main.py','app.java','index.ts','main.cpp','package.json'};extensions={'py','java','ts','cpp','json'};languages={'python','java','typescript','cpp','json'};keys=set()
+        for associations in (data,data.get('light',{}),data.get('highContrast',{})):
+            for field,allowed in [('fileNames',names),('fileExtensions',extensions),('languageIds',languages)]:
+                entries=associations.get(field,{})
+                if isinstance(entries,dict):associations[field]={k:v for k,v in entries.items() if k.lower() in allowed};keys.update(associations[field].values())
+            if isinstance(associations.get('file'),str):keys.add(associations['file'])
+        data['iconDefinitions']={k:v for k,v in data.get('iconDefinitions',{}).items() if k in keys}
+
     def resource(relative,limit):
         if not isinstance(relative,str) or ':' in relative or '\\' in relative:raise ValueError('Ruta de icono inválida.')
         path=(theme_path.parent/relative).resolve()
@@ -444,10 +454,17 @@ class ExtensionStore(ExtensionInstallPlans):
             if extra: warnings.append('Contribuciones adicionales sujetas a la compatibilidad del motor: '+', '.join(sorted(extra)[:20]))
             if not supported: warnings.append('No hay contribuciones activables en este host. Instalación solo como paquete inactivo.')
             ticket=secrets.token_urlsafe(24)
+            previews={'themes':[],'iconThemes':[]}
+            for declaration in c.get('themes',[])[:8]:
+                try:previews['themes'].append({'label':str(declaration.get('label','Theme'))[:160],'uiTheme':declaration.get('uiTheme','vs-dark'),'data':color_theme(temp/'extension',declaration.get('path'))})
+                except (OSError,ValueError,TypeError):pass
+            for declaration in c.get('iconThemes',[])[:2]:
+                try:previews['iconThemes'].append(icon_theme(temp/'extension',declaration,eid,preview=True))
+                except (OSError,ValueError,TypeError):pass
             result={'id':eid,'name':name,'publisher':ns,'displayName':str(manifest.get('displayName') or name)[:160],
                 'version':version,'description':str(manifest.get('description',''))[:1000],'license':str(manifest.get('license','No declarada'))[:200],
                 'source':source,'sha256':sha,'size':size,'unpackedSize':total,'supported':supported,'warnings':warnings,'dependencies':dependencies,'icon':package_icon(temp/'extension',manifest),
-                'compatibility':'partial' if warnings else 'declarative','ticket':ticket,'enabled':bool(supported)}
+                'compatibility':'partial' if warnings else 'declarative','ticket':ticket,'enabled':bool(supported),'previews':previews}
             with self.lock:
                 self._expire()
                 if len(self.pending)>=64: raise ValueError('Cierra una revisión pendiente antes de abrir otra.')
@@ -500,7 +517,7 @@ class ExtensionStore(ExtensionInstallPlans):
         with self.lock,self.index_transaction():
             self._expire();item=self.pending.get(ticket)
             if not item: raise ValueError('La revisión ha caducado. Inspecciona otra vez el paquete.')
-            _,folder,result=item;result={k:v for k,v in result.items() if k!='ticket'}
+            _,folder,result=item;result={k:v for k,v in result.items() if k not in ('ticket','previews')}
             target=self.root/(result['id']+'-'+result['sha256'][:16])
             if not target.exists(): os.replace(folder,target)
             else: shutil.rmtree(folder,ignore_errors=True)

@@ -82,7 +82,7 @@ class Handler(BaseHTTPRequestHandler):
         from http.cookies import SimpleCookie
         cookies = SimpleCookie()
         cookies.load(self.headers.get("Cookie", ""))
-        cookie = cookies.get("lumen_session")
+        cookie = cookies.get(f"lumen_session_{self.server.server_port}")
         if not cookie or not secrets.compare_digest(cookie.value, self.app.token):
             raise PermissionError("Sesión no válida. Recarga Zénit desde su dirección local.")
         if not bootstrap and not secrets.compare_digest(self.headers.get("X-Lumen-Token", ""), self.app.token):
@@ -104,7 +104,7 @@ class Handler(BaseHTTPRequestHandler):
         policy="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'unsafe-inline' blob: https:; img-src blob: data: https:; font-src blob: data: https:; connect-src https:; media-src blob: data: https:; frame-ancestors 'self'; base-uri 'none'; object-src 'none'" if webview else "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; media-src 'self' blob:; frame-src http://127.0.0.1:*; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"
         self.send_header("Content-Security-Policy",policy)
         if session:
-            self.send_header("Set-Cookie", f"lumen_session={self.app.token}; HttpOnly; SameSite=Strict; Path=/")
+            self.send_header("Set-Cookie", f"lumen_session_{self.server.server_port}={self.app.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400")
         try:
             self.end_headers()
             if self.command != "HEAD":

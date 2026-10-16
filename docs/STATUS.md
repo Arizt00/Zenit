@@ -1,11 +1,11 @@
 # What works today
 
-Zénit 0.5.4 R12 source is a public preview. No universal VS Code parity percentage is claimed.
+Zénit 0.5.4 R15 source is a public preview. No universal VS Code parity percentage is claimed.
 
 | Area | Available | Boundary |
 | --- | --- | --- |
 | Editing | Monaco, splits, shared unsaved buffers, native windows, recoverable tab controls, original nC identity | Concurrent conflicts need resolution. |
-| Binary inspection | Paged hex/ASCII, byte offsets, endian and numeric interpretation | Read only; no binary editing or full media previews. |
+| Binary editing | Paged hex/ASCII, local undo/redo, atomic byte patches with backups, source rebuild, native/Java execution | Fixed-size edits up to 64 KiB per save, files up to 1 GiB; rebuild needs source and a configured toolchain. Data and libraries require a host application. |
 | Debugging | Native DAP memory/disassembly and observed pause comparison | Adapter-dependent capabilities; no reverse execution or complete instruction trace. |
 | Terminal | Interactive ConPTY, multiple sessions, detachable views | Full VS Code shell integration remains pending. |
 | Python | Included CPython/stdlib/pip/venv, base libraries, real package management in Extensions, automatic project interpreter | Defined library set; extra index packages need internet. Custom run commands remain explicit. |
@@ -23,3 +23,5 @@ Zénit 0.5.4 R12 source is a public preview. No universal VS Code parity percent
 
 AI tests use deterministic transports to verify scope and file/UI behavior, not
 to benchmark provider intelligence. See [historical limits](../KNOWN_LIMITATIONS.md).
+
+R15 adds Co-Code (CoCo) Yjs/Yrs shared buffers, host execution and cross-IDE connectors. See [Team](TEAM.md) and [R15](PREVIEW_054_R15.md) for tested integrations and remaining API limits.

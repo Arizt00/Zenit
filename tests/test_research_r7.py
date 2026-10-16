@@ -39,7 +39,8 @@ class ResearchTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.tool('capsule',content='a'*300001)
     def test_binary_bytes_pages_and_text_remain_distinct(self):
         raw=b'MZ\x00'+bytes(range(256))*8;(self.root/'program.exe').write_bytes(raw)
-        item=self.ws.open_file('program.exe');self.assertEqual(item['format'],'PE executable');self.assertTrue(item['readOnly']);self.assertEqual(item['count'],512)
+        item=self.ws.open_file('program.exe');self.assertEqual(item['format'],'PE executable');self.assertFalse(item['readOnly']);self.assertEqual(item['count'],512)
+        self.assertTrue(item['revision']);self.assertEqual((self.root/'program.exe').read_bytes(),raw)
         page=self.ws.binary('program.exe',512);self.assertEqual(base64.b64decode(page['data']),raw[512:1024])
         self.assertEqual(self.ws.open_file('a.py')['content'],'count = 1\n')
         with self.assertRaises(ValueError):self.ws.read('program.exe')

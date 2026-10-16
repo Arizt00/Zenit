@@ -126,7 +126,7 @@ class Hilo:
             job['queuePosition'] = next((i+1 for i,j in enumerate(pending) if j['id']==job['id']), None)
             job['elapsedMs'] = max(0, round(((job.get('finished') or time.time())-(job['started'] or job['created']))*1000))
         counts={state:sum(j['state']==state for j in jobs) for state in ('queued','running','done','failed','cancelled')}
-        return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'counts':counts, 'cacheEntries': len(self.cache)}
+        return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'counts':counts, 'cacheEntries': len(self.cache),'execution':self.features.app.runner.snapshot() if getattr(self.features,'app',None) else None}
 
     def shutdown(self):
         self.closed = True

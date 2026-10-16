@@ -72,3 +72,17 @@ They can be extracted with an archive manager supporting their compression.
 LLVM's original license is retained in `sdk/foundation/llvm/LICENSE.TXT`; NCC's
 upstream notices and both license texts accompany its executable. No user's
 project or private package cache is included in the distribution.
+
+## R15 collaboration and URI components
+
+Yjs 13.6.31 and its lib0 dependency (MIT) are bundled as the browser ESM and
+VS Code connector CJS files. Original license texts accompany both bundles.
+pycrdt 0.14.9 (MIT), backed by Yrs, supplies the matching CRDT on the host;
+its distributed notices are retained in licenses/native-python in native builds.
+The official microsoft/vscode-uri 3.2.0 module (MIT) and its license are in
+backend/vendor. These components retain their own license terms.
+
+The JetBrains connector is compiled against official IntelliJ Platform SDK
+252.28539.108 and JetBrains annotations 26.0.2. SDK JARs are build inputs in the
+ignored development cache and are not redistributed in the connector archive.
+The connector contains only this project's class files, metadata and license.

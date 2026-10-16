@@ -573,7 +573,11 @@ export class LumenPlatform {
     }
     terminal.mount.addEventListener('focusin',()=>this.safe(()=>this.claimTerminal(terminal)));
     terminal.mount.addEventListener('pointerdown',()=>this.safe(()=>this.claimTerminal(terminal)));
-    this.selectTerminal(result.id);this.pollTerminal(terminal);return result;
+    this.pruneTerminalHistory();this.selectTerminal(result.id);this.pollTerminal(terminal);return result;
+  }
+  pruneTerminalHistory(){
+    const retired=[...this.terminals.values()].filter(t=>t.closed&&t.id!==this.activeTerminal).slice(0,-12);
+    for(const t of retired){t.input.close();t.xterm?.dispose();t.mount.remove();this.terminals.delete(t.id);}
   }
   themeTerminal(terminal){if(!terminal.xterm)return;const css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim(),theme=this.extensionThemes?.find(t=>t.id===this.prefs['appearance.extensionTheme']);terminal.xterm.options.theme=terminalTheme(theme,{background:get('terminal-bg'),foreground:get('terminal-text')||get('text'),cursor:get('accent'),selectionBackground:get('selection'),black:get('bg'),red:get('danger'),green:get('success'),yellow:get('syntax-string'),blue:get('syntax-function'),magenta:get('syntax-keyword'),cyan:get('syntax-type'),white:get('text')});}
   selectTerminal(id){
@@ -737,6 +741,7 @@ export class LumenPlatform {
     this.safe(()=>this.startLSP(config.id,true));
   }
   documentChanged(){
+    if(this.host.editor.current?.startsWith('.team/'))return;
     if(this.host.editor.models.get(this.host.editor.current)?.kind==='binary'){clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);clearTimeout(this.saveTimer);return;}
     if(this.disposed)return;this.autoLanguageServer();this.lantern?.changed();this.companion?.changed();if(this.liveEditingPath===this.host.editor.current){clearTimeout(this.saveTimer);return;}clearTimeout(this.changeTimer);this.changeTimer=this.later(()=>{for(const s of this.lspSessions.values())this.safe(()=>this.syncLSP(s));this.refreshDiagnostics();},220);
     clearTimeout(this.syntaxTimer);const ed=this.host.editor,path=ed.current,text=ed.getValue();

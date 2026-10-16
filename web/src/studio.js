@@ -54,12 +54,16 @@ export class LenonStudio {
     const photo=$('.profile-photo>button');if(photo){const picture=this.profile.avatar?`<img src="${esc(this.profile.avatar)}" alt="">`:`<span class="profile-initial">${initial}</span>`,html=picture+`<span class="photo-badge">${icon('camera')}</span>`;if(photo.innerHTML!==html)photo.innerHTML=html;}
   }
   async hydrate(root){
+    if(document.documentElement.hasAttribute('data-booting')){if(!this.awaitingGlass){this.awaitingGlass=true;window.addEventListener('zenit:ready',()=>{this.awaitingGlass=false;this.hydrate(document);},{once:true});}return;}
     for(const [canvas,scene] of this.scenes)if(!canvas.isConnected){scene.dispose();this.scenes.delete(canvas);}
+    this.sceneObserver ||= new IntersectionObserver(entries=>{for(const entry of entries){const canvas=entry.target;if(!entry.isIntersecting||canvas.closest('[hidden],[inert]'))continue;this.sceneObserver.unobserve(canvas);this.initGlass(canvas);}}, {rootMargin:'20px'});
     for(const canvas of root.querySelectorAll('canvas[data-glass]')){
-      if(canvas.dataset.initialized)continue;canvas.dataset.initialized='true';
-      const scene=await createLumenScene(canvas,this.host.service().babylon);
-      if(this.disposed||!canvas.isConnected)scene.dispose();else this.scenes.set(canvas,scene);
+      if(canvas.dataset.initialized)continue;canvas.dataset.initialized='observed';this.sceneObserver.observe(canvas);
     }
+  }
+  async initGlass(canvas){
+    if(this.disposed||!canvas.isConnected)return;canvas.dataset.initialized='true';const scene=await createLumenScene(canvas,this.host.service().babylon);
+    if(this.disposed||!canvas.isConnected)scene.dispose();else this.scenes.set(canvas,scene);
   }
   enter(){
     const mutate=()=>{$('#lumen-home')?.setAttribute('hidden','');$('#workspace').inert=false;$('.statusbar').hidden=false;document.documentElement.dataset.screen='studio';};
@@ -187,5 +191,5 @@ export class LenonStudio {
     this.wheel=e=>{if(!this.host.motion.enabled||Math.abs(e.deltaY)<1||performance.now()-this.lastBounce<420)return;let el=e.target instanceof Element?e.target:null;while(el&&el!==document.body){const style=getComputedStyle(el);if(/auto|scroll/.test(style.overflowY)&&el.scrollHeight>el.clientHeight+2){const edge=e.deltaY<0&&el.scrollTop<=0||e.deltaY>0&&el.scrollTop+el.clientHeight>=el.scrollHeight-1;if(edge&&!el.closest('.monaco-editor,.xterm')){this.lastBounce=performance.now();this.host.motion.play(el,[{translate:'0 0'},{translate:'0 '+(e.deltaY<0?7:-7)+'px'},{translate:'0 0'}],380);}return;}el=el.parentElement;}};
     document.addEventListener('wheel',this.wheel,{passive:true});
   }
-  dispose(){this.searchView?.dispose();this.debugWorkspace?.dispose();cancelAnimationFrame(this.pointerFrame);this.lantern?.dispose();this.disposed=true;clearTimeout(this.layoutTimer);clearTimeout(this.debugTimer);document.removeEventListener('wheel',this.wheel);document.removeEventListener('visibilitychange',this.visibility);for(const scene of this.scenes.values())scene.dispose();this.scenes.clear();}
+  dispose(){this.sceneObserver?.disconnect();this.searchView?.dispose();this.debugWorkspace?.dispose();cancelAnimationFrame(this.pointerFrame);this.lantern?.dispose();this.disposed=true;clearTimeout(this.layoutTimer);clearTimeout(this.debugTimer);document.removeEventListener('wheel',this.wheel);document.removeEventListener('visibilitychange',this.visibility);for(const scene of this.scenes.values())scene.dispose();this.scenes.clear();}
 }

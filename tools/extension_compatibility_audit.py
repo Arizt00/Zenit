@@ -32,7 +32,7 @@ def main():
     if eid.lower()=='esbenp.prettier-vscode':
      edits=host.request({'method':'provide','kind':'format','document':{'path':'main.js','text':'const x={a:1,b:2}\n','language':'javascript','dirty':True},'options':{'tabSize':2,'insertSpaces':True}})['items'];result['realFormattingEdits']=len(edits)
     if result['commands']==0 and result['providerCount']==0:result['note']='Activation registered no observable commands/providers; do not certify functionality.'
-   except Exception as error:result.update(activation='blocked',error=str(error))
+   except Exception as error:result.update(activation='blocked',error=str(error),diagnostics=getattr(error,'__notes__',[]))
    finally:
     if host:host.close()
     app.features.shutdown();app.runner.shutdown();results.append(result);print(json.dumps(result,ensure_ascii=True),flush=True)

@@ -18,7 +18,7 @@
     const overlay=document.getElementById('connection-overlay');
     if(overlay){overlay.classList.remove('hidden');overlay.querySelector('h1').textContent=english()?'Zénit could not finish opening':'Zénit no pudo terminar de abrirse';overlay.querySelector('p').textContent=String(error?.message||error||'Error de carga');const retry=overlay.querySelector('button');retry.textContent=english()?'Retry':'Volver a intentar';retry.onclick=()=>location.reload();}
   };
-  const ready=()=>{complete=true;phases.push({name:'ready',ms:Math.round(performance.now()-started)});document.documentElement.removeAttribute('data-booting');document.getElementById('startup-screen')?.setAttribute('hidden','');cleanup();};
+  const ready=()=>{complete=true;phases.push({name:'ready',ms:Math.round(performance.now()-started)});document.documentElement.removeAttribute('data-booting');document.getElementById('startup-screen')?.setAttribute('hidden','');cleanup();window.dispatchEvent(new Event('zenit:ready'));};
   const onError=event=>{if(event.target?.tagName==='SCRIPT'&&event.target.type==='module')fail(new Error(english()?'A required interface module could not load. Retry opening Zénit.':'No se pudo cargar un módulo de la interfaz. Vuelve a abrir Zénit.'));else if(event.error)fail(event.error);};
   const onRejection=event=>fail(event.reason);
   const cleanup=()=>{window.removeEventListener('error',onError,true);window.removeEventListener('unhandledrejection',onRejection);};

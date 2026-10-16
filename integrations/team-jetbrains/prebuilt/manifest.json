@@ -1,0 +1,8 @@
+{
+  "sdk": "252.28539.108",
+  "jarSha256": "43fb443bbab74f0d9a07258784fb397d998bcec81563bf8c2eaf3799bfea47b7",
+  "sources": {
+    "integrations/team-jetbrains/src/main/java/studio/zenit/team/TeamToolWindow.java": "9b3c2f0635164e32ba843bcfc656990b3eb2b2dbb7c0b2618266396d845c22f7",
+    "integrations/team-jetbrains/src/main/resources/META-INF/plugin.xml": "a5125cc62f39802b17ebc8e5c3b23080d6595f95e8d4ef4940f6360410a4a7a8"
+  }
+}

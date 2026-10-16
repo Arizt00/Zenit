@@ -53,7 +53,7 @@ class Preview{
   }
   async restoreEngines(){
     if(this.host.platform.disposed)return;
-    try{if(this.host.service().trusted&&!this.restoredWorkspace){this.restoredWorkspace=this.host.service().workspace;const state=await this.host.platform.api('/extensions/runtime/restore',{});this.registerExtensions(state.hosts);for(const [id,error] of Object.entries(state.errors||{}))this.host.notify(id+': '+error,'error');}}
+    try{if(this.host.service().trusted&&!this.restoredWorkspace){this.restoredWorkspace=this.host.service().workspace;const [state,metadata]=await Promise.all([this.host.platform.api('/extensions/runtime/restore',{}),this.host.platform.api('/extensions')]);this.extensionMetadata=new Map(metadata.extensions.map(x=>[x.id,x]));this.registerExtensions(state.hosts);for(const [id,error] of Object.entries(state.errors||{}))this.host.notify(id+': '+error,'error');}}
     catch(error){this.host.notify(error.message,'error');}
     this.restoreTimer=setTimeout(()=>{if(!this.host.service().trusted||this.restoredWorkspace!==this.host.service().workspace)this.restoredWorkspace=null;this.restoreEngines();},2200);
   }
@@ -76,7 +76,7 @@ class Preview{
   }
   async saveAs(){
     const ed=this.host.editor;if(!ed.current)return;
-    if(ed.models.get(ed.current)?.kind==='binary'){this.host.notify('Binary inspection is read only.');return;}
+    if(ed.models.get(ed.current)?.kind==='binary'){this.host.notify('Guarda los bytes desde el editor hexadecimal. Para conservar un parche separado, usa Exportar cambios.');return;}
     if(window.pywebview?.api?.save_as){const result=await window.pywebview.api.save_as(ed.current,ed.getValue());if(!result)return;await this.host.refreshTree();if(result.relative){const fresh=await this.host.api('/file?path='+encodeURIComponent(result.relative));const existing=ed.models.get(result.relative);if(existing){existing.model?.setValue(fresh.content);existing.value=fresh.content;ed.markSaved(fresh);}await this.host.openFile(result.relative);}this.host.notify('Archivo guardado en '+result.path);return;}
     this.host.modal('Guardar como',`<form id="save-as-form"><label>Ruta dentro del proyecto<input id="save-as-path" value="${esc(ed.current)}" required></label><div class="modal-actions"><button class="primary-button">Guardar copia</button></div></form>`);
     $('#save-as-form').onsubmit=e=>{e.preventDefault();this.safe(async()=>{const path=$('#save-as-path').value.trim();await this.host.api('/save',{path,content:ed.getValue(),create:true});this.host.closeModal();await this.host.refreshTree();await this.host.openFile(path);});};
@@ -94,7 +94,7 @@ class Preview{
     document.querySelectorAll('[data-download]').forEach(b=>b.onclick=()=>this.safe(async()=>{await this.host.platform.api('/downloads/'+b.dataset.op,{id:b.dataset.download});await this.renderDownloads();}));this.downloadTimer=setTimeout(()=>this.safe(()=>this.renderDownloads()),1200);
   }
   extensionButtons(){
-    document.querySelectorAll('[data-extension-toggle]').forEach(toggle=>{const card=toggle.closest('.extension-card');if(card.querySelector('[data-extension-execute]'))return;const item=this.host.platform.extensionItems?.find(x=>x.id===toggle.dataset.extensionToggle);if(!item?.supported?.includes('runtime'))return;const b=document.createElement('button');b.className='secondary-button small-button';b.dataset.extensionExecute=item.id;b.textContent=this.runtimeHosts?.some(x=>x.id===item.id&&x.running)?this.host.platform.t('Detener motor','Stop engine'):this.host.platform.t('Iniciar motor','Start engine');toggle.before(b);});
+    document.querySelectorAll('[data-extension-toggle]').forEach(toggle=>{const card=toggle.closest('.extension-card');if(card.querySelector('[data-extension-execute]'))return;const item=this.host.platform.extensionItems?.find(x=>x.id===toggle.dataset.extensionToggle);if(!item?.supported?.includes('runtime'))return;const b=document.createElement('button');b.className='secondary-button small-button';b.dataset.extensionExecute=item.id;b.textContent=this.extensionStartLabel(item.id);toggle.before(b);});
     if($('.tools-content')&&!$('#download-tools-link')){const b=document.createElement('button');b.id='download-tools-link';b.className='secondary-button';b.textContent='Descargar compilador · hasta 500 GB';b.onclick=()=>this.safe(()=>this.downloads());$('.tools-content .section-heading').append(b);}
   }
   async extensionViews(){
@@ -106,11 +106,24 @@ class Preview{
     const data=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'tree',view,element});if(!container.isConnected)return;
     container.replaceChildren();
     for(const item of data.items){const row=document.createElement('button');row.className='extension-tree-row';row.title=typeof item.tooltip==='string'?item.tooltip:'';row.innerHTML=icon(item.collapsibleState?'chevron-right':'file')+`<span>${esc(item.label)}</span><small>${esc(item.description||'')}</small>`;container.append(row);const children=document.createElement('div');children.className='extension-tree-children';children.hidden=true;container.append(children);
+      if(item.checkboxState!==undefined){const input=document.createElement('input');input.type='checkbox';input.checked=(typeof item.checkboxState==='object'?item.checkboxState.state:item.checkboxState)===1;input.setAttribute('aria-label',item.label);row.before(input);input.onchange=()=>this.safe(()=>this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'treeCheckbox',view,element:item.key,checkboxState:input.checked?1:0}));}
       row.onclick=()=>this.safe(async()=>{if(item.collapsibleState){children.hidden=!children.hidden;row.setAttribute('aria-expanded',String(!children.hidden));if(!children.hidden)await this.treeChildren(ext,view,children,item.key);}else if(item.command)await this.host.platform.pluginCommand(ext.id+':'+item.command.command,item.command.arguments||[]);});
       if(item.collapsibleState===2){children.hidden=false;row.setAttribute('aria-expanded','true');await this.treeChildren(ext,view,children,item.key);}
     }
   }
+  extensionStartLabel(id){
+    const p=this.host.platform;if(id!=='nc-lang.nc-language'&&((p.extensionContributions?.iconThemes||[]).some(t=>t.owner===id)||(p.extensionThemes||[]).some(t=>t.owner===id)))return p.t('Aplicar apariencia','Apply appearance');
+    return this.runtimeHosts?.some(x=>x.id===id&&x.running)?p.t('Detener motor','Stop engine'):p.t('Iniciar motor','Start engine');
+  }
   async startExtension(id){
+    const platform=this.host.platform,icons=(platform.extensionContributions.iconThemes||[]).filter(t=>t.owner===id),themes=(platform.extensionThemes||[]).filter(t=>t.owner===id);
+    if(id!=='nc-lang.nc-language'&&(icons.length||themes.length)){
+      if(icons.length===1)await platform.savePreference('appearance.iconTheme',icons[0].id);
+      else if(icons.length)platform.iconThemePicker.open(id);
+      else if(themes.length===1)await platform.savePreference('appearance.extensionTheme',themes[0].id);
+      else platform.themePicker.open(id);
+      return;
+    }
     if(this.runtimeHosts?.some(x=>x.id===id&&x.running)){const stopped=await this.host.platform.api('/extensions/runtime/stop',{id});this.registerExtensions(stopped.hosts);return;}
     if(!await this.host.platform.host.ensureTrust())return;
     const graph=await this.host.platform.api('/extensions/dependencies?id='+encodeURIComponent(id));
@@ -119,7 +132,7 @@ class Preview{
     const data=await this.host.platform.api('/extensions/runtime/start',{id,consent:true});this.registerExtensions(data.hosts);const engine=data.hosts.find(x=>x.id===id);this.host.notify(engine?.unsupportedApis?.length?'Motor con servicios pendientes: '+engine.unsupportedApis.join(', '):engine?.engine||'Motor iniciado. Comandos disponibles en la paleta.',engine?.unsupportedApis?.length?'error':'info');
   }
   registerExtensions(hosts){
-    for(const p of this.providers)p.dispose?.();this.providers=[];this.runtimeHosts=hosts;document.querySelectorAll('[data-extension-execute]').forEach(b=>b.textContent=hosts.some(x=>x.id===b.dataset.extensionExecute&&x.running)?this.host.platform.t('Detener motor','Stop engine'):this.host.platform.t('Iniciar motor','Start engine'));const platform=this.host.platform,m=window.monaco,ed=this.host.editor;
+    for(const p of this.providers)p.dispose?.();this.providers=[];this.runtimeHosts=hosts;this.services.terminalLinkHosts=hosts.filter(x=>x.running&&x.terminalLinks);document.querySelectorAll('[data-extension-execute]').forEach(b=>b.textContent=this.extensionStartLabel(b.dataset.extensionExecute));const platform=this.host.platform,m=window.monaco,ed=this.host.editor;
     this.providers.push(explorerDecorations(this.host,hosts.filter(x=>x.running&&x.fileDecorations)));
     const doc=model=>{const path=[...ed.models].find(([,r])=>r.model===model)?.[0]||ed.current;return {path,text:model?.getValue()??ed.getValue(),language:languageFor(path)};};
     const relativeUri=value=>{const raw=typeof value==='string'?value:(value?.fsPath||value?.external||value?.path||'');const absolute=decodeURIComponent(raw.replace(/^file:\/\//,'')).replaceAll('\\','/').replace(/^\/(?:([A-Za-z]:))/, '$1');const root=this.host.service().workspace.replaceAll('\\','/').replace(/\/$/,'');if(absolute.toLowerCase().startsWith(root.toLowerCase()+'/'))return absolute.slice(root.length+1);if(/^(?:[A-Za-z]:|\/)/.test(absolute))throw Error('La definición está fuera del proyecto abierto.');return absolute;};
