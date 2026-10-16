@@ -104,13 +104,17 @@ def main():
             z.writestr('extension/grammar.json',json.dumps({'scopeName':'source.qa-native','patterns':[{'name':'keyword.control.native','match':'ZENIT_TOKEN'},{'name':'comment.block.native','begin':'/\\*','end':'\\*/'}]}))
         app.features.extensions.install(app.features.extensions.inspect_bytes(grammar_vsix.getvalue())['ticket'],True)
         # Exercise the frozen Rust CRDT extension and the shipped peer resources.
-        team=app.features.team;shared=team.start(app.workspace,{'documents':[{'path':'first.py'}]})
+        team=app.features.team;shared=team.start(app.workspace,{'documents':[{'path':'first.py'}],'allowRun':True})
         from pycrdt import Doc,Text
         from backend.team import decode
         doc=Doc({'text':Text()});doc.apply_update(decode(team.request({'peer':'native','vectors':{}})['updates']['first.py']))
         assert str(doc['text'])=='print("DISK")\n'
         with urlopen(shared['invitation'].split('#')[0],timeout=5) as response:assert b'Z' in response.read()
-        team.stop();checks.append('Frozen pycrdt converges shared buffers and serves the embedded multi-IDE client')
+        first=team.request({'action':'run','path':'first.py','requestId':'native-shared-run'})
+        until(lambda:app.runner.jobs[first['job']].done)
+        assert team.request({'action':'run','path':'first.py','requestId':'native-shared-run'})['job']==first['job']
+        assert len(team.room.jobs)==1
+        team.stop();checks.append('Frozen pycrdt converges shared buffers, serves multi-IDE clients and reuses a shared run after a lost acknowledgement')
         for target in ('vscode','jetbrains'):
             package=team.connector(target);assert hashlib.sha256(decode(package['data'])).hexdigest()==package['sha256']
         checks.append('Frozen distribution includes verified VSIX and JetBrains connector archives')

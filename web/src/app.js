@@ -550,7 +550,7 @@ function setupEvents(){
     const file=event.target.closest('[data-file]');if(file)return openFile(file.dataset.file,+file.dataset.line||null);
     const tab=event.target.closest('[data-tab]');if(tab)return activateFile(tab.dataset.tab);
     const directory=event.target.closest('[data-dir]');if(directory){const path=directory.dataset.dir;openFolders.has(path)?openFolders.delete(path):openFolders.add(path);renderTree();return;}
-    const view=event.target.closest('[data-view]');if(view)return setView(view.dataset.view);
+    const view=event.target.closest('button[data-view]');if(view)return setView(view.dataset.view);
     const terminal=event.target.closest('[data-terminal]');if(terminal){showTerminal(terminal.dataset.terminal);const active=platformUI?.terminals.get(platformUI.activeTerminal);if(terminal.dataset.terminal==='terminal'&&active&&!active.closed)platformUI.selectTerminal(active.id);return;}
     const aiAction=event.target.closest('[data-ai-action]');if(aiAction)return beginAiAction(aiAction.dataset.aiAction);
     const aiPrompt=event.target.closest('[data-ai-prompt]');if(aiPrompt){$('#ai-input').value=aiPrompt.dataset.aiPrompt;$('#ai-input').focus();return;}

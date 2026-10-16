@@ -1,7 +1,15 @@
 import * as Y from '/team-vendor/yjs.mjs';
-const $=s=>document.querySelector(s),key=location.hash.slice(1),peer=crypto.randomUUID?.()||Math.random().toString(36).slice(2),files=new Map();let current,editor,busy=false,running=false,applying=false,timer,pending=new Map();
+import {SharedExecutions} from '/team-execution.js';
+const $=s=>document.querySelector(s),key=location.hash.slice(1),peer=crypto.randomUUID?.()||Math.random().toString(36).slice(2),files=new Map();let current,editor,busy=false,running=false,applying=false,timer,syncError=false,pending=new Map();const executions=new SharedExecutions(request),runIntents=new Map();
 const encode=bytes=>{let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s);},decode=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function request(body){const response=await fetch('/v1',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body)}),result=await response.json();if(!response.ok)throw Error(result.error||'Conexión rechazada.');return result;}
+async function request(body){
+  for(let attempt=0;attempt<2;attempt++){
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);let response,result;
+    try{response=await fetch('/v1',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal});result=await response.json();}
+    catch(error){if(attempt||body.action!=='run'||!body.requestId)throw error;continue;}finally{clearTimeout(timeout);}
+    if(!response.ok)throw Error(result.error||'Conexión rechazada.');return result;
+  }
+}
 function status(text){$('#status').textContent=text;}
 function language(path){return {py:'python',cpp:'cpp',c:'c',nc:'nc',asm:'asm',java:'java',js:'javascript',ts:'typescript',json:'json'}[path.split('.').at(-1)]||'plaintext';}
 function choose(path){current=path;editor.setModel(files.get(path).model);for(const b of $('#files').children)b.setAttribute('aria-pressed',String(b.dataset.path===path));}
@@ -16,12 +24,19 @@ async function sync(){
       else if(entry.model.getValue()!==text){const before=entry.model.getValue();let start=0,end=0;while(start<before.length&&start<text.length&&before[start]===text[start])start++;while(end<before.length-start&&end<text.length-start&&before.at(-1-end)===text.at(-1-end))end++;const a=entry.model.getPositionAt(start),b=entry.model.getPositionAt(before.length-end);applying=true;try{entry.model.applyEdits([{range:new monaco.Range(a.lineNumber,a.column,b.lineNumber,b.column),text:text.slice(start,text.length-end)}]);}finally{applying=false;}}
     }
     if(!current&&files.size)choose(files.keys().next().value);
+    const execution=await executions.read(current,result.executions?.[current]);$('#output').textContent=execution?.text||'';syncError=false;
     $('#environment').textContent=result.environment.workspace+' · '+result.environment.host+' · '+result.environment.runtime;$('#peers').replaceChildren();for(const person of result.peers){const node=document.createElement('div');node.textContent=person.name+(person.path?' · '+person.path:'');$('#peers').append(node);}$('#run').disabled=!result.allowRun;$('#save').disabled=!result.allowRun;$('#undo').disabled=false;status('Conectado · cambios sincronizados');
-  }catch(error){for(const [path,updates] of sent)pending.set(path,[...updates,...pending.get(path)||[]]);status('Reconectando. Se conservan tus cambios. '+error.message);}
+  }catch(error){syncError=true;for(const [path,updates] of sent)pending.set(path,[...updates,...pending.get(path)||[]]);status('Reconectando. Se conservan tus cambios. '+error.message);}
   finally{busy=false;timer=setTimeout(sync,pending.size?60:document.hidden?1800:500);}
 }
 $('#connect').onclick=async()=>{try{if(key.length<32)throw Error('Necesitas la invitación completa, incluido el fragmento después de #.');if(!editor){window.require.config({paths:{vs:'/vendor/monaco/vs'}});await new Promise((resolve,reject)=>window.require(['vs/editor/editor.main'],resolve,reject));editor=monaco.editor.create($('#editor'),{automaticLayout:true,theme:matchMedia('(prefers-color-scheme:dark)').matches?'vs-dark':'vs',fontSize:14,minimap:{enabled:false},padding:{top:20},smoothScrolling:true});editor.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyZ,()=>files.get(current)?.undo.undo());}running=true;await sync();$('#connect').disabled=true;}catch(error){status(error.message);}};
-async function flush(){while(busy)await new Promise(r=>setTimeout(r,20));await sync();if(pending.size)throw Error('Aún quedan cambios sin confirmar.');}
+async function flush(){while(busy)await new Promise(r=>setTimeout(r,20));await sync();if(syncError||pending.size)throw Error('Aún quedan cambios sin confirmar.');}
 $('#save').onclick=async()=>{try{await flush();await request({action:'save',path:current});status('Guardado en el anfitrión.');}catch(e){status(e.message);}};
-$('#run').onclick=async()=>{try{await flush();const {job}=await request({action:'run',path:current});let offset=0;$('#output').textContent='';while(running){const data=await request({action:'job',job,offset});offset=data.offset;$('#output').textContent+=data.output;if(data.done)break;await new Promise(r=>setTimeout(r,300));}}catch(e){status(e.message);}};
+$('#run').onclick=async()=>{
+  const path=current;let intent=runIntents.get(path);if(intent?.promise)return intent.promise;
+  if(!intent){intent={requestId:peer+':'+(crypto.randomUUID?.()||Math.random().toString(36).slice(2))};runIntents.set(path,intent);}
+  let acknowledged=false;
+  intent.promise=(async()=>{try{await flush();const result=await request({action:'run',path,requestId:intent.requestId});acknowledged=true;while(running){const data=await executions.read(path,result);if(current===path)$('#output').textContent=data.text;if(data.done)break;await new Promise(r=>setTimeout(r,300));}}catch(e){status(e.message);}})();
+  try{await intent.promise;}finally{intent.promise=null;if(acknowledged)runIntents.delete(path);}
+};
 $('#undo').onclick=()=>files.get(current)?.undo.undo();window.addEventListener('pagehide',()=>{running=false;clearTimeout(timer);});

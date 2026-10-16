@@ -1,8 +1,9 @@
 const v=require('vscode'),Y=require('./vendor/yjs.cjs'),crypto=require('node:crypto'),http=require('node:http'),https=require('node:https');
 let active;
 class Client {
-  constructor(invite,name){const u=new URL(invite);if(!['http:','https:'].includes(u.protocol)||!u.hash||u.username)throw Error('Invitación no válida.');this.key=u.hash.slice(1);u.hash='';u.pathname='/v1';this.url=u;this.name=name;this.peer=crypto.randomUUID();this.files=new Map();this.pending=new Map();this.output=v.window.createOutputChannel('Co-Code · Zénit');this.disposables=[];this.stopped=false;this.applying=false;this.serial=Promise.resolve();}
-  request(body){return new Promise((resolve,reject)=>{const raw=Buffer.from(JSON.stringify(body)),request=(this.url.protocol==='https:'?https:http).request(this.url,{method:'POST',headers:{Authorization:'Bearer '+this.key,'Content-Type':'application/json','Content-Length':raw.length},timeout:8000},response=>{let data='';response.setEncoding('utf8');response.on('data',chunk=>{data+=chunk;if(data.length>8000000){response.destroy();reject(Error('Respuesta demasiado grande.'));}});response.on('end',()=>{try{const value=JSON.parse(data);if(response.statusCode!==200)throw Error(value.error||'Conexión rechazada.');resolve(value);}catch(error){reject(error);}});});request.on('error',reject);request.on('timeout',()=>request.destroy(Error('El anfitrión no respondió.')));request.end(raw);});}
+  constructor(invite,name){const u=new URL(invite);if(!['http:','https:'].includes(u.protocol)||!u.hash||u.username)throw Error('Invitación no válida.');this.key=u.hash.slice(1);u.hash='';u.pathname='/v1';this.url=u;this.name=name;this.peer=crypto.randomUUID();this.files=new Map();this.pending=new Map();this.output=v.window.createOutputChannel('Co-Code · Zénit');this.disposables=[];this.stopped=false;this.applying=false;this.serial=Promise.resolve();this.executions=new Map();this.runIntents=new Map();}
+  send(body){return new Promise((resolve,reject)=>{const raw=Buffer.from(JSON.stringify(body)),request=(this.url.protocol==='https:'?https:http).request(this.url,{method:'POST',headers:{Authorization:'Bearer '+this.key,'Content-Type':'application/json','Content-Length':raw.length},timeout:8000},response=>{let data='';response.setEncoding('utf8');response.on('data',chunk=>{data+=chunk;if(data.length>8000000){response.destroy();reject(Error('Respuesta demasiado grande.'));}});response.on('end',()=>{try{const value=JSON.parse(data);if(response.statusCode!==200)throw Object.assign(Error(value.error||'Conexión rechazada.'),{status:response.statusCode});resolve(value);}catch(error){reject(error);}});});request.on('error',reject);request.on('timeout',()=>request.destroy(Error('El anfitrión no respondió.')));request.end(raw);});}
+  async request(body){try{return await this.send(body);}catch(error){if(this.stopped||body.action!=='run'||!body.requestId||error.status)throw error;return this.send(body);}}
   async start(){
     const changed=new v.EventEmitter(),entryFor=uri=>[...this.files.values()].find(e=>e.uri?.toString()===uri.toString());
     const denied=()=>{throw v.FileSystemError.NoPermissions('Los archivos los administra el anfitrión.');};
@@ -23,12 +24,27 @@ class Client {
         Y.applyUpdate(entry.crdt,Buffer.from(update,'base64'),'remote');const text=entry.text.toString();if(!entry.doc){entry.path=path;entry.uri=v.Uri.from({scheme:'zenit-team',authority:result.room,path:'/'+path});entry.doc=await v.workspace.openTextDocument(entry.uri);await v.languages.setTextDocumentLanguage(entry.doc,this.language(path));}
         else if(entry.doc.getText()!==text){const before=entry.doc.getText();let start=0,end=0;while(start<before.length&&start<text.length&&before[start]===text[start])start++;while(end<before.length-start&&end<text.length-start&&before[before.length-1-end]===text[text.length-1-end])end++;const edit=new v.WorkspaceEdit();edit.replace(entry.doc.uri,new v.Range(entry.doc.positionAt(start),entry.doc.positionAt(before.length-end)),text.slice(start,text.length-end));this.applying=true;try{if(!await v.workspace.applyEdit(edit))throw Error('El editor rechazó una actualización.');}finally{this.applying=false;}}
       }
+      const entry=[...this.files.values()].find(e=>e.doc===v.window.activeTextEditor?.document);if(entry)await this.pollExecution(entry.path,result.executions?.[entry.path]);
     }catch(error){for(const [path,updates] of sent)this.pending.set(path,[...updates,...this.pending.get(path)||[]]);throw error;}
   }
   language(path){const ext=path.split('.').at(-1);return {py:'python',c:'c',cpp:'cpp',h:'c',hpp:'cpp',java:'java',js:'javascript',ts:'typescript',nc:'nc',asm:'asm',json:'json',md:'markdown'}[ext]||'plaintext';}
   current(){const doc=v.window.activeTextEditor?.document;const entry=[...this.files.values()].find(e=>e.doc===doc);if(!entry)throw Error('Selecciona uno de los búferes compartidos.');return entry;}
   async save(){const entry=this.current();if(!await entry.doc.save())throw Error('No se pudo guardar el búfer compartido.');v.window.showInformationMessage('Guardado en el anfitrión: '+entry.path);}
-  async run(){const entry=this.current();await this.sync();const {job}=await this.request({action:'run',path:entry.path});this.output.show(true);let offset=0;while(!this.stopped){const data=await this.request({action:'job',job,offset});offset=data.offset;this.output.append(data.output);if(data.done)break;await new Promise(resolve=>setTimeout(resolve,300));}}
+  async pollExecution(path,run){
+    if(!run||run.available===false)return null;
+    let record=this.executions.get(path);
+    if(record?.job!==run.job){record={job:run.job,offset:0,done:false};this.executions.set(path,record);this.output.appendLine('▶ '+path);}
+    if(record.done)return record;if(record.pending)return record.pending;
+    record.pending=(async()=>{const data=await this.request({action:'job',job:record.job,offset:record.offset});record.offset=data.offset;record.done=data.done&&!data.more;this.output.append(data.output);return record;})();
+    try{return await record.pending;}finally{record.pending=null;}
+  }
+  async run(){
+    const entry=this.current();let intent=this.runIntents.get(entry.path);if(intent?.promise)return intent.promise;
+    if(!intent){intent={requestId:this.peer+':'+crypto.randomUUID()};this.runIntents.set(entry.path,intent);}
+    let acknowledged=false;
+    intent.promise=(async()=>{await this.sync();const result=await this.request({action:'run',path:entry.path,requestId:intent.requestId});acknowledged=true;this.output.show(true);while(!this.stopped){const data=await this.pollExecution(entry.path,result);if(data.done)break;await new Promise(resolve=>setTimeout(resolve,300));}})();
+    try{return await intent.promise;}finally{intent.promise=null;if(acknowledged)this.runIntents.delete(entry.path);}
+  }
   async undo(){this.current().undo.undo();await this.sync();}
   stop(){this.stopped=true;clearInterval(this.timer);this.request({action:'leave',peer:this.peer}).catch(()=>{});this.disposables.forEach(x=>x.dispose());for(const e of this.files.values()){e.undo.destroy();e.crdt.destroy();}this.output.dispose();}
 }

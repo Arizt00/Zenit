@@ -36,7 +36,14 @@ servidor propio de encuentro ni sesiones persistentes en la nube.
 
 «Permitir guardar y ejecutar en mi equipo» autoriza esas acciones a los
 participantes. Los procesos usan las herramientas y el entorno del anfitrión.
-Los invitados no necesitan instalar esas dependencias. Los cambios de texto se
+Los invitados no necesitan instalar esas dependencias. Una ejecución activa por
+archivo se comparte entre los participantes: pulsar Ejecutar al mismo tiempo
+recupera el mismo trabajo, sin duplicar su proceso. Los archivos distintos pueden
+ejecutarse de forma independiente dentro de la cola acotada del anfitrión. Los
+clientes publican un identificador por intención y conservan ese identificador al
+reintentar una petición; la sala recuerda las últimas 128 intenciones. La salida
+se observa también desde los demás clientes, con cursores independientes que
+leen el mismo trabajo. Los cambios de texto se
 fusionan mediante CRDT; los cambios externos en disco requieren revisión antes
 de guardar. La sesión conserva el texto compartido si detecta ese conflicto.
 
@@ -61,7 +68,9 @@ No hay un límite fijo de personas en el producto. La memoria, CPU y red del
 anfitrión determinan la capacidad real; se probó el registro de 81 participantes,
 no una carga ilimitada de editores. Una sesión admite hasta 32 archivos de
 500 KB cada uno y hasta 8 MB de texto total. La interfaz inicial comparte el
-archivo actual. Los presupuestos de petición y estado CRDT evitan crecimiento
+archivo actual; el anfitrión puede añadir otros archivos abiertos con
+«Compartir archivo actual» sin cambiar la sala ni reemplazar los búferes que ya
+se están editando. Los presupuestos de petición y estado CRDT evitan crecimiento
 sin control. La sincronización envía cambios incrementales y reduce su frecuencia
 cuando la ventana está oculta o la conexión falla.
 
@@ -70,6 +79,38 @@ retienen hasta cuatro instantáneas de texto en memoria, de hasta 2 MB cada una;
 solo el anfitrión restaura y restaurar no escribe automáticamente en disco.
 «Revisar cambios con Melody» envía el antes/después al proveedor de IA que ya
 tengas configurado, únicamente cuando pulsas esa acción.
+
+## Prueba entre estaciones
+
+`tools/check_coco_station.py` prepara una sesión exclusivamente con dos archivos
+de prueba. En el anfitrión:
+
+```powershell
+python tools/check_coco_station.py host --mode lan --exchange qa-output/coco-lan
+```
+
+Copia `invitation.json` de esa carpeta al segundo equipo y ejecuta allí:
+
+```powershell
+python tools/check_coco_station.py join --invitation-file invitation.json --report peer-report.json
+```
+
+Repite con `--mode internet` en el anfitrión y conecta el segundo equipo desde
+otra red. Los informes comprueban la misma sala, dos archivos con ediciones
+Unicode, guardado en el anfitrión y ocho intenciones concurrentes que convergen
+a un único proceso por archivo. Repetir las peticiones después de completar los
+trabajos debe devolver sus identificadores originales. La sesión de prueba se
+cierra automáticamente al terminar o al agotar el tiempo de espera.
+
+El script necesita las dependencias Python del proyecto. También puede
+ejecutarse con `zenit-python.exe --python-child <ruta-al-script> ...` desde una
+instalación de Zénit, usando su runtime incluido. Por defecto rechaza ejecutarse
+como invitado en la misma estación. `--allow-same-station` permite comprobar el
+verificador localmente, pero marca explícitamente que no valida dos equipos.
+Identidades de sistema distintas tampoco acreditan por sí solas dos máquinas
+físicas. La prueba entre dos equipos queda pendiente cuando no se dispone del
+segundo equipo; no debe sustituirse por dos procesos locales ni una VM y
+presentarse como comprobación física.
 
 Para reconstruir los archivos de instalación de los conectores:
 

@@ -75,6 +75,13 @@ de Forge: icono al reposar, etiqueta al pasar el cursor y contracción tras puls
 El cierre impide arrancar nuevos servidores de lenguaje mientras retira los
 existentes, también cuando había un inicio en curso.
 
+CoCo reutiliza una ejecución activa por archivo ante órdenes simultáneas y
+conserva el identificador de petición en los reintentos de red. Los demás
+participantes pueden observar esa salida sin iniciar otro proceso. El anfitrión
+añade archivos a la misma sala sin reemplazar las ediciones en curso. El menú
+de tres puntos de una extensión ya no se interpreta como navegación al editor,
+incluidas las vistas Lista, Tarjetas y Compacta.
+
 Lantern conserva sus entornos Python y máquinas QEMU por sesión, con opción de
 retenerlos mediante `.tern`. Co-Code comparte el entorno de ejecución del
 anfitrión y su intérprete Python seleccionado. No crea un contenedor duplicado

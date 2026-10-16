@@ -5,7 +5,9 @@ transport uses one asyncio thread, not one polling worker per participant.
 """
 import asyncio
 import base64
+from collections import OrderedDict
 import hmac
+from http.client import IncompleteRead
 import json
 import secrets
 import socket
@@ -13,7 +15,7 @@ import threading
 import time
 from urllib.parse import urlsplit
 from urllib.request import Request,build_opener,HTTPRedirectHandler,ProxyHandler
-from urllib.error import HTTPError
+from urllib.error import HTTPError,URLError
 
 
 def encode(value):return base64.b64encode(value).decode('ascii')
@@ -26,15 +28,29 @@ class TeamRoom:
     def __init__(self,features,workspace,documents,allow_run=False):
         from pycrdt import Doc,Text
         self.features=features;self.workspace=workspace;self.documents={};self.revisions={};self.peers={};self.lock=threading.RLock();self.jobs=set();self.allow_run=bool(allow_run);self.closed=False
-        self.id=secrets.token_hex(12);self.token=secrets.token_urlsafe(32);self.checkpoints=[]
+        self.id=secrets.token_hex(12);self.token=secrets.token_urlsafe(32);self.checkpoints=[];self.executions={};self.run_requests=OrderedDict()
+        self.add_documents(documents)
+
+    def add_documents(self,documents):
+        from pycrdt import Doc,Text
+        if not isinstance(documents,list) or not 1<=len(documents)<=32:raise ValueError('Selecciona entre uno y 32 archivos por sesión.')
+        additions={}
         for item in documents:
-            name=item['path'];disk=workspace.read(name)
+            disk=self.workspace.read(item['path']);name=disk['path']
+            if name in self.documents:continue
             if disk.get('binary'):raise ValueError('Comparte un archivo de texto.')
             text=item.get('text',disk['content'])
             if not isinstance(text,str) or len(text.encode('utf-8'))>500000:raise ValueError('El archivo compartido supera 500 KB.')
-            self.documents[name]=Doc({'text':Text(text)},allow_multithreading=True);self.revisions[name]=disk['revision']
-        if not self.documents or len(self.documents)>32:raise ValueError('Selecciona entre uno y 32 archivos por sesión.')
-        if sum(len(str(d['text']).encode('utf-8')) for d in self.documents.values())>8000000:raise ValueError('La sesión supera 8 MB de texto compartido.')
+            additions[name]=(text,disk['revision'])
+        if len(self.documents)+len(additions)>32:raise ValueError('Selecciona entre uno y 32 archivos por sesión.')
+        if sum(len(str(d['text']).encode('utf-8')) for d in self.documents.values())+sum(len(t.encode('utf-8')) for t,_ in additions.values())>8000000:raise ValueError('La sesión supera 8 MB de texto compartido.')
+        for name,(text,revision) in additions.items():self.documents[name]=Doc({'text':Text(text)},allow_multithreading=True);self.revisions[name]=revision
+        return {'paths':list(self.documents),'room':self.id}
+
+    def execution_snapshot(self):
+        runner=self.features.app.runner
+        self.jobs.intersection_update(runner.jobs)
+        return {path:{**item,'done':not (job:=runner.jobs.get(item['job'])) or job.done,'code':job.code if job else None,'queued':getattr(job,'queued',False),'available':job is not None} for path,item in self.executions.items()}
 
     def request(self,body,owner=False):
         with self.lock:
@@ -56,7 +72,10 @@ class TeamRoom:
                         from pycrdt import Doc,Text
                         doc=Doc({'text':Text()},allow_multithreading=True);doc.apply_update(previous);self.documents[path]=doc;raise
                 updates={path:encode(doc.get_update(decode(body['vectors'][path],100000) if body.get('vectors',{}).get(path) else None)) for path,doc in self.documents.items()}
-                return {'room':self.id,'updates':updates,'paths':list(self.documents),'peers':[{k:v for k,v in peer.items() if k!='seen'} for peer in self.peers.values()],'allowRun':self.allow_run,'environment':self.environment(),'checkpoints':[{'id':c['id'],'label':c['label'],'created':c['created']} for c in self.checkpoints]}
+                return {'room':self.id,'updates':updates,'paths':list(self.documents),'executions':self.execution_snapshot(),'peers':[{k:v for k,v in peer.items() if k!='seen'} for peer in self.peers.values()],'allowRun':self.allow_run,'environment':self.environment(),'checkpoints':[{'id':c['id'],'label':c['label'],'created':c['created']} for c in self.checkpoints]}
+            if action=='share':
+                if not owner:raise PermissionError('Solo el anfitrión añade archivos a la sesión.')
+                return self.add_documents(body.get('documents'))
             if action=='checkpoint':
                 texts={p:str(d['text']) for p,d in self.documents.items()}
                 if sum(len(t.encode('utf-8')) for t in texts.values())>2000000:raise ValueError('El punto de control admite hasta 2 MB de texto.')
@@ -75,9 +94,26 @@ class TeamRoom:
                 return self.save(body.get('path'))
             if action=='run':
                 if not self.allow_run:raise PermissionError('El anfitrión no ha activado la ejecución compartida.')
-                path=body.get('path');self.save(path);plan=self.features.runtimes.plan(self.workspace,path)
-                if plan.get('preview'):raise ValueError('Usa una tarea de consola en esta sesión.')
-                result=self.features.app.runner.start(plan['commands'],self.workspace.root,timeout=0);self.jobs.add(result['job']);return result
+                path=body.get('path');request_id=body.get('requestId')
+                if path not in self.documents:raise PermissionError('El archivo no está compartido.')
+                if request_id is not None and (not isinstance(request_id,str) or not 1<=len(request_id)<=120):raise ValueError('Identificador de ejecución inválido.')
+                if request_id in self.run_requests:
+                    previous=self.run_requests[request_id]
+                    if previous['path']!=path:raise ValueError('La petición de ejecución pertenece a otro archivo.')
+                    if previous['job'] not in self.features.app.runner.jobs:raise ValueError('La ejecución anterior ya no está disponible; no se volverá a iniciar por este reintento.')
+                    return {**previous,'reused':True}
+                previous=self.execution_snapshot().get(path)
+                if previous and not previous['done']:
+                    result={**previous,'path':path,'reused':True}
+                else:
+                    self.save(path);plan=self.features.runtimes.plan(self.workspace,path)
+                    if plan.get('preview'):raise ValueError('Usa una tarea de consola en esta sesión.')
+                    result={**self.features.app.runner.start(plan['commands'],self.workspace.root,timeout=0),'path':path,'started':time.time(),'reused':False}
+                    self.jobs.add(result['job']);self.executions[path]={key:result[key] for key in ('job','started')}
+                if request_id:
+                    self.run_requests[request_id]=result
+                    while len(self.run_requests)>128:self.run_requests.popitem(last=False)
+                return result
             if action in ('job','stop','input'):
                 identity=body.get('job')
                 if identity not in self.jobs:raise PermissionError('Esta ejecución no pertenece al equipo.')
@@ -86,7 +122,9 @@ class TeamRoom:
                 if action!='job' and not self.allow_run:raise PermissionError('Ejecución compartida desactivada.')
                 if action=='stop':job.cancel();return {'stopped':True}
                 if action=='input':job.write(str(body.get('text',''))[:65536]);return {'sent':True}
-                offset=max(0,int(body.get('offset',0)));return {'output':job.output[offset:offset+50000],'offset':min(len(job.output),offset+50000),'done':job.done,'code':job.code,'queued':getattr(job,'queued',False)}
+                with job.lock:
+                    output=job.output;offset=min(len(output),max(0,int(body.get('offset',0))));end=min(len(output),offset+50000)
+                    return {'output':output[offset:end],'offset':end,'more':end<len(output),'done':job.done,'code':job.code,'queued':getattr(job,'queued',False)}
             raise ValueError('Acción de equipo desconocida.')
 
     def save(self,path):
@@ -107,7 +145,7 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 class TeamService:
-    def __init__(self,features):self.features=features;self.room=None;self.remote=None;self.thread=None;self.loop=None;self.server=None;self.url=None;self.tunnel=None;self.mode='local';self.internet_job=None
+    def __init__(self,features):self.features=features;self.room=None;self.remote=None;self.remote_room=None;self.thread=None;self.loop=None;self.server=None;self.url=None;self.tunnel=None;self.mode='local';self.internet_job=None
     def start(self,ws,body):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de compartirlo.')
         mode=body.get('mode','lan' if body.get('network') else 'local')
@@ -166,7 +204,7 @@ class TeamService:
         from urllib.parse import unquote
         import mimetypes
         name=unquote(urlsplit(value).path).lstrip('/') or 'team.html';root=(self.features.app.project/'web').resolve()
-        if name not in ('team.html','team-peer.js','team-peer.css') and not name.startswith(('vendor/monaco/','team-vendor/')):raise ValueError('Recurso no disponible.')
+        if name not in ('team.html','team-peer.js','team-peer.css','team-execution.js') and not name.startswith(('vendor/monaco/','team-vendor/')):raise ValueError('Recurso no disponible.')
         path=(root/name).resolve()
         if not path.is_relative_to(root) or not path.is_file() or path.stat().st_size>12000000:raise ValueError('Recurso no disponible.')
         data=path.read_bytes();mime=mimetypes.guess_type(name)[0] or 'application/octet-stream'
@@ -182,19 +220,23 @@ class TeamService:
         if self.room and hmac.compare_digest(parsed.fragment,self.room.token):raise ValueError('Ya eres el anfitrión de este equipo.')
         remote=(parsed._replace(fragment='',path='/v1').geturl(),parsed.fragment)
         result=self.contact(remote,{'action':'sync','peer':secrets.token_hex(12),'name':'Conectando','vectors':{}})
-        self.stop();self.remote=remote;self.url=url;self.mode='internet' if parsed.scheme=='https' else 'local' if parsed.hostname in ('127.0.0.1','localhost','::1') else 'lan';return {**self.status(),'room':result['room']}
+        self.stop();self.remote=remote;self.remote_room=result['room'];self.url=url;self.mode='internet' if parsed.scheme=='https' else 'local' if parsed.hostname in ('127.0.0.1','localhost','::1') else 'lan';return self.status()
 
     def contact(self,remote,body):
         endpoint,token=remote;request=Request(endpoint,data=json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},method='POST')
-        try:
-            with build_opener(ProxyHandler({}),NoRedirect()).open(request,timeout=8) as response:
-                raw=response.read(8000000)
-                if len(raw)>=8000000:raise ValueError('Respuesta de equipo demasiado grande.')
-                result=json.loads(raw)
-        except HTTPError as error:
-            try:message=json.loads(error.read(1000)).get('error')
-            except Exception:message='No se pudo conectar con el equipo.'
-            raise ValueError(message) from None
+        for attempt in range(2):
+            try:
+                with build_opener(ProxyHandler({}),NoRedirect()).open(request,timeout=8) as response:
+                    raw=response.read(8000000)
+                    if len(raw)>=8000000:raise ValueError('Respuesta de equipo demasiado grande.')
+                    result=json.loads(raw)
+                break
+            except HTTPError as error:
+                try:message=json.loads(error.read(1000)).get('error')
+                except Exception:message='No se pudo conectar con el equipo.'
+                raise ValueError(message) from None
+            except (URLError,TimeoutError,ConnectionError,IncompleteRead,json.JSONDecodeError):
+                if attempt or body.get('action')!='run' or not body.get('requestId'):raise ValueError('El anfitrión no respondió. Puedes reintentar sin repetir la ejecución.') from None
         if result.get('error'):raise ValueError(result['error'])
         return result
 
@@ -209,7 +251,7 @@ class TeamService:
         connection=self.tunnel.status() if self.tunnel else {'kind':self.mode,'phase':'ready' if self.room or self.remote else 'off','error':None}
         invitation=self.url
         if self.tunnel:invitation=connection['endpoint']+'/#'+self.room.token if connection['endpoint'] and self.room else None
-        return {'active':bool(self.room or self.remote),'hosting':bool(self.room),'invitation':invitation,'room':self.room.id if self.room else None,'allowRun':bool(self.room and self.room.allow_run),'station':socket.gethostname(),'connection':connection}
+        return {'active':bool(self.room or self.remote),'hosting':bool(self.room),'invitation':invitation,'room':self.room.id if self.room else self.remote_room,'allowRun':bool(self.room and self.room.allow_run),'station':socket.gethostname(),'connection':connection}
     def connector(self,target):
         import hashlib
         name={'vscode':'zenit-team-0.1.0.vsix','jetbrains':'zenit-team-jetbrains-0.1.0.zip'}.get(target)
@@ -235,5 +277,5 @@ class TeamService:
                 for task in asyncio.all_tasks(self.loop):task.cancel()
             self.loop.call_soon_threadsafe(close)
         if self.thread and self.thread is not threading.current_thread():self.thread.join(timeout=5)
-        self.room=None;self.remote=None;self.loop=None;self.server=None;self.thread=None;self.url=None
+        self.room=None;self.remote=None;self.remote_room=None;self.loop=None;self.server=None;self.thread=None;self.url=None
         return self.status()
