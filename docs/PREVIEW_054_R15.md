@@ -33,6 +33,8 @@ abierta se aparta para dar espacio al código; vuelve al regresar al otro espaci
   oculta mientras se carga el cristal. Babylon se inicia cuando la interfaz está
   preparada y el cristal es visible. El arranque ya no espera a un análisis
   completo del proyecto; Comprobar proyecto sigue disponible manualmente.
+  El servidor local admite ráfagas de conexiones de varias ventanas para evitar
+  perder importaciones de la interfaz mientras el equipo está compilando.
 - La revisión de un VSIX presenta autor, descripción y vistas basadas en sus
   colores e iconos reales. Los planes con dependencias conservan esas vistas.
   Aplicar un paquete de apariencia selecciona sus recursos, sin necesitar

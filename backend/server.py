@@ -45,6 +45,10 @@ class Application:
 class LumenServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
+    # Each desktop window loads its own module graph while the other windows
+    # keep polling. The default five pending TCP connections can drop imports
+    # during those bursts, especially while a compiler is busy on the host.
+    request_queue_size = 64
     def __init__(self, port: int, application: Application):
         self.app = application
         super().__init__(("127.0.0.1", port), Handler)
