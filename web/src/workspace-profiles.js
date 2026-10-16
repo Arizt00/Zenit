@@ -16,7 +16,7 @@ export class WorkspaceProfiles{
     this.bar.querySelector('.profile-tool-toggle').onclick=()=>{this.tools.hidden=!this.tools.hidden;if(!this.tools.hidden)this.host.studio.host.motion?.enter(this.tools,3);this.bar.querySelector('.profile-tool-toggle').setAttribute('aria-expanded',String(!this.tools.hidden));};
     this.bar.querySelector('.profile-detach').onclick=()=>this.safe(()=>host.desktop.detach(this.detachedPanel||'profile',host.editor.current||''));
     const changed=host.editor.callbacks.change;host.editor.callbacks.change=(...args)=>{changed?.(...args);this.changed();};
-    const active=host.preview.activeChanged.bind(host.preview);host.preview.activeChanged=(...args)=>{active(...args);this.changed();};
+    const active=host.preview.activeChanged.bind(host.preview);host.preview.activeChanged=(...args)=>{active(...args);this.changed(true);};
     host.studio.workspaces=this;this.apply();
   }
   safe(fn){return this.host.platform.safe(fn);}
@@ -32,7 +32,7 @@ export class WorkspaceProfiles{
   setDetached(detached,panel){this.detached=detached;this.detachedPanel=detached?panel:null;this.tools.hidden=detached||this.style==='general';const button=this.bar.querySelector('.profile-detach');button.title=detached?'Volver a acoplar el espacio':'Desacoplar espacio de desarrollo';button.setAttribute('aria-label',button.title);button.innerHTML=icon(detached?'dock-left':'detach');if(!detached)this.changed();}
   placement(panel='profile'){const child=this.host.desktop.query.has('panel');return `<button class="icon-button profile-surface-detach" data-surface-panel="${panel}" title="${child?'Volver a Zénit':'Desacoplar en ventana'}" aria-label="${child?'Volver a Zénit':'Desacoplar en ventana'}">${icon(child?'dock-left':'arrow-up-right')}</button>`;}
   bindPlacement(){this.tools.querySelectorAll('[data-surface-panel]').forEach(b=>b.onclick=()=>this.safe(()=>this.host.desktop.detach(b.dataset.surfacePanel,this.host.editor.current||'')));}
-  changed(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.paint(),350);}
+  changed(immediate=false){clearTimeout(this.timer);if(immediate)this.paint();else this.timer=setTimeout(()=>this.paint(),350);}
   paint(){
     if(this.disposed||this.detached)return;const path=this.host.editor.current||'',text=this.host.editor.getValue?.()||'';
     const label=styles[this.style][1]+' · '+(path||'sin archivo');if(this.tools.getAttribute('aria-label')!==label)this.tools.setAttribute('aria-label',label);

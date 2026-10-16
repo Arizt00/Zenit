@@ -114,11 +114,19 @@ class Runtimes:
                 raise ValueError('Este ASM usa registros o servicios RISC-V/MIPS. Abre Laboratorio ASM y selecciona RARS o MARS para simularlo, o compila con la toolchain de su máquina virtual. No es ASM nativo del equipo.')
             from .native_packages import native_state
             deps=native_state(ws)
-            compiler=self.executable('gcc','clang')
             if file.suffix.lower()=='.asm':
-                nasm=self.executable('nasm');obj=folder/(file.stem+'.obj')
-                commands=[[nasm,'-f','win64' if os.name=='nt' else 'elf64',str(file),'-o',str(obj)],[compiler,str(obj),*deps['link'],'-o',str(target)]]
-            else:commands=[[compiler,*(['-g'] if debug else []),*deps['compile'],str(file),*deps['link'],'-o',str(target)]]
+                from .nasm import target_system
+                system=target_system(source);host='windows' if os.name=='nt' else 'linux' if sys.platform.startswith('linux') else 'macos'
+                bits=32 if re.search(r'(?im)^\s*\[?bits\s+32\b',source) else 64
+                if not check and system!=host:raise ValueError('Este archivo NASM tiene destino '+system.title()+', pero este equipo usa '+host.title()+'. Selecciona NASM + Unicorn y ese destino en Laboratorio ASM, o ejecútalo en '+('Linux/WSL o una máquina virtual Linux.' if system=='linux' else 'una estación o máquina virtual Windows.'))
+                if not check and bits==32:raise ValueError('El ejecutor nativo incluido es de 64 bits. Simula NASM x86 de 32 bits en el laboratorio o configura su toolchain de 32 bits.')
+                nasm=self.executable('nasm');obj=folder/(file.stem+('.obj' if system=='windows' else '.o'))
+                commands=[[nasm,'-f',('win' if system=='windows' else 'elf')+str(bits),'-I',str(file.parent)+os.sep,str(file),'-o',str(obj)]]
+                if not check:
+                    compiler=self.executable('gcc','clang');start=re.search(r'(?im)^\s*(?:global|GLOBAL)\s+_start\b',source)
+                    flags=['-nostartfiles','-Wl,-e,_start','-lkernel32'] if start and system=='windows' else ['-nostdlib','-no-pie','-Wl,-e,_start'] if start else []
+                    commands.append([compiler,str(obj),*flags,*deps['link'],'-o',str(target)])
+            else:commands=[[self.executable('gcc','clang'),*(['-g'] if debug else []),*deps['compile'],str(file),*deps['link'],'-o',str(target)]]
             if not check and not debug:commands.append([str(target)])
         elif lang in ('c','cpp'):
             from .native_packages import native_state

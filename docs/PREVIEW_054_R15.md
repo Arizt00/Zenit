@@ -170,3 +170,26 @@ prioridad. Las comprobaciones de sintaxis y las copias temporales de Lantern
 no crean estos archivos en el proyecto del usuario.
 
 El menú contextual del explorador añade **Guardar** y **Guardar como…** para el archivo elegido. Las pestañas comparten un único controlador de menú, corrigiendo el cierre inmediato por doble activación y conservando Reabrir pestaña cerrada. El botón izquierdo mantiene la apertura normal; el derecho abre las acciones.
+
+## NASM para Linux y Windows
+
+El laboratorio detecta `.asm` NASM y ofrece **NASM + Unicorn**, x86/x86-64 y
+un selector de destino **Linux · ELF** o **Windows · PE/COFF**. `BITS 32` y
+`; Sistema: Linux`/`; Sistema: Windows` orientan la selección inicial; las
+selecciones manuales se mantienen durante esa sesión para cada archivo.
+NASM ensambla realmente ELF32/ELF64 o Win32/Win64 y LLVM enlaza la imagen antes
+de cargarla en Unicorn. Los ejemplos, las instrucciones, los registros, el
+código de salida y el paso a paso corresponden al destino elegido.
+
+El adaptador de Linux implementa `exit` y `write` sobre stdout/stderr dentro
+del simulador, con un máximo de 64 KiB. Windows admite programas de CPU y el
+retorno de `main`; DLL externas, WinAPI y servicios no implementados requieren
+el ejecutor nativo o una máquina virtual. No se reenvían llamadas del invitado
+al sistema anfitrión. El laboratorio no incluye un kernel completo.
+
+El ejecutor nativo de NASM conserva el formato y ABI del archivo, valida la
+sintaxis sin enlazar cuando solo se comprueba, usa CRT para `main` y admite
+`_start` explícito (Linux sin CRT, Windows con `ExitProcess`). Un destino Linux
+en un equipo Windows se dirige al laboratorio, Linux/WSL o una VM en lugar de
+intentar enlazarlo como `WinMain`. Las toolchains nativas de 32 bits se configuran
+por separado; el laboratorio simula ambas anchuras sin requerirlas.
