@@ -90,6 +90,9 @@ def main():
         (workspace/'data.csv').write_text('name,value\none,2\n',encoding='utf-8')
         (workspace/'native.tm').write_text('ZENIT_TOKEN = 42\n/* comentario\ncontinúa */\n',encoding='utf-8')
         app=Application(root,workspace,data_dir=base/'profile');app.workspace.trusted=True
+        from backend.coco_tunnel import InternetTunnel,VERSION as tunnel_version
+        assert tunnel_version=='2026.10.1' and (root/'licenses/cloudflared/LICENSE').is_file()
+        assert InternetTunnel(app.features,'http://127.0.0.1:1/').status()['phase']=='preparing'
         app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.showWelcome':False,'updates.automatic':False,'appearance.motion':False})
         grammar_vsix=io.BytesIO()
         with zipfile.ZipFile(grammar_vsix,'w') as z:

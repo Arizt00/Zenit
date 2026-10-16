@@ -51,6 +51,28 @@ class TeamTests(unittest.TestCase):
             self.assertEqual(result['room'],status['room']);self.assertIn('main.py',result['updates'])
             with self.assertRaises(PermissionError):self.peer('bad',updates={'../secret':encode(b'\x00\x00')})
         finally:guest.features.shutdown();guest.runner.shutdown()
+
+    def test_internet_retry_keeps_room_and_unsaved_edits_when_transport_fails(self):
+        from unittest.mock import patch
+        from backend.coco_tunnel import InternetTunnel
+        with patch.object(InternetTunnel,'start',side_effect=ValueError('fixture offline')):
+            initial=self.start(mode='internet');room=self.service.room
+            room.documents['main.py']['text'].insert(0,'# unsaved station edit\n')
+            import time
+            deadline=time.monotonic()+3
+            while self.app.features.hilo.jobs[self.service.internet_job]['state'] in ('queued','running') and time.monotonic()<deadline:time.sleep(.01)
+            previous=self.service.tunnel;self.service.internet()
+            self.assertIs(self.service.room,room);self.assertEqual(self.service.status()['room'],initial['room'])
+            self.assertIsNot(self.service.tunnel,previous);self.assertTrue(previous.cancelled.is_set())
+            self.assertIn('unsaved station edit',str(room.documents['main.py']['text']))
+            self.assertNotIn('unsaved station edit',(self.app.workspace.root/'main.py').read_text())
+        self.service.stop();self.assertIsNone(self.service.tunnel)
+
+    def test_busy_hilo_reports_retryable_connection_without_local_invitation(self):
+        from unittest.mock import patch
+        with patch.object(self.app.features.hilo,'submit',side_effect=ValueError('Hilo busy')):
+            with self.assertRaisesRegex(ValueError,'Hilo busy'):self.start(mode='internet')
+        state=self.service.status();self.assertTrue(state['active']);self.assertEqual(state['connection']['phase'],'failed');self.assertIsNone(state['invitation'])
     def test_yjs_node_peer_uses_real_wire_format(self):
         status=self.start();source="""import * as Y from './web/team-vendor/yjs.mjs';
 const [url,key]=process.argv[1].split('#');const sync=body=>fetch(url+'v1',{method:'POST',headers:{Authorization:'Bearer '+key},body:JSON.stringify({peer:'vscode',vectors:{},...body})}).then(r=>r.json());

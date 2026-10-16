@@ -55,3 +55,5 @@ html[data-motion=off] .editor-context-menu{transition:none;}
 .team-copy-actions .hover-reveal{--reveal-width:172px;}
 .team-copy-actions .hover-reveal>span{font-size:12px;}
 .team-copy-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span{max-width:135px;}
+
+.team-network-modes{display:grid;gap:12px;border:1px solid var(--border);border-radius:12px;margin:0;padding:14px 16px;}.team-network-modes legend{font-size:11px;color:var(--secondary);padding:0 6px;}.team-start .team-network-modes label{gap:10px;line-height:1.5;}.team-network-modes input[type=radio]{width:16px;height:16px;flex:none;accent-color:var(--accent);}.team-start [data-team-internet-info]{font-size:11px;line-height:1.65;}.team-connection{font-size:12px;line-height:1.65;color:var(--secondary);margin:4px 0 18px;}.team-connection+[data-team-retry]{margin-bottom:16px;}

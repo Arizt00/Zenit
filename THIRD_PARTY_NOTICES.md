@@ -86,3 +86,11 @@ The JetBrains connector is compiled against official IntelliJ Platform SDK
 252.28539.108 and JetBrains annotations 26.0.2. SDK JARs are build inputs in the
 ignored development cache and are not redistributed in the connector archive.
 The connector contains only this project's class files, metadata and license.
+
+CoCo's optional Internet mode downloads the unmodified cloudflared 2026.10.1
+connector from Cloudflare's official GitHub release after the user selects that
+mode. Each supported asset is pinned by SHA-256. It is not installed as a system
+service or included in the base SDK. Its Apache-2.0 license and upstream source
+reference are retained in `licenses/cloudflared`. Cloudflare Quick Tunnels are
+an external temporary development/testing service with their own terms and
+availability limits; they do not imply affiliation or end-to-end encryption.

@@ -4,11 +4,35 @@ Abre **CoCo** en la parte superior derecha de Zénit o desde la paleta de comand
 Abre un archivo de texto y crea un equipo para compartir su búfer, incluidos los
 cambios que aún no has guardado. El servicio permanece apagado hasta entonces.
 
-La invitación permite editar los archivos que el anfitrión comparte. Marca
-«Permitir conexiones desde mi red» para otros ordenadores de tu red privada. Si
-no lo marcas, solo conecta el mismo ordenador. No se necesitan privilegios de
-administrador ni se modifica el cortafuegos. Fuera de tu red, utiliza un túnel
-seguro o una red privada; no se proporciona un servidor público de encuentro.
+La invitación permite editar los archivos que el anfitrión comparte. Elige el
+alcance antes de crear la sesión:
+
+| Modo | Conexión entre estaciones |
+| --- | --- |
+| Este equipo | Otras instancias de Zénit o IDEs en el mismo ordenador. Solo escucha en la interfaz local. |
+| Red local | Otros ordenadores de tu red privada, mediante la dirección del anfitrión. El cortafuegos debe permitir esa conexión; Zénit no cambia sus reglas. |
+| Internet | Equipos en redes distintas mediante una dirección HTTPS temporal de Cloudflare. Hilo prepara el conector y la invitación aparece cuando el enlace está listo. |
+
+En todos los modos se comparte la misma sesión, con un único búfer por archivo
+y el entorno de ejecución del anfitrión. Cada participante puede usar Zénit o
+un conector compatible. La estación anfitriona debe permanecer abierta y
+conectada. No se necesitan privilegios de administrador ni un servicio de
+Windows.
+
+Internet descarga `cloudflared` 2026.10.1 de su publicación oficial, verifica
+su SHA-256 y lo conserva en el perfil de Zénit. La preparación automática admite
+Windows x64 y Linux x64/ARM64. No requiere una cuenta de Cloudflare. El tráfico
+pasa por Cloudflare: HTTPS no significa cifrado de extremo a extremo entre
+participantes. Terminar la sesión detiene el conector y revoca la invitación.
+Si el enlace falla, «Reintentar conexión de Internet» conserva el mismo búfer y
+la misma sala; comparte la nueva invitación para reconectar las estaciones.
+
+Este transporte utiliza [Quick Tunnels de Cloudflare](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/),
+orientados a desarrollo y pruebas, sin garantía de disponibilidad. El proveedor
+admite hasta 200 peticiones en curso, que no equivalen a 200 participantes. La
+dirección cambia al reiniciar el enlace. Para trabajo permanente se puede usar
+una red privada entre estaciones con el modo Red local; R15 no incluye un
+servidor propio de encuentro ni sesiones persistentes en la nube.
 
 «Permitir guardar y ejecutar en mi equipo» autoriza esas acciones a los
 participantes. Los procesos usan las herramientas y el entorno del anfitrión.

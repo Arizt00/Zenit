@@ -45,7 +45,7 @@ class TeamRoom:
                 if not isinstance(peer,str) or not 1<=len(peer)<=100:raise ValueError('Participante inválido.')
                 now=time.monotonic();self.peers={k:v for k,v in self.peers.items() if now-v['seen']<45}
                 cursor=body.get('cursor');cursor={k:v for k,v in cursor.items() if k in ('lineNumber','column') and type(v) is int and 0<v<2000000} if isinstance(cursor,dict) else None
-                self.peers[peer]={'id':peer,'name':str(name)[:80],'path':str(body.get('path',''))[:300],'cursor':cursor,'seen':now}
+                self.peers[peer]={'id':peer,'name':str(name)[:80],'station':str(body.get('station','Navegador'))[:100],'path':str(body.get('path',''))[:300],'cursor':cursor,'seen':now}
                 for path,value in body.get('updates',{}).items():
                     if path not in self.documents:raise PermissionError('El archivo no está compartido.')
                     doc=self.documents[path];previous=doc.get_update()
@@ -107,12 +107,14 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 class TeamService:
-    def __init__(self,features):self.features=features;self.room=None;self.remote=None;self.thread=None;self.loop=None;self.server=None;self.url=None
+    def __init__(self,features):self.features=features;self.room=None;self.remote=None;self.thread=None;self.loop=None;self.server=None;self.url=None;self.tunnel=None;self.mode='local';self.internet_job=None
     def start(self,ws,body):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de compartirlo.')
-        self.stop();self.room=TeamRoom(self.features,ws,body.get('documents',[]),body.get('allowRun',False));ready=threading.Event();errors=[]
+        mode=body.get('mode','lan' if body.get('network') else 'local')
+        if mode not in ('local','lan','internet'):raise ValueError('Selecciona este equipo, red local o Internet.')
+        self.stop();self.mode=mode;self.room=TeamRoom(self.features,ws,body.get('documents',[]),body.get('allowRun',False));ready=threading.Event();errors=[]
         async def serve():
-            try:self.server=await asyncio.start_server(self.client,'0.0.0.0' if body.get('network') else '127.0.0.1',0,limit=8192);ready.set();await self.server.serve_forever()
+            try:self.server=await asyncio.start_server(self.client,'0.0.0.0' if self.mode=='lan' else '127.0.0.1',0,limit=8192);ready.set();await self.server.serve_forever()
             except asyncio.CancelledError:pass
             except Exception as error:errors.append(str(error));ready.set()
         def run():
@@ -122,11 +124,24 @@ class TeamService:
         self.thread=threading.Thread(target=run,name='zenit-team',daemon=True);self.thread.start()
         if not ready.wait(5) or errors:self.stop();raise ValueError('No se pudo abrir la sesión: '+str(errors))
         address='127.0.0.1'
-        if body.get('network'):
+        if self.mode=='lan':
             try:address=next(x[4][0] for x in socket.getaddrinfo(socket.gethostname(),None,socket.AF_INET) if not x[4][0].startswith('127.'))
             except (StopIteration,OSError):address=socket.gethostname()
         self.url=f'http://{address}:{self.server.sockets[0].getsockname()[1]}/#{self.room.token}'
+        if self.mode=='internet':self.internet()
         return self.status()
+
+    def internet(self):
+        if not self.room:raise ValueError('Crea la sesión compartida antes de conectar Internet.')
+        if self.mode!='internet':raise ValueError('Selecciona Internet al crear la sesión para conectar otras redes.')
+        if self.tunnel:self.tunnel.stop()
+        from .coco_tunnel import InternetTunnel
+        local='http://127.0.0.1:'+str(self.server.sockets[0].getsockname()[1])+'/'
+        self.tunnel=InternetTunnel(self.features,local);tunnel=self.tunnel;self.mode='internet'
+        try:result=self.features.hilo.submit('CoCo · conectar estaciones por Internet',tunnel.start,workspace=self.room.workspace.root,key='coco-internet:'+self.room.id+':'+secrets.token_hex(4),cancel=tunnel.stop,priority=1)
+        except Exception as error:
+            tunnel.stop();tunnel.phase='failed';tunnel.error=str(error);raise
+        self.internet_job=result['job'];return result
 
     async def client(self,reader,writer):
         status=200;response={}
@@ -167,7 +182,7 @@ class TeamService:
         if self.room and hmac.compare_digest(parsed.fragment,self.room.token):raise ValueError('Ya eres el anfitrión de este equipo.')
         remote=(parsed._replace(fragment='',path='/v1').geturl(),parsed.fragment)
         result=self.contact(remote,{'action':'sync','peer':secrets.token_hex(12),'name':'Conectando','vectors':{}})
-        self.stop();self.remote=remote;self.url=url;return {**self.status(),'room':result['room']}
+        self.stop();self.remote=remote;self.url=url;self.mode='internet' if parsed.scheme=='https' else 'local' if parsed.hostname in ('127.0.0.1','localhost','::1') else 'lan';return {**self.status(),'room':result['room']}
 
     def contact(self,remote,body):
         endpoint,token=remote;request=Request(endpoint,data=json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},method='POST')
@@ -184,10 +199,17 @@ class TeamService:
         return result
 
     def request(self,body):
+        body={**body,'station':socket.gethostname()}
         if self.remote:return self.contact(self.remote,body)
         if not self.room:raise ValueError('No hay sesión de equipo.')
-        return self.room.request(body,owner=True)
-    def status(self):return {'active':bool(self.room or self.remote),'hosting':bool(self.room),'invitation':self.url,'room':self.room.id if self.room else None,'allowRun':bool(self.room and self.room.allow_run)}
+        result=self.room.request(body,owner=True)
+        if body.get('action','sync')=='sync':result.update(connection=self.status()['connection'],invitation=self.status()['invitation'])
+        return result
+    def status(self):
+        connection=self.tunnel.status() if self.tunnel else {'kind':self.mode,'phase':'ready' if self.room or self.remote else 'off','error':None}
+        invitation=self.url
+        if self.tunnel:invitation=connection['endpoint']+'/#'+self.room.token if connection['endpoint'] and self.room else None
+        return {'active':bool(self.room or self.remote),'hosting':bool(self.room),'invitation':invitation,'room':self.room.id if self.room else None,'allowRun':bool(self.room and self.room.allow_run),'station':socket.gethostname(),'connection':connection}
     def connector(self,target):
         import hashlib
         name={'vscode':'zenit-team-0.1.0.vsix','jetbrains':'zenit-team-jetbrains-0.1.0.zip'}.get(target)
@@ -197,6 +219,11 @@ class TeamService:
         if not path:raise FileNotFoundError('Construye los conectores con tools/build_team_integrations.py.')
         data=path.read_bytes();return {'filename':name,'data':encode(data),'sha256':hashlib.sha256(data).hexdigest()}
     def stop(self):
+        if self.internet_job:
+            try:self.features.hilo.cancel(self.internet_job)
+            except ValueError:pass
+            self.internet_job=None
+        if self.tunnel:self.tunnel.stop();self.tunnel=None
         if self.room:
             self.room.closed=True
             for identity in self.room.jobs:

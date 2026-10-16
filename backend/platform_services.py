@@ -165,6 +165,7 @@ class PlatformServices:
         if path=='/team/start':return self.team.start(ws,body)
         if path=='/team/join':return self.team.join(ws,body.get('invitation',''))
         if path=='/team/stop':return self.team.stop()
+        if path=='/team/internet':self._trusted();return self.team.internet()
         if path=='/team/request':
             self._trusted();return self.team.request(body)
         if path=='/extensions/uri':

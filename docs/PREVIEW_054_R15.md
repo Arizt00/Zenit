@@ -49,6 +49,13 @@ cambios a Melody. La consulta utiliza el proveedor configurado; no cambia ni
 acelera por sí misma el modelo remoto. Hilo también conserva temporalmente el
 inventario de aportaciones de extensiones para evitar lecturas repetidas.
 
+CoCo incorpora los modos Este equipo, Red local e Internet. Dos estaciones
+pueden editar la misma sala y ejecutar en el entorno del anfitrión. Para
+Internet, Hilo prepara un conector Cloudflare verificado y una dirección HTTPS
+temporal; su estado y los reintentos aparecen en CoCo. Un fallo de transporte
+conserva el búfer. Este servicio temporal está orientado a desarrollo y pruebas,
+sin garantía de disponibilidad; consulte sus límites en TEAM.md.
+
 El botón de copiar invitación deja 16 px bajo el campo y comparte la animación
 de Forge: icono al reposar, etiqueta al pasar el cursor y contracción tras pulsar.
 El cierre impide arrancar nuevos servidores de lenguaje mientras retira los
