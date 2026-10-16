@@ -145,8 +145,9 @@ export class LumenEditor {
     if(this.detachedPaths.has(path||this.current)){this.callbacks.detached?.(path||this.current);return;}
     if(this.models.get(path||this.current)?.kind==='binary')throw Error('Usa el editor hexadecimal para modificar los bytes de este archivo.');
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
+    const model=this.models.get(path||this.current)?.model;if(!model)return;
     let pane=this.panes[1];
-    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model:null,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
+    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
     this.mount.dataset.splitAxis=['top','bottom'].includes(side)?'vertical':'horizontal';
     pane.node.style.order=['left','top'].includes(side)?'-1':'1';
     pane.view.setModel(this.models.get(path||this.current)?.model||null);this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();pane.view.focus();this.callbacks.active?.(this.current);
