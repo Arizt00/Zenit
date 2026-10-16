@@ -23,11 +23,12 @@ class Preview{
     this.documentDrag=new DocumentDrag({...host,panel:$('#editor-panel'),safe:fn=>this.safe(fn),onStart:path=>{this.dragged=path;this.drop.hidden=false;},onEnd:()=>{this.drop.hidden=true;this.dragged=null;},detach:(path,position)=>host.detachEditor(path,position)});
     this.drop.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move';};
     this.drop.ondrop=e=>{e.preventDefault();e.stopPropagation();this.safe(async()=>{const data=JSON.parse(e.dataTransfer.getData('application/x-lumen-document'));await this.host.detachEditor(data.path);});this.drop.hidden=true;};
-    $('#file-tabs').addEventListener('contextmenu',e=>{const path=e.target.closest('[data-tab]')?.dataset.tab;if(!path)return;e.preventDefault();
+    $('#file-tabs').addEventListener('contextmenu',e=>{const tab=e.target.closest('[data-tab]');if(!tab)return;e.preventDefault();e.stopPropagation();this.fileTabMenu(tab);});
+    this.fileTabMenu=tab=>{const path=tab.dataset.tab;
       const paths=[...host.editor.models.keys()],close=async names=>{for(const p of names){await host.closeFile(p);if(host.editor.models.has(p))break;}};
-      host.showMenu(e.target.closest('[data-tab]'),[
+      host.showMenu(tab,[
         {label:'Guardar',icon:'check',shortcut:'Ctrl S',run:()=>host.saveFile(path)},
-        {label:'Guardar como…',icon:'file',shortcut:'Ctrl Shift O',run:async()=>{await host.openFile(path);await this.saveAs();}},
+        {label:'Guardar como…',icon:'file',shortcut:'Ctrl Shift O',run:()=>this.saveAs(path)},
         {label:'Mostrar en el explorador',icon:'folder',run:async()=>{await host.openFile(path);host.dock.show('project');host.revealFile(path);}},
         {label:'Copiar ruta relativa',icon:'copy',run:()=>navigator.clipboard.writeText(path)},
         {label:'Copiar ruta',icon:'copy',run:()=>navigator.clipboard.writeText(host.service().workspace.replaceAll('\\','/')+'/'+path)},
@@ -41,7 +42,8 @@ class Preview{
         {label:'Cerrar a la derecha',icon:'close',run:()=>close(paths.slice(paths.indexOf(path)+1))},
         {label:'Cerrar guardados',icon:'check',run:()=>close(paths.filter(p=>!host.editor.isDirty(p)))},
         {label:'Cerrar todos',icon:'close',run:()=>close(paths)},
-      ],path.split('/').at(-1));});
+        {separator:true},{label:'Reabrir pestaña cerrada',icon:'undo',shortcut:'Ctrl Shift T',disabled:!this.tabControls?.canReopen(),run:()=>this.tabControls?.reopen()},
+      ],path.split('/').at(-1));};
     document.addEventListener('click',e=>{const exec=e.target.closest('[data-extension-execute]');if(exec)this.safe(()=>this.startExtension(exec.dataset.extensionExecute));});
     this.extensionObserver=new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches('.extension-card')||n.querySelector('.extension-card')))))this.extensionButtons();});this.extensionObserver.observe(document.body,{childList:true,subtree:true});
     const viewButton=document.createElement('button');viewButton.className='icon-button';viewButton.title='Vistas de extensiones';viewButton.setAttribute('aria-label',viewButton.title);viewButton.innerHTML=icon('extensions');$('.editor-tabbar').append(viewButton);viewButton.onclick=()=>this.safe(()=>this.extensionViews());
@@ -74,12 +76,14 @@ class Preview{
     if(window.pywebview?.api?.new_window)return window.pywebview.api.new_window(path,content??null);
     const url=new URL(location.href);url.searchParams.set('file',path);const opened=window.open(url,'_blank');if(!opened)throw Error('Permite abrir ventanas en el navegador o utiliza Zénit Desktop.');
   }
-  async saveAs(){
-    const ed=this.host.editor;if(!ed.current)return;
+  async saveAs(path=this.host.editor.current){
+    const ed=this.host.editor;if(!path)return;
+    if(ed.current!==path)await this.host.openFile(path);
     if(ed.models.get(ed.current)?.kind==='binary'){this.host.notify('Guarda los bytes desde el editor hexadecimal. Para conservar un parche separado, usa Exportar cambios.');return;}
     if(window.pywebview?.api?.save_as){const result=await window.pywebview.api.save_as(ed.current,ed.getValue());if(!result)return;await this.host.refreshTree();if(result.relative){const fresh=await this.host.api('/file?path='+encodeURIComponent(result.relative));const existing=ed.models.get(result.relative);if(existing){existing.model?.setValue(fresh.content);existing.value=fresh.content;ed.markSaved(fresh);}await this.host.openFile(result.relative);}this.host.notify('Archivo guardado en '+result.path);return;}
-    this.host.modal('Guardar como',`<form id="save-as-form"><label>Ruta dentro del proyecto<input id="save-as-path" value="${esc(ed.current)}" required></label><div class="modal-actions"><button class="primary-button">Guardar copia</button></div></form>`);
-    $('#save-as-form').onsubmit=e=>{e.preventDefault();this.safe(async()=>{const path=$('#save-as-path').value.trim();await this.host.api('/save',{path,content:ed.getValue(),create:true});this.host.closeModal();await this.host.refreshTree();await this.host.openFile(path);});};
+    const content=ed.getValue();
+    this.host.modal('Guardar como',`<form id="save-as-form"><label>Ruta dentro del proyecto<input id="save-as-path" value="${esc(path)}" required></label><div class="modal-actions"><button class="primary-button">Guardar copia</button></div></form>`);
+    $('#save-as-form').onsubmit=e=>{e.preventDefault();this.safe(async()=>{const destination=$('#save-as-path').value.trim();await this.host.api('/save',{path:destination,content,create:true});this.host.closeModal();await this.host.refreshTree();await this.host.openFile(destination);});};
   }
   async downloads(){
     this.host.platform.openPage('downloads',`<section class="downloads-page"><span class="eyebrow">HERRAMIENTAS · PREVIEW</span><h1>Espacio para tus compiladores.</h1><p>Hasta 500 GB por archivo. Transferencia directa a disco, pausa y reanudación cuando el servidor lo permite.</p><form id="download-form"><label>URL HTTPS del distribuidor<input id="download-url" type="url" placeholder="https://…" required></label><label>Nombre del archivo<input id="download-name" placeholder="compilador.zip" required></label><label>SHA-256 del distribuidor · opcional<input id="download-sha" pattern="[a-fA-F0-9]{64}" placeholder="Verificación del archivo"></label><button class="primary-button">${icon('download')}Descargar</button></form><p class="muted-copy">Los paquetes se guardan sin ejecutarlos. Después de instalarlos, configura su ruta en Lenguajes y herramientas.</p><small id="download-location"></small><div id="download-list"></div></section>`);

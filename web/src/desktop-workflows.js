@@ -136,6 +136,7 @@ export class DesktopWorkflows{
       if(!this.query.has('panel')&&!options.quiet)this.forgeIntegrated=true;
       h.studio.enter();if(options.quiet)h.showConsole();else this.showForgeConsole();this.paintHacker();
       const result=await h.platform.api('/hacker/start',{mode,path,content,args:options.args||[]});
+      if(result.artifacts?.created?.length){await h.refreshTree();h.notify(h.platform.t('Archivos de compilación preparados: ','Build files prepared: ')+result.artifacts.created.join(' · '));}
       if(result.preview){h.studio.lantern.showPreview(result.preview);return;}
       if(result.terminal){await h.platform.attachTerminal(result.terminal);this.forgeRun.terminal=result.terminal.id;this.publishTerminal(result.terminal.id);return;}
       h.showConsole();await h.watchJob(result.job,path);

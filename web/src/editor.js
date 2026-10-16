@@ -1,4 +1,5 @@
 import {installMonacoOverlays} from './monaco-overlays.js';
+import {installDiagnosticPanels} from './diagnostic-panel.js';
 import {waitForNativeBridge} from './native-ready.js';
 import {themePalette} from './extension-theme.js';
 import {TextMateLanguages,textMateTheme} from './textmate.js';
@@ -110,9 +111,11 @@ export class LumenEditor {
       overviewRulerLanes:0,hideCursorInOverviewRuler:true,overviewRulerBorder:false,
       scrollbar:{vertical:'hidden',horizontal:'hidden',verticalScrollbarSize:0,horizontalScrollbarSize:0,useShadows:false},
       fixedOverflowWidgets:true,overflowWidgetsDomNode:document.body,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Editor de código de Zénit',
+      hover:{above:false,delay:240,hidingDelay:200,sticky:true},
       quickSuggestions:{other:true,comments:false,strings:false},suggest:{preview:true},inlineSuggest:{enabled:true},
       tabCompletion:'on',wordBasedSuggestions:'currentDocument',
     });
+    this.diagnosticPanels=installDiagnosticPanels(this);this.disposables.push(this.diagnosticPanels);
     primary.view=this.view;this.bindPane(primary);
     monaco.editor.onDidChangeMarkers(()=>this.callbacks.diagnostics?.(this.diagnostics()));
     this.breakpoints=new Map();this.breakpointDecorations=[];
@@ -126,6 +129,7 @@ export class LumenEditor {
     node.querySelector('[data-detach-editor]').onclick=()=>{pane.view.focus();window.dispatchEvent(new CustomEvent('lumen:detach-editor'));};return pane;
   }
   bindPane(pane){
+    this.diagnosticPanels?.bind(pane.view);
     pane.view.onDidFocusEditorText(()=>{
       this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();this.paintBreakpoints();this.updateCursor();this.callbacks.active?.(this.current);window.dispatchEvent(new Event('lumen:editor-active'));
     });

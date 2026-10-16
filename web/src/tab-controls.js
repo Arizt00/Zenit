@@ -4,8 +4,6 @@ export function installTabControls(h){
   ed.close=path=>{if(ed.models.has(path)){closed.push(path);if(closed.length>20)closed.shift();}close(path);};
   ed.reset=()=>{closed.length=0;reset();};
   const reopen=async()=>{const path=closed.pop();if(path)await h.openFile(path);};
-  const bulk=async paths=>{for(const path of paths){await h.closeFile(path);if(ed.models.has(path))break;}};
-  tabs.addEventListener('contextmenu',e=>{const tab=e.target.closest('[data-tab]');if(!tab)return;e.preventDefault();const paths=[...ed.models.keys()],index=paths.indexOf(tab.dataset.tab);h.showMenu(tab,[{label:'Close tab',icon:'close',run:()=>h.closeFile(tab.dataset.tab)},{label:'Close other tabs',icon:'files',run:()=>bulk(paths.filter(p=>p!==tab.dataset.tab))},{label:'Close tabs to the right',icon:'arrow-right',disabled:index===paths.length-1,run:()=>bulk(paths.slice(index+1))},{label:'Reopen closed tab',icon:'refresh',disabled:!closed.length,run:reopen}],'Editor tabs');});
   tabs.addEventListener('auxclick',e=>{const tab=e.target.closest('[data-tab]');if(e.button===1&&tab){e.preventDefault();h.closeFile(tab.dataset.tab);}});
   document.addEventListener('keydown',e=>{
     if(document.getElementById('modal-backdrop')?.classList.contains('hidden')===false)return;
@@ -16,4 +14,5 @@ export function installTabControls(h){
     else if(tabs.contains(e.target))next=e.key==='ArrowLeft'?(index-1+paths.length)%paths.length:e.key==='ArrowRight'?(index+1)%paths.length:e.key==='Home'?0:e.key==='End'?paths.length-1:undefined;
     if(next!==undefined&&paths.length){e.preventDefault();h.activateFile(paths[next]);if(tabs.contains(e.target))tabs.querySelector('.active')?.focus();}
   },true);
+  return {reopen,canReopen:()=>closed.length>0};
 }

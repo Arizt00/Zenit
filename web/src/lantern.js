@@ -122,13 +122,15 @@ export class LanternView{
   renderLens(){
     const ed=this.host.editor,model=ed.models.get(ed.current)?.model;
     if(!this.matchesBuffer()||!model||!window.monaco||this.host.platform.prefs['lantern.lens']===false){this.clearLens();return;}
-    const values=[...(this.state.lens||[]),...(this.state.diagnostics||[]).map(x=>({line:x.startLineNumber,value:x.message,error:true}))];
+    // Diagnostics already belong to Monaco markers and their floating panel.
+    // Only observed runtime values are injected into the source line.
+    const values=(this.state.lens||[]).filter(v=>!v.error);
     const key=JSON.stringify(values);if(this.lensKey===key&&this.lensModel===model)return;
     this.clearLens();this.lensModel=model;this.lensKey=key;
     this.lensIds=model.deltaDecorations([],values.filter(v=>Number.isInteger(v.line)&&v.line>0&&v.line<=model.getLineCount()).slice(0,200).map(v=>{
       const col=model.getLineMaxColumn(v.line),text=(v.label?v.label+' · ':'')+String(v.value).replace(/[\r\n\t]/g,' ');
       return {range:new monaco.Range(v.line,col,v.line,col),options:{description:'Lantern Lens',showIfCollapsed:true,stickiness:monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-        after:{content:'   '+(v.error?'! ':'↳ ')+text.slice(0,120),inlineClassName:'lantern-lens-value'+(v.error?' lantern-lens-error':''),cursorStops:monaco.editor.InjectedTextCursorStops.None},hoverMessage:{value:'Lantern Lens: '+text,isTrusted:false}}};
+        after:{content:'   ↳ '+text.slice(0,120),inlineClassName:'lantern-lens-value',cursorStops:monaco.editor.InjectedTextCursorStops.None},hoverMessage:{value:'Lantern Lens: '+text,isTrusted:false}}};
     }));
   }
   frame(preview){const frame=document.createElement('iframe');frame.title='Vista previa del proyecto';frame.sandbox='allow-scripts allow-forms allow-modals allow-same-origin';frame.src=preview.url;frame.referrerPolicy='no-referrer';return frame;}

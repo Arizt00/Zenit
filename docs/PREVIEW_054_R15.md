@@ -143,3 +143,30 @@ prioridad. «Máquinas de Lantern» abre la creación y restauración de entorno
 `.tern`, incluida la VM Arch x86-64 cuando su base QEMU/imagen está preparada.
 Otras máquinas existentes pueden conectarse por SSH. Esta revisión no instala
 imágenes de todas las arquitecturas ni arranca kernels en el sistema anfitrión.
+
+## Diagnósticos y preparación de programas nativos
+
+Los errores y advertencias se leen en una tarjeta flotante bajo el código,
+con un 35 % de transparencia en el material y texto opaco. La tarjeta no tiene
+scroll: separa los diagnósticos y los textos extensos en partes consecutivas,
+con flechas, acceso por teclado y copia del mensaje íntegro. La apertura y el
+cierre usan animaciones breves; respetan movimiento reducido. `Ctrl+K Ctrl+I`
+abre el diagnóstico del cursor. Las explicaciones de selección conservan
+la ubicación de Melody elegida por el usuario.
+
+La ejecución nativa estándar de C/C++ exporta `CMakeLists.txt`, una cabecera
+inicial `.h`/`.hpp` y los intermediarios del compilador, además del ejecutable
+en `.lumen/run/<programa-id>/`. Las descripciones CMake por fuente están en
+`.lumen/native/`; conservan los argumentos y dependencias configurados y se
+pueden reconstruir con CMake/Ninja. Los CMake y cabeceras existentes no se
+sobrescriben y el fuente no se modifica para incluir la cabecera.
+
+Para `.n`/`.nc`, ncc compila una vez con `build-native --no-run` y se ejecuta
+el artefacto producido; se crea `ncc.package.json` si no existía. Rust requiere
+`rustc` detectado y genera `Cargo.toml` si falta. Las cabeceras C de nC/Rust son
+plantillas opcionales de interoperabilidad: no inventan declaraciones ni
+convierten tipos del lenguaje a una ABI C. Los perfiles personalizados conservan
+prioridad. Las comprobaciones de sintaxis y las copias temporales de Lantern
+no crean estos archivos en el proyecto del usuario.
+
+El menú contextual del explorador añade **Guardar** y **Guardar como…** para el archivo elegido. Las pestañas comparten un único controlador de menú, corrigiendo el cierre inmediato por doble activación y conservando Reabrir pestaña cerrada. El botón izquierdo mantiene la apertura normal; el derecho abre las acciones.

@@ -124,7 +124,7 @@ class Runtimes:
             from .native_packages import native_state
             deps=native_state(ws)
             compiler=self.executable(*TOOLS[lang]);standard='-std='+custom.get('standard','c++17' if lang=='cpp' else 'c11')
-            commands=[[compiler,standard,'-Wall','-Wextra','-I',str(Path(__file__).resolve().parents[1]/'debugger-support/lantern'),*deps.get('cppCompile' if lang=='cpp' else 'cCompile',deps['compile']),*(['-g','-O0'] if debug else []),*(['-fsyntax-only'] if check else []),str(file),*([] if check else [*deps['link'],'-o',str(target)])]]
+            commands=[[compiler,standard,'-Wall','-Wextra','-I',str(Path(__file__).resolve().parents[1]/'debugger-support/lantern'),*deps.get('cppCompile' if lang=='cpp' else 'cCompile',deps['compile']),*(['-g','-O0'] if debug else []),*(['-fsyntax-only'] if check else ['-save-temps=obj']),str(file),*([] if check else [*deps['link'],'-o',str(target)])]]
             if not check and not debug:commands.append([str(target)])
         elif lang=='rust':
             compiler=self.executable('rustc');commands=[[compiler,'--edition=2021',*(['-g','-C','opt-level=0'] if debug else []),*(['--emit=metadata'] if check else []),str(file),'-o',str(target)]]
@@ -161,12 +161,17 @@ class Runtimes:
             manifest=ws.resolve('ncc.package.json',must_exist=False)
             package=json.loads(manifest.read_text(encoding='utf-8')) if manifest.is_file() and not hasattr(ws,'python_workspace') else {}
             entry=package.get('targets',{}).get('main')
-            if entry and ws.resolve(entry)==file and not debug:commands=[[ncc,'package','check' if check else 'run','--path',str(ws.root)]]
+            if entry and ws.resolve(entry)==file and check:commands=[[ncc,'package','check','--path',str(ws.root)]]
             elif check:commands=[[ncc,'check',str(file)]]
-            elif debug and file.suffix.lower() in ('.n','.nc'):
+            elif file.suffix.lower() in ('.n','.nc'):
                 commands=[[ncc,'compiler','build-native',str(file),'--profile','debug','--out-dir',str(folder),'--out',str(target),'--no-run','--strict']]
+                if not debug:commands.append([str(target)])
             elif not debug:commands=[[ncc,'run',str(file)]]
-        return {'language':lang,'commands':commands,'target':target,'file':file,'cwd':ws.root}
+        result={'language':lang,'commands':commands,'target':target,'file':file,'cwd':ws.root}
+        if not check and lang in ('c','cpp','rust','nc') and (lang!='nc' or file.suffix.lower() in ('.n','.nc')):
+            from .native_project import prepare_native_project
+            result['artifacts']=prepare_native_project(ws,file,lang,target,commands if debug else commands[:-1])
+        return result
     def status(self):
         result=[]
         for name in SUFFIXES:

@@ -29,7 +29,7 @@ export class EditorContextMenu {
       ['editor.action.goToReferences','Buscar referencias','Find References','Shift F12']]);
     const peek=supported([['editor.action.peekDefinition','Definición','Definition','Alt F12'],['editor.action.referenceSearch.trigger','Referencias','References']]);
     const refactor=supported([['editor.action.rename','Renombrar símbolo','Rename Symbol','F2'],['editor.action.changeAll','Cambiar todas las coincidencias','Change All Occurrences','Ctrl F2'],['editor.action.quickFix','Corrección rápida…','Quick Fix…','Ctrl .'],['editor.action.refactor','Refactorizar…','Refactor…'],['editor.action.sourceAction','Acciones de código…','Source Actions…'],['editor.action.formatDocument','Formatear documento','Format Document','Shift Alt F'],['editor.action.formatSelection','Formatear selección','Format Selection']]);
-    const ask=(question)=>{h.dock.floatPanel('assistant');p.setMelodyMode?.('chat');const input=document.getElementById('ai-input');input.value=question;input.focus();};
+    const ask=(question)=>{h.dock.show('assistant');p.setMelodyMode?.('chat');const input=document.getElementById('ai-input');input.value=question;input.focus();};
     const lang=view.getModel()?.getLanguageId(),native=['c','cpp','nc','asm'].includes(lang),known=native||lang==='python';
     const extensionGroups=new Map();
     for(const [id,c] of this.preview.runtimeCommands||[]){if(!extensionGroups.has(c.ext))extensionGroups.set(c.ext,[]);extensionGroups.get(c.ext).push(item(c.title||c.id,()=>p.pluginCommand(id),'extensions'));}

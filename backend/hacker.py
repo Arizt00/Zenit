@@ -53,10 +53,10 @@ class Hacker:
             commands=plan['commands']
             if not commands:raise ValueError('No hay una orden de ejecución para este archivo.')
             label=language(path)+' · '+file.name
-            if len(commands)==1:return {'terminal':self._terminal(commands[0],label,ws.root)}
+            if len(commands)==1:return {'terminal':self._terminal(commands[0],label,ws.root),'artifacts':plan.get('artifacts')}
             result=self.features.app.runner.start(commands[:-1],ws.root,timeout=120)
             self.builds[result['job']]={'argv':commands[-1],'workspace':ws.root,'project':project,'name':label}
-            return result
+            return {**result,'artifacts':plan.get('artifacts')}
         folder=Path(tempfile.mkdtemp(prefix='lumen-hacker-'));self.folders.append(folder)
         source=folder/file.name;source.write_text(content,encoding='utf-8',newline='')
         if mode=='python':
