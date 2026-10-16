@@ -140,6 +140,12 @@ def main():
                 assert title.endswith(PRODUCT_NAME),(title,PRODUCT_NAME)
                 assert api._window.evaluate_js('document.querySelector(".brand-tagline").textContent').endswith('R'+str(REVISION))
                 checks.append('Packaged runtime, Monaco and native JS bridge')
+                api._window.evaluate_js('document.querySelector(".coco-button").click()')
+                until(lambda:api._window.evaluate_js('document.querySelectorAll(".team-network-modes>label").length===3'))
+                assert api._window.evaluate_js('document.querySelectorAll(".team-entry-tabs [role=tab]").length')==2
+                assert api._window.evaluate_js('document.querySelector(".team-network-modes .team-mode-copy strong").textContent')=='Este equipo'
+                api._window.evaluate_js('document.querySelector("#modal [data-action=close-modal]").click()')
+                until(lambda:api._window.evaluate_js('document.querySelector("#modal-backdrop").classList.contains("hidden")'))
                 assert app.native.lib is not None,app.native.name
                 checks.append('Native C/C++ core loaded')
                 # WebView2 suspends painting in hidden windows. Token DOM checks

@@ -7,8 +7,10 @@ Los espacios de trabajo comparten un icono de ventana con dos áreas, un selecto
 con identidad propia, acciones alineadas y controles que se adaptan al ancho
 del editor. El mismo icono aparece en la vista previa de configuración. Las
 herramientas se abren con una transición breve que respeta movimiento reducido.
-Assembly agrupa ejemplos y entrada en una sección plegable y muestra la salida
-del motor en su propio bloque, sin superponer los controles de destino.
+Assembly agrupa ejemplos, entrada y destinos en una sección plegable. Los
+resultados se consultan en pestañas de salida, registros, instrucciones y memoria,
+según los datos que publique el motor. Al cambiar al espacio ASM, la consola
+abierta se aparta para dar espacio al código; vuelve al regresar al otro espacio.
 
 - Ejecutar conserva su icono y etiqueta durante el cambio a Detener. En una
   ventana externa, la terminal local recibe su ejecución; «Usar terminal de
@@ -56,6 +58,9 @@ cambios a Melody. La consulta utiliza el proveedor configurado; no cambia ni
 acelera por sí misma el modelo remoto. Hilo también conserva temporalmente el
 inventario de aportaciones de extensiones para evitar lecturas repetidas.
 
+CoCo separa crear y unirse mediante pestañas. Los modos de conexión tienen
+tarjetas alineadas con iconos, y el permiso de guardar y ejecutar se configura
+aparte. La invitación y los estados de conexión conservan su espacio propio.
 CoCo incorpora los modos Este equipo, Red local e Internet. Dos estaciones
 pueden editar la misma sala y ejecutar en el entorno del anfitrión. Para
 Internet, Hilo prepara un conector Cloudflare verificado y una dirección HTTPS

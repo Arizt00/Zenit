@@ -39,7 +39,9 @@ def main():
             'src/workbench.js','src/foundation-ui.js','src/session-workbench.js',
             'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',
             'src/desktop-workflows.js','src/editor.js','src/icons.js','src/dependency-layout.js','design/refine-r14.css','design/refine-r15.css','src/team.js','team-peer.js','team-vendor/yjs.mjs',
-            'design/workflow-polish.css','design/session-workbench.css'))
+            'design/workflow-polish.css','design/session-workbench.css',
+            'src/team-view.js','src/assembly-workbench.js','src/workspace-profiles.js',
+            'design/co-code.css','design/assembly-workspace.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
         for name in sorted(critical):
             assert hashlib.sha256(archive.extract(entries['payload/'+name])).hexdigest()==sha256(payload/name), name

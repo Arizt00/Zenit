@@ -21,10 +21,11 @@ export class WorkspaceProfiles{
   }
   safe(fn){return this.host.platform.safe(fn);}
   apply(style){
-    this.previewEnabled=false;
+    const previous=this.style;this.previewEnabled=false;
     this.style=style||this.host.studio.profile.workspaceStyle||'general';this.bar.querySelector('select').value=this.style;document.documentElement.dataset.workspaceStyle=this.style;this.tools.dataset.style=this.style;
-    const action=(name,label,glyph)=>`<button class="text-button" data-profile-action="${name}">${icon(glyph)}<span>${label}</span></button>`;
-    this.bar.querySelector('.workspace-profile-actions').innerHTML=({general:action('run','Ejecutar','play')+action('debug-view','Depurar','bug')+action('forge-window','Forge','build'),web:action('preview','Vista web','globe')+action('run','Ejecutar','play'),data:action('table','Explorar CSV','files')+action('run','Ejecutar Python','play'),design:action('palette','Colores y contraste','palette')+action('preview','Vista de componente','globe'),assembly:action('assembly','Laboratorio ASM','cpu')})[this.style];
+    const dock=this.host.platform.host.dock;if(previous&&previous!==this.style){if(this.style==='assembly'&&dock.isVisible('console')){this.restoreConsole=true;dock.hide('console');}else if(previous==='assembly'&&this.restoreConsole){this.restoreConsole=false;dock.show('console');}}
+    const action=(name,label,glyph)=>`<button class="text-button" title="${label}" aria-label="${label}" data-profile-action="${name}">${icon(glyph)}<span>${label}</span></button>`;
+    this.bar.querySelector('.workspace-profile-actions').innerHTML=({general:action('run','Ejecutar','play')+action('debug-view','Depurar','bug')+action('forge-window','Forge','build'),web:action('preview','Vista web','globe')+action('run','Ejecutar','play'),data:action('table','Explorar CSV','files')+action('run','Ejecutar Python','play'),design:action('palette','Colores y contraste','palette')+action('preview','Vista de componente','globe'),assembly:action('assembly','Laboratorio ASM','cpu')+action('run','Ejecutar nativo','play')+action('lantern-environments','Máquinas de Lantern','cube')})[this.style];
     this.bar.querySelectorAll('[data-profile-action]').forEach(b=>b.onclick=()=>this.safe(async()=>{const op=b.dataset.profileAction;if(op==='preview'){this.previewEnabled=true;this.tools.hidden=false;await this.paintPreview();}else if(op==='table'||op==='palette'||op==='assembly'){this.previewEnabled=false;this.tools.hidden=false;this.paint();}else await this.host.perform(op,b);}));
     this.tools.hidden=this.detached||this.style==='general';this.bar.querySelector('.profile-tool-toggle').hidden=this.style==='general';this.paint();if(!this.tools.hidden)this.host.studio.host.motion?.enter(this.tools,3);
   }

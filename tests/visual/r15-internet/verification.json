@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Internet mode shows provider disclosure, asynchronous preparation and an enabled invitation only after public HTTPS is ready",
+    "A public HTTPS editor joins the same room, edits Unicode, saves only on the host and receives host execution output"
+  ],
+  "errors": [],
+  "scope": "Both clients use this computer; guest traffic crosses the public HTTPS endpoint."
+}
