@@ -8,6 +8,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import platform
 from pathlib import Path
 import shutil
 import socket
@@ -31,7 +32,7 @@ def write_report(path,value):
 
 def host(args):
     from backend.server import Application
-    from backend.coco_tunnel import VERSION
+    from backend.coco_tunnel import VERSION,ASSETS
     args.exchange.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='zenit-coco-station-probe-') as temp:
         base=Path(temp);ws=base/'fixture';ws.mkdir();documents=[]
@@ -47,7 +48,8 @@ time.sleep(2)
             (ws/name).write_text(source,encoding='utf-8');documents.append({'path':name,'text':'# HOST_UNSAVED\n'+source})
         app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True
         if args.connector:
-            target=app.features.prefs.directory/'tools/coco'/VERSION/args.connector.name;target.parent.mkdir(parents=True);shutil.copy2(args.connector,target)
+            name=ASSETS[(platform.system(),platform.machine())][0]
+            target=app.features.prefs.directory/'tools/coco'/VERSION/name;target.parent.mkdir(parents=True);shutil.copy2(args.connector,target)
         report={'mode':args.mode,'hostStation':station_id(),'hostName':socket.gethostname(),'checks':[],'errors':[]}
         try:
             state=app.features.team.start(app.workspace,{'documents':documents,'mode':args.mode,'allowRun':True});deadline=time.monotonic()+100
