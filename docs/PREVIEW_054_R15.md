@@ -49,6 +49,11 @@ cambios a Melody. La consulta utiliza el proveedor configurado; no cambia ni
 acelera por sí misma el modelo remoto. Hilo también conserva temporalmente el
 inventario de aportaciones de extensiones para evitar lecturas repetidas.
 
+El botón de copiar invitación deja 16 px bajo el campo y comparte la animación
+de Forge: icono al reposar, etiqueta al pasar el cursor y contracción tras pulsar.
+El cierre impide arrancar nuevos servidores de lenguaje mientras retira los
+existentes, también cuando había un inicio en curso.
+
 Lantern conserva sus entornos Python y máquinas QEMU por sesión, con opción de
 retenerlos mediante `.tern`. Co-Code comparte el entorno de ejecución del
 anfitrión y su intérprete Python seleccionado. No crea un contenedor duplicado

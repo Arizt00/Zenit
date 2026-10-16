@@ -1,6 +1,7 @@
 """Run with the packaged zenit-python helper, using its embedded modules/runtime."""
 import argparse
 import concurrent.futures
+from contextlib import contextmanager
 import io
 import hashlib
 import json
@@ -27,6 +28,22 @@ def until(fn,timeout=60):
         except Exception:pass
         time.sleep(.15)
     raise AssertionError('Packaged native operation timed out')
+
+
+@contextmanager
+def native_workspace():
+    temporary=tempfile.TemporaryDirectory(prefix='lumen-native-package-')
+    target=Path(temporary.name).resolve()
+    assert target.parent==Path(tempfile.gettempdir()).resolve() and target.name.startswith('lumen-native-package-')
+    try:yield temporary.name
+    finally:
+        # WebView2/ConPTY release native handles just after window shutdown.
+        # Retry only this verified test directory; never hide a cleanup failure.
+        for attempt in range(20):
+            try:temporary.cleanup();break
+            except PermissionError:
+                if attempt==19:raise
+                time.sleep(.25)
 
 
 def focus_native(window):
@@ -66,7 +83,7 @@ def main():
     assert len(mesh)==info['byteLength'] and hashlib.sha256(mesh).hexdigest()==info['sha256']
     from backend.projects import create_project
     checks.append('Frozen package includes every extension API module, verified Blender geometry and project creation')
-    with tempfile.TemporaryDirectory(prefix='lumen-native-package-') as temp:
+    with native_workspace() as temp:
         base=Path(temp);workspace=base/'project';workspace.mkdir();file=workspace/'first.py';file.write_text('print("DISK")\n',encoding='utf-8')
         html='<!doctype html><html><body><h1>DISK</h1></body></html>'
         (workspace/'Web.html').write_text(html,encoding='utf-8')

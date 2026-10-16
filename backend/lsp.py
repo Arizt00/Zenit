@@ -148,12 +148,13 @@ class LanguageSession:
 
 
 class LanguageServers:
-    def __init__(self,prefs,toolchains):self.prefs=prefs;self.toolchains=toolchains;self.sessions={};self.retired=[];self.lock=threading.RLock()
+    def __init__(self,prefs,toolchains):self.prefs=prefs;self.toolchains=toolchains;self.sessions={};self.retired=[];self.lock=threading.RLock();self.closing=False
     def start(self,ws,profile_id,consent=False):
         if not ws.trusted or consent is not True:raise PermissionError('Autoriza este ejecutable LSP en un proyecto de confianza.')
         profile=next((p for p in self.toolchains.config['servers'] if p['id']==profile_id),None)
         if not profile:raise FileNotFoundError('Servidor de lenguaje no configurado.')
         with self.lock:
+            if self.closing:raise ValueError('El servicio de lenguajes se está cerrando.')
             if len(self.sessions)>=5:raise ValueError('Detén un servidor antes de abrir otro.')
             session=LanguageSession(profile,ws);self.sessions[session.id]=session
         self.prefs.audit('lsp.start',id=profile_id)
@@ -180,5 +181,7 @@ class LanguageServers:
             if s:self.retired=(self.retired+[sid])[-64:]
         if s:s.close()
         return {'stopped':bool(s)}
-    def shutdown(self):
-        for sid in list(self.sessions):self.stop(sid)
+    def shutdown(self,permanent=False):
+        with self.lock:
+            if permanent:self.closing=True
+            for sid in list(self.sessions):self.stop(sid)

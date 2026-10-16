@@ -9,10 +9,26 @@ from pathlib import Path
 from unittest.mock import patch
 from backend.runner import Runner,Job
 from backend.server import Application
+from backend.lsp import LanguageServers
+from types import SimpleNamespace
 
 ROOT=Path(__file__).resolve().parents[1]
 
 class ExecutionR15(unittest.TestCase):
+    def test_shutdown_closes_inflight_language_server_and_rejects_late_starts(self):
+        entered=threading.Event();release=threading.Event();closed=[]
+        class Session:
+            id='server';capabilities={}
+            def __init__(self,*args):entered.set();release.wait(3)
+            def close(self):closed.append(self.id)
+        manager=LanguageServers(SimpleNamespace(audit=lambda *args,**kw:None),SimpleNamespace(config={'servers':[{'id':'test','languages':['python']}]}))
+        workspace=SimpleNamespace(trusted=True,root=ROOT)
+        with patch('backend.lsp.LanguageSession',Session):
+            start=threading.Thread(target=manager.start,args=(workspace,'test',True));start.start();self.assertTrue(entered.wait(2))
+            stop=threading.Thread(target=manager.shutdown,kwargs={'permanent':True});stop.start();release.set();start.join(3);stop.join(3)
+            self.assertFalse(start.is_alive() or stop.is_alive());self.assertEqual(closed,['server']);self.assertEqual(manager.sessions,{})
+            with self.assertRaisesRegex(ValueError,'cerrando'):manager.start(workspace,'test',True)
+
     def test_foreground_queue_bounds_and_cancelled_work_never_starts(self):
         gate=threading.Event();started=threading.Event();executed=[]
         def run(job):

@@ -17,15 +17,15 @@
 .topbar {grid-template-columns:minmax(200px,24vw) minmax(140px,1fr) max-content;gap:20px;}
 .topbar .global-search {max-width:none;}
 .top-actions {justify-content:flex-end;gap:10px;}
-.top-actions .hover-reveal {display:flex;flex:none;align-items:center;justify-content:flex-end;gap:0;box-sizing:border-box;width:40px;min-width:40px;height:40px;overflow:hidden;padding:0 10px;border-radius:13px;transition:width 420ms cubic-bezier(.22,1,.36,1),border-color 180ms,background-color 180ms;}
-.top-actions .hover-reveal>.icon {flex:none;width:18px;height:18px;}
-.top-actions .hover-reveal>.icon:first-child {order:2;}
-.top-actions .hover-reveal>span {display:block;order:1;flex:none;white-space:nowrap;opacity:0;max-width:0;margin-right:0;transform:translateX(5px);transition:opacity 150ms,transform 320ms cubic-bezier(.22,1,.36,1),max-width 420ms cubic-bezier(.22,1,.36,1),margin-right 420ms cubic-bezier(.22,1,.36,1);}
-.top-actions .hover-reveal>.icon:last-child:not(:first-child) {display:none;}
-.top-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed) {width:var(--reveal-width,138px);}
+:is(.top-actions,.team-copy-actions) .hover-reveal {display:flex;flex:none;align-items:center;justify-content:flex-end;gap:0;box-sizing:border-box;width:40px;min-width:40px;height:40px;overflow:hidden;padding:0 10px;border-radius:13px;transition:width 420ms cubic-bezier(.22,1,.36,1),border-color 180ms,background-color 180ms;}
+:is(.top-actions,.team-copy-actions) .hover-reveal>.icon {flex:none;width:18px;height:18px;}
+:is(.top-actions,.team-copy-actions) .hover-reveal>.icon:first-child {order:2;}
+:is(.top-actions,.team-copy-actions) .hover-reveal>span {display:block;order:1;flex:none;white-space:nowrap;opacity:0;max-width:0;margin-right:0;transform:translateX(5px);transition:opacity 150ms,transform 320ms cubic-bezier(.22,1,.36,1),max-width 420ms cubic-bezier(.22,1,.36,1),margin-right 420ms cubic-bezier(.22,1,.36,1);}
+:is(.top-actions,.team-copy-actions) .hover-reveal>.icon:last-child:not(:first-child) {display:none;}
+:is(.top-actions,.team-copy-actions) .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed) {width:var(--reveal-width,138px);}
 .top-actions .forge-toggle.hover-reveal {--reveal-width:92px;}
 .top-actions .debug-button.hover-reveal {--reveal-width:108px;}
-.top-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span {opacity:1;max-width:100px;margin-right:9px;transform:none;transition-delay:35ms;}
+:is(.top-actions,.team-copy-actions) .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span {opacity:1;max-width:100px;margin-right:9px;transform:none;transition-delay:35ms;}
 .assistant-heading {height:auto;min-height:68px;padding:16px 16px 8px;gap:12px;flex-wrap:wrap;}
 .assistant-heading-title {flex:1 1 auto;gap:8px;min-width:max-content;}
 .assistant-heading-title h2 {font-size:21px;}
@@ -47,5 +47,5 @@
 :is(.icon-button,.secondary-button,.text-button)>.icon {flex-shrink:0;stroke-linecap:round;stroke-linejoin:round;}
 .ai-stream {white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;}
 @media(max-width:760px){.settings-content .preference-row {flex-wrap:wrap;}.settings-content .preference-control {flex-shrink:1;}}
-@media(prefers-reduced-motion:reduce){.top-actions .hover-reveal,.top-actions .hover-reveal>span,.palette-modes button {transition:none;}}
+@media(prefers-reduced-motion:reduce){:is(.top-actions,.team-copy-actions) .hover-reveal,:is(.top-actions,.team-copy-actions) .hover-reveal>span,.palette-modes button {transition:none;}}
 html[data-motion=off] :is(.hover-reveal,.hover-reveal>span,.palette-modes button) {transition:none;}

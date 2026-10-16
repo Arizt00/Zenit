@@ -362,6 +362,7 @@ class PlatformServices:
             if not job.done:job.cancel()
         self.ai.clear_history()
     def shutdown(self):
+        self.lsp.shutdown(permanent=True)
         self.team.stop()
         self.hilo.shutdown()
         self.voice.shutdown()

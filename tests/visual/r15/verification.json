@@ -7,6 +7,7 @@
     "Executing locally writes only to the external console; selecting Zénit routes execution exclusively to the main console and retains the animated label",
     "The same three-dot anchor closes its menu; the menu clears the toolbar with a 16px gap",
     "Three menu levels remain separate inside the viewport and extension entries use their display names and package marks",
+    "Copy invitation has breathing room, expands with the shared Forge animation and collapses after click or pointer exit",
     "Zénit and the embedded cross-IDE Monaco client converge after concurrent Unicode edits; a guest saves the shared file on the host",
     "Guests execute in the host environment and receive one shared output stream",
     "A second Zénit joins with virtual buffers, synchronizes and saves on the host without creating fake local files or extension API errors"

@@ -21,7 +21,7 @@ puedes abrirla en un navegador con Monaco integrado. La invitación deja de
 funcionar cuando el anfitrión termina la sesión. Los participantes inactivos se
 retiran del listado tras 45 segundos.
 
-Los conectores se descargan desde «Conectar desde otra IDE» en Equipo:
+Los conectores se descargan desde «Conectar desde otra IDE» en CoCo:
 
 | Editor | Uso | Verificación de R15 |
 | --- | --- | --- |

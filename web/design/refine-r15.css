@@ -50,3 +50,8 @@ html[data-motion=off] .editor-context-menu{transition:none;}
 
 .binary-tools{display:grid;gap:12px;}.binary-edit-tools,.binary-action-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}.binary-action-tools{justify-content:flex-end;border-top:1px solid var(--border);padding-top:12px;}
 .binary-tools [data-binary-run],.binary-tools [data-binary-run]:hover{background:var(--button-end);color:var(--button-text);}.binary-tools [data-binary-run]:disabled{opacity:.45;}
+
+.team-copy-actions{display:flex;justify-content:flex-end;margin:16px 0 20px;min-height:40px;}
+.team-copy-actions .hover-reveal{--reveal-width:172px;}
+.team-copy-actions .hover-reveal>span{font-size:12px;}
+.team-copy-actions .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span{max-width:135px;}
