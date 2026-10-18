@@ -15,29 +15,29 @@ class FoundationTest(unittest.TestCase):
   for arch,source in EXAMPLES.items():
    if arch=='mips':continue # The bundled LLVM omits MIPS; the real MARS adapter covers it.
    with self.subTest(architecture=arch):
-    result=Simulation(None).run(SimpleNamespace(trusted=True),{'architecture':arch,'source':source,'steps':100})
+    result=Simulation(None).run(SimpleNamespace(trusted=True,root=ROOT),{'architecture':arch,'source':source,'steps':100})
     self.assertEqual(result['status'],'complete',result);self.assertEqual(result['registers'][registers[arch]],'0xc');self.assertEqual(result['executed'],3)
  def test_step_limit_and_edit_restart(self):
   if not bundled_tool('python'):self.skipTest('Requires the prepared SDK')
-  s=Simulation(None);ws=SimpleNamespace(trusted=True)
+  s=Simulation(None);ws=SimpleNamespace(trusted=True,root=ROOT)
   first=s.run(ws,{'architecture':'x86_64','source':EXAMPLES['x86_64'],'steps':1})
   self.assertEqual(first['status'],'paused');self.assertEqual(first['registers']['rax'],'0x7')
   edited=s.run(ws,{'architecture':'x86_64','source':EXAMPLES['x86_64'].replace('7','3'),'steps':2})
   self.assertEqual(edited['registers']['rax'],'0x8')
  def test_x86_64_loop_and_stack_example_has_real_results(self):
   if not bundled_tool('python') or not bundled_tool('clang'):self.skipTest('Requires the prepared SDK')
-  source=(ROOT/'examples/asm/x86_64_sum.s').read_text(encoding='utf-8');sim=Simulation(None);ws=SimpleNamespace(trusted=True)
-  partial=sim.run(ws,{'architecture':'x86_64','source':source,'steps':33});self.assertEqual(partial['status'],'paused');self.assertEqual(partial['registers']['rsp'],'0x20ffe8');self.assertEqual(partial['memory'].split()[40],'37')
-  final=sim.run(ws,{'architecture':'x86_64','source':source,'steps':1000});self.assertEqual(final['status'],'complete');self.assertEqual(final['executed'],36);self.assertEqual(final['registers']['rax'],'0x37');self.assertEqual(final['registers']['rbx'],'0x37');self.assertEqual(final['registers']['rdx'],'0x6e');self.assertEqual(final['registers']['rsp'],'0x20fff0');self.assertEqual(len(next(x for x in sim.status()['architectures'] if x['id']=='x86_64')['examples']),2)
+  source=(ROOT/'examples/asm/x86_64_sum.s').read_text(encoding='utf-8');sim=Simulation(None);ws=SimpleNamespace(trusted=True,root=ROOT)
+  partial=sim.run(ws,{'architecture':'x86_64','source':source,'steps':33});self.assertEqual(partial['status'],'paused');initial_sp=int(partial['trace'][0]['registers']['rsp'],16);pushed_sp=int(partial['registers']['rsp'],16);self.assertEqual(pushed_sp,initial_sp-8);self.assertEqual(partial['memory'].split()[pushed_sp-0x20ffc0],'37')
+  final=sim.run(ws,{'architecture':'x86_64','source':source,'steps':1000});self.assertEqual(final['status'],'complete');self.assertEqual(final['executed'],36);self.assertEqual(final['registers']['rax'],'0x37');self.assertEqual(final['registers']['rbx'],'0x37');self.assertEqual(final['registers']['rdx'],'0x6e');self.assertEqual(int(final['registers']['rsp'],16),initial_sp);self.assertEqual(len(next(x for x in sim.status()['architectures'] if x['id']=='x86_64')['examples']),2)
  def test_invalid_syntax_and_untrusted_project(self):
   s=Simulation(None)
   with self.assertRaises(PermissionError):s.run(SimpleNamespace(trusted=False),{})
   if not bundled_tool('python'):self.skipTest('Requires the prepared SDK')
-  r=s.run(SimpleNamespace(trusted=True),{'architecture':'x86_64','source':'invented_instruction rax\n','steps':10})
+  r=s.run(SimpleNamespace(trusted=True,root=ROOT),{'architecture':'x86_64','source':'invented_instruction rax\n','steps':10})
   self.assertEqual(r['status'],'error');self.assertIn('error',r['error'])
  def test_bounded_infinite_loop(self):
   if not bundled_tool('python'):self.skipTest('Requires the prepared SDK')
-  r=Simulation(None).run(SimpleNamespace(trusted=True),{'architecture':'x86_64','source':'.text\nloop: jmp loop\n','steps':30})
+  r=Simulation(None).run(SimpleNamespace(trusted=True,root=ROOT),{'architecture':'x86_64','source':'.text\nloop: jmp loop\n','steps':30})
   self.assertEqual(r['status'],'paused');self.assertEqual(r['executed'],30)
  def test_sdk_environment_does_not_import_user_packages(self):
   env=tool_environment();self.assertEqual(env['PYTHONNOUSERSITE'],'1')
