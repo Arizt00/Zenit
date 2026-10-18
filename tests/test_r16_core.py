@@ -43,6 +43,20 @@ class WorkbenchTests(unittest.TestCase):
  def test_recovery_is_durable_and_never_saves_source(self):
   store=self.app.features.workbenches;source=(self.ws/'main.py').read_bytes();session=self.session();store.checkpoint(self.app.workspace,{'session':session})
   reopened=Workbenches(self.app.features).snapshot(self.app.workspace)['session'];self.assertEqual(reopened['documents'][0]['content'],'unsaved ñ');self.assertEqual(reopened['documents'][0]['scrollTop'],40);self.assertEqual((self.ws/'main.py').read_bytes(),source)
+ def test_http_and_disk_recovery_accept_full_text_budget_with_json_escaping(self):
+  from backend.server import LumenServer
+  from urllib.request import Request,urlopen
+  from urllib.error import HTTPError
+  server=LumenServer(0,self.app);threading.Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}'
+  headers={'Content-Type':'application/json','X-Lumen-Token':self.app.token,'Cookie':f'lumen_session_{server.server_port}='+self.app.token}
+  text='\x00'*(2*1024*1024);session={'documents':[{'path':f'draft-{i}.py','dirty':True,'content':text} for i in range(4)]};payload=json.dumps({'session':session}).encode();self.assertGreater(len(payload),48*1024*1024)
+  try:
+   with urlopen(Request(url+'/api/platform/workbench/session',data=payload,headers=headers),timeout=30) as response:self.assertTrue(json.load(response)['saved'])
+   fresh=Workbenches(self.app.features).snapshot(self.app.workspace)['session'];self.assertEqual(len(fresh['documents']),4);self.assertEqual(fresh['documents'][3]['content'],text);self.assertFalse((self.ws/'draft-0.py').exists())
+   with urlopen(Request(url+'/api/platform/workbench/spaces/save',data=json.dumps({'name':'Large','session':session}).encode(),headers=headers),timeout=30) as response:self.assertEqual(len(json.load(response)['spaces']),1)
+   with self.assertRaises(HTTPError) as caught:urlopen(Request(url+'/api/platform/settings',data=b'{}',headers={**headers,'Content-Length':'3000001'}),timeout=5)
+   self.assertEqual(caught.exception.code,400)
+  finally:server.shutdown();server.server_close()
  def test_malformed_recovery_is_preserved_before_reset(self):
   store=self.app.features.workbenches;file=store._path(self.app.workspace);file.write_text('[invalid recovery');self.assertIsNone(store.snapshot(self.app.workspace)['session']);backups=list(store.directory.glob('*.corrupt-*.json'));self.assertEqual(len(backups),1);self.assertEqual(backups[0].read_text(),'[invalid recovery')
  def test_named_spaces_keep_metadata_separate_from_unsaved_recovery(self):

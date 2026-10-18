@@ -73,7 +73,7 @@ class DesktopAPI:
                 try:
                     raw=self._window.evaluate_js('window.zenitSessionSnapshot ? JSON.stringify(window.zenitSessionSnapshot()) : null')
                     if not raw:return
-                    if not isinstance(raw,str) or len(raw)>12*1024*1024:raise ValueError('Snapshot demasiado grande.')
+                    if not isinstance(raw,str) or len(raw)>52*1024*1024:raise ValueError('Snapshot demasiado grande.')
                     body=json.loads(raw);app=self._application
                     if body.get('workspace')==str(app.workspace.root):app.features.workbenches.checkpoint(app.workspace,body)
                 except Exception as error:self._application.features.hilo._failure('session-close',error)

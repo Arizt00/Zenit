@@ -190,15 +190,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             self.auth()
+            path = urlparse(self.path).path
             size = int(self.headers.get("Content-Length", "0"))
-            if not 0 < size <= 3_000_000:
+            # Recovery carries several bounded buffers. JSON escaping can use
+            # six wire bytes per text byte; other operations keep their limit.
+            limit = 52*1024*1024 if path in ('/api/platform/workbench/session','/api/platform/workbench/spaces/save') else 3_000_000
+            if not 0 < size <= limit:
                 raise ValueError("Tamaño de petición no válido.")
             if not self.headers.get("Content-Type", "").startswith("application/json"):
                 raise ValueError("Se requiere JSON.")
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError("El cuerpo debe ser un objeto JSON.")
-            path = urlparse(self.path).path
             ws = self.app.workspace
             if path.startswith("/api/platform/"):
                 return self.reply(self.app.features.post(path[len("/api/platform"):], body))

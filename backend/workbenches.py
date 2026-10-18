@@ -14,7 +14,7 @@ class Workbenches:
   if key not in self.cache:
    try:
     file=self._path(ws)
-    if file.stat().st_size>10*MAX_TEXT:raise ValueError('Workbench too large')
+    if file.stat().st_size>32*MAX_TEXT:raise ValueError('Workbench too large')
     value=json.loads(file.read_text(encoding='utf-8'))
     if not isinstance(value,dict) or value.get('schema')!=1 or value.get('workspace')!=key or not isinstance(value.get('spaces'),list) or value.get('session') is not None and not isinstance(value['session'],dict):raise ValueError('Invalid workbench')
    except (OSError,ValueError,TypeError):
