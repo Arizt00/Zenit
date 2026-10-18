@@ -33,6 +33,9 @@ from .hilo import Hilo, Connections
 from .tern import Tern
 from .team import TeamService
 from .binary_tools import BinaryTools
+from .workbenches import Workbenches
+from .execution_targets import ExecutionTargets
+from .sdk_manager import SDKManager
 
 
 class PlatformServices:
@@ -58,6 +61,40 @@ class PlatformServices:
         self.native_packages=NativePackages(self)
         self.hilo=Hilo(self);self.connections=Connections(self);self.tern=Tern(self)
         self.team=TeamService(self);self.binary_tools=BinaryTools(self)
+        self.workbenches=Workbenches(self);self.execution=ExecutionTargets(self);self.sdk=SDKManager(self)
+        self.runtimes.execution=self.execution
+        self._register_subsystems()
+    def _register_subsystems(self):
+        core=self.hilo
+        core.register('runner',self.app.runner,workspace_stop=self._stop_jobs,shutdown=self.app.runner.shutdown)
+        core.register('workbench',self.workbenches)
+        core.register('sdk',self.sdk,depends=('runner',))
+        core.register('runtimes',self.runtimes,depends=('sdk',))
+        core.register('execution',self.execution,depends=('runtimes','workbench'))
+        core.register('hacker',self.hacker,depends=('execution',),shutdown=self.hacker.shutdown)
+        core.register('buffers',self.buffers,workspace_stop=lambda ws:self.buffers.clear())
+        core.register('terminals',self.terminals,depends=('hacker',),workspace_stop=lambda ws:self.terminals.shutdown(),shutdown=self.terminals.shutdown)
+        core.register('lsp',self.lsp,depends=('runtimes',),workspace_stop=lambda ws:self.lsp.shutdown(),shutdown=lambda:self.lsp.shutdown(permanent=True))
+        core.register('preview',self.preview,depends=('runtimes',),workspace_stop=lambda ws:self.preview.stop(),shutdown=self.preview.stop)
+        core.register('debug',self.debugger,depends=('runtimes','terminals'),workspace_stop=lambda ws:self.debugger.stop(),shutdown=self.debugger.stop)
+        core.register('lantern',self.lantern,depends=('preview','runner'),workspace_stop=lambda ws:self.lantern.stop(),shutdown=self.lantern.stop)
+        core.register('machines',self.machines,depends=('terminals',))
+        core.register('environments',self.tern,depends=('machines','lantern'),workspace_stop=self.tern.close_workspace,shutdown=lambda:self.tern.close_workspace(self.app.workspace))
+        core.register('melody',self.ai,depends=('runtimes',),workspace_stop=self._stop_ai,shutdown=self.ai.shutdown)
+        core.register('voice',self.voice,depends=('melody',),workspace_stop=lambda ws:self.voice.stop(),shutdown=self.voice.shutdown)
+        core.register('extensions',self.extensions,depends=('sdk',),shutdown=self.extensions.shutdown)
+        core.register('extension-runtime',self.extension_runtime,depends=('extensions','lsp','buffers'),workspace_stop=lambda ws:self.extension_runtime.shutdown(),shutdown=self.extension_runtime.shutdown)
+        core.register('downloads',self.downloads,shutdown=self.downloads.shutdown)
+        core.register('updates',self.updates,depends=('downloads',),shutdown=self.updates.shutdown)
+        core.register('team',self.team,depends=('buffers','environments','execution'),workspace_stop=lambda ws:self.team.stop(),shutdown=self.team.stop)
+        core.subscribe('sdk.changed',lambda event:self.lsp.shutdown())
+    def _stop_jobs(self,ws):
+        for job in list(self.app.runner.jobs.values()):
+            if not job.done and job.cwd.is_relative_to(ws.root):job.cancel()
+    def _stop_ai(self,ws):
+        for job in list(self.ai.jobs.values()):
+            if not job.done:job.cancel()
+        self.ai.clear_history()
     def restore_trust(self):
         state=self.permissions.state(self.app.workspace.root,direct=not self.prefs.get('security.confirmRoutineActions'))
         self.app.workspace.trusted=state['trusted'];return state
@@ -92,6 +129,11 @@ class PlatformServices:
     def get(self,path,query):
         q=lambda key,default='':query.get(key,[default])[0]
         if path=='/state':return self.state()
+        if path=='/workbench':return self.workbenches.snapshot(self.app.workspace)
+        if path=='/execution/targets':return self.execution.inventory(self.app.workspace,q('refresh')=='1')
+        if path=='/sdk':return self.sdk.status()
+        if path=='/operations':return self.hilo.snapshot(self.app.workspace.root)
+        if path=='/connections':return {'connections':self.connections.inventory()}
         if path=='/binary/info':return self.binary_tools.info(q('path'))
         if path=='/team':return self.team.status()
         if path=='/team/connector':return self.team.connector(query.get('target',['vscode'])[0])
@@ -174,14 +216,23 @@ class PlatformServices:
             parsed=urlsplit(uri)
             if parsed.scheme!='lumen' or parsed.netloc not in self.extension_runtime.hosts:raise ValueError('No hay un controlador activo para este enlace.')
             self.extension_runtime.hosts[parsed.netloc].event('uri',{'uri':uri});return {'delivered':True}
-        if path=='/hilo/refresh':self.hilo.invalidate();return {'connections':self.connections.inventory()}
+        if path=='/workbench/session':return self.workbenches.checkpoint(ws,body)
+        if path=='/workbench/discard':return self.workbenches.discard(ws,body.get('path'))
+        if path=='/workbench/spaces/save':return self.workbenches.save_space(ws,body)
+        if path=='/workbench/spaces/delete':return self.workbenches.delete_space(ws,body.get('name'))
+        if path=='/execution/select':return self.execution.select(ws,body)
+        if path=='/sdk/activate':self._trusted();return self.sdk.activate(body.get('directory'))
+        if path=='/sdk/deactivate':self._trusted();return self.sdk.deactivate(body.get('directory'))
+        if path=='/sdk/import':
+            self._trusted();return self.hilo.submit('Preparar SDK',lambda event:self.sdk.install(body.get('path'),event),workspace=ws.root,key='sdk-install')
+        if path in ('/hilo/refresh','/connections/refresh'):self.hilo.invalidate();return {'connections':self.connections.inventory()}
         if path=='/hilo/clear':return self.hilo.clear_finished(ws.root)
-        if path=='/hilo/cancel':
+        if path in ('/hilo/cancel','/operations/cancel'):
             self._trusted()
             job=next((j for j in self.hilo.snapshot(ws.root)['jobs'] if j['id']==body.get('id')),None)
             if not job:raise ValueError('Task is not in this workspace.')
             return self.hilo.cancel(body['id'])
-        if path=='/hilo/connect':return self.connections.launch(ws,body)
+        if path in ('/hilo/connect','/connections/open'):return self.connections.launch(ws,body)
         if path=='/machines/base':self._trusted();return self.machines.configure_base(body.get('directory'))
         if path.startswith('/lantern/environments/'):
             self._trusted();action=path.rsplit('/',1)[-1]
@@ -231,6 +282,7 @@ class PlatformServices:
         if path=='/extensions/runtime/restore':return self.extension_runtime.restore(ws)
         if path=='/extensions/runtime/request':return self.extension_runtime.request(ws,body)
         if path=='/lantern/start':
+            self.execution.require_local(ws,'Los checkpoints y la ejecución continua de Lantern')
             if self.debugger.snapshot()['status'] in ('running','paused'):self.debugger.stop()
             return self.lantern.start(ws,body.get('path',''),body.get('content'),body.get('version'))
         if path=='/lantern/buffer':return self.lantern.buffer(ws,body.get('path',''),body.get('content'),body.get('version'))
@@ -250,6 +302,7 @@ class PlatformServices:
         if path=='/languages/config':return self.runtimes.save(body)
         if path=='/preview':return self.preview.start(ws,body.get('path',''),body.get('buffers'))
         if path=='/debug/start':
+            self.execution.require_local(ws,'La depuración DAP')
             self.lantern.stop()
             return self.debugger.start(ws,body.get('path',''),body.get('breakpoints',[]))
         if path=='/debug/command':self._trusted();return self.debugger.command(body.get('command'))
@@ -351,23 +404,8 @@ class PlatformServices:
             return {'queued':True,'sequence':self.command_seq,'command':command}
         raise FileNotFoundError('Operación de plataforma desconocida.')
     def workspace_changed(self):
-        self.team.stop()
         self.hilo.cancel_workspace(self.app.workspace.root)
-        self.tern.close_workspace(self.app.workspace)
+        self.hilo.lifecycle('workspace_stop',self.app.workspace)
         self.hilo.invalidate()
-        self.voice.stop()
-        self.buffers.clear()
-        self.extension_runtime.shutdown()
-        self.lantern.stop();self.debugger.stop();self.preview.stop()
-        self.terminals.shutdown();self.lsp.shutdown()
-        for job in list(self.ai.jobs.values()):
-            if not job.done:job.cancel()
-        self.ai.clear_history()
     def shutdown(self):
-        self.lsp.shutdown(permanent=True)
-        self.team.stop()
         self.hilo.shutdown()
-        self.voice.shutdown()
-        self.updates.shutdown()
-        self.workspace_changed();self.ai.shutdown();self.extensions.shutdown();self.downloads.shutdown()
-        self.hacker.shutdown()

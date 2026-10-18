@@ -33,7 +33,7 @@ export class LanternView{
     }
     if(action==='analyze'){
       const p=this.host.platform;if(p.aiJob||p.aiStarting)throw Error(this.studio.t('Detén o espera la respuesta actual.','Stop or wait for the current response.'));
-      this.host.dock.floatPanel('assistant');p.setMelodyMode?.('chat');const input=$('#ai-input');input.value=lanternConsultation(this.state,this.baselineRevision)+'\nThe attached editor scope, if any, is from '+(this.host.editor.current||'no file')+'. The executed file is '+(this.state.path||'not started')+'. Do not assume different files contain the same source.';input.focus();
+      this.host.dock.show('assistant');p.setMelodyMode?.('chat');const input=$('#ai-input');input.value=lanternConsultation(this.state,this.baselineRevision)+'\nThe attached editor scope, if any, is from '+(this.host.editor.current||'no file')+'. The executed file is '+(this.state.path||'not started')+'. Do not assume different files contain the same source.';input.focus();
       if(!p.prefs['ai.model']){p.openModelPicker?.();return;}
       await p.sendAI(input.value,{consult:true});return;
     }

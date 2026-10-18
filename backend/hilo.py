@@ -11,15 +11,19 @@ import time
 import uuid
 
 from .runtime_paths import find_tool
+from .orchestration import Kernel
 
 
-class Hilo:
+class Hilo(Kernel):
     def __init__(self, features):
+        super().__init__()
         self.features = features
         self.lock = threading.RLock()
         self.queue = queue.PriorityQueue(maxsize=24)
         self.jobs = OrderedDict()
         self.cache = {}
+        self.reads = {}
+        self.cache_generation=0
         self.sequence = 0
         self.closed = False
         # One maintenance worker leaves foreground execution and HTTP independent.
@@ -28,9 +32,9 @@ class Hilo:
 
     def submit(self, label, operation, *, workspace='', key=None, priority=10, cancel=None):
         with self.lock:
-            if self.closed: raise RuntimeError('Hilo is closing.')
+            if self.closed: raise RuntimeError('El núcleo se está cerrando.')
             if key:
-                existing = next((j for j in self.jobs.values() if j['key'] == key and j['state'] in ('queued', 'running')), None)
+                existing = next((j for j in self.jobs.values() if j['key'] == key and j['workspace']==str(workspace) and j['state'] in ('queued', 'running')), None)
                 if existing: return {'job': existing['id']}
             identity = uuid.uuid4().hex
             event = threading.Event()
@@ -40,7 +44,7 @@ class Hilo:
             try: self.queue.put_nowait((priority, self.sequence, identity, operation))
             except queue.Full:
                 del self.jobs[identity]
-                raise ValueError('Hilo has 24 pending operations. Wait or cancel a task.') from None
+                raise ValueError('Hay 24 operaciones pendientes. Espera o cancela una tarea.') from None
             for old in list(self.jobs):
                 if len(self.jobs) <= 64: break
                 if self.jobs[old]['state'] not in ('queued', 'running'): del self.jobs[old]
@@ -69,7 +73,7 @@ class Hilo:
     def cancel(self, identity):
         with self.lock:
             job = self.jobs.get(identity)
-            if not job: raise ValueError('Unknown Hilo operation.')
+            if not job: raise ValueError('Operación desconocida.')
             if job['state'] in ('queued', 'running'):
                 job['event'].set()
                 if job['cancel']: job['cancel']()
@@ -100,17 +104,33 @@ class Hilo:
         return self.submit('Packages · ' + Path(job.cwd).name, run, workspace=job.cwd, key='process:' + job.id, cancel=cancel)
 
     def cached(self, key, read, ttl=15):
+        # Concurrent windows share one discovery instead of starting identical
+        # filesystem/tool scans. Errors wake every waiter and are never cached.
         with self.lock:
             item = self.cache.get(key)
             if item and item[0] > time.monotonic(): return copy.deepcopy(item[1])
-        value = read()
-        with self.lock:
-            self.cache[key] = (time.monotonic() + ttl, value)
-            if len(self.cache) > 32: self.cache.pop(next(iter(self.cache)))
-        return copy.deepcopy(value)
+            pending=self.reads.get(key)
+            owner=pending is None
+            if owner:pending={'event':threading.Event(),'generation':self.cache_generation};self.reads[key]=pending
+        if not owner:
+            if not pending['event'].wait(30):raise TimeoutError('La detección de herramientas sigue ocupada.')
+            if 'error' in pending:raise pending['error']
+            if pending['generation']!=self.cache_generation:return self.cached(key,read,ttl)
+            return copy.deepcopy(pending['value'])
+        try:
+            value=read()
+            with self.lock:
+                pending['value']=value
+                if pending['generation']==self.cache_generation:self.cache[key]=(time.monotonic()+ttl,value)
+                if len(self.cache)>32:self.cache.pop(next(iter(self.cache)))
+            return copy.deepcopy(value)
+        except BaseException as error:
+            pending['error']=error;raise
+        finally:
+            with self.lock:self.reads.pop(key,None);pending['event'].set()
 
     def invalidate(self):
-        with self.lock: self.cache.clear()
+        with self.lock:self.cache.clear();self.cache_generation+=1
 
     def clear_finished(self, workspace):
         with self.lock:
@@ -129,9 +149,13 @@ class Hilo:
         return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'counts':counts, 'cacheEntries': len(self.cache),'execution':self.features.app.runner.snapshot() if getattr(self.features,'app',None) else None}
 
     def shutdown(self):
+        with self.lifecycle_lock:
+            if self.stopping:return
+            self.stopping=True
         self.closed = True
         for identity in list(self.jobs): self.cancel(identity)
         self.worker.join(timeout=5)
+        self.lifecycle('shutdown')
         self.invalidate()
 
 

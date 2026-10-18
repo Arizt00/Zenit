@@ -1,8 +1,9 @@
+import {SDKManagerUI} from './sdk-manager.js';
 import {SessionWorkbench} from './session-workbench.js';
 import {hoverReveal} from './hover-reveal.js';
 import {icon,escapeHTML as esc} from './icons.js';
 
-const SECTIONS=[['languages','code','Lenguajes'],['project','folder','Proyecto'],['assembly','cpu','Assembly'],['containers','cube','Contenedores'],['machines','split','Máquinas'],['sessions','sparkles','Lantern']];
+const SECTIONS=[['languages','code','Lenguajes'],['project','folder','Proyecto'],['assembly','cpu','Assembly'],['containers','cube','Contenedores'],['machines','split','Máquinas'],['sessions','sparkles','Lantern'],['sdk','cpu','SDK']];
 const NAMES={python:'Python',gcc:'C · GCC','g++':'C++ · GCC',clang:'LLVM · ASM',java:'Java',javac:'Compilador Java',bash:'Bash',ncc:'nC',node:'Node · extensiones',docker:'Docker CLI','qemu-system-x86_64':'QEMU',mvn:'Maven',gradle:'Gradle'};
 const BRANDS={python:'python',gcc:'c','g++':'cplusplus',clang:'llvm',java:'openjdk',docker:'docker',mvn:'apachemaven',gradle:'gradle'};
 const GROUPS={languages:['python','gcc','g++','clang','java','javac','ncc','node'],project:['mvn','gradle','bash'],containers:['docker'],machines:['qemu-system-x86_64']};
@@ -53,6 +54,7 @@ export class FoundationUI{
     page.querySelector('#lab-create-arch').onclick=e=>this.operation(e.currentTarget,async()=>{if(!await h.ensureTrust())return false;this.machines=await h.platform.api('/machines/create',{type:'arch'});if(page.isConnected)this.updateMachines();},'Perfil Arch preparado.');
     page.querySelector('#lab-ssh').onsubmit=e=>{e.preventDefault();this.operation(e.submitter,async()=>{if(!await h.ensureTrust())return false;const body=Object.fromEntries(new FormData(e.target));body.port=Number(body.port);this.machines=await h.platform.api('/machines/create',body);if(page.isConnected)this.updateMachines();},'Conexión añadida.');};
     const section=document.createElement('section');section.dataset.labPanel='sessions';section.id='lab-section-sessions';section.setAttribute('role','tabpanel');section.setAttribute('aria-labelledby','lab-tab-sessions');section.hidden=true;page.querySelector('.lab-content').append(section);this.sessions=new SessionWorkbench(h);this.sessions.mount(section);
+    const sdkSection=document.createElement('section');sdkSection.dataset.labPanel='sdk';sdkSection.id='lab-section-sdk';sdkSection.setAttribute('role','tabpanel');sdkSection.setAttribute('aria-labelledby','lab-tab-sdk');sdkSection.hidden=true;page.querySelector('.lab-content').append(sdkSection);this.sdkManager=new SDKManagerUI(h,sdkSection);this.sdkManager.mount().catch(error=>h.platform.host.notify(error.message,'error'));
     this.addProjectWorkflow();this.updateTools();this.updateMachines();this.selectSection(this.section);
   }
   addProjectWorkflow(){
@@ -61,7 +63,7 @@ export class FoundationUI{
     box.innerHTML=`<div><span class="platform-eyebrow">PROJECT READINESS</span><strong>${esc(path||t('Sin archivo activo','No active file'))}</strong><p>${t('Configura el entorno aquí. Ejecuta y observa su resultado en Forge.','Configure the environment here. Execute and inspect the result in Forge.')}</p></div><button class="primary-button" data-lab-forge>${icon('play')}Open Forge</button><button class="secondary-button" data-lab-assist>${icon('sparkles')}Explain setup</button>`;
     this.root.querySelector('.lab-navigation').before(box);
     box.querySelector('[data-lab-forge]').onclick=()=>p.safe(async()=>{p.closePage();await h.desktop.openForgeTerminal();});
-    box.querySelector('[data-lab-assist]').onclick=()=>p.safe(async()=>{const tools=this.sdk.tools.map(x=>({name:NAMES[x.id]||x.id,available:!!x.path,bundled:!!x.bundled}));p.closePage();p.host.dock.floatPanel('assistant');p.melodyMode='chat';const question='Explain the environment needed to run this active project file. Use the detected tool inventory, identify missing prerequisites and propose clear setup steps. Do not run commands or edit files.\n'+JSON.stringify({path,language,tools},null,2);document.getElementById('ai-input').value=question;await p.sendAI(question,{consult:true});});
+    box.querySelector('[data-lab-assist]').onclick=()=>p.safe(async()=>{const tools=this.sdk.tools.map(x=>({name:NAMES[x.id]||x.id,available:!!x.path,bundled:!!x.bundled}));p.closePage();p.host.dock.show('assistant');p.melodyMode='chat';const question='Explain the environment needed to run this active project file. Use the detected tool inventory, identify missing prerequisites and propose clear setup steps. Do not run commands or edit files.\n'+JSON.stringify({path,language,tools},null,2);document.getElementById('ai-input').value=question;await p.sendAI(question,{consult:true});});
   }
   selectSection(id){
     if(!SECTIONS.some(s=>s[0]===id))return;this.section=id;

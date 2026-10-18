@@ -55,6 +55,7 @@ SCHEMA = {
  'general.locale': ('general','en','Idioma de la interfaz','Interface language',['es','en']),
  'general.showWelcome': ('general',True,'Mostrar inicio al abrir Zénit','Show welcome when Zénit starts','bool'),
  'general.restoreLayout': ('general',True,'Recordar la distribución de paneles','Remember panel layout','bool'),
+ 'general.restoreSession': ('general',True,'Recuperar pestañas y cambios sin guardar','Recover tabs and unsaved changes','bool'),
  'appearance.extensionTheme': ('appearance','','Tema de extensión activo','Active extension theme','string'),
  'appearance.iconTheme': ('appearance','auto','Tema de iconos activo','Active file icon theme','string'),
  'appearance.theme': ('appearance','day','Tema','Color theme',['day','dark','forest']),

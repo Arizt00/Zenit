@@ -20,7 +20,13 @@
   };
   const ready=()=>{complete=true;phases.push({name:'ready',ms:Math.round(performance.now()-started)});document.documentElement.removeAttribute('data-booting');document.getElementById('startup-screen')?.setAttribute('hidden','');cleanup();window.dispatchEvent(new Event('zenit:ready'));};
   const onError=event=>{if(event.target?.tagName==='SCRIPT'&&event.target.type==='module')fail(new Error(english()?'A required interface module could not load. Retry opening Zénit.':'No se pudo cargar un módulo de la interfaz. Vuelve a abrir Zénit.'));else if(event.error)fail(event.error);};
-  const onRejection=event=>fail(event.reason);
+  const onRejection=event=>{
+    // Restoring tabs disposes Monaco's pending hover/completion requests.
+    // Its own cancellation is expected; it does not mean startup failed.
+    const error=event.reason;
+    if(error?.name==='Canceled'&&error?.message==='Canceled'&&String(error.stack).includes('/vendor/monaco/'))return;
+    fail(error);
+  };
   const cleanup=()=>{window.removeEventListener('error',onError,true);window.removeEventListener('unhandledrejection',onRejection);};
   window.addEventListener('error',onError,true);window.addEventListener('unhandledrejection',onRejection);
   window.zenitStartup={phase,fail,ready,snapshot:()=>({complete,failed,phases:phases.map(p=>({...p}))})};

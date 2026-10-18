@@ -40,6 +40,7 @@ class Hacker:
 
     def start(self, ws, path, content, mode, args=None):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto para ejecutar su código.')
+        if mode!='file' and getattr(self.features,'execution',None):self.features.execution.require_local(ws,'Esta acción de Forge')
         project=ws.root
         if mode=='binary':ws,path,_=self.features.binary_tools.scope(path)
         else:ws,path=self.features.execution_workspace(ws,path)

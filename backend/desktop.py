@@ -51,6 +51,7 @@ class DesktopAPI:
                 if isinstance(value,(int,float)) and -100_000<=value<=100_000:coordinates[axis]=round(value)
         child=webview.create_window(PRODUCT_NAME+' · '+titles[panel],self._url+'/?'+query,js_api=api,width=1060 if panel in ('editor','forge','preview','lantern') or panel.startswith('profile-') else 640,height=760,min_size=(380,320),easy_drag=False,background_color='#191d28',**coordinates)
         api._window=child;self._children[key]=child
+        api._bind_session_close()
         def closed():
             self._children.pop(key,None)
             # Qt evaluation can wait for a renderer already closing. Never keep
@@ -63,6 +64,21 @@ class DesktopAPI:
             __import__('threading').Thread(target=notify_parent,daemon=True).start()
         child.events.closed+=closed
         return {'opened':True,'panel':panel}
+
+    def _bind_session_close(self):
+        """Capture the renderer synchronously before it disappears on normal close."""
+        def closing():
+            import json,threading
+            def capture():
+                try:
+                    raw=self._window.evaluate_js('window.zenitSessionSnapshot ? JSON.stringify(window.zenitSessionSnapshot()) : null')
+                    if not raw:return
+                    if not isinstance(raw,str) or len(raw)>12*1024*1024:raise ValueError('Snapshot demasiado grande.')
+                    body=json.loads(raw);app=self._application
+                    if body.get('workspace')==str(app.workspace.root):app.features.workbenches.checkpoint(app.workspace,body)
+                except Exception as error:self._application.features.hilo._failure('session-close',error)
+            worker=threading.Thread(target=capture,daemon=True);worker.start();worker.join(timeout=2)
+        self._window.events.closing+=closing
 
     def close_panel(self):
         """Return this shared child to its original application, without stopping jobs."""

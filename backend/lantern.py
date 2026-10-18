@@ -8,6 +8,7 @@ import struct
 import shutil
 import tempfile
 import os
+import stat
 from .terminals import child_environment
 from .lantern_adapters import stage, prepare, runtime_commands, Superseded
 from .diagnostics import marker
@@ -31,6 +32,7 @@ class Lantern:
         self.lock=threading.RLock();self.control_lock=threading.RLock();self.event=threading.Event();self.thread=None;self.job=None
         self.memory_dir=None;self.history=[];self.validation=None;self.generation=0;self.content=None;self.version=None;self.shadow=None;self.live_root=None
         self.workspace=None;self.revision=0;self.pending=0;self.stamp=None
+        self.checkpoint_cache={}
         self.state={'active':False,'status':'idle','path':'','revision':0,'output':'','diagnostics':[],'preview':None}
 
     def snapshot(self):
@@ -47,7 +49,7 @@ class Lantern:
                 try:
                     lens=self.memory_dir/'lens.json'
                     if lens.stat().st_size<=256000:
-                        data=json.loads(read_checkpoint(lens,256000))
+                        data=self.read_json(lens,256000)
                         if data.get('generation')==str(self.generation):state['lens']=data.get('values',[])[:200]
                 except (OSError,ValueError,TypeError):pass
             state['history']=copy.deepcopy(self.history[-20:])
@@ -55,7 +57,7 @@ class Lantern:
             state['memoryHelp']='Python: lantern_state · JS/TS: lanternState · C/C++: lantern.h / lantern.hpp · nC: estado JSON con esquema y migración.'
             if self.memory_dir:
                 state['checkpoint']=str(self.memory_dir/'state.json')
-                try: state['memory']=json.loads(read_checkpoint(self.memory_dir/'state.json',1_000_000))
+                try: state['memory']=self.read_json(self.memory_dir/'state.json',1_000_000)
                 except (OSError,ValueError): state['memory']={}
                 native=self.memory_dir/'state.json.native'
                 try:
@@ -65,6 +67,19 @@ class Lantern:
                         state['nativeMemory']={'schema':schema,'bytes':size,'checksum':f'{checksum:016x}','path':str(native)}
                 except (OSError,ValueError,struct.error):pass
             return state
+
+    def read_json(self,path,limit):
+        # Multiple windows poll the same state; parse each atomic checkpoint once.
+        metadata=path.lstat()
+        if not stat.S_ISREG(metadata.st_mode) or getattr(metadata,'st_file_attributes',0)&0x400:raise ValueError('Checkpoint no regular.')
+        if metadata.st_size>limit:raise ValueError('Checkpoint demasiado grande.')
+        key=(metadata.st_mtime_ns,metadata.st_ctime_ns,metadata.st_size,metadata.st_ino)
+        cached=self.checkpoint_cache.get(str(path))
+        if cached and cached[0]==key:return copy.deepcopy(cached[1])
+        data=json.loads(read_checkpoint(path,limit))
+        self.checkpoint_cache[str(path)]=(key,data)
+        while len(self.checkpoint_cache)>4:self.checkpoint_cache.pop(next(iter(self.checkpoint_cache)))
+        return copy.deepcopy(data)
 
     def template(self,lang):
         suffix={'c':'c','cpp':'cpp','nc':'n'}.get(lang)

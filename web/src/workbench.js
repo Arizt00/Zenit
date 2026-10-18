@@ -714,7 +714,7 @@ export class LumenPlatform {
         const diagnostics=validDiagnostics(p.diagnostics);this.diagnosticMap.set(path,diagnostics);
         if(this.host.editor.kind==='monaco'){const model=this.host.editor.models.get(path)?.model;if(model)window.monaco.editor.setModelMarkers(model,'lumen-lsp',diagnostics.map(d=>({message:String(d.message||''),severity:({1:8,2:4,3:2,4:1})[d.severity]||2,startLineNumber:d.range.start.line+1,startColumn:d.range.start.character+1,endLineNumber:d.range.end.line+1,endColumn:d.range.end.character+1})));}
       }
-      this.refreshDiagnostics();if(result.closed){await this.stopLSP(s.id,false);if(!result.retired)this.host.notify(this.t('El servidor de lenguaje ha terminado.','Language server exited.'),'warning');return;}
+      this.refreshDiagnostics();if(result.closed){await this.stopLSP(s.id,false);if(result.retired){const state=await this.api('/state');this.development=state.development;this.later(()=>this.autoLanguageServer(),200);}else this.host.notify(this.t('El servidor de lenguaje ha terminado.','Language server exited.'),'warning');return;}
     }catch(error){if(!this.lspSessions.has(s.id))return;await this.stopLSP(s.id,false);this.report(error);return;}
     this.later(()=>this.pollLSP(s),document.hidden?1500:400);
   }

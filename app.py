@@ -167,6 +167,7 @@ def main():
             background={'day':'#F4F6FC','dark':'#191d28','forest':'#15231e'}[first_theme]
             api._window = webview.create_window("Zénit", url, js_api=api, width=1648, height=928,
                 min_size=(1050, 680), frameless=False, easy_drag=False, maximized=True, background_color=background)
+            api._bind_session_close()
             api._window.events.maximized += lambda: setattr(api, "_maximized", True)
             api._window.events.restored += lambda: setattr(api, "_maximized", False)
             try:

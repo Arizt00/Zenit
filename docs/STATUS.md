@@ -1,6 +1,6 @@
 # What works today
 
-Zénit 0.5.4 R15 source is a public preview. No universal VS Code parity percentage is claimed.
+Zénit 0.5.4 R16 source is a public preview. No universal VS Code parity percentage is claimed.
 
 | Area | Available | Boundary |
 | --- | --- | --- |
@@ -13,7 +13,10 @@ Zénit 0.5.4 R15 source is a public preview. No universal VS Code parity percent
 | Forge | File runtime, Python buffer, C/GDB, repeat/stop, exit status | Toolchains must be configured; history belongs to the current Forge window. |
 | Melody | Inline models, bounded local file memory, scope preview, session prompt drafts, live edits, file plans, recovery/undo, five local evidence tools | Providers need configuration; drafts last for the current window; generated code needs review. |
 | Lantern | Unsaved-buffer execution, pin/follow, output comparison, read-only Melody consultation | History/output are bounded; checkpoints require cooperating code. |
-| Hilo | Automatic bounded package queue, discovery cache and seven explicit application adapters | Clients and accounts are separate; not autonomous control of arbitrary applications. |
+| Internal orchestration | HILO backend subsystem registry, reverse dependency cleanup, bounded maintenance and shared discovery cache | No HILO product panel. Foreground execution remains independent of maintenance. |
+| Saved spaces and recovery | Per-project panel/tab/style snapshots, split order, cursor/scroll and durable dirty text | 12 named spaces, 48 documents, 2 MiB per dirty buffer / 8 MiB total. Binary patches require explicit save. |
+| Execution target | Shared persistent local/WSL/SSH target for file run/check, including CoCo host runtime plans | SSH requires files already present remotely. Cooperative checkpoints, DAP and buffer-specific Forge modes currently require local execution. VM console is separate. |
+| SDK components | Reusable prepared roots and verified optional ZIP imports with exact SHA-256 manifests | Local component packages; no automatic remote component repository. Imported tools run with the current user when explicitly invoked. |
 | Session environments | Real Python venvs and QEMU/Arch machines, workspace `.tern` descriptors | VM base is optional. Disk checkpoints retain backing files, not RAM. |
 | Voice | Existing local Emma bridge | Requires a compatible local voice installation. |
 | Search | Literal matching lines, filters, UTF-16 positions | No regex/bulk replace yet; up to 200 visible results. |
@@ -25,3 +28,5 @@ AI tests use deterministic transports to verify scope and file/UI behavior, not
 to benchmark provider intelligence. See [historical limits](../KNOWN_LIMITATIONS.md).
 
 R15 adds Co-Code (CoCo) Yjs/Yrs shared buffers, host execution and cross-IDE connectors. See [Team](TEAM.md) and [R15](PREVIEW_054_R15.md) for tested integrations and remaining API limits.
+
+R16 moves HILO entirely behind the product UI, restores workbench sessions independently of the backend port, pauses Melody display animation in hidden windows, caches unchanged Lantern checkpoints and corrects VS Code Position/Range/Selection semantics. See [R16 notes](PREVIEW_054_R16.md).

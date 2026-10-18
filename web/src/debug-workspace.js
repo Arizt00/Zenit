@@ -37,10 +37,10 @@ export class DebugWorkspace{
   select(tab){if(!TABS.some(x=>x[0]===tab)||!this.root?.isConnected)return;this.tab=tab;this.root.querySelectorAll('[data-debug-tab]').forEach(button=>{const active=button.dataset.debugTab===tab;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});this.root.querySelectorAll('[data-debug-pane]').forEach(pane=>pane.hidden=pane.dataset.debugPane!==tab);}
   busy(){return ['running','paused'].includes(this.state?.status);}
   async consultMelody(){
-    const h=this.host,p=h.platform;if(p.aiStarting||p.aiJob){h.dock.floatPanel('assistant');document.getElementById('ai-input').focus();h.notify(p.t('Melody está respondiendo. Detén o termina la respuesta antes de consultar otra sesión.','Melody is responding. Finish or stop the response before consulting another session.'));return;}
+    const h=this.host,p=h.platform;if(p.aiStarting||p.aiJob){h.dock.show('assistant');document.getElementById('ai-input').focus();h.notify(p.t('Melody está respondiendo. Detén o termina la respuesta antes de consultar otra sesión.','Melody is responding. Finish or stop the response before consulting another session.'));return;}
     const state=this.state||{},path=state.path||this.selected;
     const question='Analyze this debugger snapshot. Explain the observed state, likely cause, and next diagnostic step. Distinguish facts from hypotheses. Propose a reviewable fix if supported by the evidence. This is a read-only consultation; do not edit files.\n'+JSON.stringify({path,status:state.status,line:state.line,error:state.error,stack:state.stack,variables:state.variables,output:state.output?.slice(-6000)},null,2);
-    h.dock.floatPanel('assistant');p.melodyMode='chat';const input=document.getElementById('ai-input');input.value=question;input.focus();
+    h.dock.show('assistant');p.melodyMode='chat';const input=document.getElementById('ai-input');input.value=question;input.focus();
     if(!p.prefs['ai.model']){await p.settings('ai');h.notify(p.t('Conecta un modelo. La consulta de depuración permanece preparada en Melody.','Connect a model. Your debug question remains prepared in Melody.'));return;}
     await p.sendAI(question,{consult:true});
   }

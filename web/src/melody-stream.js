@@ -5,12 +5,14 @@ export class MelodyStream {
     this.node=document.createTextNode('');element.replaceChildren(this.node);
     this.onScroll=()=>{this.follow=scroller.scrollHeight-scroller.scrollTop-scroller.clientHeight<56;};
     scroller.addEventListener('scroll',this.onScroll,{passive:true});
+    this.visibility=()=>{if(document.hidden){cancelAnimationFrame(this.frame);this.frame=0;}else if(!this.disposed&&this.shown<this.target.length)this.update(this.target);};
+    document.addEventListener('visibilitychange',this.visibility);
   }
   update(value){
     if(this.disposed)return;
     if(!value.startsWith(this.target)){this.node.data='';this.shown=0;this.credit=0;}
     this.target=value;
-    if(!this.frame){this.lastPaint=performance.now();this.frame=requestAnimationFrame(now=>this.paint(now));}
+    if(!this.frame&&!document.hidden){this.lastPaint=performance.now();this.frame=requestAnimationFrame(now=>this.paint(now));}
   }
   paint(now=performance.now()){
     this.frame=0;if(this.disposed||!this.element.isConnected)return;
@@ -28,5 +30,5 @@ export class MelodyStream {
     if(end<this.target.length)this.frame=requestAnimationFrame(time=>this.paint(time));
   }
   finish(){cancelAnimationFrame(this.frame);this.frame=0;this.node.appendData(this.target.slice(this.shown));this.shown=this.target.length;}
-  dispose(){this.finish();this.disposed=true;this.scroller.removeEventListener('scroll',this.onScroll);}
+  dispose(){this.finish();this.disposed=true;this.scroller.removeEventListener('scroll',this.onScroll);document.removeEventListener('visibilitychange',this.visibility);}
 }

@@ -36,7 +36,7 @@ def main():
         index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
         critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
         critical.update('_internal/web/'+name for name in (
-            'src/workbench.js','src/foundation-ui.js','src/session-workbench.js',
+            'src/workbench.js','src/foundation-ui.js','src/session-workbench.js','src/workbench-session.js','src/sdk-manager.js','design/coherence-r16.css',
             'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',
             'src/desktop-workflows.js','src/editor.js','src/diagnostic-panel.js','design/diagnostic-panel.css','src/explorer-menu.js','src/preview.js','src/tab-controls.js','src/editor-context-menu.js','src/icons.js','src/dependency-layout.js','design/refine-r14.css','design/refine-r15.css','src/team.js','team-peer.js','team-vendor/yjs.mjs',
             'design/workflow-polish.css','design/session-workbench.css',

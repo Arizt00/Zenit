@@ -81,6 +81,11 @@ class Runtimes:
         raise ValueError('Falta '+ ' / '.join(names)+'. Instala su SDK o configura la ruta en Lenguajes y depuradores.')
     def plan(self,ws,path,check=False,debug=False):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de ejecutar código.')
+        execution=getattr(self,'execution',None)
+        if execution:
+            if debug:execution.require_local(ws,'La depuración DAP')
+            remote=execution.plan(ws,path,check)
+            if remote is not None:return remote
         file=ws.resolve(path);lang=language(path)
         if lang not in SUFFIXES:raise ValueError('Configura una tarea para este tipo de archivo.')
         folder=ws.private_dir('run')/(file.stem+'-'+hashlib.sha256(path.encode()).hexdigest()[:8]);folder.mkdir(exist_ok=True)

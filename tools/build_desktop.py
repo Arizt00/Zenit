@@ -48,7 +48,7 @@ def prepare_windows_bundle_cleanup(bundle):
             path.chmod(metadata.st_mode | stat.S_IWRITE)
 
 
-def bundle_python(bundle):
+def bundle_python(bundle,components=None):
     """Ship the prepared standalone CPython, never the build environment."""
     if sys.platform!='win32':return
     source=ROOT/'sdk/foundation';index=json.loads((source/'tool-index.json').read_text(encoding='utf-8'))
@@ -61,13 +61,15 @@ def bundle_python(bundle):
     target=bundle/'sdk/foundation';target.mkdir(parents=True,exist_ok=True)
     shutil.copytree(source/'python',target/'python',dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
     names=('python','pylsp','gcc','g++','gdb','cmake','ninja','as','ar','clang','clang++','clangd','llvm-objcopy','llvm-objdump','lld','ld.lld','lld-link','ncc','nasm')
-    native_dirs=('native-mingw','native-sources','llvm','nc','nasm')
+    selected=set(components or ('python','gcc','llvm','nc','nasm'))
+    native_dirs=tuple(folder for group,folders in {'gcc':('native-mingw','native-sources'),'llvm':('llvm',),'nc':('nc',),'nasm':('nasm',)}.items() if group in selected for folder in folders)
     for folder in native_dirs:
         if not (source/folder).is_dir():raise RuntimeError('Prepare the native base before packaging: '+folder)
         shutil.copytree(source/folder,target/folder,dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    names=tuple(name for name in names if index['tools'].get(name,'').split('/')[0] in {'python',*native_dirs})
     for name in names:
         if not (source/index['tools'].get(name,'not-prepared')).is_file():raise RuntimeError('Missing base tool: '+name)
-    base={'schema':1,'platform':sys.platform,'tools':{name:index['tools'][name] for name in names},'components':[x for x in index['components'] if x['id'] in ('python','llvm','gcc','nc','nasm')]}
+    base={'schema':1,'platform':sys.platform,'tools':{name:index['tools'][name] for name in names},'components':[x for x in index['components'] if x['id'] in selected]}
     (target/'tool-index.json').write_text(json.dumps(base,indent=2),encoding='utf-8')
 
 
@@ -154,7 +156,10 @@ def main():
     parser.add_argument('--plan',action='store_true')
     parser.add_argument('--require-assets',action='store_true')
     parser.add_argument('--package-only',action='store_true',help='Empaquetar un bundle ya construido en este sistema')
+    parser.add_argument('--sdk-components',default='python,gcc,llvm,nc,nasm',help='SDK incluidos: python y componentes opcionales gcc,llvm,nc,nasm')
     args=parser.parse_args()
+    components=args.sdk_components.split(',')
+    if 'python' not in components or set(components)-{'python','gcc','llvm','nc','nasm'}:parser.error('El runtime Python es obligatorio; revisa los componentes SDK.')
     command=[sys.executable,'-m','PyInstaller','--noconfirm','--clean',str(ROOT/'packaging/lumen.spec')]
     print(json.dumps({'platform':sys.platform,'architecture':architecture(),'version':RELEASE_TAG,'argv':command,'signed':False,'installerRequested':args.installer},indent=2),flush=True)
     if args.plan:return 0
@@ -169,7 +174,7 @@ def main():
         if sys.platform=='darwin':prepare_mac_icon()
         prepare_windows_bundle_cleanup(ROOT/'dist/Zenit')
         subprocess.run(command,cwd=ROOT,check=True)
-    if not args.package_only:bundle_python(ROOT/'dist/Zenit')
+    if not args.package_only:bundle_python(ROOT/'dist/Zenit',components)
     outputs=[];prefix=f'Zenit-{VERSION}-R{REVISION}'
     if args.installer:
         if sys.platform=='win32':

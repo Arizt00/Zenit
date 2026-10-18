@@ -19,9 +19,10 @@ import {WorkspaceProfiles} from './workspace-profiles.js';
 import {FoundationUI} from './foundation-ui.js';
 import {TeamUI} from './team.js';
 import {MelodyCompanion} from './melody-companion.js';
+import {WorkbenchSession} from './workbench-session.js';
 
 const motion=new LumenMotion();
-let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,productUI=null,tabsSignature='';
+let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,workbenchUI=null,productUI=null,tabsSignature='';
 
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
@@ -218,10 +219,11 @@ function newFileDialog(){
   $('#new-file-form').onsubmit=async event=>{event.preventDefault();try{const name=$('#new-file-name').value.trim();if(!name)throw new Error('Escribe un nombre.');await api('/save',{path:name,content:'',create:true});closeModal();await refreshTree();await openFile(name);editor.focus();}catch(error){showErrorInModal(error);}};
 }
 async function changeWorkspace(path){
-  if([...editor.models.keys()].some(p=>editor.isDirty(p))){const ok=await confirmDialog('Cambios sin guardar','Cambiar de carpeta descartará los cambios no guardados. Guarda primero para conservarlos.','Descartar y abrir');if(!ok)return false;}
+  if([...editor.models.keys()].some(p=>editor.isDirty(p))){const ok=await confirmDialog('Cambios sin guardar','Los cambios se conservarán en la recuperación de este proyecto. Puedes volver a esta carpeta para continuar.','Abrir carpeta');if(!ok)return false;}
+  await workbenchUI?.flush();
   const data=await api('/workspace',{path});service={...service,...data};tree=data.tree;cwd='';platformUI?.workspaceChanged();editor.reset();tabsSignature='';closeModal();activeView='explorer';
   desktopUI?.workspaceChanged();
-  await initializeDocuments();await setView('explorer');studio?.enter();updatePrompt();termClear();await checkWorkspace();notify('Carpeta abierta.');return true;
+  await initializeDocuments();await setView('explorer');await workbenchUI?.workspaceChanged();studio?.enter();updatePrompt();termClear();notify('Carpeta abierta.');return true;
 }
 function newProjectDialog(){
   const parent=service.workspace.replace(/[\\/][^\\/]+[\\/]?$/,'');
@@ -654,6 +656,7 @@ async function start(){
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
     previewUI.tabControls=installTabControls({editor,openFile,activateFile,closeFile,safe:fn=>guard(fn)()});
     installDiagnostics();
+    workbenchUI=new WorkbenchSession({editor,dock,profiles:workspaceProfiles,desktop:desktopUI,platform:platformUI,openFile,renderTabs,service:()=>service,commands:commandDefinitions});await workbenchUI.init();
     document.documentElement.removeAttribute('data-booting');
     $('#engine-label').textContent='Local workspace';
     // Explicitly expose state for repeatable UI smoke tests; no secrets are exposed here.
@@ -661,7 +664,7 @@ async function start(){
     window.zenitStartup?.ready();
   }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
-window.addEventListener('pagehide',event=>{if(!event.persisted){teamUI?.dispose();productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
+window.addEventListener('pagehide',event=>{if(!event.persisted){workbenchUI?.dispose();teamUI?.dispose();productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='\\'){event.preventDefault();guard(()=>perform('split-editor'))();}});
 $('#retry-connection').onclick=()=>location.reload();
 start();
