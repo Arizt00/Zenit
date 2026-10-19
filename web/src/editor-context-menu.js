@@ -1,4 +1,5 @@
 import {icon,escapeHTML as esc} from './icons.js';
+import {commandAppearance} from './extension-command-icon.js';
 
 /** Capability-driven editor menu. Every leaf runs an existing editor or extension action. */
 export class EditorContextMenu {
@@ -18,7 +19,7 @@ export class EditorContextMenu {
   }
   items(view){
     const h=this.h,p=h.platform,t=(es,en)=>p.t(es,en),item=(label,run,glyph='code',shortcut='')=>({label,run,glyph,shortcut});
-    const action=(id,es,en,key='')=>{const a=view.getAction(id);return a?.isSupported()?item(t(es,en),()=>a.run(),'code',key):null;};
+    const action=(id,es,en,key='')=>{const a=view.getAction(id);return a?.isSupported()?{...item(t(es,en),()=>a.run(),'code',key),...commandAppearance({id,title:en})}:null;};
     const group=(label,glyph,items)=>({label,glyph,children:items.filter(Boolean)});
     const supported=(entries)=>entries.map(x=>action(...x)).filter(Boolean);
     const navigation=supported([
@@ -32,7 +33,7 @@ export class EditorContextMenu {
     const ask=(question)=>{h.dock.show('assistant');p.setMelodyMode?.('chat');const input=document.getElementById('ai-input');input.value=question;input.focus();};
     const lang=view.getModel()?.getLanguageId(),native=['c','cpp','nc','asm'].includes(lang),known=native||lang==='python';
     const extensionGroups=new Map();
-    for(const [id,c] of this.preview.runtimeCommands||[]){if(!extensionGroups.has(c.ext))extensionGroups.set(c.ext,[]);extensionGroups.get(c.ext).push(item(c.title||c.id,()=>p.pluginCommand(id),'extensions'));}
+    for(const [id,c] of this.preview.runtimeCommands||[]){if(!extensionGroups.has(c.ext))extensionGroups.set(c.ext,[]);extensionGroups.get(c.ext).push({...item(c.title||c.id,()=>p.pluginCommand(id)),...commandAppearance(c,document.documentElement.dataset.theme)});}
     const extensionActions=[...extensionGroups].map(([id,children])=>{
       const meta=this.preview.extensionMetadata?.get(id);return {...group(meta?.displayName||id,'extensions',children),logo:meta?p.extensionLogo(meta):'',detail:meta?.publisher||id};
     });

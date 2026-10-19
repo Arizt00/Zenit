@@ -38,6 +38,13 @@ if(Module.registerHooks)Module.registerHooks({
   }
 });
 async function request(message){
+  if(message.method==='activateFromFile'){
+    if(loaded||message.bytes<1||message.bytes>20000000)throw Error('Metadatos de activación inválidos.');
+    const fs=require('node:fs'),crypto=require('node:crypto'),file=fs.openSync(message.file,'r');let raw;
+    try{const info=fs.fstatSync(file);if(!info.isFile()||info.size!==message.bytes)throw Error('Tamaño de activación inválido.');raw=fs.readFileSync(file);}finally{fs.closeSync(file);}
+    if(crypto.createHash('sha256').update(raw).digest('hex')!==message.sha256)throw Error('Los metadatos de activación cambiaron.');
+    const value=JSON.parse(raw);if(value.method!=='activate')throw Error('Operación de activación inválida.');return request(value);
+  }
   if(message.method==='activate'){
     const authorised=[...(message.dependencies||[]),{id:message.extensionId,root:message.root,manifest:message.manifest,entry:message.entry}];
     const activateExtension=async id=>{

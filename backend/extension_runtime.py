@@ -22,7 +22,15 @@ class Host:
         self.extension_roots=[self.extension_root,*[Path(x['root']) for x in options.get('dependencies',[])]]
         self.process=subprocess.Popen([node,str(Path(__file__).with_name('extension_host.cjs'))],cwd=workspace.root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=child_environment(),creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
         threading.Thread(target=self.read,daemon=True).start();threading.Thread(target=self.read_errors,daemon=True).start()
-        try:self.capabilities=self.request({'method':'activate','entry':str(entry),'root':str(root),'workspace':str(workspace.root),**options})
+        try:
+            from .extension_bootstrap import activation_message
+            with activation_message({'method':'activate','entry':str(entry),'root':str(root),'workspace':str(workspace.root),**options},options['storage']) as message:
+                self.capabilities=self.request(message)
+            from .extension_command_icons import command_icons
+            icons={}
+            for item in [*options.get('dependencies',[]),{'root':root,'manifest':options['manifest']}]:icons.update(command_icons(item['root'],item['manifest']))
+            for command in self.capabilities.get('commands',[]):
+                if command['id'] in icons:command['icon']=icons[command['id']]
         except Exception as error:
             self.close();error.add_note(self.logs[-8000:]);raise
 
