@@ -578,6 +578,19 @@ function setupEvents(){
   });
   $('#ai-form').addEventListener('submit',guard(async event=>{event.preventDefault();await sendAI($('#ai-input').value);}));
   $('#ai-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#ai-form').requestSubmit();}});
+  // Global theme keys must arrive before Monaco consumes editor keybindings.
+  // Windows can report Ctrl+left Alt as AltGraph too; remember the actual Alt
+  // key so an intentional shortcut and right-Alt text entry remain distinct.
+  let themeLeftAlt=false;
+  window.addEventListener('blur',()=>{themeLeftAlt=false;});
+  document.addEventListener('keyup',event=>{if(['AltLeft','AltRight'].includes(event.code)||event.key==='AltGraph')themeLeftAlt=false;},true);
+  document.addEventListener('keydown',event=>{
+    if(event.code==='AltLeft'){themeLeftAlt=true;return;}
+    if(event.code==='AltRight'||event.key==='AltGraph'){themeLeftAlt=false;return;}
+    const digit=['1','2','3'].includes(event.key)?event.key:/^Digit[123]$/.test(event.code)?event.code.slice(-1):null;
+    if($('#onboarding')||!digit||!(event.ctrlKey||event.metaKey)||!event.altKey||event.getModifierState('AltGraph')&&!themeLeftAlt)return;
+    event.preventDefault();event.stopPropagation();guard(()=>perform(['theme-day','theme-dark','theme-forest'][+digit-1]))();
+  },true);
   document.addEventListener('keydown',event=>{
     if($('#onboarding'))return;
     if(event.key==='Escape'){
@@ -591,9 +604,7 @@ function setupEvents(){
       const first=list[0],last=list.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
     }
     const control=event.ctrlKey||event.metaKey;const key=event.key.toLowerCase();let action;
-    const themeDigit=['1','2','3'].includes(key)?key:/^Digit[123]$/.test(event.code)?event.code.slice(-1):null;
-    if(control&&event.altKey&&!event.getModifierState('AltGraph')&&themeDigit)action=['theme-day','theme-dark','theme-forest'][+themeDigit-1];
-    else if(control&&event.altKey&&key==='b')action='collapse-right';
+    if(control&&event.altKey&&key==='b')action='collapse-right';
     else if(control&&event.altKey&&key==='n')action='toggle-rail';
     else if(control&&event.altKey&&key==='l')action='lantern';
     else if(control&&event.altKey&&key==='f')action='focus-layout';
