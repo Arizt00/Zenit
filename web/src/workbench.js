@@ -35,7 +35,7 @@ export class LumenPlatform {
     this.melodyFiles=new MelodyFilesUI(this);
     this.pythonPackages=new PythonPackagesUI(this);this.nativePackages=new NativePackagesUI(this);this.extensionView=new ExtensionView(this);
     this.themePicker=new ThemePicker(this);this.iconThemePicker=new IconThemePicker(this);
-    this.page=null;this.activeCategory='general';this.disposed=false;this.timers=[];this.extensionContributions={};this.contributionDisposables=[];
+    this.page=null;this.activeCategory='general';this.disposed=false;this.timers=[];this.extensionContributions={languages:[],grammars:[],snippets:[],themes:[],iconThemes:[],commands:[],errors:[]};this.contributionDisposables=[];
     this.terminals=new Map();this.terminalView=crypto.randomUUID();this.activeTerminal=null;this.showingPTY=false;this.aiJob=null;this.aiGeneration=0;this.conversation=crypto.randomUUID?.()||String(Date.now());
     this.terminalWindowFocus=()=>{const t=this.terminals.get(this.activeTerminal);if(t&&this.showingPTY&&t.mount.contains(document.activeElement))this.safe(()=>this.claimTerminal(t));};window.addEventListener('focus',this.terminalWindowFocus);
     this.lspSessions=new Map();this.diagnosticMap=new Map();this.development={tasks:[],servers:[],associations:{}};
@@ -53,7 +53,6 @@ export class LumenPlatform {
     this.prefs=settings.settings;this.schema=settings.schema.filter(s=>!['ai.melodyProvider','ai.melodyModel','appearance.extensionTheme','appearance.iconTheme'].includes(s.key));this.providers=state.providers;this.development=state.development;
     this.applyPreferences();this.createProviderBar();this.createTerminalBar();this.createStatus();this.installEvents();
     this.voice=new MelodyVoiceUI(this);
-    await this.loadContributions();
     this.scheduleCommands();this.scheduleHardware();
   }
   report(error){this.host.notify(error.message||String(error),'error',7000);}

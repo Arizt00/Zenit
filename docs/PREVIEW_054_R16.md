@@ -112,6 +112,24 @@ descarga de componentes.
 
 ## Extensiones y validación
 
+La apertura del editor y la recuperación de sesión ya no esperan al catálogo de
+gramáticas/iconos ni al escaneo opcional de herramientas de Forge. Ambas tareas
+se ejecutan después de que el espacio esté disponible. Sus errores se notifican
+sin sustituir el editor por una pantalla de arranque fallido; la lectura del
+catálogo grande tiene un plazo propio de 120 segundos, sin ampliar los plazos de
+las operaciones de escritura o ejecución.
+
+Las vistas de extensiones conservan su origen opaco y reciben recursos mediante
+una dirección temporal limitada a sus `localResourceRoots`. Al reemplazar o cerrar
+la vista se revoca también esa dirección. Esto permite cargar scripts, estilos y
+sus recursos relativos sin los enlaces `blob` del documento padre que el sandbox
+bloqueaba. Los bloques JSON `data-initial-state` se tratan como datos. Se comprueba
+el `appReady` y la inicialización real de GitLab Duo Chat 7.2.5 con el paquete
+instalado sin modificar y un perfil de prueba sin credenciales; esta prueba no
+envía consultas al servicio de GitLab ni acredita el acceso de una cuenta a Duo.
+El intercambio de mensajes mantiene el contrato de la
+[API de webviews de VS Code](https://code.visualstudio.com/api/extension-guides/webview).
+
 Se corrigen los contratos de Position/Range/Selection de VS Code: coordenadas no
 negativas, rangos ordenados, selecciones invertidas, sobrecargas y operaciones
 sobre rangos. SemanticTokensBuilder acepta esas mismas instancias. Esto amplía

@@ -235,14 +235,28 @@ class ExtensionServices:
         with self.lock:
             if ident not in self.panels:raise FileNotFoundError('El panel se cerró.')
             if not isinstance(html,str) or len(html)>2_000_000:raise ValueError('Documento webview demasiado grande.')
-            for token,item in list(self.documents.items()):
-                if item['panel']==ident:del self.documents[token]
-            token=uuid.uuid4().hex;self.documents[token]={'panel':ident,'html':html,'scripts':bool(self.panels[ident].get('options',{}).get('enableScripts'))};return {'url':'/extension-webview/'+token}
+            panel=self.panels[ident];roots=panel.get('options',{}).get('localResourceRoots')
+            if roots is None:roots=[str(panel['owner'].workspace.root),*[str(root) for root in getattr(panel['owner'],'extension_roots',[panel['owner'].extension_root])]]
+            roots=[file_path(root) for root in roots if root]
+            token=uuid.uuid4().hex
+            from .webview_resources import prepare_html
+            html=prepare_html(ident,token,html,roots)
+            for old_token,item in list(self.documents.items()):
+                if item['panel']==ident:del self.documents[old_token]
+            # Revoke the old document and its resource capability together.
+            self.documents[token]={'panel':ident,'html':html,'resourceRoots':[str(root) for root in roots],'scripts':bool(panel.get('options',{}).get('enableScripts'))};return {'url':'/extension-webview/'+token}
     def webview_content(self,token):
         with self.lock:
             item=self.documents.get(token)
             if not item or item['panel'] not in self.panels:raise FileNotFoundError('Documento webview cerrado.')
             return item.copy()
+    def webview_resource(self,token,root_index,relative):
+        document=self.webview_content(token)
+        from .webview_resources import resource_path
+        path=resource_path(document['resourceRoots'],root_index,relative)
+        if not path.is_file() or path.stat().st_size>20_000_000:raise FileNotFoundError('Recurso webview no disponible.')
+        import mimetypes
+        return path.read_bytes(),mimetypes.guess_type(path.name)[0] or 'application/octet-stream'
     def emit(self,command,**data):
         p=self.platform
         with p.command_lock:

@@ -48,7 +48,7 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
     const ready=call('webview.create',{id,viewType,title,column:p.viewColumn,options:opts});
     let updateTail=ready;p._whenReady=()=>updateTail;
     const update=data=>{updateTail=updateTail.then(()=>call('webview.update',{id,...data}));updateTail.catch(e=>host.notify(e.message));return updateTail;};
-    const webview={cspSource:'blob: data:',onDidReceiveMessage:receive.event,
+    const webview={cspSource:'zenit-resource:',onDidReceiveMessage:receive.event,
       asWebviewUri(uri){return v.Uri.parse('zenit-resource://'+id+'/'+encodeURIComponent(uri.fsPath));},
       async postMessage(message){await ready;return call('webview.post',{id,message});}
     };

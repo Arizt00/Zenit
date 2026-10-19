@@ -95,7 +95,7 @@ class Handler(BaseHTTPRequestHandler):
         if expected_workspace and unquote(expected_workspace)!=str(self.app.workspace.root):
             raise ConflictError('La carpeta cambió en otra ventana. Conserva o copia tu búfer antes de volver a abrir el editor.')
 
-    def reply(self, data, code=200, content_type="application/json; charset=utf-8", session=False, webview=False):
+    def reply(self, data, code=200, content_type="application/json; charset=utf-8", session=False, webview=False, webview_resource=False, resource_source=''):
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8") if isinstance(data, (dict, list)) else data
         self.send_response(code)
         self.send_header("Content-Type", content_type)
@@ -104,8 +104,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN" if webview else "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        self.send_header("Cross-Origin-Resource-Policy", "cross-origin" if webview_resource else "same-origin")
+        if webview_resource:self.send_header("Access-Control-Allow-Origin", "*")
         policy="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'unsafe-inline' blob: https:; img-src blob: data: https:; font-src blob: data: https:; connect-src https:; media-src blob: data: https:; frame-ancestors 'self'; base-uri 'none'; object-src 'none'" if webview else "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; media-src 'self' blob:; frame-src http://127.0.0.1:*; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        if webview and resource_source:
+            for directive in ('script-src','style-src','img-src','font-src','media-src'):
+                policy=policy.replace(directive+' ',directive+' '+resource_source+' ')
+        if webview_resource:policy="default-src 'none'; sandbox; frame-ancestors 'none'; base-uri 'none'"
         self.send_header("Content-Security-Policy",policy)
         if session:
             self.send_header("Set-Cookie", f"lumen_session_{self.server.server_port}={self.app.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400")
@@ -134,9 +139,16 @@ class Handler(BaseHTTPRequestHandler):
             parsed = urlparse(self.path)
             path = parsed.path
             query = parse_qs(parsed.query)
+            if path.startswith('/extension-webview-resource/'):
+                parts=path.split('/',4)
+                if len(parts)!=5:raise FileNotFoundError('Recurso webview no disponible.')
+                self.app.features._trusted();raw,mime=self.app.features.extension_services.webview_resource(parts[2],parts[3],parts[4])
+                return self.reply(raw,content_type=mime,webview_resource=True)
             if path.startswith('/extension-webview/'):
                 self.auth(bootstrap=True);self.app.features._trusted();item=self.app.features.extension_services.webview_content(path.rsplit('/',1)[-1])
-                return self.reply(item['html'].encode('utf-8'),content_type='text/html; charset=utf-8',webview=True)
+                source=f'http://127.0.0.1:{self.server.server_port}/extension-webview-resource/'+path.rsplit('/',1)[-1]+'/'
+                from .webview_resources import RESOURCE_SOURCE
+                return self.reply(item['html'].replace(RESOURCE_SOURCE,source).encode('utf-8'),content_type='text/html; charset=utf-8',webview=True,resource_source=source)
             if path.startswith("/api/"):
                 self.auth(bootstrap=path == "/api/bootstrap")
                 ws = self.app.workspace

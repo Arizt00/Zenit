@@ -42,7 +42,7 @@ async function api(path,body) {
   const options={credentials:'same-origin',headers:{'X-Lumen-Token':token}};
   if(service?.workspace)options.headers['X-Lumen-Workspace']=encodeURIComponent(service.workspace);
   if(body!==undefined){options.method='POST';options.headers['Content-Type']='application/json';options.body=JSON.stringify(body);}
-  const controller=new AbortController();options.signal=controller.signal;const deadline=setTimeout(()=>controller.abort(),35000);let response;try{response=await fetch('/api'+path,options);}catch(error){if(error.name==='AbortError')throw new Error('La operación está tardando demasiado. Puedes seguir trabajando; revisa su estado antes de repetirla.');throw error;}finally{clearTimeout(deadline);}
+  const controller=new AbortController();options.signal=controller.signal;const timeout=body===undefined&&path==='/platform/extensions/contributions'?120000:35000;const deadline=setTimeout(()=>controller.abort(),timeout);let response;try{response=await fetch('/api'+path,options);}catch(error){if(error.name==='AbortError')throw new Error('La operación está tardando demasiado. Puedes seguir trabajando; revisa su estado antes de repetirla.');throw error;}finally{clearTimeout(deadline);}
   const data=await response.json();
   if(!response.ok){const error=new Error(data.error||`Request failed (${response.status})`);error.status=response.status;throw error;}
   return data;
@@ -662,6 +662,11 @@ async function start(){
     // Explicitly expose state for repeatable UI smoke tests; no secrets are exposed here.
     window.lumen={get theme(){return document.documentElement.dataset.theme;},get editorKind(){return editor.kind;},get graphicsKind(){return [...(studio?.scenes.values()||[])].some(s=>s.kind==='babylon')?'babylon':'css';},get graphicsAPI(){return document.querySelector('canvas[data-engine]')?.dataset.engine||'CSS';},get activeFile(){return editor.current;},get ready(){return true;},get platformReady(){return !!platformUI?.state;},get platformPage(){return platformUI?.page;},get languageServers(){return platformUI?.lspSessions.size||0;},get layout(){return dock.snapshot();},get motionEnabled(){return motion.enabled;}};
     window.zenitStartup?.ready();
+    // Package grammars/icon catalogs and optional tool scans must not hold the
+    // editor or session recovery behind a slow extension or a cold filesystem.
+    // Start after Preview installs its runtime-command integration.
+    platformUI.contributionsTask=platformUI.safe(()=>platformUI.loadContributions());
+    desktopUI.toolsTask=desktopUI.safe(()=>desktopUI.refreshForgeTools());
   }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
 window.addEventListener('pagehide',event=>{if(!event.persisted){workbenchUI?.dispose();teamUI?.dispose();productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
