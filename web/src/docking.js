@@ -40,7 +40,7 @@ export class DockManager {
   read(){try{return normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||localStorage.getItem('lumen.layout.v2')||'null'));}catch(_){return defaultLayout();}}
   save(){if(new URLSearchParams(location.search).has('panel'))return;try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(this.snapshot({persistent:true})));}catch(_){/* Session remains usable in storage-restricted webviews. */}}
   snapshot({persistent=false}={}){return persistent?persistedLayout(this.state,[...this.nativeDetached]):JSON.parse(JSON.stringify(this.state));}
-  setContext(kind){this.contextHidden=new Set(kind==='extensions'?['project','assistant','console']:kind==='foundation'?['project','assistant']:kind==='debug'||kind==='search'?['assistant']:[]);this.render();}
+  setContext(kind){this.contextHidden=new Set(['extensions','conflicts'].includes(kind)?['project','assistant','console']:kind==='foundation'?['project','assistant']:kind==='debug'||kind==='search'?['assistant']:[]);this.render();}
   contextAllows(id){return !this.contextHidden?.has(id)||(this.root.dataset.page==='debug'&&id==='assistant'&&!!this.state.floating[id]);}
   visibleIds(side){return this.state.groups[side].filter(id=>!this.state.hidden.includes(id)&&!this.state.floating[id]&&this.contextAllows(id));}
   isVisible(id){const side=sideOf(this.state,id),drawerClosed=side==='right'&&matchMedia('(max-width:1099px)').matches&&!this.compactOpen;return this.contextAllows(id)&&!this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!drawerClosed&&!this.state.collapsed.includes(side)&&this.state.active[side]===id));}

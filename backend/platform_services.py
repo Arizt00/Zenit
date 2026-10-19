@@ -56,6 +56,10 @@ class PlatformServices:
         from .extension_accounts import ExtensionAccounts
         self.extension_accounts=ExtensionAccounts(self.prefs,self._accounts_changed)
         self.melody_files=MelodyFiles(self)
+        from .project_tests import ProjectTests
+        self.tests=ProjectTests(self)
+        from .git_conflicts import GitConflicts
+        self.conflicts=GitConflicts(self)
         self.voice=MelodyVoice(self.prefs)
         from .python_packages import PythonPackages
         self.python_packages=PythonPackages(self)
@@ -139,6 +143,12 @@ class PlatformServices:
         if path=='/execution/targets':return self.execution.inventory(self.app.workspace,q('refresh')=='1')
         if path=='/sdk':return self.sdk.status()
         if path=='/operations':return self.hilo.snapshot(self.app.workspace.root)
+        if path=='/testing':return {**self.tests.discover(self.app.workspace),**self.tests.snapshot(self.app.workspace,q('run'))}
+        if path=='/git/conflicts':return self.conflicts.snapshot(self.app.workspace)
+        if path=='/git/conflict':self._trusted();return self.conflicts.read(self.app.workspace,q('path'))
+        if path=='/testing/plan':return self.tests.plan(self.app.workspace,{'framework':q('framework','unittest'),'selection':q('selection'),'coverage':q('coverage')=='1','build':q('build')=='1'})
+        if path=='/testing/coverage':self._trusted();return self.tests.coverage(self.app.workspace,q('run'))
+        if path=='/ai/files/trace':self._trusted();return self.melody_files.trace(self.app.workspace,q('receipt'))
         if path=='/operations/resources':self._trusted();return self.hilo.resources(self.app.workspace.root)
         if path=='/connections':return {'connections':self.connections.inventory()}
         if path=='/accounts/extensions':return self.extension_accounts.snapshot()
@@ -231,6 +241,10 @@ class PlatformServices:
         if path=='/workbench/spaces/delete':return self.workbenches.delete_space(ws,body.get('name'))
         if path=='/execution/select':return self.execution.select(ws,body)
         if path=='/sdk/activate':self._trusted();return self.sdk.activate(body.get('directory'))
+        if path=='/testing/run':return self.tests.start(ws,body)
+        if path=='/git/conflicts/resolve':return self.conflicts.apply(ws,body)
+        if path=='/git/conflicts/draft':return self.conflicts.draft(ws,body)
+        if path=='/testing/cancel':return self.tests.cancel(ws,body.get('run'))
         if path=='/accounts/extensions/connect':return self.extension_accounts.connect(body)
         if path=='/accounts/extensions/disconnect':return self.extension_accounts.disconnect()
         if path=='/sdk/deactivate':self._trusted();return self.sdk.deactivate(body.get('directory'))
@@ -409,6 +423,7 @@ class PlatformServices:
         if path=='/ai/files/review':self._trusted();return self.melody_files.review(ws,body.get('job'))
         if path=='/ai/files/apply':self._trusted();return self.melody_files.commit(ws,body.get('ticket'),body.get('consent'))
         if path=='/ai/files/undo':self._trusted();return self.melody_files.undo(ws,body.get('receipt'))
+        if path=='/ai/files/test':return self.melody_files.verify(ws,body)
         if path=='/ai/cancel':self.ai.get(body.get('id')).cancel();return {'cancelled':True}
         if path=='/ai/clear':
             self.ai.clear_history()

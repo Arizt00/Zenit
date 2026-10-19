@@ -13,7 +13,7 @@ data=[(str(ROOT/'web'),'web'),(str(ROOT/'licenses'),'licenses'),(str(ROOT/'READM
 data.append((str(ROOT/'tools/asm_worker.py'),'tools'))
 data.append((str(ROOT/'tools/check_coco_station.py'),'tools'))
 data.append((str(ROOT/'tools/simulators'),'tools/simulators'))
-for name in ('debug_worker.py','lantern_memory.py','lantern_lens.py','native_package_worker.py'):data.append((str(ROOT/'backend'/name),'backend'))
+for name in ('debug_worker.py','lantern_memory.py','lantern_lens.py','native_package_worker.py','test_bridge.py'):data.append((str(ROOT/'backend'/name),'backend'))
 data.append((str(ROOT/'examples/asm/x86_64_sum.s'),'examples/asm'))
 data.append((str(ROOT/'tools/machine_console.py'),'tools'))
 data.append((str(ROOT/'tools/machine_seed.py'),'tools'))

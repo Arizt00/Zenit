@@ -234,8 +234,9 @@ class MelodyFiles:
                 raise ValueError('Hay demasiados planes pendientes. Cierra o aplica uno.')
             ticket = uuid.uuid4().hex
             plan = {'ticket':ticket, 'workspace':str(ws.root), 'summary':str(data.get('summary', ''))[:1000], 'created':now, 'operations':reviewed, 'session':session, 'explicit':snapshots is not None}
+            plan['consulted']=[{'path':name,'unsaved':bool(item.get('buffer')),'bytes':len((item.get('text') or '').encode('utf-8'))} for name,item in (snapshots or {}).items() if item.get('text') is not None and item.get('expected') is not None]
             self.plans[ticket] = plan
-            return {k:plan[k] for k in ('ticket','workspace','summary')} | {'operations':[{k:item[k] for k in ('kind','path','content','before')} for item in reviewed], 'bytes':total, 'direct':bool(snapshots is not None)}
+            return {k:plan[k] for k in ('ticket','workspace','summary','consulted')} | {'operations':[{k:item[k] for k in ('kind','path','content','before')} for item in reviewed], 'bytes':total, 'direct':bool(snapshots is not None)}
 
     @staticmethod
     def replace(path, raw):
@@ -275,6 +276,7 @@ class MelodyFiles:
             for index, op in enumerate(ops):
                 if op['raw'] is not None:(recovery / f'{index}.bak').write_bytes(op['raw'])
             receipt = {'id':receipt_id, 'workspace':str(ws.root), 'operations':[{'path':x['path'], 'kind':x['kind'], 'before':x['expected'], 'after':self.digest(x['proposed']), 'backup':f'{i}.bak' if x['raw'] is not None else None, 'buffer':x['buffer'], 'external':x['external']} for i,x in enumerate(ops)], 'folders':[], 'session':list(plan['session']), 'explicit':plan['explicit']}
+            receipt.update(consulted=plan.get('consulted',[]),summary=plan['summary'],checks=[])
             # Write the recovery inventory before any source file changes.
             (recovery / 'receipt.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
             folders = []; applied = []
@@ -314,6 +316,8 @@ class MelodyFiles:
         with self.lock, ws.lock, self.platform.buffers.lock:
             receipt = self.receipts.get(receipt_id)
             if not receipt or receipt['workspace'] != str(ws.root):raise ConflictError('La recuperación pertenece a otra sesión o carpeta.')
+            tests=getattr(self.platform,'tests',None)
+            if tests and any(run['active'] for identity in receipt.get('checks',[]) for run in tests.snapshot(ws,identity)['runs']):raise ConflictError('Detén las pruebas del plan antes de restaurar sus archivos.')
             recovery = ws.resolve('.lumen/melody/' + receipt_id)
             actions = []
             for item in receipt['operations']:
@@ -337,3 +341,25 @@ class MelodyFiles:
                     old=item['buffer'];self.platform.buffers.items[old['path']]=dict(old,sequence=old['sequence']+2)
             self.receipts.pop(receipt_id)
             return {'restored':True, 'operations':[{'path':x['path'], 'kind':'restored'} for x in receipt['operations']]}
+
+    def verify(self,ws,body):
+        if not ws.trusted or body.get('consent') is not True:raise PermissionError('Revisa y autoriza las pruebas del conjunto de cambios.')
+        with self.lock,ws.lock,self.platform.buffers.lock:
+            receipt=self.receipts.get(body.get('receipt'))
+            if not receipt or receipt['workspace']!=str(ws.root):raise ValueError('El plan no pertenece a esta sesión o proyecto.')
+            expected={}
+            for item in receipt['operations']:
+                _,path=self.relative(ws,item['path'],explicit=receipt['explicit'],session=receipt['session']);raw=path.read_bytes() if path.is_file() else None
+                if self.digest(raw)!=item['after']:raise ConflictError('El archivo cambió después de aplicar el plan: '+item['path'])
+                self.clean_buffer(ws,item['path'],raw);expected[item['path']]=item['after']
+            result=self.platform.tests.start(ws,body,context={'kind':'melody','receipt':receipt['id'],'expected':expected})
+            if result['run'] not in receipt['checks']:receipt['checks'].append(result['run'])
+            from .preferences import atomic_json
+            atomic_json(ws.resolve('.lumen/melody/'+receipt['id'])/'receipt.json',receipt)
+            return result
+
+    def trace(self,ws,identity):
+        receipt=self.receipts.get(identity)
+        if not receipt or receipt['workspace']!=str(ws.root):raise ValueError('El plan no pertenece a esta sesión o proyecto.')
+        runs=[item for run in receipt.get('checks',[]) for item in self.platform.tests.snapshot(ws,run)['runs']]
+        return {'receipt':identity,'consulted':receipt.get('consulted',[]),'summary':receipt.get('summary'),'runs':runs,'recovery':str(ws.resolve('.lumen/melody/'+identity))}

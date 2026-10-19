@@ -296,6 +296,7 @@ async function setView(view){
   }
   if(view==='git'){
     $('#sidebar-title').textContent='Source Control';$('#sidebar-content').innerHTML=`<div class="sidebar-section"><button class="secondary-button" data-action="refresh-git">${icon('refresh')} Refresh</button><span class="sidebar-badge">Lectura del repositorio local</span></div><pre class="sidebar-pre" id="git-output">Consultando Git...</pre>`;
+    $('#sidebar-content .sidebar-section').insertAdjacentHTML('beforeend',`<button class="secondary-button" data-platform="git-conflicts">${icon('git')} ${platformUI?.t('Resolver conflictos','Resolve conflicts')||'Resolver conflictos'}</button>`);
     const result=await api('/git?mode=status');if(activeView!=='git')return;$('#git-output').textContent=result.output;
     const match=/^## ([^\.\n ]+)/m.exec(result.output);$('#branch-label').textContent=match?match[1]:'local';return;
   }

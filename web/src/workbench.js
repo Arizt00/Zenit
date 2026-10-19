@@ -1,6 +1,8 @@
 import {MelodyStream} from './melody-stream.js';
 import {mountConnections} from './session-workbench.js';
 import {TaskCenter} from './task-center.js';
+import {ProjectTestsUI} from './project-tests.js';
+import {GitConflictsUI} from './git-conflicts.js';
 import {extensionReviewHTML,extensionPlanHTML,extensionProgressHTML,updateExtensionProgress} from './extension-installer.js';
 import {ACCOUNT_PROVIDERS,accountPanel,bindAccount} from './accounts.js';
 import {icon,escapeHTML,setFileIcons} from './icons.js';
@@ -55,6 +57,8 @@ export class LumenPlatform {
     this.applyPreferences();this.createProviderBar();this.createTerminalBar();this.createStatus();this.installEvents();
     this.voice=new MelodyVoiceUI(this);
     this.tasks=new TaskCenter(this);
+    this.testsUI=new ProjectTestsUI(this);
+    this.conflictsUI=new GitConflictsUI(this);
     this.scheduleCommands();this.scheduleHardware();
   }
   report(error){this.host.notify(error.message||String(error),'error',7000);}
@@ -135,7 +139,7 @@ export class LumenPlatform {
     const sidebar=document.getElementById('sidebar-title');if(sidebar&&['Project','Proyecto'].includes(sidebar.textContent))sidebar.textContent=this.t('Proyecto','Project');
     const subtitle=document.getElementById('assistant-subtitle');if(subtitle&&!this.aiJob)subtitle.textContent=this.t('Convierte ideas en realidad. Más simple. Más lejos.','Turn ideas into reality. Simpler. Further.');
   }
-  pageTitle(kind){if(kind==='tasks')return this.t('Tareas','Tasks');if(kind==='foundation')return this.t('Laboratorio','Laboratory');if(kind==='search')return this.t('Buscar','Search');if(kind==='debug')return this.t('Depuración','Debug');return kind==='settings'?this.t('Ajustes','Settings'):kind==='extensions'?this.t('Extensiones','Extensions'):kind==='tools'?this.t('Herramientas de desarrollo','Development tools'):kind==='hardware'?this.t('Sistema y rendimiento','System and performance'):kind==='snippets'?this.t('Fragmentos de código','Code snippets'):kind;}
+  pageTitle(kind){if(kind==='testing')return this.t('Pruebas','Tests');if(kind==='conflicts')return this.t('Conflictos de Git','Git conflicts');if(kind==='tasks')return this.t('Tareas','Tasks');if(kind==='foundation')return this.t('Laboratorio','Laboratory');if(kind==='search')return this.t('Buscar','Search');if(kind==='debug')return this.t('Depuración','Debug');return kind==='settings'?this.t('Ajustes','Settings'):kind==='extensions'?this.t('Extensiones','Extensions'):kind==='tools'?this.t('Herramientas de desarrollo','Development tools'):kind==='hardware'?this.t('Sistema y rendimiento','System and performance'):kind==='snippets'?this.t('Fragmentos de código','Code snippets'):kind;}
   openPage(kind,content,preserve=false){
     this.extensionServices?.hide();
     const changed=this.page!==kind;
@@ -153,7 +157,7 @@ export class LumenPlatform {
     this.page=kind;this.workbench.hidden=false;document.getElementById('editor-panel').classList.add('platform-open');
     if(kind!=='settings')document.querySelectorAll('.activity-rail .rail-item').forEach(el=>el.classList.toggle('active',(el.dataset.action||el.dataset.view)===(kind==='debug'?'run':kind)));
     for(const selector of ['.editor-tabbar','.breadcrumbs','#editor-mount','#editor-empty']){const el=document.querySelector(selector);if(el)el.inert=true;}
-    if(!preserve)this.workbench.innerHTML=`<header class="platform-header"><div class="platform-title"><span class="platform-mark">${this.glyph(kind==='extensions'?'extensions':kind==='tasks'?'layers':kind==='tools'?'build':(kind==='hardware'||kind==='foundation')?'cpu':kind==='search'?'search':kind==='debug'?'bug':'settings')}</span><div><span class="platform-eyebrow">ZÉNIT</span><h2>${this.pageTitle(kind)}</h2></div></div><button class="icon-button" data-platform="close-page" aria-label="${this.t('Cerrar y volver al editor','Close and return to editor')}" title="Esc">${this.glyph('close')}</button></header>${content}`;
+    if(!preserve)this.workbench.innerHTML=`<header class="platform-header"><div class="platform-title"><span class="platform-mark">${this.glyph(kind==='extensions'?'extensions':kind==='tasks'?'layers':kind==='testing'?'flask':kind==='conflicts'?'git':kind==='tools'?'build':(kind==='hardware'||kind==='foundation')?'cpu':kind==='search'?'search':kind==='debug'?'bug':'settings')}</span><div><span class="platform-eyebrow">ZÉNIT</span><h2>${this.pageTitle(kind)}</h2></div></div><button class="icon-button" data-platform="close-page" aria-label="${this.t('Cerrar y volver al editor','Close and return to editor')}" title="Esc">${this.glyph('close')}</button></header>${content}`;
     if(changed){if(kind==='settings')this.host.motion.openSurface(this.workbench,this.settingsOverlay);else this.host.motion.enter(this.workbench,4);}this.workbench.querySelector('input,button')?.focus({preventScroll:true});
   }
   closePage(){
@@ -742,6 +746,7 @@ export class LumenPlatform {
     this.safe(()=>this.startLSP(config.id,true));
   }
   documentChanged(){
+    this.testsUI?.decorate();
     if(this.host.editor.current?.startsWith('.team/'))return;
     if(this.host.editor.models.get(this.host.editor.current)?.kind==='binary'){clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);clearTimeout(this.saveTimer);return;}
     if(this.disposed)return;this.autoLanguageServer();this.lantern?.changed();this.companion?.changed();if(this.liveEditingPath===this.host.editor.current){clearTimeout(this.saveTimer);return;}clearTimeout(this.changeTimer);this.changeTimer=this.later(()=>{for(const s of this.lspSessions.values())this.safe(()=>this.syncLSP(s));this.refreshDiagnostics();},220);
@@ -801,6 +806,7 @@ export class LumenPlatform {
       if(d.lspStop)return this.stopLSP(d.lspStop);
       if(d.insertSnippet!=null){const snippet=this.extensionContributions.snippets[Number(d.insertSnippet)];if(snippet)return this.reviewCode(snippet.body);return;}
       switch(d.platform){
+        case 'git-conflicts':return this.conflictsUI.open();
         case 'close-page':return this.closePage();case 'extensions':return this.extensions();case 'extension-import-menu':case 'extension-import':return this.importExtension();case 'extension-updates':return this.extensionUpdates();case 'extension-export':return this.exportExtensions();
         case 'tools':return this.tools();case 'tools-refresh':return this.tools(true);case 'terminal-profiles':return this.terminalProfiles();case 'hardware':return this.hardware();case 'focus':return this.setFocus();
         case 'settings-export':{const data=JSON.stringify(this.prefs,null,2),blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='lumen-settings.json';a.click();this.later(()=>URL.revokeObjectURL(url),1000);return;}
