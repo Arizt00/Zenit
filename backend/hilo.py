@@ -30,25 +30,42 @@ class Hilo(Kernel):
         self.worker = threading.Thread(target=self._work, name='zenit-hilo', daemon=True)
         self.worker.start()
 
-    def submit(self, label, operation, *, workspace='', key=None, priority=10, cancel=None):
+    def submit(self, label, operation, *, workspace='', key=None, priority=10, cancel=None, depends=()):
         with self.lock:
             if self.closed: raise RuntimeError('El núcleo se está cerrando.')
+            if type(priority) is not int or not -20<=priority<=20:raise ValueError('La prioridad debe estar entre -20 y 20.')
+            if not isinstance(depends,(list,tuple)) or len(depends)>16 or any(not isinstance(x,str) or x not in self.jobs for x in depends):raise ValueError('Dependencias de tareas no válidas.')
+            if any(self.jobs[x]['workspace']!=str(workspace) for x in depends):raise ValueError('Las dependencias deben pertenecer al mismo proyecto.')
             if key:
                 existing = next((j for j in self.jobs.values() if j['key'] == key and j['workspace']==str(workspace) and j['state'] in ('queued', 'running')), None)
                 if existing: return {'job': existing['id']}
+            if sum(j['state']=='queued' for j in self.jobs.values())>=24:raise ValueError('Hay 24 operaciones pendientes. Espera o cancela una tarea.')
             identity = uuid.uuid4().hex
             event = threading.Event()
-            job = dict(id=identity, label=label, workspace=str(workspace), key=key, state='queued', stage='Waiting', priority=priority, created=time.time(), started=None, result=None, error=None, event=event, cancel=cancel)
+            job = dict(id=identity, label=label, workspace=str(workspace), key=key, state='queued', stage='Waiting', priority=priority, created=time.time(), started=None, result=None, error=None, event=event, cancel=cancel, depends=list(dict.fromkeys(depends)), operation=operation, enqueued=False)
             self.sequence += 1
             self.jobs[identity] = job
-            try: self.queue.put_nowait((priority, self.sequence, identity, operation))
-            except queue.Full:
-                del self.jobs[identity]
-                raise ValueError('Hay 24 operaciones pendientes. Espera o cancela una tarea.') from None
+            self._release_waiting()
+            referenced={x for j in self.jobs.values() if j['state'] in ('queued','running') for x in j['depends']}
             for old in list(self.jobs):
                 if len(self.jobs) <= 64: break
-                if self.jobs[old]['state'] not in ('queued', 'running'): del self.jobs[old]
+                if self.jobs[old]['state'] not in ('queued', 'running') and old not in referenced and not self.jobs[old]['enqueued']: del self.jobs[old]
             return {'job': identity}
+
+    def _release_waiting(self):
+        # Only ready work enters the queue. A high-priority dependent cannot
+        # occupy the worker while its lower-priority prerequisite is waiting.
+        for job in self.jobs.values():
+            if job['state']!='queued' or job['enqueued']:continue
+            prerequisites=[self.jobs[x] for x in job['depends'] if x in self.jobs]
+            if any(x['state'] in ('failed','cancelled') for x in prerequisites):
+                job['event'].set();job.update(state='cancelled',stage='Dependencia no completada',finished=time.time())
+                if job['cancel']:job['cancel']()
+                continue
+            if any(x['state']!='done' for x in prerequisites):job['stage']='Esperando otros trabajos';continue
+            self.sequence+=1
+            try:self.queue.put_nowait((job['priority'],self.sequence,job['id'],job['operation']));job['enqueued']=True
+            except queue.Full:break
 
     def _work(self):
         while True:
@@ -56,8 +73,12 @@ class Hilo(Kernel):
             except queue.Empty:
                 if self.closed: return
                 continue
-            with self.lock: job = self.jobs[identity]
+            with self.lock:
+                job = self.jobs.get(identity)
+                if job:job['enqueued']=False
+            if job is None:self.queue.task_done();continue
             result = None; error = None
+            cpu_started=time.thread_time()
             try:
                 if job['event'].is_set(): raise CancelledError()
                 with self.lock: job.update(state='running', stage='Preparing', started=time.time())
@@ -67,7 +88,9 @@ class Hilo(Kernel):
             except Exception as failure:
                 state = 'failed'; error = str(failure)[:2000]
             finally:
-                with self.lock: job.update(state=state, result=result, error=error, finished=time.time())
+                with self.lock:
+                    job.update(state=state, result=result, error=error, finished=time.time(),workerCpuMs=round((time.thread_time()-cpu_started)*1000,2))
+                    self._release_waiting()
                 self.queue.task_done()
 
     def cancel(self, identity):
@@ -77,6 +100,8 @@ class Hilo(Kernel):
             if job['state'] in ('queued', 'running'):
                 job['event'].set()
                 if job['cancel']: job['cancel']()
+                if job['state']=='queued':job.update(state='cancelled',stage='Cancelada',finished=time.time())
+                self._release_waiting()
             return {'cancelled': job['event'].is_set()}
 
     def report(self, event, stage):
@@ -134,13 +159,14 @@ class Hilo(Kernel):
 
     def clear_finished(self, workspace):
         with self.lock:
-            finished=[identity for identity,job in self.jobs.items() if job['workspace']==str(workspace) and job['state'] not in ('queued','running')]
+            referenced={x for j in self.jobs.values() if j['state'] in ('queued','running') for x in j['depends']}
+            finished=[identity for identity,job in self.jobs.items() if job['workspace']==str(workspace) and job['state'] not in ('queued','running') and identity not in referenced and not job['enqueued']]
             for identity in finished:del self.jobs[identity]
         return {'removed':len(finished)}
 
     def snapshot(self, workspace=None):
         with self.lock:
-            jobs = [{k: v for k, v in j.items() if k not in ('event', 'cancel', 'key')} for j in self.jobs.values() if workspace is None or j['workspace'] == str(workspace)]
+            jobs = [{k: v for k, v in j.items() if k not in ('event', 'cancel', 'key','operation','enqueued')} for j in self.jobs.values() if workspace is None or j['workspace'] == str(workspace)]
         pending = sorted((j for j in jobs if j['state'] == 'queued'), key=lambda j:(j['priority'],j['created']))
         for job in jobs:
             job['queuePosition'] = next((i+1 for i,j in enumerate(pending) if j['id']==job['id']), None)
