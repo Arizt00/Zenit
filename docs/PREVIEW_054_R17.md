@@ -99,6 +99,15 @@ por acción cuando la extensión no los declara. Se corrigieron la carga de meta
 grandes de GitLens y el proveedor de autenticación GitHub que impedía activar GitHub
 Actions. Las credenciales requieren conexión explícita y consentimiento por extensión.
 
+La revisión instalada corrigió además la apertura de vistas web al activar GitLab
+y GitLens: registrar un proveedor ya no crea pestañas ni tapa el archivo recuperado.
+La vista se resuelve al solicitar su apertura y puede cerrarse y abrirse de nuevo.
+El clic en una pestaña de archivo devuelve el editor sin descartar el búfer.
+También se enlazaron los comandos de enfoque de árboles, incluidos los declarados
+antes de crear su proveedor. GitLens ya no termina su proceso al solicitar uno de
+esos árboles; la interfaz abre la vista correspondiente o indica que el proveedor
+todavía no está registrado. Los paneles con `preserveFocus` respetan el editor activo.
+
 La matriz `config/extension-compatibility.json` vincula pruebas a ID, versión y
 SHA-256 exactos. **Ver pruebas verificadas** distingue activación, comportamiento
 comprobado y capacidades sin certificar. EditorConfig se prueba con opciones reales

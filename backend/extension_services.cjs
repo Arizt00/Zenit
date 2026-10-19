@@ -45,7 +45,7 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   function panel(viewType,title,column,opts={},id=uid()){
     let html='',disposed=false;const receive=new v.EventEmitter(),didDispose=new v.EventEmitter(),viewState=new v.EventEmitter();
     const p={_id:id,viewType,title,viewColumn:typeof column==='object'?column.viewColumn:column,active:true,visible:true,options:opts};
-    const ready=call('webview.create',{id,viewType,title,column:p.viewColumn,options:opts});
+    const ready=call('webview.create',{id,viewType,title,column:p.viewColumn,options:opts,preserveFocus:typeof column==='object'&&column.preserveFocus===true});
     let updateTail=ready;p._whenReady=()=>updateTail;
     const update=data=>{updateTail=updateTail.then(()=>call('webview.update',{id,...data}));updateTail.catch(e=>host.notify(e.message));return updateTail;};
     const webview={cspSource:'zenit-resource:',onDidReceiveMessage:receive.event,
@@ -78,7 +78,30 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   }
   v.ViewColumn={Active:-1,Beside:-2,One:1,Two:2,Three:3,Four:4,Five:5,Nine:9};
   v.window.createWebviewPanel=panel;
-  v.window.registerWebviewViewProvider=(id,provider,opts={})=>{const p=panel(id,id,1,opts);p.show=p.reveal;p.onDidChangeVisibility=p.onDidChangeViewState;Promise.resolve(provider.resolveWebviewView(p,{state:undefined},token)).catch(e=>host.notify(e.message));return new v.Disposable(()=>p.dispose());};
+  // Registering a sidebar provider must not create an editor or resolve its
+  // iframe during activation. Resolve only when the view's focus command runs.
+  const webviewProviders=new Map();
+  v.window.registerWebviewViewProvider=(id,provider,opts={})=>{
+    if(webviewProviders.has(id))throw Error('Vista webview ya registrada: '+id);
+    const entry={disposed:false,panel:null,pending:null};webviewProviders.set(id,entry);
+    const declaration=Object.values(options.manifest.contributes?.views||{}).flat().find(view=>view.id===id);
+    const title=declaration?.name||id;
+    const showView=async(preserveFocus=false)=>{
+      if(entry.disposed)throw Error('La vista ya no está registrada: '+id);
+      if(!entry.pending){
+        const p=panel(id,title,1,opts.webviewOptions||{});entry.panel=p;
+        p.show=(preserveFocus=false)=>p.reveal(p.viewColumn,preserveFocus);
+        p.onDidChangeVisibility=p.onDidChangeViewState;
+        p.onDidDispose(()=>{if(entry.panel===p){entry.panel=null;entry.pending=null;}});
+        entry.pending=Promise.resolve().then(()=>provider.resolveWebviewView(p,{state:undefined},token)).then(()=>p._whenReady()).then(()=>p).catch(error=>{p.dispose();throw error;});
+      }
+      const p=await entry.pending;
+      if(entry.disposed)throw Error('La vista ya no está registrada: '+id);
+      p.show(preserveFocus);await p._whenReady();
+    };showView.vscodeCommand=true;
+    const focus=host.registerCommand(id+'.focus',showView,'Abrir '+title);
+    return new v.Disposable(()=>{entry.disposed=true;webviewProviders.delete(id);focus.dispose();entry.panel?.dispose();});
+  };
   v.window.registerWebviewPanelSerializer=(id,serializer)=>{contexts.set('serializer:'+id,serializer);return new v.Disposable(()=>contexts.delete('serializer:'+id));};
   v.DebugAdapterServer=class{constructor(port,host='127.0.0.1'){Object.assign(this,{port,host});}};
   v.DebugAdapterNamedPipeServer=class{constructor(path){this.path=path;}};

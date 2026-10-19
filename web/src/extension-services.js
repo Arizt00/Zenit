@@ -126,7 +126,7 @@ export class ExtensionServicesUI {
       const ids=new Set(panels.filter(x=>x.visible).map(x=>x.id));
       for(const [id,state] of this.panels)if(!ids.has(id)){this.remove(state);this.panels.delete(id);}
       for(const panel of panels){if(!panel.visible)continue;let state=this.panels.get(panel.id);
-        if(!state){state={panel,seq:0,urls:[]};this.panels.set(panel.id,state);await this.render(state);this.show(state);}else if(state.panel.html!==panel.html){state.panel=panel;await this.render(state);}else {const previous=state.panel;state.panel=panel;this.title(state);if(previous.revision!==panel.revision&&panel.revealSequence!==previous.revealSequence)this.show(state);}
+        if(!state){state={panel,seq:0,urls:[]};this.panels.set(panel.id,state);await this.render(state);if(!panel.preserveFocus)this.show(state);}else if(state.panel.html!==panel.html){state.panel=panel;await this.render(state);}else {const previous=state.panel;state.panel=panel;this.title(state);if(previous.revision!==panel.revision&&panel.revealSequence!==previous.revealSequence)this.show(state);}
         for(const item of panel.messages)if(item.seq>state.seq&&state.loaded){state.frame.contentWindow.postMessage(item.message,'*');state.seq=item.seq;}
       }
     }catch(error){if(!this.disposed)console.warn('Extension services:',error.message);}

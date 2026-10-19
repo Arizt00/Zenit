@@ -101,13 +101,13 @@ class Preview{
     document.querySelectorAll('[data-extension-toggle]').forEach(toggle=>{const card=toggle.closest('.extension-card');if(card.querySelector('[data-extension-execute]'))return;const item=this.host.platform.extensionItems?.find(x=>x.id===toggle.dataset.extensionToggle);if(!item?.supported?.includes('runtime'))return;const b=document.createElement('button');b.className='secondary-button small-button';b.dataset.extensionExecute=item.id;b.textContent=this.extensionStartLabel(item.id);toggle.before(b);});
     if($('.tools-content')&&!$('#download-tools-link')){const b=document.createElement('button');b.id='download-tools-link';b.className='secondary-button';b.textContent='Descargar compilador · hasta 500 GB';b.onclick=()=>this.safe(()=>this.downloads());$('.tools-content .section-heading').append(b);}
   }
-  async extensionViews(){
-    const hosts=(this.runtimeHosts||[]).filter(x=>x.running&&x.views?.length);
+  async extensionViews(target=null){
+    const hosts=(this.runtimeHosts||[]).filter(x=>x.running&&x.views?.length&&(!target||x.id===target.extension));
     this.host.platform.openPage('extension-views',`<section class="extension-views-page"><h3>Vistas de tus extensiones</h3><p>Contenido real de los motores activos. Expande los nodos o ejecuta sus comandos.</p>${hosts.map((h,i)=>`<article class="extension-tree-card" data-extension-tree="${i}"><h4>${esc(h.id)}</h4></article>`).join('')||'<p>Inicia una extensión que registre TreeDataProvider o TreeView para ver su contenido.</p>'}</section>`);
-    for(let i=0;i<hosts.length;i++)for(const view of hosts[i].views){const section=document.createElement('section');section.className='extension-tree-view';section.innerHTML=`<header><strong>${esc(view.id)}</strong><button class="icon-button" aria-label="Actualizar ${esc(view.id)}">${icon('refresh')}</button></header><div class="extension-tree-nodes"></div>`;document.querySelector(`[data-extension-tree="${i}"]`).append(section);const refresh=()=>this.safe(()=>this.treeChildren(hosts[i],view.id,section.lastElementChild));section.querySelector('button').onclick=refresh;await refresh();}
+    for(let i=0;i<hosts.length;i++)for(const view of hosts[i].views){if(target&&view.id!==target.view)continue;const section=document.createElement('section');section.className='extension-tree-view';section.innerHTML=`<header><strong>${esc(view.title||view.id)}</strong><button class="icon-button" aria-label="Actualizar ${esc(view.title||view.id)}">${icon('refresh')}</button></header><div class="extension-tree-nodes"></div>`;document.querySelector(`[data-extension-tree="${i}"]`).append(section);const refresh=()=>this.safe(()=>this.treeChildren(hosts[i],view.id,section.lastElementChild));section.querySelector('button').onclick=refresh;await refresh();}
   }
   async treeChildren(ext,view,container,element){
-    const data=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'tree',view,element});if(!container.isConnected)return;
+    let data;try{data=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'tree',view,element});}catch(error){if(error.message.includes('Vista de extensión no registrada')){container.textContent='La extensión todavía no ha registrado el proveedor de esta vista.';return;}throw error;}if(!container.isConnected)return;
     container.replaceChildren();
     for(const item of data.items){const row=document.createElement('button');row.className='extension-tree-row';row.title=typeof item.tooltip==='string'?item.tooltip:'';row.innerHTML=icon(item.collapsibleState?'chevron-right':'file')+`<span>${esc(item.label)}</span><small>${esc(item.description||'')}</small>`;container.append(row);const children=document.createElement('div');children.className='extension-tree-children';children.hidden=true;container.append(children);
       if(item.checkboxState!==undefined){const input=document.createElement('input');input.type='checkbox';input.checked=(typeof item.checkboxState==='object'?item.checkboxState.state:item.checkboxState)===1;input.setAttribute('aria-label',item.label);row.before(input);input.onchange=()=>this.safe(()=>this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'treeCheckbox',view,element:item.key,checkboxState:input.checked?1:0}));}
@@ -184,6 +184,7 @@ class Preview{
       const data=await platform.api('/extensions/runtime/request',{id:command.ext,method:'command',command:command.id,arguments:args,document:doc()});
       const edits=[];
       for(const e of data.effects||[]){
+        if(e.treeView)await this.extensionViews({extension:command.ext,view:e.treeView});
         if(e.message)this.host.notify(e.message);
         if(e.clipboard!==undefined)await navigator.clipboard.writeText(String(e.clipboard));
         if(e.open)await this.host.openFile(relativeUri(e.open));

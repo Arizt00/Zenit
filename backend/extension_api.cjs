@@ -152,7 +152,7 @@ module.exports=function createAPI(host,options){
     return {ignoreCreateEvents:ignoreCreate,ignoreChangeEvents:ignoreChange,ignoreDeleteEvents:ignoreDelete,onDidCreate:create.event,onDidChange:change.event,onDidDelete:remove.event,dispose(){watcher.close();create.dispose();change.dispose();remove.dispose();}};
   };
   vscode.commands.registerCommand=(id,fn,ctx)=>{const bound=(...args)=>fn.apply(ctx,args);bound.vscodeCommand=true;return registerCommand(id,bound,id);};
-  const treeViews=require('./extension_views.cjs')(vscode);
+  const treeViews=require('./extension_views.cjs')(vscode,host,options);
   vscode.FoldingRangeKind=FoldingRangeKind;
   const services=require('./extension_services.cjs')(vscode,host,options,event,makeDocument,documents);
   const ui=require('./extension_ui.cjs')(vscode,host);
