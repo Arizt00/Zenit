@@ -1,7 +1,12 @@
 // Authentication providers supplied by authorised extensions. No fabricated tokens.
 const providers=new Map(),grants=new Set();let changed;
-module.exports=function(v,consumer){
+module.exports=function(v,consumer,host,builtins=[]){
   changed ||= new v.EventEmitter();
+  if(builtins.includes('github')&&!providers.has('github')){
+    const emitter=new v.EventEmitter();
+    const invoke=(method,scopes=[],options={})=>host.service(method,{provider:'github',extension:consumer,scopes,account:options.account});
+    providers.set('github',{id:'github',label:'GitHub',options:{},builtin:true,provider:{onDidChangeSessions:emitter.event,getSessions:(scopes=[],options={})=>invoke('authentication.sessions',scopes,options),createSession:async(scopes,options)=>{const sessions=await invoke('authentication.create',scopes,options);return sessions[0];}}});
+  }
   const get=id=>{const p=providers.get(id);if(!p)throw Error('Proveedor de autenticación no conectado: '+id+'. Instala y autoriza su proveedor antes de iniciar sesión.');return p;};
   const grantKey=(id,s)=>JSON.stringify([consumer,id,s.id,[...s.scopes].sort()]);
   v.authentication={
@@ -29,4 +34,5 @@ module.exports=function(v,consumer){
       grants.add(grantKey(id,session));return session;
     }
   };
+  return {changed(id){const p=providers.get(id);if(!p?.builtin)return;for(const key of [...grants])if(JSON.parse(key)[1]===id)grants.delete(key);changed.fire({provider:{id,label:p.label}});}};
 };

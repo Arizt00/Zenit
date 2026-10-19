@@ -153,7 +153,7 @@ module.exports=function createAPI(host,options){
   const treeViews=require('./extension_views.cjs')(vscode);
   const services=require('./extension_services.cjs')(vscode,host,options,event,makeDocument,documents);
   const ui=require('./extension_ui.cjs')(vscode,host);
-  require('./extension_auth.cjs')(vscode,options.id);
+  const authentication=require('./extension_auth.cjs')(vscode,options.id,host,options.authenticationProviders||[]);
   const portAttributes=require('./extension_ports.cjs')(vscode);
   const fileSystems=require('./extension_filesystem.cjs')(vscode,event,makeDocument,documents,globPattern);
   require('./extension_language_tools.cjs')(vscode,options);
@@ -190,6 +190,7 @@ module.exports=function createAPI(host,options){
     return result.applied===true;
   };
   decorateEditor=require('./extension_decoration_types.cjs')(vscode,host);
+  decorateEditor=require('./extension_editor_options.cjs')(host,decorateEditor);
   vscode.TimelineItem=itemClass('label timestamp');
   vscode.commands.registerDiffInformationCommand=(id,callback,thisArg)=>registerCommand(id,async(...args)=>{const editor=vscode.window.activeTextEditor;if(!editor)return;const changes=await host.service('editor.diff',{uri:editor.document.uri,text:editor.document.getText()});return callback.call(thisArg,editor,changes,...args);});
   vscode.QuickInputButtonLocation={Title:1,Input:2};
@@ -231,6 +232,7 @@ module.exports=function createAPI(host,options){
   const context={subscriptions:[],extensionPath:options.root,extensionUri:Uri.file(options.root),extension:extensions.find(e=>e.id===options.id),extensionMode:1,storagePath:storage,globalStoragePath:storage,storageUri:Uri.file(storage),globalStorageUri:Uri.file(storage),logUri:Uri.file(storage),logPath:storage,asAbsolutePath:p=>path.join(options.root,p),workspaceState:memento('workspace-state.json'),globalState:memento('global-state.json'),environmentVariableCollection:require('./extension_environment.cjs')(vscode,host,storage)};
   context.secrets={onDidChange:event('secrets').event,get:async key=>(await host.service('secrets.get',{key,extension:options.id})).value??undefined,store:async(key,value)=>{await host.service('secrets.store',{key,value,extension:options.id});event('secrets').fire({key});},delete:async key=>{await host.service('secrets.delete',{key,extension:options.id});event('secrets').fire({key});}};
   const failures=new WeakMap();
+  const accountEvent=services.event;services.event=(name,value)=>{if(name==='authentication.changed'){authentication.changed(value.provider);return;}return accountEvent(name,value);};
   vscode.workspace.onWillSaveTextDocument=event('willSave').event;
   vscode.TextDocumentSaveReason={Manual:1,AfterDelay:2,FocusOut:3};
   async function willSave(reason=1,doc=current){

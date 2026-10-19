@@ -9,6 +9,12 @@ export class ExtensionServicesUI {
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.editor.options'){
+      const model=ed.models.get(event.path)?.model,o=event.options;if(!model)return;
+      const opts={};if(Number.isInteger(o.tabSize))opts.tabSize=o.tabSize;if(typeof o.insertSpaces==='boolean')opts.insertSpaces=o.insertSpaces;if(Number.isInteger(o.indentSize)||o.indentSize==='tabSize')opts.indentSize=o.indentSize;
+      model.updateOptions(opts);if(o.tabSize==='auto'||o.insertSpaces==='auto')model.detectIndentation(model.getOptions().insertSpaces,model.getOptions().tabSize);
+      if(ed.current===event.path){const view=ed.activeView?.()||ed.view;view?.updateOptions({...o.cursorStyle?{cursorStyle:['line','block','underline','line-thin','block-outline','underline-thin'][o.cursorStyle-1]}:{},...o.lineNumbers!==undefined?{lineNumbers:['off','on','relative','interval'][o.lineNumbers]}:{}});}return;
+    }
     if(event.command==='zenit.editor.close'){
       if(event.owner!==this.owner)return;
       for(const path of event.paths)if(ed.models.has(path))await h.closeFile(path);

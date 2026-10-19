@@ -167,6 +167,7 @@ class ExtensionRuntime:
                 except (OSError,ValueError):pass
             profiles=terminal_profiles()
             options={'installedAt':self.store.prefs.directory.stat().st_ctime*1000,'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None,'iconTheme':self.services.icon_state()['configurationId'] if self.services else 'zenit','themeKind':self.services.theme_state()['kind'] if self.services else 1,'themeLabel':self.services.theme_state()['label'] if self.services else 'Zénit Día'}
+            options['authenticationProviders']=['github'] if self.services and hasattr(self.services.platform,'extension_accounts') else []
             self.stop(eid);self.hosts[eid]=Host(node,root,entry,workspace,options,self.services)
             self.approve(workspace,eid,graph)
             self.store.prefs.audit('extension.execute',extension=eid)

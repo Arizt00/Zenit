@@ -53,6 +53,8 @@ class PlatformServices:
         self.simulation=Simulation(self);self.machines=Machines(self)
         self.buffers=Buffers()
         self.extension_services=ExtensionServices(self);self.extension_runtime.services=self.extension_services
+        from .extension_accounts import ExtensionAccounts
+        self.extension_accounts=ExtensionAccounts(self.prefs,self._accounts_changed)
         self.melody_files=MelodyFiles(self)
         self.voice=MelodyVoice(self.prefs)
         from .python_packages import PythonPackages
@@ -64,6 +66,10 @@ class PlatformServices:
         self.workbenches=Workbenches(self);self.execution=ExecutionTargets(self);self.sdk=SDKManager(self)
         self.runtimes.execution=self.execution
         self._register_subsystems()
+    def _accounts_changed(self):
+        self.extension_services.emit('authentication.changed',provider='github')
+        for host in list(self.extension_runtime.hosts.values()):
+            if hasattr(host,'event'):host.event('authentication.changed',{'provider':'github'})
     def _register_subsystems(self):
         core=self.hilo
         core.register('runner',self.app.runner,workspace_stop=self._stop_jobs,shutdown=self.app.runner.shutdown)
@@ -134,6 +140,7 @@ class PlatformServices:
         if path=='/sdk':return self.sdk.status()
         if path=='/operations':return self.hilo.snapshot(self.app.workspace.root)
         if path=='/connections':return {'connections':self.connections.inventory()}
+        if path=='/accounts/extensions':return self.extension_accounts.snapshot()
         if path=='/binary/info':return self.binary_tools.info(q('path'))
         if path=='/team':return self.team.status()
         if path=='/team/connector':return self.team.connector(query.get('target',['vscode'])[0])
@@ -222,6 +229,8 @@ class PlatformServices:
         if path=='/workbench/spaces/delete':return self.workbenches.delete_space(ws,body.get('name'))
         if path=='/execution/select':return self.execution.select(ws,body)
         if path=='/sdk/activate':self._trusted();return self.sdk.activate(body.get('directory'))
+        if path=='/accounts/extensions/connect':return self.extension_accounts.connect(body)
+        if path=='/accounts/extensions/disconnect':return self.extension_accounts.disconnect()
         if path=='/sdk/deactivate':self._trusted();return self.sdk.deactivate(body.get('directory'))
         if path=='/sdk/import':
             self._trusted();return self.hilo.submit('Preparar SDK',lambda event:self.sdk.install(body.get('path'),event),workspace=ws.root,key='sdk-install')

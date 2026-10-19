@@ -406,6 +406,23 @@ class ExtensionServices:
     def call(self,host,method,p):
         ws=host.workspace
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
+        if method=='editor.options':
+            target=file_path(p.get('uri'));key=self.key(ws,target)
+            if not target.is_relative_to(ws.root):self.file_workspace(target)
+            options=p.get('options');clean={}
+            if not isinstance(options,dict):raise ValueError('Opciones del editor inválidas.')
+            for name,value in options.items():
+                if value is None:continue
+                if name in ('tabSize','indentSize') and (type(value) is int and 1<=value<=20 or value in ('auto','tabSize')):clean[name]=value
+                elif name=='insertSpaces' and (type(value) is bool or value=='auto'):clean[name]=value
+                elif name=='cursorStyle' and type(value) is int and 1<=value<=6:clean[name]=value
+                elif name=='lineNumbers' and type(value) is int and 0<=value<=3:clean[name]=value
+                else:raise ValueError('Opción del editor no admitida: '+str(name))
+            self.emit('zenit.editor.options',path=key,options=clean);return {'ok':True}
+        if method in ('authentication.sessions','authentication.create'):
+            if p.get('provider')!='github':raise ValueError('Proveedor de cuenta no integrado.')
+            if p.get('extension') not in getattr(host,'extension_ids',{host.extension_id}):raise PermissionError('Cuenta solicitada por otra extensión.')
+            return self.platform.extension_accounts.sessions(p.get('scopes',[]),p.get('account'),method=='authentication.create')
         if method=='editor.diff':
             import difflib,subprocess
             target=file_path(p['uri']);name=target.relative_to(ws.root).as_posix();text=p.get('text','')

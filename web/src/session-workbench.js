@@ -1,5 +1,6 @@
 import {icon,escapeHTML as esc} from './icons.js';
 import {providerIcon} from './provider-identity.js';
+import {mountExtensionAccounts} from './extension-accounts.js';
 
 /** Environment and connection controls stay out of Melody's conversation surface. */
 export class SessionWorkbench {
@@ -68,5 +69,6 @@ export async function mountConnections(host,root){
       finally{b.disabled=false;}
     }));
   }catch(error){if(root.isConnected)root.querySelector('.connection-feedback').textContent=error.message;}};
+  const accounts=document.createElement('section');accounts.className='extension-accounts';root.insertBefore(accounts,root.querySelector('.connections-grid'));await mountExtensionAccounts(p,accounts);
   root.refreshConnections=refresh;root.querySelector('[data-connections-refresh]').onclick=()=>refresh(true);await refresh();
 }
