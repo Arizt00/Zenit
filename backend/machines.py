@@ -33,9 +33,20 @@ class Machines:
             path=(root/relative).resolve()
             return str(path) if path.is_relative_to(root) and path.is_file() else None
         arch=next((x for x in data.get('components',[]) if x.get('id')=='arch'),{})
+        image=file(arch.get('file'));image_root=root
+        if not image and not directory and not self.base_root:
+            # Optional image and QEMU components may be installed in either order.
+            from .foundation import roots,read_index
+            for candidate in roots():
+                try:
+                    candidate=candidate.resolve();index=read_index(candidate);resource=next((c for c in index.get('components',[]) if c.get('id')=='arch'),{}).get('file')
+                    if not isinstance(resource,str):continue
+                    target=(candidate/resource).resolve()
+                    if target.is_relative_to(candidate) and target.is_file():image=str(target);image_root=candidate;break
+                except (OSError,ValueError):continue
         return {'qemu':file(data.get('tools',{}).get('qemu-system-x86_64')) or find_tool('qemu-system-x86_64'),
                 'qimg':file(data.get('tools',{}).get('qemu-img')) or find_tool('qemu-img'),
-                'image':file(arch.get('file')),'directory':str(root)}
+                'image':image,'directory':str(image_root)}
     def configure_base(self,directory):
         if not isinstance(directory,str) or not Path(directory).is_absolute():raise ValueError('Choose an absolute prepared SDK folder.')
         base=self.vm_base(directory)

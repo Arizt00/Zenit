@@ -43,6 +43,8 @@ def main():
             'src/team-view.js','team-execution.js','src/assembly-workbench.js','src/workspace-profiles.js',
             'design/co-code.css','design/assembly-workspace.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
+        critical.update('_internal/web/'+name for name in ('src/team-project.js','coco-drafts.js','src/task-center.js','src/tern-portability.js','src/project-tests.js','src/git-conflicts.js','src/machine-inspector.js','src/extension-command-icon.js','src/extension-accounts.js','design/workflows-r17.css'))
+        critical.update(('_internal/config/extension-compatibility.json','_internal/docs/PREVIEW_054_R17.md','_internal/backend/test_bridge.py'))
         for name in sorted(critical):
             assert hashlib.sha256(archive.extract(entries['payload/'+name])).hexdigest()==sha256(payload/name), name
     if sys.platform=='darwin':

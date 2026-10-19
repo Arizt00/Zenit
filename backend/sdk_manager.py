@@ -26,7 +26,16 @@ class SDKManager:
   if data.get('platform') not in (None,sys.platform):raise ValueError('Este SDK pertenece a otro sistema operativo.')
   for name,path in data.get('tools',{}).items():
    if not isinstance(path,str) or not (root/path).resolve().is_relative_to(root) or not (root/path).is_file():raise ValueError('El SDK contiene una herramienta ausente o una ruta externa: '+str(name))
-  if not data.get('tools'):raise ValueError('Este índice no contiene herramientas.')
+  if not data.get('tools'):
+   resources=[c for c in data.get('components',[]) if c.get('id')=='arch' and isinstance(c.get('file'),str)]
+   if not resources:raise ValueError('Este índice no contiene herramientas ni una imagen de máquina válida.')
+   for resource in resources:
+    file=(root/resource['file']).resolve()
+    if not file.is_relative_to(root) or not file.is_file():raise ValueError('La imagen del SDK está ausente o fuera de su carpeta.')
+    digest=hashlib.sha256()
+    with file.open('rb') as stream:
+     for block in iter(lambda:stream.read(1024*1024),b''):digest.update(block)
+    if digest.hexdigest()!=resource.get('sha256'):raise ValueError('La imagen no coincide con su huella de origen.')
   with self.lock:
    candidates=[str(root),*[p for p in self.config.get('roots',[]) if p!=str(root)]]
    if len(candidates)>16:raise ValueError('Desactiva un SDK antes de añadir otro.')

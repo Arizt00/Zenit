@@ -6,7 +6,7 @@ from tools.package_sdk import GROUPS,package
 from backend.version import RELEASE_TAG
 
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--components',default='gcc,llvm,nc,nasm,java,node');parser.add_argument('--source',type=Path,default=ROOT/'sdk/foundation');parser.add_argument('--output',type=Path,default=ROOT/'dist/sdk');args=parser.parse_args();components=args.components.split(',');rows=[]
+ parser=argparse.ArgumentParser();parser.add_argument('--components',default='gcc,llvm,nc,nasm,java,node,qemu,arch');parser.add_argument('--source',type=Path,default=ROOT/'sdk/foundation');parser.add_argument('--output',type=Path,default=ROOT/'dist/sdk');args=parser.parse_args();components=args.components.split(',');rows=[]
  if len(components)!=len(set(components)) or set(components)-set(GROUPS):parser.error('Revisa los componentes SDK.')
  for component in components:
   row=package(args.source,component,args.output/f'Zenit-{RELEASE_TAG}-{sys.platform}-SDK-{component}.zip');digest=hashlib.sha256()
