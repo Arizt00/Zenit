@@ -7,7 +7,7 @@ import subprocess
 UNINSTALL_KEY = r'Software\Microsoft\Windows\CurrentVersion\Uninstall\LumenStudio'
 
 
-def register_uninstaller(root, version):
+def register_uninstaller(root, version, *, only_if_needed=False):
     if os.name != 'nt':
         return
     import winreg
@@ -29,10 +29,23 @@ def register_uninstaller(root, version):
         'InstallDate': date.today().strftime('%Y%m%d'),
         'URLInfoAbout': 'https://github.com/Arizt00/Zenit',
     }
+    flags = {'NoModify': 1, 'NoRepair': 1, 'NoRemove': 0, 'SystemComponent': 0}
+    if only_if_needed:
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY) as entry:
+                matches = all(winreg.QueryValueEx(entry, name) == (value, winreg.REG_SZ)
+                              for name, value in values.items() if name != 'InstallDate')
+                matches = matches and all(winreg.QueryValueEx(entry, name) == (value, winreg.REG_DWORD)
+                                          for name, value in flags.items())
+                if matches:
+                    return False
+        except FileNotFoundError:
+            pass
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY) as entry:
         for name, value in values.items():
             winreg.SetValueEx(entry, name, 0, winreg.REG_SZ, value)
         # This is an EXE installer: expose Uninstall, without advertising MSI
         # maintenance actions that the standalone application does not implement.
-        for name, value in {'NoModify': 1, 'NoRepair': 1, 'NoRemove': 0, 'SystemComponent': 0}.items():
+        for name, value in flags.items():
             winreg.SetValueEx(entry, name, 0, winreg.REG_DWORD, value)
+    return True

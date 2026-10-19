@@ -19,6 +19,7 @@ from backend.uninstall import Uninstaller, retry_readonly
 from backend import windows_installation
 from backend.version import VERSION
 from installer import Installer
+import launcher
 
 
 @contextmanager
@@ -211,6 +212,43 @@ class WindowsRegistrationTests(unittest.TestCase):
             windows_installation.register_uninstaller(self.root, VERSION)
         with self.assertRaises(FileNotFoundError):
             self.winreg.OpenKey(self.winreg.HKEY_CURRENT_USER, self.key)
+
+    def test_desktop_launch_repairs_the_selected_release_once_and_preserves_install_date(self):
+        reg=self.winreg
+        executable=self.root/'app-0.5.4-R16'/'zenit.exe'
+        executable.parent.mkdir();executable.write_bytes(b'installed payload')
+        (self.root/'Uninstall-Zenit.exe').write_bytes(b'uninstaller')
+        (self.root/'installation.json').write_text(json.dumps({'directory':executable.parent.name,'integrations':{'register':True}}))
+        with reg.CreateKey(reg.HKEY_CURRENT_USER,self.key) as entry:
+            reg.SetValueEx(entry,'DisplayName',0,reg.REG_SZ,'Lumen Studio')
+            reg.SetValueEx(entry,'DisplayVersion',0,reg.REG_SZ,'0.5.2')
+            reg.SetValueEx(entry,'SystemComponent',0,reg.REG_DWORD,1)
+        launcher.refresh_registration(self.root,executable)
+        with reg.OpenKey(reg.HKEY_CURRENT_USER,self.key,0,reg.KEY_READ|reg.KEY_WRITE) as entry:
+            self.assertEqual(reg.QueryValueEx(entry,'DisplayName')[0],'Zénit IDE')
+            self.assertEqual(reg.QueryValueEx(entry,'DisplayVersion')[0],'0.5.4')
+            self.assertEqual(reg.QueryValueEx(entry,'SystemComponent')[0],0)
+            reg.SetValueEx(entry,'InstallDate',0,reg.REG_SZ,'20200101')
+            written=reg.QueryInfoKey(entry)[2]
+        launcher.refresh_registration(self.root,executable)
+        with reg.OpenKey(reg.HKEY_CURRENT_USER,self.key) as entry:
+            self.assertEqual(reg.QueryInfoKey(entry)[2],written)
+            self.assertEqual(reg.QueryValueEx(entry,'InstallDate')[0],'20200101')
+
+    def test_desktop_launch_respects_disabled_registration(self):
+        (self.root/'installation.json').write_text(json.dumps({'integrations':{'register':False}}))
+        with patch.object(windows_installation,'register_uninstaller') as register:
+            launcher.refresh_registration(self.root,self.root/'app-0.5.5-R1'/'zenit.exe')
+        register.assert_not_called()
+
+    def test_registration_failure_does_not_block_the_editor(self):
+        executable=self.root/'app-0.5.5-R1'/'zenit.exe'
+        executable.parent.mkdir();executable.write_bytes(b'installed payload')
+        (self.root/'installation.json').write_text(json.dumps({'directory':executable.parent.name,'integrations':{'register':True}}))
+        with patch.object(windows_installation,'register_uninstaller',side_effect=PermissionError('registry blocked')),patch.object(launcher.sys,'executable',str(self.root/'Zenit.exe')),patch.object(launcher.sys,'frozen',True,create=True),patch.object(launcher.subprocess,'Popen') as opened:
+            self.assertEqual(launcher.main(),0)
+        self.assertEqual(opened.call_args.args[0][0],str(executable))
+        self.assertEqual(json.loads((self.root/'registration-status.json').read_text())['state'],'error')
 
 
 if __name__ == '__main__':

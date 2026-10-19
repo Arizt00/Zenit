@@ -38,6 +38,8 @@ Al abrir una versión nueva en la aplicación de escritorio se presenta su panel
 
 El instalador comprueba el presupuesto de longitud de las rutas de Windows antes de iniciar la instalación. La actualización automática realiza esta comprobación antes de pedir el cierre del editor, de modo que una ruta incompatible no interrumpe la sesión.
 
+El lanzador estable comprueba también la inscripción en Aplicaciones instaladas desde el contexto real del escritorio. Repara nombre, versión, rutas y visibilidad si Windows conserva una entrada anterior; utiliza la versión del payload seleccionado. Una inscripción correcta no se reescribe ni cambia su fecha de instalación. Se respeta la opción de no registrar la aplicación y un fallo del registro no impide abrir el proyecto.
+
 ## Extensiones
 
 Los avisos informativos de instalación se agrupan en un recibo de compatibilidad. Las tarjetas mantienen identidad, descripción y acciones alineadas. La compatibilidad añade las factorías FileIsADirectory y FileNotADirectory y códigos FileSystemError reales. La matriz distingue las pruebas de comportamiento de una simple activación y queda ligada a versión y SHA-256 exactos.
