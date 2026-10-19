@@ -2,7 +2,12 @@
 .dock-content,.dock-slot,.editor-area,.editor-panel,.workspace-profile-bar,.heading-actions{min-width:0;min-height:0}
 #project-panel>.panel-heading,.editor-tabbar,#assistant-panel>.assistant-heading{box-sizing:border-box;min-height:52px;margin-top:0;align-items:center}
 #project-panel>.panel-heading{padding:8px 12px;gap:8px}
-#assistant-panel>.assistant-heading{padding:10px 14px;gap:10px}
+#assistant-panel>.assistant-heading{height:52px;flex:0 0 52px;padding:8px 12px;gap:8px;flex-wrap:nowrap;border-bottom:1px solid var(--border)}
+#assistant-panel .assistant-heading-title{min-width:0;flex:1 1 0;gap:8px}
+#assistant-panel .assistant-heading-title h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#assistant-panel .assistant-heading-title>.sparkles,#assistant-panel .melody-beta{flex:none}
+.project-panel{container-type:inline-size;container-name:project-dock}
+.panel-heading h1{overflow:hidden;text-overflow:ellipsis}
 .heading-actions{display:flex;align-items:center;flex:0 0 auto;gap:4px}
 .heading-actions>.icon-button{width:28px;height:28px;min-width:28px;padding:5px;flex:none}
 .panel-heading h2,.panel-heading h3,.assistant-heading h2{margin:0;line-height:1.25;min-width:0}
@@ -19,6 +24,20 @@
 .saved-space-list article>div{flex:1;min-width:0}.saved-space-list strong{display:block;overflow-wrap:anywhere;font-size:14px;font-weight:550}.saved-space-list small{display:block;margin-top:6px;color:var(--muted);font-size:11px}
 .sdk-manager{display:grid;gap:20px;min-width:0}.sdk-manager form{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:18px;border:1px solid var(--border);border-radius:14px}.sdk-manager label{display:grid;gap:9px;flex:1 1 240px;font-size:12px}.sdk-manager input{min-width:0;min-height:40px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--field);color:var(--text)}
 .sdk-manager-list{display:grid;gap:12px}.sdk-manager-list article{padding:18px;border:1px solid var(--border);border-radius:14px;min-width:0}.sdk-manager-list header{display:flex;align-items:center;gap:10px;justify-content:space-between}.sdk-manager-list code{display:block;overflow-wrap:anywhere;white-space:normal;color:var(--muted);font:11px/1.6 var(--font-code);margin:10px 0}.sdk-component-tools{display:flex;gap:6px;flex-wrap:wrap}.sdk-component-tools span{padding:5px 8px;border:1px solid var(--border);border-radius:7px;font-size:11px}
+/* Adapt to the editor's width, including split views and detached windows. */
+.binary-view{container-type:inline-size;container-name:binary-editor;overflow:auto}
+.binary-view>header,.binary-view>.binary-arguments{flex:none}
+.binary-scroll{flex:1 0 160px}
+.binary-tools{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;flex:none;gap:12px}
+.binary-edit-tools{flex:1 1 460px;min-width:0;gap:8px}
+.binary-action-tools{flex:0 1 auto;min-width:0;gap:8px;margin-left:auto;border-top:0;padding-top:0}
+.binary-tools form{gap:8px}
+.binary-view>footer{flex:none;row-gap:10px}
+.binary-value{min-width:0;flex:1 1 260px;overflow-wrap:anywhere;line-height:1.6}
+@container project-dock (max-width:270px){.heading-actions>.project-header-external{display:none}}
+@container project-dock (max-width:235px){.heading-actions>.project-header-create{display:none}}
+@container binary-editor (max-width:880px){.binary-tools{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}.binary-action-tools{justify-content:flex-start;margin-left:0;border-top:1px solid var(--border);padding-top:10px}}
+@container binary-editor (max-width:650px){.binary-action-tools>.secondary-button,.binary-action-tools>.primary-button{width:36px;min-width:36px;padding:8px;justify-content:center}.binary-action-label{display:none}}
 @media(max-width:1350px){.execution-target-control{max-width:125px}.top-actions{gap:7px}}
 @media(max-width:1100px){.execution-target-control{max-width:100px}.saved-space-form{align-items:stretch;flex-direction:column}}
 @media(max-width:1100px){.execution-target-control{width:40px;min-width:40px;max-width:40px;padding:10px;flex:none;justify-content:center}.execution-target-control>span,.execution-target-control>.icon:last-child{display:none}}

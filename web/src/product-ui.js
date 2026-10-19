@@ -26,8 +26,13 @@ export function installProductUI(host){
     const hidden=[...container.querySelectorAll('button')].filter(button=>!button.matches(keep)&&!button.classList.contains('dock-grip'));
     hidden.forEach(button=>button.classList.add('zenit-overflow-action'));
     const menu=document.createElement('button');menu.type='button';menu.className='icon-button zenit-tools-menu';menu.setAttribute('aria-label','Más acciones');menu.title='Más acciones';menu.innerHTML=icon('more');container.append(menu);
-    menu.onclick=()=>host.showMenu(menu,hidden.map(button=>({label:button.getAttribute('aria-label')||button.title||button.textContent.trim(),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'settings',disabled:button.disabled,run:()=>button.click()})),'Acciones');
+    menu.onclick=()=>{
+      const actions=[...container.querySelectorAll('button')].filter(button=>button!==menu&&(hidden.includes(button)||button.classList.contains('zenit-responsive-action')&&!button.offsetWidth));
+      host.showMenu(menu,actions.map(button=>({label:button.getAttribute('aria-label')||button.title||button.textContent.trim(),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'settings',disabled:button.disabled,run:()=>button.click()})),'Acciones');
+    };
   }
+  document.querySelector('#project-panel .heading-actions [data-action="new-file"]')?.classList.add('zenit-responsive-action','project-header-create');
+  document.querySelector('#project-panel .heading-actions [title*="escritorio"]')?.classList.add('zenit-responsive-action','project-header-external');
   compact(document.querySelector('#project-panel .heading-actions'),'[data-action="new-file"],[data-action="project-menu"],[data-collapse-panel],[title*="escritorio"]');
   compact(document.querySelector('#assistant-panel .heading-actions'),'[data-panel-float]');
   compact(document.querySelector('.editor-tabbar'),'.file-tab,.new-tab,.file-group');

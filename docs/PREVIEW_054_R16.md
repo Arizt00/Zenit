@@ -53,6 +53,14 @@ ancho disponible. Las consultas de Melody desde Forge, Lantern, laboratorio y
 herramientas conservan su posición actual. Recuperar pestañas no convierte una
 cancelación interna de Monaco en una pantalla falsa de fallo de arranque.
 
+La revisión visual posterior iguala las tres cabeceras a 52 px, incluida Melody.
+En un explorador estrecho, las acciones secundarias pasan al menú de tres puntos
+sin desaparecer: abrir una ventana externa por debajo de 270 px y crear archivo
+por debajo de 235 px. El editor de binarios reúne edición y ejecución en una fila
+cuando cabe; en vistas estrechas utiliza iconos con nombres accesibles y conserva
+al menos 160 px para la tabla hexadecimal. Estos cambios responden al ancho del
+panel, también en divisiones y ventanas independientes.
+
 ## Destino común
 
 El selector superior guarda un destino por proyecto y lo comparte entre ventanas:
