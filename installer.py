@@ -51,8 +51,10 @@ class Installer:
     def preflight(self):
         if not (self.payload/'zenit.exe').is_file():raise ValueError('No se encuentra el programa que debe instalarse.')
         if os.name=='nt':
+            target=self.target.expanduser().resolve();destination=target/f'app-{VERSION}-R{REVISION}'
             longest=max((len(str(file.relative_to(self.payload))) for file in self.payload.rglob('*') if file.is_file()),default=0)
-            if len(str(self.target.resolve()))+18+longest>=260:raise ValueError('La ruta de instalación es demasiado larga para este paquete de Windows. Elige una carpeta más corta, por ejemplo la carpeta Programs de tu usuario.')
+            intermediate=max(len('.install-')+8,len(destination.name+'-previous-'+str(time.time_ns())) if destination.exists() else len(destination.name))
+            if len(str(target))+2+intermediate+longest>=260:raise ValueError('La ruta de instalación es demasiado larga para este paquete de Windows. Elige una carpeta más corta, por ejemplo la carpeta Programs de tu usuario.')
 
     def status(self):
         with self.lock:
