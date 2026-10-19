@@ -587,7 +587,10 @@ function setupEvents(){
   document.addEventListener('keydown',event=>{
     if(event.code==='AltLeft'){themeLeftAlt=true;return;}
     if(event.code==='AltRight'||event.key==='AltGraph'){themeLeftAlt=false;return;}
-    const digit=['1','2','3'].includes(event.key)?event.key:/^Digit[123]$/.test(event.code)?event.code.slice(-1):null;
+    // Some Windows input paths omit code and report the layout character
+    // (for example @ for Ctrl+Alt+2). Retain their virtual-key digit too.
+    const virtualKey=event.keyCode||event.which;
+    const digit=['1','2','3'].includes(event.key)?event.key:/^Digit[123]$/.test(event.code)?event.code.slice(-1):!event.code&&virtualKey>=49&&virtualKey<=51?String.fromCharCode(virtualKey):null;
     if($('#onboarding')||!digit||!(event.ctrlKey||event.metaKey)||!event.altKey||event.getModifierState('AltGraph')&&!themeLeftAlt)return;
     event.preventDefault();event.stopPropagation();guard(()=>perform(['theme-day','theme-dark','theme-forest'][+digit-1]))();
   },true);

@@ -8,7 +8,7 @@ Los paneles de documentación, avisos de acciones y menús contextuales tienen u
 
 La interfaz y Monaco componen los fondos de los temas de extensión de la misma forma. Se corrige el contraste insuficiente de números de línea, texto de campos, ayudas y sugerencias; los colores de sintaxis legibles de cada tema se conservan. Las cabeceras utilizan su propio fondo y primer plano declarados. La prueba con los paquetes instalados verifica 39 variantes, cambios de fuente, ventanas separadas y recarga sin perder el búfer pendiente.
 
-Los atajos Ctrl+Alt+1/2/3 reconocen también la posición física de los dígitos en distribuciones como AZERTY. La entrada de caracteres mediante AltGr no cambia el tema.
+Los atajos Ctrl+Alt+1/2/3 reconocen también la posición física de los dígitos en distribuciones como AZERTY y la tecla virtual cuando Windows omite el código físico. Se verificaron los tres atajos en la aplicación instalada, con el editor enfocado, sin insertar caracteres en el archivo. La entrada de caracteres mediante AltGr no cambia el tema.
 
 ## Proyecto y Melody
 
