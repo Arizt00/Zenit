@@ -44,13 +44,14 @@ def wait_for_editor(data,timeout=120):
 def apply_update(request,installer_factory,*,wait=wait_for_editor,launch=None):
  data,profile,target=read_request(request);receipt=profile/'updates/install-result.json';exited=False
  try:
+  installer=installer_factory(target=target)
+  if hasattr(installer,'preflight'):installer.preflight()
   atomic_json(receipt,{'state':'waiting','request':Path(request).name,'version':data['version']})
   wait(data)
   exited=True
   if digest(data['installer'])!=data['sha256']:raise ValueError('El instalador cambió después de verificarse.')
   backup=backup_metadata(profile)
   atomic_json(receipt,{'state':'installing','version':data['version'],'backup':str(backup)})
-  installer=installer_factory(target=target)
   previous=json.loads((target/'installation.json').read_text('utf-8'));integrations=previous.get('integrations',{})
   installer._install({'locale':data.get('locale','en'),'packages':[],**{key:bool(integrations.get(key,default)) for key,default in (('shortcuts',True),('register',True),('desktop',False))}})
   result=installer.status()

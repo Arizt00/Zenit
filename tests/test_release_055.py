@@ -36,6 +36,24 @@ class ReleaseUpdateTests(unittest.TestCase):
    with self.assertRaises(TimeoutError):apply_update(request,Installer,wait=lambda data:(_ for _ in ()).throw(TimeoutError('editor active')),launch=lambda *a:order.append('duplicate'))
    self.assertNotIn('duplicate',order)
 
+ def test_preflight_failure_leaves_editor_running_without_relaunch(self):
+  with tempfile.TemporaryDirectory() as tmp:
+   base=Path(tmp);profile=base/'profile';target=base/'installed';target.mkdir();(target/'installation.json').write_text('{}');(target/'Zenit.exe').write_bytes(b'old launcher');request=profile/'updates/handoff-preflight.json';atomic_json(request,{'profile':str(profile),'target':str(target),'workspace':str(base),'pid':123,'processCreated':1,'created':time.time(),'version':'v0.6.0'})
+   order=[]
+   class Installer:
+    def __init__(self,target):pass
+    def preflight(self):raise ValueError('ruta demasiado larga')
+   with self.assertRaisesRegex(ValueError,'ruta demasiado larga'):apply_update(request,Installer,wait=lambda data:order.append('wait'),launch=lambda *a:order.append('launch'))
+   self.assertEqual(order,[]);self.assertEqual(json.loads((profile/'updates/install-result.json').read_text())['state'],'error');self.assertEqual((target/'Zenit.exe').read_bytes(),b'old launcher')
+
+ @unittest.skipUnless(os.name=='nt','Windows path-budget preflight')
+ def test_installer_rejects_long_destination_before_copying(self):
+  from installer import Installer
+  with tempfile.TemporaryDirectory() as tmp:
+   base=Path(tmp);payload=base/'payload';payload.mkdir();(payload/'zenit.exe').write_bytes(b'fixture');target=base/('destination-'+'x'*120)/('nested-'+'x'*60)
+   with self.assertRaisesRegex(ValueError,'demasiado larga'):Installer(payload=payload,target=target).preflight()
+   self.assertFalse(target.exists())
+
 class MachineLibraryTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.base=Path(self.temp.name);self.project=self.base/'project';self.project.mkdir();self.app=Application(ROOT,self.project,data_dir=self.base/'profile');self.app.workspace.trusted=True;self.library=self.app.features.machine_images;self.ws=self.app.workspace;self.event=threading.Event();self.qimg=self.app.features.machines.vm_base().get('qimg')

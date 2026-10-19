@@ -10,6 +10,8 @@ Los paneles de documentación, avisos de acciones y menús contextuales tienen u
 
 El botón Proyecto de la barra de estado y la paleta abren un espacio con herramientas detectadas, plantillas revisables y acciones Comprobar, Compilar y Ejecutar. Las plantillas cubren Python con pruebas, C y C++ con cabecera y CMake/CTest, Java con Maven, NASM x86-64 y paquetes creados con el compilador nC real.
 
+El archivo activo y el destino encabezan la página. Un selector de lenguaje utiliza un único formulario de preparación, con estado de herramientas y acceso al SDK. La página distingue los cambios pendientes y permite guardarlos expresamente antes de revisar un plan. La actividad conserva los resultados en filas compactas y adaptables al espacio disponible.
+
 Los planes muestran las órdenes y verifican de nuevo sus entradas antes de ejecutarlas. Usan el destino común del proyecto; una compilación separada no está disponible en destinos remotos que solo exponen ejecución. Repetir una petición del mismo plan reutiliza su trabajo. Solo hay un flujo de proyecto simultáneo por carpeta. Los recibos conservan órdenes, hashes, salida y estado; HILO mantiene la planificación y cancelación en el backend.
 
 Melody puede preparar un mensaje con el objetivo, búfer, archivo consultado y su hash, diagnósticos y últimos resultados realmente registrados. El programador revisa y envía el mensaje. Se mantienen la revisión de cambios en varios archivos, pruebas y restauración de R17.
@@ -29,6 +31,8 @@ En Ajustes → General → Actualizaciones y novedades se elige Estable o Establ
 En Windows, Instalar y reiniciar prepara el instalador verificado, registra la sesión, espera a que cierre el editor, copia metadatos de recuperación, instala en una carpeta de versión independiente y abre el lanzador estable con el proyecto anterior. Se conservan los SDK y payloads anteriores. El proceso se detiene ante ventanas externas, trabajos, terminales o parches binarios pendientes. Los cambios de texto recuperados siguen sin guardar en los archivos fuente. No se fuerzan cierres de procesos. En macOS y Linux se abre el paquete nativo mediante el instalador del sistema; el reinicio automático de Windows no se presenta como verificado en esos sistemas.
 
 Al abrir una versión nueva en la aplicación de escritorio se presenta su panel de novedades una vez. También puede consultarse manualmente. La disponibilidad pública de una actualización depende de publicar su release y sus artefactos con hash; compilar localmente no publica una release.
+
+El instalador comprueba el presupuesto de longitud de las rutas de Windows antes de iniciar la instalación. La actualización automática realiza esta comprobación antes de pedir el cierre del editor, de modo que una ruta incompatible no interrumpe la sesión.
 
 ## Extensiones
 

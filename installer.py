@@ -48,6 +48,12 @@ class Installer:
         return {'version': VERSION, 'revision': REVISION, 'target': str(self.target), 'bytes': size, 'available': (self.payload / 'zenit.exe').is_file(),
                 'winget': bool(shutil.which('winget')), 'packages': [{'id': k, 'name': v[0], 'package': v[1]} for k, v in PACKAGES.items()]}
 
+    def preflight(self):
+        if not (self.payload/'zenit.exe').is_file():raise ValueError('No se encuentra el programa que debe instalarse.')
+        if os.name=='nt':
+            longest=max((len(str(file.relative_to(self.payload))) for file in self.payload.rglob('*') if file.is_file()),default=0)
+            if len(str(self.target.resolve()))+18+longest>=260:raise ValueError('La ruta de instalación es demasiado larga para este paquete de Windows. Elige una carpeta más corta, por ejemplo la carpeta Programs de tu usuario.')
+
     def status(self):
         with self.lock:
             snapshot = copy.deepcopy(self.state)
@@ -163,6 +169,7 @@ class Installer:
     def _install(self, options):
         staging = None
         try:
+            self.preflight()
             target = self.target.expanduser().resolve()
             if target == Path(target.anchor) or len(target.parts) < 3 or target.is_symlink():
                 raise ValueError('Selecciona una carpeta de instalación válida.')
