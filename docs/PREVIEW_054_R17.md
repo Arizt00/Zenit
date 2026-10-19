@@ -2,6 +2,8 @@
 
 R17 amplía la R16 corregida. Conserva su recuperación de sesión, espacios por
 proyecto, destino común y deshacer de cambios de extensiones.
+El cierre nativo espera la captura final sin bloquear el hilo de WebView2, de
+modo que la última pulsación puede recuperarse incluso al cerrar inmediatamente.
 
 ## Lantern y entornos reproducibles
 

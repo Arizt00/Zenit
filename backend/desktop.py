@@ -66,9 +66,20 @@ class DesktopAPI:
         return {'opened':True,'panel':panel}
 
     def _bind_session_close(self):
-        """Capture the renderer synchronously before it disappears on normal close."""
+        """Defer the first close while capturing; never block WebView's UI thread."""
+        import threading
+        lock=threading.Lock();state={'pending':False,'allowed':False,'finished':False}
         def closing():
-            import json,threading
+            import json
+            with lock:
+                if state['allowed']:return True
+                if state['pending']:return False
+                state['pending']=True
+            def finish():
+                with lock:
+                    if state['finished']:return
+                    state['finished']=True;state['allowed']=True
+                self._window.destroy()
             def capture():
                 try:
                     raw=self._window.evaluate_js('window.zenitSessionSnapshot ? JSON.stringify(window.zenitSessionSnapshot()) : null')
@@ -77,7 +88,12 @@ class DesktopAPI:
                     body=json.loads(raw);app=self._application
                     if body.get('workspace')==str(app.workspace.root):app.features.workbenches.checkpoint(app.workspace,body)
                 except Exception as error:self._application.features.hilo._failure('session-close',error)
-            worker=threading.Thread(target=capture,daemon=True);worker.start();worker.join(timeout=2)
+                finally:timer.cancel();finish()
+            def timed_out():
+                self._application.features.hilo._failure('session-close',TimeoutError('El editor no respondió a la captura de cierre; se conserva el último checkpoint disponible.'))
+                finish()
+            timer=threading.Timer(4,timed_out);timer.daemon=True;timer.start();threading.Thread(target=capture,daemon=True).start()
+            return False
         self._window.events.closing+=closing
 
     def close_panel(self):
