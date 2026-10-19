@@ -130,6 +130,14 @@ envía consultas al servicio de GitLab ni acredita el acceso de una cuenta a Duo
 El intercambio de mensajes mantiene el contrato de la
 [API de webviews de VS Code](https://code.visualstudio.com/api/extension-guides/webview).
 
+Los cambios de texto de las extensiones registran su revisión compartida al
+aplicarse. Ctrl+Z y Ctrl+Y publican el resultado como una edición local nueva;
+las consultas periódicas o eventos atrasados no vuelven a insertar el texto
+deshecho. La comparación respeta la normalización LF/CRLF de Monaco y evita
+operaciones vacías en su historial. Las pruebas usan una extensión real, teclado,
+archivos nuevos y existentes, escritura previa sin guardar y un editor separado,
+sin modificar los archivos fuente en disco.
+
 Se corrigen los contratos de Position/Range/Selection de VS Code: coordenadas no
 negativas, rangos ordenados, selecciones invertidas, sobrecargas y operaciones
 sobre rangos. SemanticTokensBuilder acepta esas mismas instancias. Esto amplía

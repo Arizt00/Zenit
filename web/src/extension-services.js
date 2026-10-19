@@ -2,6 +2,7 @@ import {ExtensionOutputUI} from './extension-output.js';
 import {escapeHTML as esc,icon} from './icons.js';
 import {ExtensionQuickInputUI} from './extension-quickinput.js';
 import {EditorDecorations} from './editor-decorations.js';
+import {sameBufferText} from './buffer-text.js';
 
 export class ExtensionServicesUI {
   constructor(host){this.owner=crypto.randomUUID();this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
@@ -73,14 +74,25 @@ export class ExtensionServicesUI {
       if(resource.kind==='delete')for(const path of [...ed.models.keys()])if(path===resource.path||path.startsWith(resource.path+'/'))ed.close(path);
     }
     for(const buffer of change.buffers||[]){
+      const desktop=h.studio.desktop,known=desktop?.shared.get(buffer.path);
+      // Polling may already have applied this revision, followed by a local
+      // undo. A late copy of its event must not put the extension text back.
+      if(known&&known.sequence>=buffer.sequence)continue;
       let record=ed.models.get(buffer.path);
       if(record?.kind==='binary')continue;
       if(!record){ed.open({path:buffer.path,content:buffer.before},{activate:false});record=ed.models.get(buffer.path);}
       const text=record.model?.getValue()??record.value;
-      if(text===buffer.text)continue;
-      if(text!==buffer.before){h.notify('Hay cambios simultáneos en '+buffer.path+'. El búfer local se conserva.','error');continue;}
-      if(record.model){record.model.pushStackElement();record.model.pushEditOperations([],[{range:record.model.getFullModelRange(),text:buffer.text}],()=>null);record.model.pushStackElement();}
-      else{record.value=buffer.text;if(ed.current===buffer.path)ed.setValue(buffer.text);}
+      if(!sameBufferText(text,buffer.text)){
+        if(!sameBufferText(text,buffer.before)){h.notify('Hay cambios simultáneos en '+buffer.path+'. El búfer local se conserva.','error');continue;}
+        const applying=desktop?.applying;if(desktop)desktop.applying=true;
+        try{
+          if(record.model){record.model.pushStackElement();record.model.pushEditOperations([],[{range:record.model.getFullModelRange(),text:buffer.text}],()=>null);record.model.pushStackElement();}
+          else{record.value=buffer.text;if(ed.current===buffer.path)ed.setValue(buffer.text);}
+        }finally{if(desktop)desktop.applying=applying;}
+      }
+      // Track the accepted server revision before the next user edit. Undo is
+      // then published as a new local change instead of overwritten by a poll.
+      desktop?.acknowledgeBuffer(buffer);
     }
     h.renderTabs();await h.refreshTree();
   }

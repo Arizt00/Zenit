@@ -1,6 +1,7 @@
 import {hoverReveal} from './hover-reveal.js';
 import {icon,escapeHTML as esc} from './icons.js';
 import {languageLabel} from './editor.js';
+import {sameBufferText} from './buffer-text.js';
 const $=s=>document.querySelector(s);
 
 export class DesktopWorkflows{
@@ -261,12 +262,16 @@ export class DesktopWorkflows{
     const notice=document.createElement('div');notice.className='native-workspace-notice';notice.textContent='La carpeta cambió en la ventana principal. Tu texto permanece aquí: cópialo antes de cerrar y vuelve a abrir el panel.';$('#app').prepend(notice);
   }
   bufferWrite(fn){const request=(this.bufferWrites||Promise.resolve()).catch(()=>{}).then(fn);this.bufferWrites=request;return request;}
+  acknowledgeBuffer(buffer){
+    const old=this.shared.get(buffer.path);if(old&&old.sequence>=buffer.sequence)return;
+    this.shared.set(buffer.path,buffer);this.remoteBuffers.set(buffer.path,buffer);
+  }
   share(path){return this.bufferWrite(()=>this.shareUnlocked(path));}
   async shareUnlocked(path){
     const r=this.host.editor.models.get(path);if(!r||r.kind==='binary')return;
     const all=await this.host.platform.api('/buffers'),old=all.buffers.find(x=>x.path===path);
     const text=r.model?.getValue()??r.value;
-    if(old&&old.text!==text&&this.shared.has(path)&&old.sequence!==this.shared.get(path).sequence)throw Error('Hay cambios pendientes de otra ventana. Resuelve la sincronización antes de separarlo.');
+    if(old&&!sameBufferText(old.text,text)&&this.shared.has(path)&&old.sequence!==this.shared.get(path).sequence)throw Error('Hay cambios pendientes de otra ventana. Resuelve la sincronización antes de separarlo.');
     const result=await this.host.platform.api('/buffers',{path,text,sequence:old?.sequence||0,saved:!this.host.editor.isDirty(path),revision:r.revision});
     if(result.conflict)throw Error('Otra ventana acaba de editar este archivo. Repite la acción.');this.shared.set(path,result.buffer);
   }
@@ -276,7 +281,7 @@ export class DesktopWorkflows{
     if(this.publishing)return;this.publishing=true;
     try{for(const path of [...this.pending]){
       this.pending.delete(path);const r=this.host.editor.models.get(path),base=this.shared.get(path);if(!r||!base)continue;
-      const text=r.model?.getValue()??r.value,saved=!this.host.editor.isDirty(path);if(text===base.text&&saved===base.saved)continue;
+      const text=r.model?.getValue()??r.value,saved=!this.host.editor.isDirty(path);if(sameBufferText(text,base.text)&&saved===base.saved)continue;
       const result=await this.host.platform.api('/buffers',{path,text,sequence:base.sequence,saved,revision:r.revision});
       if(result.conflict){this.shared.delete(path);this.host.notify('Ediciones simultáneas en '+path+'. Tu búfer se conserva; compara las dos ventanas antes de guardar.','error');}
       else this.shared.set(path,result.buffer);
@@ -295,10 +300,10 @@ export class DesktopWorkflows{
         const old=this.shared.get(remote.path),text=r.model?.getValue()??r.value;
         if(this.pending.has(remote.path)||this.publishing)continue;
         if(old&&remote.sequence<=old.sequence)continue;
-        if(old&&text!==old.text){this.queue(remote.path);continue;}
-        if(!old&&this.host.editor.isDirty(remote.path)&&text!==remote.text)continue;
+        if(old&&!sameBufferText(text,old.text)){this.queue(remote.path);continue;}
+        if(!old&&this.host.editor.isDirty(remote.path)&&!sameBufferText(text,remote.text))continue;
         this.shared.set(remote.path,remote);
-        this.applying=true;try{if(text!==remote.text){if(r.model){r.model.pushStackElement();r.model.pushEditOperations([],[{range:r.model.getFullModelRange(),text:remote.text}],()=>null);r.model.pushStackElement();}else{r.value=remote.text;if(this.host.editor.current===remote.path)this.host.editor.setValue(remote.text);}}if(remote.saved){r.savedValue=remote.text;if(remote.revision)r.revision=remote.revision;r.value=remote.text;this.host.editor.callbacks.change?.(remote.path,false);}}finally{this.applying=false;}
+        this.applying=true;try{if(!sameBufferText(text,remote.text)){if(r.model){r.model.pushStackElement();r.model.pushEditOperations([],[{range:r.model.getFullModelRange(),text:remote.text}],()=>null);r.model.pushStackElement();}else{r.value=remote.text;if(this.host.editor.current===remote.path)this.host.editor.setValue(remote.text);}}if(remote.saved){const value=r.model?.getValue()??r.value;r.savedValue=value;if(remote.revision)r.revision=remote.revision;r.value=value;this.host.editor.callbacks.change?.(remote.path,false);}}finally{this.applying=false;}
       }
       if(auxiliaryChanged&&this.query.has('panel'))this.host.studio.workspaces?.changed();
     }catch(error){if(!this.disposed)console.warn('Window sync:',error.message);}

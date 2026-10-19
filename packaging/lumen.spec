@@ -18,6 +18,7 @@ data.append((str(ROOT/'examples/asm/x86_64_sum.s'),'examples/asm'))
 data.append((str(ROOT/'tools/machine_console.py'),'tools'))
 data.append((str(ROOT/'tools/machine_seed.py'),'tools'))
 # Package documentation deliberately: historical QA can contain local user paths.
+data.append((str(ROOT/'docs/PREVIEW_054_R16.md'),'docs'))
 data.append((str(ROOT/'backend/extension_views.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_services.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_quickinput.cjs'),'backend'))
