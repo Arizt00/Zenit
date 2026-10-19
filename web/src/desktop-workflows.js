@@ -333,17 +333,39 @@ export class DesktopWorkflows{
     this.updateTimer=setTimeout(()=>this.pollUpdates(),2500);
   }
   async updatesPage(check=false){
-    const h=this.host;h.platform.openPage('updates',`<section class="updates-page"><span class="eyebrow">ZÉNIT · ACTUALIZACIONES</span><h1>Tu espacio, al día.</h1><p>Las versiones publicadas en GitHub se descargan en segundo plano y se verifican con SHA-256.</p><div id="update-status" role="status"></div><div class="update-actions"><button class="secondary-button" id="update-check">Comprobar ahora</button><button class="secondary-button" id="update-download">Descargar actualización</button><button class="primary-button" id="update-install">Instalar actualización…</button></div><label class="setting-row"><span>Descarga automática<small>Comprueba al iniciar y cada seis horas.</small></span><input id="automatic-updates" type="checkbox" ${h.platform.prefs['updates.automatic']?'checked':''}></label><small>El instalador se abre cuando tú eliges. Guarda tus archivos antes de actualizar.</small></section>`);
+    const h=this.host;h.platform.openPage('updates',`<section class="updates-page release-workspace"><header><span class="eyebrow">ZÉNIT · ACTUALIZACIONES</span><h1>Tu espacio, al día.</h1><p>Descarga primero. Instala cuando hayas terminado de trabajar. Cada paquete publicado se verifica con SHA-256.</p></header><div class="release-card"><div id="update-status" role="status"></div><div class="release-actions"><button class="secondary-button" id="update-check">Comprobar ahora</button><button class="secondary-button" id="update-download">Descargar actualización</button><button class="primary-button" id="update-install">Instalar y reiniciar…</button></div></div><div class="release-card"><label class="release-field">Canal<select id="update-channel"><option value="stable">Estable</option><option value="preview">Estable y preview</option></select></label><label class="setting-row"><span>Descarga automática<small>Comprueba al iniciar y cada seis horas. La instalación siempre la eliges tú.</small></span><input id="automatic-updates" type="checkbox" ${h.platform.prefs['updates.automatic']?'checked':''}></label><button class="secondary-button" id="update-whats-new">Ver novedades de esta versión</button></div><small>Antes de instalar, cierra terminales y devuelve las ventanas externas. Los cambios de texto se recuperan en la sesión; guarda los parches binarios pendientes.</small></section>`);
     $('#update-check').onclick=()=>this.safe(async()=>{this.updateState=await h.platform.api('/updates/check',{download:h.platform.prefs['updates.automatic']});this.renderUpdate();});
     $('#update-download').onclick=()=>this.safe(async()=>{this.updateState=await h.platform.api('/updates/download',{});this.renderUpdate();});
-    $('#update-install').onclick=()=>this.safe(async()=>{if(!window.pywebview?.api?.install_update)throw Error('La instalación de actualizaciones está disponible en Zénit de escritorio.');await window.pywebview.api.install_update();});
+    $('#update-install').onclick=()=>this.safe(()=>this.installUpdate());
     $('#automatic-updates').onchange=e=>this.safe(()=>h.platform.savePreference('updates.automatic',e.target.checked));
+    $('#update-channel').value=h.platform.prefs['updates.channel']||'preview';$('#update-channel').onchange=e=>this.safe(async()=>{await h.platform.savePreference('updates.channel',e.target.value);this.updateState=await h.platform.api('/updates/check',{download:false});this.renderUpdate();});
+    $('#update-whats-new').onclick=()=>this.safe(()=>this.showWhatsNew(true));
     this.updateState=check?await h.platform.api('/updates/check',{download:h.platform.prefs['updates.automatic']}):await h.platform.api('/updates');this.renderUpdate();
+  }
+  async installUpdate(){
+    const h=this.host,native=window.pywebview?.api;if(!native?.install_update)throw Error('La instalación está disponible en Zénit de escritorio.');
+    const binary=[...h.editor.models].filter(([path,r])=>r.kind==='binary'&&h.editor.isDirty(path));if(binary.length)throw Error('Guarda o descarta los bytes pendientes antes de actualizar: '+binary.map(([p])=>p).join(', '));
+    if(!window.zenitSessionSnapshot)throw Error('La recuperación de sesión todavía no está preparada.');
+    await h.platform.api('/workbench/session',window.zenitSessionSnapshot());
+    const button=$('#update-install');button.disabled=true;button.textContent='Preparando instalación…';
+    try{
+      const result=await native.install_update();if(!result.prepared){button.textContent='Instalador abierto';return;}
+      const deadline=Date.now()+90000;
+      while(Date.now()<deadline){const state=await native.update_handoff_status();if(state.state==='error')throw Error(state.error);if(state.state==='waiting'){button.textContent='Reiniciando Zénit…';await h.platform.api('/workbench/session',window.zenitSessionSnapshot());await native.finish_update();return;}await new Promise(resolve=>setTimeout(resolve,600));}
+      throw Error('El instalador sigue preparándose. Espera a que termine antes de cerrar Zénit; puedes consultar updates/install-result.json en tu perfil.');
+    }catch(error){button.disabled=false;button.textContent='Instalar y reiniciar…';throw error;}
+  }
+  async showWhatsNew(explicit=false){
+    if(this.query.has('panel'))return;
+    const h=this.host,data=await h.platform.api('/updates/welcome');if(!explicit&&(!data.show||!window.pywebview?.api))return;
+    h.platform.host.modal('Novedades · '+data.version,`<div class="release-workspace"><span class="platform-eyebrow">BIENVENIDO A TU NUEVO ZÉNIT</span><h3>Un entorno más conectado.</h3><p>Estos cambios ya forman parte de ${esc(data.version)}.</p><ul>${data.items.map(item=>`<li>${esc(item)}</li>`).join('')}</ul><div class="release-actions"><button class="primary-button" id="release-start">Continuar en mi proyecto</button><button class="secondary-button" id="release-project">Explorar flujos de proyecto</button></div></div>`);
+    const finish=async()=>{await h.platform.api('/updates/welcome',{});h.platform.host.closeModal();};$('#release-start').onclick=()=>this.safe(finish);$('#release-project').onclick=()=>this.safe(async()=>{await finish();await this.handle('project-workflows');});
+    await h.platform.api('/updates/welcome',{});
   }
   renderUpdate(){
     const s=this.updateState;if(!s||!$('#update-status'))return;
     const labels={idle:'Pendiente de comprobar',checking:'Buscando en GitHub…',available:'Nueva versión disponible',up_to_date:'Tienes la versión más reciente',downloading:'Descargando y verificando…',ready:'Lista para instalar',error:'No se pudo completar la actualización'};
-    $('#update-status').innerHTML=`<strong>${esc(labels[s.status])}</strong><p>${esc(s.current)}${s.available?' → '+esc(s.available.version):''}</p>${s.transfer?`<progress max="${s.transfer.total||s.available.size}" value="${s.transfer.bytes}"></progress><small>${(s.transfer.bytes/1e6).toFixed(1)} / ${(s.available.size/1e6).toFixed(1)} MB</small>`:''}${s.error?`<p role="alert">${esc(s.error)}</p>`:''}`;
+    $('#update-status').innerHTML=`<strong>${esc(labels[s.status])}</strong><p>${esc(s.current)}${s.available?' → '+esc(s.available.version):''}</p>${s.transfer?`<progress max="${s.transfer.total||s.available.size}" value="${s.transfer.bytes}"></progress><small>${(s.transfer.bytes/1e6).toFixed(1)} / ${(s.available.size/1e6).toFixed(1)} MB</small>`:''}${s.available?.notes?`<details><summary>Novedades del paquete</summary><pre class="release-receipt">${esc(s.available.notes)}</pre></details>`:''}${s.error?`<p role="alert">${esc(s.error)}</p>`:''}`;
     $('#update-download').disabled=!s.available||['ready','downloading'].includes(s.status);$('#update-install').disabled=s.status!=='ready';
   }
   dispose(){this.disposed=true;this.channel.close();clearInterval(this.forgeTimer);clearTimeout(this.publishTimer);clearTimeout(this.bufferTimer);clearTimeout(this.updateTimer);window.removeEventListener('lumen:native-return',this.returned);window.removeEventListener('lumen:detach-editor',this.detachEditor);}

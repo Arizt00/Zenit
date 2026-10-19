@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "release": "0.5.4-R17",
+  "release": "0.5.5-R1",
   "platform": "win32",
   "packages": [
     {
@@ -162,6 +162,58 @@
       ],
       "notVerified": [
         "Las capacidades no enumeradas aquí no están certificadas."
+      ]
+    },
+    {
+      "id": "DEVSENSE.composer-php-vscode",
+      "version": "1.75.19425",
+      "sha256": "5f4cd17c16bd5f23b109c40fa3fef4f1a74fe5534a4fd22e5c572d1fccc392c0",
+      "verified": false,
+      "release": "0.5.5-R1",
+      "tested": [
+        "Importación y activación del paquete real en un proyecto Git y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas."
+      ]
+    },
+    {
+      "id": "shd101wyy.markdown-preview-enhanced",
+      "version": "0.8.40",
+      "sha256": "1d7973cd154b9b90b5361f7e2d611ad9c7da931756b5301188ca084050f43409",
+      "verified": false,
+      "release": "0.5.5-R1",
+      "tested": [
+        "Importación y activación del paquete real en un proyecto Git y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas."
+      ]
+    },
+    {
+      "id": "ms-toolsai.jupyter",
+      "version": "2025.9.1",
+      "sha256": "110660656944c4ab0ff687db488c2e8c59c67ec121dcf09bcaa54b6edd9ce71f",
+      "verified": false,
+      "release": "0.5.5-R1",
+      "tested": [
+        "Carga real de Jupyter: FileSystemError corregido; activación detenida al consultar vscode.workspace.notebookDocuments."
+      ],
+      "notVerified": [
+        "No se ha validado la API ni la interfaz de documentos notebook; el paquete no es compatible aún."
+      ]
+    },
+    {
+      "id": "zhuangtongfa.material-theme",
+      "version": "3.20.3",
+      "sha256": "fac19c53133cab9d4236bee87838d81992c8c3627795b7caeb519a009e4e74eb",
+      "verified": false,
+      "release": "0.5.5-R1",
+      "tested": [
+        "Importación y activación del paquete real en un proyecto Git y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas."
       ]
     }
   ]

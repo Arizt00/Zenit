@@ -51,6 +51,7 @@ def atomic_json(path: Path, data):
 SCHEMA = {
  'general.restoreWorkspace': ('general',True,'Reabrir la última carpeta','Reopen the last folder','bool'),
  'updates.automatic': ('general',True,'Descargar actualizaciones de GitHub automáticamente','Download GitHub updates automatically','bool'),
+ 'updates.channel': ('general','preview','Canal de actualizaciones','Update channel',['stable','preview']),
  'hacker.enabled': ('terminal',False,'Modo Forge','Forge mode','bool'),
  'general.locale': ('general','en','Idioma de la interfaz','Interface language',['es','en']),
  'general.showWelcome': ('general',True,'Mostrar inicio al abrir Zénit','Show welcome when Zénit starts','bool'),

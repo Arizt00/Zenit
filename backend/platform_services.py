@@ -68,6 +68,10 @@ class PlatformServices:
         self.hilo=Hilo(self);self.connections=Connections(self);self.tern=Tern(self)
         self.team=TeamService(self);self.binary_tools=BinaryTools(self)
         self.workbenches=Workbenches(self);self.execution=ExecutionTargets(self);self.sdk=SDKManager(self)
+        from .project_workflows import ProjectWorkflows
+        self.workflows=ProjectWorkflows(self)
+        from .machine_images import MachineImages
+        self.machine_images=MachineImages(self)
         self.runtimes.execution=self.execution
         self._register_subsystems()
     def _accounts_changed(self):
@@ -89,6 +93,7 @@ class PlatformServices:
         core.register('debug',self.debugger,depends=('runtimes','terminals'),workspace_stop=lambda ws:self.debugger.stop(),shutdown=self.debugger.stop)
         core.register('lantern',self.lantern,depends=('preview','runner'),workspace_stop=lambda ws:self.lantern.stop(),shutdown=self.lantern.stop)
         core.register('machines',self.machines,depends=('terminals',))
+        core.register('machine-images',self.machine_images,depends=('machines',),workspace_stop=self.machine_images.close_workspace,shutdown=lambda:self.machine_images.close_workspace(self.app.workspace))
         core.register('environments',self.tern,depends=('machines','lantern'),workspace_stop=self.tern.close_workspace,shutdown=lambda:self.tern.close_workspace(self.app.workspace))
         core.register('melody',self.ai,depends=('runtimes',),workspace_stop=self._stop_ai,shutdown=self.ai.shutdown)
         core.register('voice',self.voice,depends=('melody',),workspace_stop=lambda ws:self.voice.stop(),shutdown=self.voice.shutdown)
@@ -170,8 +175,12 @@ class PlatformServices:
             return status()
         if path=='/simulation':return self.simulation.status()
         if path=='/machines':return self.machines.snapshot()
+        if path=='/machines/images':return self.machine_images.snapshot(self.app.workspace)
         if path=='/hacker':return self.hacker.tools()
         if path=='/updates':return self.updates.snapshot()
+        if path=='/updates/welcome':return self.updates.welcome()
+        if path=='/workflows':return self.workflows.catalog(self.app.workspace)
+        if path=='/workflows/history':return {'history':self.workflows.history(self.app.workspace)}
         if path=='/buffers':return self.buffers.snapshot()
         if path=='/buffers/document':return self.buffers.document(self.app.workspace,q('path'))
         if path=='/settings':return self.prefs.describe()
@@ -290,6 +299,19 @@ class PlatformServices:
         if path=='/machines/create':
             self._trusted()
             return self.machines.create_arch() if body.get('type')=='arch' and not body.get('host') else self.machines.save_ssh(body)
+        if path.startswith('/machines/images/'):
+            self._trusted();action=path.rsplit('/',1)[-1]
+            if action in ('import','create','export'):
+                import hashlib
+                operation={'import':self.machine_images.import_image,'create':self.machine_images.create,'export':self.machine_images.export}[action]
+                key='machine-images:'+action+':'+hashlib.sha256(json.dumps(body,sort_keys=True).encode()).hexdigest()
+                return self.hilo.submit('Biblioteca de máquinas · '+action,lambda event:operation(ws,body,event),workspace=str(ws.root),key=key,priority=15)
+            if action=='save':return self.machine_images.save(ws,body)
+            if action=='reopen':return self.machine_images.reopen(ws,body)
+            if action=='start':return self.machine_images.start(ws,body.get('id'))
+            if action=='stop':return self.machine_images.stop(ws,body.get('id'))
+            if action=='discard':return self.machine_images.discard(ws,body.get('id'))
+            raise ValueError('Acción de máquina desconocida.')
         if path=='/machines/start':return self.machines.start(ws,body.get('id'))
         if path=='/machines/stop':
             self._trusted();return self.machines.stop(body.get('id'))
@@ -303,8 +325,17 @@ class PlatformServices:
             self._trusted();p=file_path(body['path']);item=self.extension_services.file_workspace(p).save(p.name,body['content'],body.get('revision'),newline=body.get('newline','LF'),bom=body.get('bom',False));item.update(path=str(p),saved=True);return item
         if path=='/hacker/start':return self.hacker.start(ws,body.get('path',''),body.get('content'),body.get('mode'),body.get('args'))
         if path=='/hacker/attach':return self.hacker.attach(ws,body.get('job'))
+        if path.startswith('/workflows/'):
+            self._trusted();action=path.rsplit('/',1)[-1]
+            if action=='scaffold-plan':return self.workflows.scaffold_plan(ws,body)
+            if action=='scaffold':return self.workflows.scaffold(ws,body)
+            if action=='plan':return self.workflows.plan(ws,body)
+            if action=='run':return self.workflows.run(ws,body)
+            if action=='evidence':return self.workflows.evidence(ws,body)
+            raise ValueError('Flujo de proyecto desconocido.')
         if path=='/updates/check':return self.updates.check(body.get('download') is True)
         if path=='/updates/download':return self.updates.download()
+        if path=='/updates/welcome':return self.updates.welcome(ack=True)
         if path=='/files/operation':
             from .file_actions import perform
             result=perform(ws,body);self.extension_services.emit('zenit.tree.changed');return result

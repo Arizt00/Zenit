@@ -34,7 +34,7 @@ def main():
         files={file.relative_to(payload).as_posix() for file in payload.rglob('*') if file.is_file() and '__pycache__' not in file.parts and file.suffix!='.pyc'}
         assert {name.removeprefix('payload/') for name in entries if name.startswith('payload/')}==files, 'Installer payload differs from the application bundle'
         index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
-        critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
+        critical={'_internal/web/src/release-055.js','_internal/web/src/code-popovers.js','_internal/web/src/machine-library.js','_internal/web/design/release-055.css','_internal/docs/RELEASE_055.md','zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
         critical.update('_internal/web/'+name for name in (
             'src/workbench.js','src/foundation-ui.js','src/session-workbench.js','src/workbench-session.js','src/sdk-manager.js','design/coherence-r16.css',
             'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',

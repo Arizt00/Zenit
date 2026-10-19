@@ -45,7 +45,7 @@ class Tern:
                 if session['state'] == 'running' and (not terminal or terminal.closed): session['state'] = 'ready'
             sessions = [{k: v for k, v in s.items() if k not in ('workspace', 'ws', 'profile')} for s in self.sessions.values() if s['workspace'] == str(ws.root)]
         state = self.features.machines.snapshot()
-        return {'sessions': sessions, 'saved': [p.name for p in ws.root.glob('*.tern') if p.is_file() and not p.is_symlink()][:100],
+        return {'sessions': sessions, 'saved': [p.name for p in ws.root.glob('*.tern') if p.is_file() and not p.is_symlink() and not self.features.machine_images.is_descriptor(p)][:100],
                 'python': bool(self.features.python_packages.base()), 'vm': state['templates'][0]['available'],
                 'bundles':[p.name for p in ws.root.glob('*.tern.zip') if p.is_file() and not p.is_symlink()][:100],'errors': self.errors[-5:]}
 

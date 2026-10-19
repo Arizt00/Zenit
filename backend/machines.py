@@ -123,7 +123,7 @@ ethernets:
     def save_ssh(self,body):
         if len(self.profiles)>=12:raise ValueError('El laboratorio admite hasta 12 máquinas.')
         host=body.get('host','');user=body.get('user','');kind=body.get('type')
-        if kind not in ('macos','windows7','arch'):raise ValueError('Sistema desconocido.')
+        if kind not in ('macos','windows7','windows11','arch','linux','kali','debian'):raise ValueError('Sistema desconocido.')
         if not isinstance(host,str) or not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9.:-]{0,252}',host):raise ValueError('Dirección SSH no válida.')
         if not isinstance(user,str) or not re.fullmatch(r'[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,63}',user):raise ValueError('Usuario SSH no válido.')
         port=body.get('port',22)
@@ -152,8 +152,13 @@ ethernets:
                 argv=[qemu,'-machine','q35,hpet=off','-accel','tcg','-cpu','max','-m',str(profile['memory']),'-smp',str(profile['cpus']),'-display','none',
                       '-smbios','type=1,serial=ds=nocloud',
                       '-serial','--serial-placeholder','-monitor','none','-qmp',f'tcp:127.0.0.1:{control_port},server=on,wait=off',
-                      '-drive','file='+profile['disk']+',format=qcow2,if=virtio,cache=writethrough',
-                      '-drive','file='+profile['seed']+',format=raw,media=cdrom,readonly=on','-netdev','user,id=net0','-device','virtio-net-pci,netdev=net0,mac=52:54:00:12:34:56']
+                      '-drive','file='+profile['disk'].replace(',',',,')+',format=qcow2,if='+('ide' if profile.get('system','').startswith('windows') else 'virtio')+',cache=writethrough',
+                      *(['-drive','file='+profile['seed'].replace(',',',,')+',format=raw,media=cdrom,readonly=on','-boot','once=d'] if profile.get('seed') else []),
+                      '-netdev','user,id=net0','-device',('e1000' if profile.get('system','').startswith('windows') else 'virtio-net-pci')+',netdev=net0,mac=52:54:00:12:34:56']
+                if profile.get('display')=='graphic':
+                    # QEMU selects an available native graphical backend. The
+                    # programmer explicitly requested a separate guest window.
+                    index=argv.index('-display');del argv[index:index+2]
                 from .foundation import python_command
                 worker=Path(__file__).resolve().parents[1]/'tools/machine_console.py'
                 argv=[*python_command(),str(worker),*argv]

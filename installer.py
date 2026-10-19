@@ -206,7 +206,7 @@ class Installer:
                 temporary_launcher=target/'.Zenit-launcher.new'
                 shutil.copy2(launcher,temporary_launcher)
                 temporary_launcher.replace(target/'Zenit.exe')
-            atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'en')})
+            atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'en'),'integrations':{key:bool(options.get(key,default)) for key,default in (('shortcuts',True),('register',True),('desktop',False))}})
             # The app consumes this only if there is no profile yet.
             atomic_json(destination / 'first-launch.json', {'general.locale': options.get('locale', 'en')})
             if options.get('shortcuts', True): self._shortcuts(destination, options.get('desktop', False))
@@ -299,6 +299,13 @@ class StaticHandler(SimpleHTTPRequestHandler):
 
 
 def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--apply-update',type=Path);args=parser.parse_args()
+    if args.apply_update:
+        from backend.update_handoff import apply_update
+        def launch(executable,workspace):subprocess.Popen([str(executable),'--desktop','--workspace',workspace],cwd=executable.parent,creationflags=0x08000000 if os.name=='nt' else 0)
+        try:apply_update(args.apply_update,Installer,launch=launch)
+        except Exception:return 1
+        return 0
     import webview
     api = Installer()
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(StaticHandler, directory=str(ROOT / 'web')))
@@ -310,4 +317,4 @@ def main():
     finally: server.shutdown(); server.server_close()
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__': sys.exit(main() or 0)

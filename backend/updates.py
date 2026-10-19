@@ -7,6 +7,8 @@ import sys
 import threading
 import time
 import urllib.request
+from pathlib import Path
+from .preferences import atomic_json
 
 from .version import RELEASE_TAG,REPOSITORY
 CURRENT=RELEASE_TAG
@@ -33,9 +35,9 @@ def package_matches(name, system=None, machine=None):
     return False
 
 
-def update_asset(releases, current=CURRENT, system=None, machine=None):
+def update_asset(releases, current=CURRENT, system=None, machine=None, channel='preview'):
     if not isinstance(releases,list):raise ValueError('GitHub no devolvió una lista de versiones.')
-    newer=[r for r in releases if isinstance(r,dict) and not r.get('draft') and version_key(r.get('tag_name')) and version_key(r['tag_name'])>version_key(current)]
+    newer=[r for r in releases if isinstance(r,dict) and not r.get('draft') and version_key(r.get('tag_name')) and version_key(r['tag_name'])>version_key(current) and (channel=='preview' or not r.get('prerelease') and '-preview.' not in r['tag_name'])]
     for release in sorted(newer,key=lambda r:version_key(r['tag_name']),reverse=True):
         for asset in release.get('assets',[]):
             if isinstance(asset,dict) and isinstance(asset.get('name'),str) and package_matches(asset['name'],system,machine):
@@ -44,7 +46,7 @@ def update_asset(releases, current=CURRENT, system=None, machine=None):
                 if not isinstance(digest,str) or not re.fullmatch(r'sha256:[a-f0-9]{64}',digest):continue
                 if not isinstance(url,str) or not any(url.startswith('https://github.com/'+repo+'/releases/download/') for repo in (REPOSITORY,'Arizt00/Edryvo','Arizt00/LumenStudio')):continue
                 if type(asset.get('size')) is not int or not 0<asset['size']<4_000_000_000:continue
-                return {'version':release['tag_name'],'name':asset['name'],'url':url,'sha256':digest[7:],'size':asset['size'],'release':release['html_url']}
+                return {'version':release['tag_name'],'name':asset['name'],'url':url,'sha256':digest[7:],'size':asset['size'],'release':release.get('html_url',''),'notes':str(release.get('body') or '')[:16000]}
     return None
 
 
@@ -52,11 +54,23 @@ class Updates:
     def __init__(self,prefs,downloads):
         self.prefs=prefs;self.downloads=downloads;self.lock=threading.RLock();self.stop_event=threading.Event()
         self.data={'current':CURRENT,'status':'idle','available':None,'error':'','checkedAt':None,'download':None}
+        self.index=Path(prefs.directory if prefs else downloads.root)/'updates/state.json'
+        try:
+            saved=json.loads(self.index.read_text('utf-8'))
+            asset=saved.get('available')
+            if asset and version_key(asset.get('version')) and version_key(asset['version'])>version_key(CURRENT):
+                # Revalidate persisted metadata against the same release policy.
+                valid=update_asset([{'tag_name':asset['version'],'assets':[{'name':asset['name'],'digest':'sha256:'+asset['sha256'],'browser_download_url':asset['url'],'size':asset['size']}]}],channel=prefs.get('updates.channel'))
+                if valid:self.data.update(available={**valid,'notes':str(asset.get('notes',''))[:16000]},download=saved.get('download'),status='available',checkedAt=saved.get('checkedAt'))
+        except (OSError,ValueError,TypeError,KeyError):pass
         self.busy=False
+
+    def persist(self):atomic_json(self.index,{k:self.data[k] for k in ('available','download','checkedAt')})
 
     def snapshot(self):
         with self.lock:
             result=copy.deepcopy(self.data)
+            result['channel']=self.prefs.get('updates.channel')
             if result['download']:
                 with self.downloads.lock:item=copy.deepcopy(self.downloads.items.get(result['download']))
                 result['transfer']=item
@@ -73,8 +87,13 @@ class Updates:
                 req=urllib.request.Request(API,headers={'User-Agent':'Zénit/'+CURRENT,'Accept':'application/vnd.github+json'})
                 with urllib.request.urlopen(req,timeout=20) as response:raw=response.read(2_000_001)
                 if len(raw)>2_000_000:raise ValueError('Respuesta de actualización demasiado grande.')
-                releases=json.loads(raw);asset=update_asset(releases)
-                with self.lock:self.data.update(status='available' if asset else 'up_to_date',available=asset,checkedAt=time.time(),download=None)
+                releases=json.loads(raw);asset=update_asset(releases,channel=self.prefs.get('updates.channel'))
+                with self.lock:
+                    same=bool(asset and self.data['available'] and asset['sha256']==self.data['available']['sha256'])
+                    if not same and self.data['download']:
+                        with self.downloads.lock:previous=self.downloads.items.get(self.data['download'])
+                        if previous and previous['status'] in ('downloading','verifying'):self.downloads.pause(previous['id'])
+                    self.data.update(status='available' if asset else 'up_to_date',available=asset,checkedAt=time.time(),download=self.data['download'] if same else None);self.persist()
                 if asset and download and not self.stop_event.is_set():self.download()
             except Exception as error:
                 with self.lock:self.data.update(status='error',error=str(error)[:300])
@@ -96,7 +115,20 @@ class Updates:
                 state=self.downloads.start(asset['url'],asset['name'],asset['sha256'])
                 key=next(x['id'] for x in state['items'] if x['url']==asset['url'] and x['sha256']==asset['sha256'])
             self.data.update(status='downloading',download=key)
+            self.persist()
             return self.snapshot()
+
+    def welcome(self,ack=False):
+        file=Path(self.prefs.directory)/'updates/seen.json'
+        try:seen=json.loads(file.read_text('utf-8')).get('version')
+        except (OSError,ValueError):seen=None
+        if ack:atomic_json(file,{'version':CURRENT,'seenAt':time.time()})
+        return {'version':CURRENT,'show':not ack and seen!=CURRENT,'previous':seen,
+                'items':['Paneles de documentación y acciones legibles, con superficie translúcida y tamaño adaptable.',
+                         'Flujos de proyecto para Python, C, C++, Java, NASM y nC: plantillas, revisión de órdenes y recibos de ejecución.',
+                         'Melody puede preparar tareas con archivos consultados, diagnósticos y resultados reales del proyecto.',
+                         'Biblioteca de imágenes y clones QCOW2 ligeros para el laboratorio de máquinas.',
+                         'Actualizaciones estables y preview: descarga verificada, instalación manual y recuperación de la sesión.']}
 
     def installer(self):
         state=self.snapshot()

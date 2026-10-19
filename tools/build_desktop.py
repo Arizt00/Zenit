@@ -156,11 +156,12 @@ def main():
     parser.add_argument('--plan',action='store_true')
     parser.add_argument('--require-assets',action='store_true')
     parser.add_argument('--package-only',action='store_true',help='Empaquetar un bundle ya construido en este sistema')
+    parser.add_argument('--incremental',action='store_true',help='Reutilizar el análisis de PyInstaller; las entradas modificadas se vuelven a construir')
     parser.add_argument('--sdk-components',default='python,gcc,llvm,nc,nasm',help='SDK incluidos: python y componentes opcionales gcc,llvm,nc,nasm')
     args=parser.parse_args()
     components=args.sdk_components.split(',')
     if 'python' not in components or set(components)-{'python','gcc','llvm','nc','nasm'}:parser.error('El runtime Python es obligatorio; revisa los componentes SDK.')
-    command=[sys.executable,'-m','PyInstaller','--noconfirm','--clean',str(ROOT/'packaging/lumen.spec')]
+    command=[sys.executable,'-m','PyInstaller','--noconfirm',*([] if args.incremental else ['--clean']),str(ROOT/'packaging/lumen.spec')]
     print(json.dumps({'platform':sys.platform,'architecture':architecture(),'version':RELEASE_TAG,'argv':command,'signed':False,'installerRequested':args.installer},indent=2),flush=True)
     if args.plan:return 0
     if not args.package_only:
@@ -179,7 +180,7 @@ def main():
     if args.installer:
         if sys.platform=='win32':
             for name in ('uninstaller','launcher','installer'):
-                subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean',str(ROOT/f'packaging/{name}.spec')],check=True,cwd=ROOT)
+                subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm',*([] if args.incremental else ['--clean']),str(ROOT/f'packaging/{name}.spec')],check=True,cwd=ROOT)
             output=ROOT/f'dist/{prefix}-Windows-Setup.exe'
             if not output.is_file():raise RuntimeError('No se generó el instalador .exe.')
             outputs=[output]

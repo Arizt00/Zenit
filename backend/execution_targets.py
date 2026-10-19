@@ -21,7 +21,8 @@ class ExecutionTargets:
   targets+=self.features.hilo.cached('wsl-targets',self._wsl,ttl=60)
   ssh=find_tool('ssh')
   for p in self.features.machines.profiles:
-   targets.append({'id':'ssh:'+p['id'] if p.get('mode')=='ssh' else 'vm:'+p['id'],'label':p['name'],'kind':'ssh' if p.get('mode')=='ssh' else 'vm','available':bool(ssh and p.get('mode')=='ssh' and p['type']!='windows7'),'system':'macos' if p['type']=='macos' else 'linux','note':None if p.get('mode')=='ssh' else 'Consola disponible en Lantern; conecta la VM por SSH para ejecutar archivos.'})
+   windows=p['type'] in ('windows7','windows11')
+   targets.append({'id':'ssh:'+p['id'] if p.get('mode')=='ssh' else 'vm:'+p['id'],'label':p['name'],'kind':'ssh' if p.get('mode')=='ssh' else 'vm','available':bool(ssh and p.get('mode')=='ssh' and not windows),'system':'windows' if windows else 'macos' if p['type']=='macos' else 'linux','note':'Consola SSH disponible; el ejecutor remoto de archivos requiere un shell POSIX.' if windows else None if p.get('mode')=='ssh' else 'Consola disponible en Lantern; conecta la VM por SSH para ejecutar archivos.'})
   selected=self.features.workbenches.snapshot(ws).get('target','local')
   if selected not in {x['id'] for x in targets}:targets.append({'id':selected,'label':'Destino no disponible','kind':'unavailable','available':False})
   return {'selected':selected,'targets':targets,'options':self.features.workbenches.snapshot(ws).get('targetOptions',{})}

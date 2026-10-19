@@ -122,7 +122,25 @@ class DesktopAPI:
     def install_update(self):
         import subprocess
         from pathlib import Path
+        previous=getattr(self,'_update_process',None)
+        if previous and previous.poll() is None:return {'prepared':True,'pid':previous.pid}
         installer=self._application.features.updates.installer()
+        if sys.platform=='win32':
+            import psutil,time,uuid
+            from .preferences import atomic_json
+            if not getattr(sys,'frozen',False):raise ValueError('La instalación con reinicio requiere la aplicación instalada.')
+            if self._owner or self._children:raise ValueError('Devuelve las ventanas externas al IDE antes de actualizar.')
+            app=self._application
+            if any(not job.done for job in app.runner.jobs.values()):raise ValueError('Espera o cancela las ejecuciones activas antes de actualizar.')
+            if any(not session.closed for session in app.features.terminals.sessions.values()):raise ValueError('Cierra las terminales y apaga las máquinas antes de actualizar.')
+            target=Path(sys.executable).resolve().parent.parent
+            if not (target/'installation.json').is_file():raise ValueError('No se encontró el lanzador instalado. Usa el instalador manual para esta edición portable.')
+            state=app.features.updates.snapshot();request=app.features.prefs.directory/'updates'/('handoff-'+uuid.uuid4().hex+'.json')
+            atomic_json(request,{'profile':str(app.features.prefs.directory),'target':str(target),'workspace':str(app.workspace.root),'locale':app.features.prefs.get('general.locale'),'pid':os.getpid(),'processCreated':psutil.Process().create_time(),'created':time.time(),'version':state['available']['version'],'installer':str(installer),'sha256':state['available']['sha256']})
+            self._update_request=request.name
+            process=subprocess.Popen([str(installer),'--apply-update',str(request)],cwd=installer.parent,creationflags=subprocess.CREATE_NO_WINDOW)
+            self._update_process=process
+            return {'prepared':True,'pid':process.pid}
         # The user launches the downloaded installer when ready. The current
         # editor stays open, so unsaved buffers are never forcibly discarded.
         if sys.platform=='darwin':
@@ -135,6 +153,17 @@ class DesktopAPI:
         else:command=[str(installer)]
         process=subprocess.Popen(command,cwd=installer.parent,creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
         return {'opened':True,'pid':process.pid}
+
+    def update_handoff_status(self):
+        import json
+        try:state=json.loads((self._application.features.prefs.directory/'updates/install-result.json').read_text('utf-8'))
+        except (OSError,ValueError):return {'state':'preparing'}
+        return state if state.get('request')==getattr(self,'_update_request',None) else {'state':'preparing'}
+
+    def finish_update(self):
+        if self.update_handoff_status().get('state')!='waiting':raise ValueError('El instalador aún no está preparado.')
+        self._window.destroy()
+        return {'restarting':True}
 
     def new_window(self, path='', content=None):
         import subprocess

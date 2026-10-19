@@ -130,7 +130,15 @@ module.exports=function createAPI(host,options){
   vscode.CancellationError=class extends Error{constructor(){super('Canceled');this.name='Canceled';}};
   // Zénit disables extension telemetry: expose its state without invoking a sender.
   vscode.env.createTelemetryLogger=()=>({isUsageEnabled:false,isErrorsEnabled:false,onDidChangeEnableStates:event('telemetry').event,logUsage(){},logError(){},dispose(){}});
-  vscode.FileSystemError=class extends Error{static FileNotFound(v){return new this('File not found: '+v);}static FileExists(v){return new this('File exists: '+v);}static NoPermissions(v){return new this('No permissions: '+v);}static Unavailable(v){return new this('Unavailable: '+v);}};
+  vscode.FileSystemError=class FileSystemError extends Error{
+    constructor(message,code='Unknown'){super(message||'File system error');this.name='FileSystemError';this.code=code;}
+    static FileNotFound(v){return new this('File not found: '+(v||''),'FileNotFound');}
+    static FileExists(v){return new this('File exists: '+(v||''),'FileExists');}
+    static FileNotADirectory(v){return new this('Not a directory: '+(v||''),'FileNotADirectory');}
+    static FileIsADirectory(v){return new this('Is a directory: '+(v||''),'FileIsADirectory');}
+    static NoPermissions(v){return new this('No permissions: '+(v||''),'NoPermissions');}
+    static Unavailable(v){return new this('Unavailable: '+(v||''),'Unavailable');}
+  };
   vscode.LogLevel={Off:0,Trace:1,Debug:2,Info:3,Warning:4,Error:5};
   vscode.workspace.onDidCreateFiles=event('createFiles').event;vscode.workspace.onDidDeleteFiles=event('deleteFiles').event;vscode.workspace.onDidRenameFiles=event('renameFiles').event;
   vscode.workspace.fs.writeFile=async(u,data)=>{const existed=fs.existsSync(u.fsPath);await fs.promises.writeFile(u.fsPath,data);if(!existed)event('createFiles').fire({files:[u]});};

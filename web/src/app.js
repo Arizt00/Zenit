@@ -1,4 +1,5 @@
 import {renderMarkdown} from './assistant-markdown.js';
+import {Release055} from './release-055.js';
 import {installProductUI} from './product-ui.js';
 import {installTabControls} from './tab-controls.js';
 import {installDiagnostics} from './diagnostics.js';
@@ -632,7 +633,7 @@ async function start(){
     sceneStatus=service.babylon?'Babylon.js + Three.js · Lenon Glass':'Cristal CSS';
     termWrite('Tu espacio está listo. Usa Comprobar proyecto cuando lo necesites.\n','term-muted');
     renderTerminalContent();
-    platformUI=new LumenPlatform({api,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
+    platformUI=new LumenPlatform({api,perform,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
       isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},setTrustSource:value=>{service.trustSource=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
@@ -652,6 +653,7 @@ async function start(){
     desktopUI=new DesktopWorkflows({api,editor,renderTabs,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,setRunState:updateTaskUI,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
+    new Release055({editor,platform:platformUI,desktop:desktopUI,dock,modal,closeModal,openFile,refreshTree,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,saveAs:path=>previewUI.saveAs(path),openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
     teamUI=new TeamUI({platform:platformUI,editor,modal,closeModal,ensureTrust,refreshTree});commandDefinitions.push(['team','coco','Co-Code: compartir archivo o unirme','']);
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
@@ -659,6 +661,7 @@ async function start(){
     installDiagnostics();
     workbenchUI=new WorkbenchSession({editor,dock,profiles:workspaceProfiles,desktop:desktopUI,platform:platformUI,openFile,renderTabs,service:()=>service,commands:commandDefinitions});await workbenchUI.init();
     document.documentElement.removeAttribute('data-booting');
+    setTimeout(()=>desktopUI.showWhatsNew().catch(error=>console.warn('Release notes:',error.message)),1200);
     $('#engine-label').textContent='Local workspace';
     // Explicitly expose state for repeatable UI smoke tests; no secrets are exposed here.
     window.lumen={get theme(){return document.documentElement.dataset.theme;},get editorKind(){return editor.kind;},get graphicsKind(){return [...(studio?.scenes.values()||[])].some(s=>s.kind==='babylon')?'babylon':'css';},get graphicsAPI(){return document.querySelector('canvas[data-engine]')?.dataset.engine||'CSS';},get activeFile(){return editor.current;},get ready(){return true;},get platformReady(){return !!platformUI?.state;},get platformPage(){return platformUI?.page;},get languageServers(){return platformUI?.lspSessions.size||0;},get layout(){return dock.snapshot();},get motionEnabled(){return motion.enabled;}};
@@ -668,7 +671,8 @@ async function start(){
     // Start after Preview installs its runtime-command integration.
     platformUI.contributionsTask=platformUI.safe(()=>platformUI.loadContributions());
     desktopUI.toolsTask=desktopUI.safe(()=>desktopUI.refreshForgeTools());
-  }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
+  }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');
+    setTimeout(()=>desktopUI.showWhatsNew().catch(error=>console.warn('Release notes:',error.message)),1200);$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
 window.addEventListener('pagehide',event=>{if(!event.persisted){workbenchUI?.dispose();teamUI?.dispose();productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='\\'){event.preventDefault();guard(()=>perform('split-editor'))();}});
