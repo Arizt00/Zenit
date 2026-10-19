@@ -133,7 +133,7 @@ export class LumenEditor {
     pane.view.onDidFocusEditorText(()=>{
       this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();this.paintBreakpoints();this.updateCursor();this.callbacks.active?.(this.current);window.dispatchEvent(new Event('lumen:editor-active'));
     });
-    pane.view.onDidChangeModel(()=>this.paintPaneLabels());
+    pane.view.onDidChangeModel(()=>{this.paintPaneLabels();pane.view.updateOptions({readOnly:this.models.get(this.pathFor(pane.view.getModel()))?.teamReadOnly===true});});
     pane.view.onDidChangeCursorPosition(e=>{if(this.view===pane.view)this.callbacks.cursor?.(e.position.lineNumber,e.position.column);});
     pane.view.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyS,()=>this.callbacks.save?.());
     pane.view.onMouseDown(e=>{const path=this.pathFor(pane.view.getModel());if(e.target.type===monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN&&e.target.position&&path){const lines=this.breakpoints.get(path)||new Set(),line=e.target.position.lineNumber;lines.has(line)?lines.delete(line):lines.add(line);this.breakpoints.set(path,lines);this.paintBreakpoints();}});
@@ -301,7 +301,7 @@ export class LumenEditor {
     if(record.kind==='binary'){
       this.externalDiagnostics=[];
       if(this.kind==='monaco')this.view.setModel(null);
-      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary,{changed:()=>this.callbacks.change?.(path,this.isDirty(path)),save:()=>this.callbacks.save?.(path),build:()=>this.callbacks.binaryBuild?.(path),run:()=>this.callbacks.binaryRun?.(path),info:()=>this.callbacks.binaryInfo?.(path)});
+      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary,{changed:()=>this.callbacks.change?.(path,this.isDirty(path)),save:()=>this.callbacks.save?.(path),build:()=>this.callbacks.binaryBuild?.(path),run:()=>this.callbacks.binaryRun?.(path),info:()=>this.callbacks.binaryInfo?.(path),inspect:()=>this.callbacks.binaryInspect?.(path),compare:(otherPath,offset)=>this.callbacks.binaryCompare?.(path,otherPath,offset)});
       this.callbacks.active?.(path);window.dispatchEvent(new Event('lumen:editor-active'));return;
     }
     if(this.kind==='monaco'){

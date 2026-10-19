@@ -1,0 +1,168 @@
+{
+  "schema": 1,
+  "release": "0.5.4-R17",
+  "platform": "win32",
+  "packages": [
+    {
+      "id": "nc-lang.nc-language",
+      "version": "1.0.0-21v",
+      "sha256": "926c4329e7be8756b7e22c72cf26e9d6fac9c852c76e39d6fdfd35575889e0ac",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "vscjava.vscode-gradle",
+      "version": "3.18.0",
+      "sha256": "a0466d8e44b873d2a4e83155d4b7b68d4ff7d989a618f2f54513ae9d7c686dfa",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "eamodio.gitlens",
+      "version": "2026.10.151351",
+      "sha256": "2af273b7c92697cf5d7b62a9030f8d0a4eaed6094cd327ad2b2e1e2bd57bf744",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "PKief.material-icon-theme",
+      "version": "5.39.0",
+      "sha256": "f3fda4e1d6095d942c92467c1ad6f322a74c62160f7d29741058e4d726922fbd",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "github.vscode-github-actions",
+      "version": "0.32.3",
+      "sha256": "058462162cb29d4d22341d912c15dcfa2194774b1e92fc30fcba1a6ca3c91abd",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "vscode.git-base",
+      "version": "1.95.3",
+      "sha256": "956c41e4e8377a6b113a6a64fcd5308deaad44a827288f6bfcd5cf1c83037483",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "vscode.git",
+      "version": "1.95.3",
+      "sha256": "44909b81d3266860f02733c08475ab5fc66c0c1d7259b3c1b164e783559d9291",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "GitLab.gitlab-workflow",
+      "version": "7.2.5",
+      "sha256": "a9c03d85ee23c5af1f4c526d192bdd21dab68fd1bdcc8d29b38cc0c1c1f58eed",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "esbenp.prettier-vscode",
+      "version": "12.4.0",
+      "sha256": "fb730ea4306d09cdc0a3aaa9e9baae28058cc97a4fbfce8b056b377a0639a9fe",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "vira.vsc-vira-theme",
+      "version": "2026.9.5",
+      "sha256": "2ac391974ab6348ae81c8680fa81082ccca043f65b185b7f479912310719b00a",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales."
+      ],
+      "notVerified": [
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+      ]
+    },
+    {
+      "id": "EditorConfig.EditorConfig",
+      "version": "0.18.2",
+      "sha256": "cbc0370ff204bc16d84a3ee6830536fc04355856fa0e895ab064e1a03cfcb84a",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Ajustes de EditorConfig aplicados al modelo real de Monaco."
+      ],
+      "notVerified": [
+        "Las capacidades no enumeradas aquí no están certificadas."
+      ]
+    },
+    {
+      "id": "tamasfe.even-better-toml",
+      "version": "0.21.2",
+      "sha256": "f3dc44f1c551edef397a79f0f8c5db4066c6a547e210b5c3cec4400bf173b008",
+      "verified": true,
+      "release": "0.5.4-R17",
+      "tested": [
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Formato TOML aplicado al búfer sin escribir el archivo.",
+        "Ctrl+Z restaura la edición en una transacción.",
+        "Servidor TOML devuelve símbolos del documento real.",
+        "Plegado TOML con tipos Region reales y serialización hacia Monaco."
+      ],
+      "notVerified": [
+        "Las capacidades no enumeradas aquí no están certificadas."
+      ]
+    }
+  ]
+}

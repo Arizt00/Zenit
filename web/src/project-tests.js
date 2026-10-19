@@ -35,11 +35,14 @@ export class ProjectTestsUI{
     root.querySelector('[data-tests-stop]')?.addEventListener('click',()=>this.p.safe(async()=>{await this.p.api('/testing/cancel',{run:run.id});await this.refresh();}));
     root.querySelector('[data-tests-coverage]')?.addEventListener('click',()=>this.p.safe(async()=>{const data=await this.p.api('/testing/coverage?run='+run.id),host=root.querySelector('.test-coverage-report');host.innerHTML=`<p>${Number(data.totals.percent_covered||0).toFixed(1)}% · ${data.totals.covered_lines}/${data.totals.num_statements} ${t('líneas cubiertas','covered lines')}</p>${Object.entries(data.files||{}).map(([path,item])=>`<p><strong>${esc(path)}</strong> · ${Number(item.summary.percent_covered).toFixed(1)}% · ${t('Sin cubrir:','Not covered:')} ${esc(item.missing_lines.join(', '))}</p>`).join('')}`;}));
   }
-  decorate(){
+  async decorate(){
     const editor=this.p.host.editor,items=this.lastRun?.result?.results||[];
     const signature=this.lastRun?.id+JSON.stringify(this.lastRun?.result?.summary||{})+JSON.stringify([...editor.models].map(([path,r])=>[path,r.model?.getVersionId(),editor.isDirty(path)]));if(signature===this.annotationSignature)return;this.annotationSignature=signature;
     if(this.groupedResults!==items){this.groupedResults=items;this.resultGroups=new Map();for(const item of items){if(!this.resultGroups.has(item.path))this.resultGroups.set(item.path,[]);this.resultGroups.get(item.path).push(item);}}
     for(const [model,ids] of this.annotations){if(!model.isDisposed())model.deltaDecorations(ids,[]);}this.annotations.clear();
+    const epoch=this.annotationEpoch=(this.annotationEpoch||0)+1,result=this.lastRun?.result,hashes=result?.sourceHashes||{};if(result?.sourcesChanged?.length||result?.contextChanged?.length)return;
+    for(const [path,record] of editor.models){if(!record.model||!hashes[path])continue;const text=record.model.getValue().replaceAll('\r\n','\n'),raw=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)),hash=[...new Uint8Array(raw)].map(x=>x.toString(16).padStart(2,'0')).join('');if(epoch!==this.annotationEpoch||record.model.isDisposed()||hash!==hashes[path])return;}
+    if(epoch!==this.annotationEpoch)return;
     for(const [path,record] of editor.models){if(!record.model||editor.isDirty(path))continue;const values=this.resultGroups.get(path)||[];if(!values.length)continue;const decorations=values.filter(x=>x.line>=1&&x.line<=record.model.getLineCount()).map(x=>({range:{startLineNumber:x.line,startColumn:1,endLineNumber:x.line,endColumn:1},options:{isWholeLine:true,glyphMarginClassName:x.status==='passed'?'test-line-pass':x.status==='skipped'?'test-line-skip':'test-line-fail',glyphMarginHoverMessage:{value:esc(x.status+' · '+x.name)}}}));this.annotations.set(record.model,record.model.deltaDecorations([],decorations));}
   }
 }

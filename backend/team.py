@@ -7,6 +7,7 @@ import asyncio
 import base64
 from collections import OrderedDict
 import hmac
+import hashlib
 from http.client import IncompleteRead
 import json
 import secrets
@@ -25,15 +26,19 @@ def decode(value,limit=524288):
 
 
 class TeamRoom:
-    def __init__(self,features,workspace,documents,allow_run=False):
+    def __init__(self,features,workspace,documents,allow_run=False,protocol=1,share_project=False):
         from pycrdt import Doc,Text
         self.features=features;self.workspace=workspace;self.documents={};self.revisions={};self.peers={};self.lock=threading.RLock();self.jobs=set();self.allow_run=bool(allow_run);self.closed=False
         self.id=secrets.token_hex(12);self.token=secrets.token_urlsafe(32);self.checkpoints=[];self.executions={};self.run_requests=OrderedDict()
+        self.run_seen=set()
+        from .team_project import TeamProject
+        self.project=TeamProject(self,protocol,share_project)
         self.add_documents(documents)
 
     def add_documents(self,documents):
         from pycrdt import Doc,Text
-        if not isinstance(documents,list) or not 1<=len(documents)<=32:raise ValueError('Selecciona entre uno y 32 archivos por sesión.')
+        maximum=128 if self.project.protocol==2 else 32
+        if not isinstance(documents,list) or not (0 if self.project.shared else 1)<=len(documents)<=maximum:raise ValueError('La selección supera el presupuesto de archivos de esta sesión.')
         additions={}
         for item in documents:
             disk=self.workspace.read(item['path']);name=disk['path']
@@ -42,9 +47,9 @@ class TeamRoom:
             text=item.get('text',disk['content'])
             if not isinstance(text,str) or len(text.encode('utf-8'))>500000:raise ValueError('El archivo compartido supera 500 KB.')
             additions[name]=(text,disk['revision'])
-        if len(self.documents)+len(additions)>32:raise ValueError('Selecciona entre uno y 32 archivos por sesión.')
+        if len(self.documents)+len(additions)>maximum:raise ValueError('La sesión alcanzó su presupuesto de documentos abiertos.')
         if sum(len(str(d['text']).encode('utf-8')) for d in self.documents.values())+sum(len(t.encode('utf-8')) for t,_ in additions.values())>8000000:raise ValueError('La sesión supera 8 MB de texto compartido.')
-        for name,(text,revision) in additions.items():self.documents[name]=Doc({'text':Text(text)},allow_multithreading=True);self.revisions[name]=revision
+        for name,(text,revision) in additions.items():self.documents[name]=Doc({'text':Text(text)},allow_multithreading=True);self.revisions[name]=revision;self.project.register(name,text)
         return {'paths':list(self.documents),'room':self.id}
 
     def execution_snapshot(self):
@@ -56,52 +61,67 @@ class TeamRoom:
         with self.lock:
             if self.closed:raise ValueError('La sesión ha terminado.')
             action=body.get('action','sync')
+            identity=self.project.authenticate(body,owner)
+            result=self.project.action(action,body,identity,owner)
+            if result is not None:return result
             if action=='sync':
                 peer=body.get('peer');name=body.get('name','Invitado')
                 if not isinstance(peer,str) or not 1<=len(peer)<=100:raise ValueError('Participante inválido.')
                 now=time.monotonic();self.peers={k:v for k,v in self.peers.items() if now-v['seen']<45}
                 cursor=body.get('cursor');cursor={k:v for k,v in cursor.items() if k in ('lineNumber','column') and type(v) is int and 0<v<2000000} if isinstance(cursor,dict) else None
                 self.peers[peer]={'id':peer,'name':str(name)[:80],'station':str(body.get('station','Navegador'))[:100],'path':str(body.get('path',''))[:300],'cursor':cursor,'seen':now}
-                for path,value in body.get('updates',{}).items():
-                    if path not in self.documents:raise PermissionError('El archivo no está compartido.')
-                    doc=self.documents[path];previous=doc.get_update()
-                    try:
+                accepted=identity['permissions']['edit']
+                incoming=body.get('updates',{}) if accepted else {}
+                previous={}
+                try:
+                    for original_path,value in incoming.items():
+                        path=self.project.resolve(original_path,body.get('documentIds'))
+                        if path not in self.documents:raise PermissionError('El archivo no está compartido.')
+                        doc=self.documents[path];previous.setdefault(path,doc.get_update())
                         doc.apply_update(decode(value))
                         if len(str(doc['text']).encode('utf-8'))>500000 or len(doc.get_update())>4000000:raise ValueError('El búfer compartido supera su presupuesto de memoria.')
-                    except BaseException:
-                        from pycrdt import Doc,Text
-                        doc=Doc({'text':Text()},allow_multithreading=True);doc.apply_update(previous);self.documents[path]=doc;raise
-                updates={path:encode(doc.get_update(decode(body['vectors'][path],100000) if body.get('vectors',{}).get(path) else None)) for path,doc in self.documents.items()}
-                return {'room':self.id,'updates':updates,'paths':list(self.documents),'executions':self.execution_snapshot(),'peers':[{k:v for k,v in peer.items() if k!='seen'} for peer in self.peers.values()],'allowRun':self.allow_run,'environment':self.environment(),'checkpoints':[{'id':c['id'],'label':c['label'],'created':c['created']} for c in self.checkpoints]}
+                    if previous and (sum(len(str(doc['text']).encode()) for doc in self.documents.values())>8000000 or sum(len(doc.get_update()) for doc in self.documents.values())>16000000):raise ValueError('La sesión alcanzó su presupuesto de memoria compartida. Crea un punto de control y una sesión nueva.')
+                except BaseException:
+                    from pycrdt import Doc,Text
+                    for path,update in previous.items():
+                        doc=Doc({'text':Text()},allow_multithreading=True);doc.apply_update(update);self.documents[path]=doc
+                    raise
+                vectors={self.project.resolve(path,body.get('documentIds')):value for path,value in body.get('vectors',{}).items()}
+                updates={path:encode(doc.get_update(decode(vectors[path],100000) if vectors.get(path) else None)) for path,doc in self.documents.items()}
+                return {'room':self.id,'updates':updates,'acceptedUpdates':accepted,'paths':list(self.documents),'executions':self.execution_snapshot(),'peers':[{k:v for k,v in peer.items() if k!='seen'} for peer in self.peers.values()],'allowRun':self.allow_run,'environment':self.environment(),'checkpoints':[{'id':c['id'],'label':c['label'],'created':c['created']} for c in self.checkpoints],**self.project.public(body,identity)}
             if action=='share':
                 if not owner:raise PermissionError('Solo el anfitrión añade archivos a la sesión.')
                 return self.add_documents(body.get('documents'))
             if action=='checkpoint':
+                self.project.require(identity,'edit')
                 texts={p:str(d['text']) for p,d in self.documents.items()}
                 if sum(len(t.encode('utf-8')) for t in texts.values())>2000000:raise ValueError('El punto de control admite hasta 2 MB de texto.')
-                item={'id':secrets.token_hex(8),'label':str(body.get('label','Punto de equipo'))[:80],'created':time.time(),'texts':texts};self.checkpoints=(self.checkpoints+[item])[-4:]
+                item={'id':secrets.token_hex(8),'label':str(body.get('label','Punto de equipo'))[:80],'created':time.time(),'texts':texts,'documentIds':dict(self.project.document_ids)};self.checkpoints=(self.checkpoints+[item])[-4:]
                 return {k:v for k,v in item.items() if k!='texts'}
             if action=='restore':
                 if not owner:raise PermissionError('El anfitrión restaura los puntos de control compartidos.')
                 item=next((c for c in self.checkpoints if c['id']==body.get('id')),None)
                 if not item:raise ValueError('El punto de control ya no existe.')
-                for path,text in item['texts'].items():
+                for original_path,text in item['texts'].items():
+                    path=self.project.resolve(original_path,item.get('documentIds'))
                     with self.documents[path].transaction():self.documents[path]['text'].clear();self.documents[path]['text'].insert(0,text)
                 return {'restored':True}
             if action=='leave':self.peers.pop(body.get('peer'),None);return {'left':True}
             if action=='save':
-                if not owner and not self.allow_run:raise PermissionError('El anfitrión guarda los cambios de esta sesión.')
-                return self.save(body.get('path'))
+                self.project.require(identity,'save')
+                return self.save(self.project.resolve(body.get('path'),body.get('documentIds')))
             if action=='run':
-                if not self.allow_run:raise PermissionError('El anfitrión no ha activado la ejecución compartida.')
-                path=body.get('path');request_id=body.get('requestId')
+                self.project.require(identity,'run')
+                path=self.project.resolve(body.get('path'),body.get('documentIds'));request_id=body.get('requestId')
                 if path not in self.documents:raise PermissionError('El archivo no está compartido.')
                 if request_id is not None and (not isinstance(request_id,str) or not 1<=len(request_id)<=120):raise ValueError('Identificador de ejecución inválido.')
                 if request_id in self.run_requests:
                     previous=self.run_requests[request_id]
-                    if previous['path']!=path:raise ValueError('La petición de ejecución pertenece a otro archivo.')
+                    if previous.get('document',self.project.document_ids.get(previous['path']))!=self.project.document_ids.get(path):raise ValueError('La petición de ejecución pertenece a otro archivo.')
                     if previous['job'] not in self.features.app.runner.jobs:raise ValueError('La ejecución anterior ya no está disponible; no se volverá a iniciar por este reintento.')
                     return {**previous,'reused':True}
+                if request_id and hashlib.sha256(request_id.encode()).digest() in self.run_seen:raise ValueError('La petición anterior ya no está disponible; este reintento no iniciará otro proceso.')
+                if len(self.run_seen)>=65536:raise ValueError('El registro de ejecución alcanzó su presupuesto. Termina esta sesión antes de crear otra.')
                 previous=self.execution_snapshot().get(path)
                 if previous and not previous['done']:
                     result={**previous,'path':path,'reused':True}
@@ -111,15 +131,16 @@ class TeamRoom:
                     result={**self.features.app.runner.start(plan['commands'],self.workspace.root,timeout=0),'path':path,'started':time.time(),'reused':False}
                     self.jobs.add(result['job']);self.executions[path]={key:result[key] for key in ('job','started')}
                 if request_id:
+                    result['document']=self.project.document_ids[path];self.run_seen.add(hashlib.sha256(request_id.encode()).digest())
                     self.run_requests[request_id]=result
                     while len(self.run_requests)>128:self.run_requests.popitem(last=False)
                 return result
             if action in ('job','stop','input'):
-                identity=body.get('job')
-                if identity not in self.jobs:raise PermissionError('Esta ejecución no pertenece al equipo.')
-                job=self.features.app.runner.jobs.get(identity)
+                job_id=body.get('job')
+                if job_id not in self.jobs:raise PermissionError('Esta ejecución no pertenece al equipo.')
+                job=self.features.app.runner.jobs.get(job_id)
                 if job is None:raise ValueError('La ejecución ya no está disponible.')
-                if action!='job' and not self.allow_run:raise PermissionError('Ejecución compartida desactivada.')
+                if action!='job':self.project.require(identity,'run')
                 if action=='stop':job.cancel();return {'stopped':True}
                 if action=='input':job.write(str(body.get('text',''))[:65536]);return {'sent':True}
                 with job.lock:
@@ -130,10 +151,14 @@ class TeamRoom:
     def save(self,path):
         if path not in self.documents:raise PermissionError('El archivo no está compartido.')
         doc=self.documents[path];text=str(doc['text']);disk=self.workspace.read(path)
+        buffer=self.features.buffers.items.get(path)
+        if buffer and buffer['text'].replace('\r\n','\n') not in (text.replace('\r\n','\n'),disk['content'].replace('\r\n','\n')):raise ValueError('El archivo tiene cambios fuera de CoCo en otro búfer. Revisa ambas versiones antes de guardar.')
         if disk['revision']!=self.revisions[path]:
             if disk['content']!=text:raise ValueError('El archivo cambió fuera del equipo. Se conserva el búfer compartido; revisa ambos antes de guardar.')
         else:self.workspace.save(path,text,disk['revision'],newline=disk['newline'],bom=disk['bom'])
-        result=self.workspace.read(path);self.revisions[path]=result['revision'];return {'saved':True,'path':path,'text':text,'revision':result['revision']}
+        result=self.workspace.read(path);self.revisions[path]=result['revision']
+        if buffer:self.features.buffers.items[path]={**buffer,'text':text,'revision':result['revision'],'saved':True,'sequence':buffer['sequence']+1}
+        return {'saved':True,'path':path,'text':text,'revision':result['revision']}
 
     def environment(self):
         active=next((s for s in self.features.tern.sessions.values() if s.get('active') and s['workspace']==str(self.workspace.root)),None)
@@ -145,12 +170,12 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 class TeamService:
-    def __init__(self,features):self.features=features;self.room=None;self.remote=None;self.remote_room=None;self.thread=None;self.loop=None;self.server=None;self.url=None;self.tunnel=None;self.mode='local';self.internet_job=None
+    def __init__(self,features):self.features=features;self.room=None;self.remote=None;self.remote_room=None;self.remote_identity=None;self.remote_protocol=1;self.thread=None;self.loop=None;self.server=None;self.url=None;self.tunnel=None;self.mode='local';self.internet_job=None
     def start(self,ws,body):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de compartirlo.')
         mode=body.get('mode','lan' if body.get('network') else 'local')
         if mode not in ('local','lan','internet'):raise ValueError('Selecciona este equipo, red local o Internet.')
-        self.stop();self.mode=mode;self.room=TeamRoom(self.features,ws,body.get('documents',[]),body.get('allowRun',False));ready=threading.Event();errors=[]
+        self.stop();self.mode=mode;self.room=TeamRoom(self.features,ws,body.get('documents',[]),body.get('allowRun',False),body.get('protocol',1),body.get('shareProject',False));ready=threading.Event();errors=[]
         async def serve():
             try:self.server=await asyncio.start_server(self.client,'0.0.0.0' if self.mode=='lan' else '127.0.0.1',0,limit=8192);ready.set();await self.server.serve_forever()
             except asyncio.CancelledError:pass
@@ -204,7 +229,7 @@ class TeamService:
         from urllib.parse import unquote
         import mimetypes
         name=unquote(urlsplit(value).path).lstrip('/') or 'team.html';root=(self.features.app.project/'web').resolve()
-        if name not in ('team.html','team-peer.js','team-peer.css','team-execution.js') and not name.startswith(('vendor/monaco/','team-vendor/')):raise ValueError('Recurso no disponible.')
+        if name not in ('team.html','team-peer.js','team-peer.css','team-execution.js','coco-drafts.js') and not name.startswith(('vendor/monaco/','team-vendor/')):raise ValueError('Recurso no disponible.')
         path=(root/name).resolve()
         if not path.is_relative_to(root) or not path.is_file() or path.stat().st_size>12000000:raise ValueError('Recurso no disponible.')
         data=path.read_bytes();mime=mimetypes.guess_type(name)[0] or 'application/octet-stream'
@@ -219,16 +244,18 @@ class TeamService:
         if parsed.scheme not in ('http','https') or not parsed.hostname or parsed.username or not 32<=len(parsed.fragment)<=100 or parsed.path not in ('','/'):raise ValueError('Usa la invitación completa del anfitrión.')
         if self.room and hmac.compare_digest(parsed.fragment,self.room.token):raise ValueError('Ya eres el anfitrión de este equipo.')
         remote=(parsed._replace(fragment='',path='/v1').geturl(),parsed.fragment)
-        result=self.contact(remote,{'action':'sync','peer':secrets.token_hex(12),'name':'Conectando','vectors':{}})
-        self.stop();self.remote=remote;self.remote_room=result['room'];self.url=url;self.mode='internet' if parsed.scheme=='https' else 'local' if parsed.hostname in ('127.0.0.1','localhost','::1') else 'lan';return self.status()
+        identity=dict(self.remote_identity) if self.remote==remote and self.remote_identity else {'peer':secrets.token_hex(12)}
+        result=self.contact(remote,{'action':'sync',**identity,'name':'Conectando','vectors':{}})
+        if result.get('self',{}).get('resumeKey'):identity['resumeKey']=result['self']['resumeKey']
+        self.stop();self.remote=remote;self.remote_identity=identity;self.remote_protocol=result.get('protocol',1);self.remote_room=result['room'];self.url=url;self.mode='internet' if parsed.scheme=='https' else 'local' if parsed.hostname in ('127.0.0.1','localhost','::1') else 'lan';return self.status()
 
     def contact(self,remote,body):
         endpoint,token=remote;request=Request(endpoint,data=json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'},method='POST')
         for attempt in range(2):
             try:
                 with build_opener(ProxyHandler({}),NoRedirect()).open(request,timeout=8) as response:
-                    raw=response.read(8000000)
-                    if len(raw)>=8000000:raise ValueError('Respuesta de equipo demasiado grande.')
+                    raw=response.read(32000000)
+                    if len(raw)>=32000000:raise ValueError('Respuesta de equipo demasiado grande.')
                     result=json.loads(raw)
                 break
             except HTTPError as error:
@@ -242,8 +269,11 @@ class TeamService:
 
     def request(self,body):
         body={**body,'station':socket.gethostname()}
-        if self.remote:return self.contact(self.remote,body)
+        if self.remote:
+            if self.remote_protocol==2:body.update(self.remote_identity)
+            return self.contact(self.remote,body)
         if not self.room:raise ValueError('No hay sesión de equipo.')
+        if self.room.project.protocol==2:body['peer']=self.room.project.owner
         result=self.room.request(body,owner=True)
         if body.get('action','sync')=='sync':result.update(connection=self.status()['connection'],invitation=self.status()['invitation'])
         return result
@@ -254,7 +284,7 @@ class TeamService:
         return {'active':bool(self.room or self.remote),'hosting':bool(self.room),'invitation':invitation,'room':self.room.id if self.room else self.remote_room,'allowRun':bool(self.room and self.room.allow_run),'station':socket.gethostname(),'connection':connection}
     def connector(self,target):
         import hashlib
-        name={'vscode':'zenit-team-0.1.0.vsix','jetbrains':'zenit-team-jetbrains-0.1.0.zip'}.get(target)
+        name={'vscode':'zenit-team-0.2.0.vsix','jetbrains':'zenit-team-jetbrains-0.1.0.zip'}.get(target)
         if not name:raise ValueError('Conector desconocido.')
         root=self.features.app.project
         path=next((p/name for p in (root/'integrations',root/'dist/integrations') if (p/name).is_file()),None)

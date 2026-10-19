@@ -35,6 +35,8 @@ class CodeActionKind {
   contains(other){return !this.value||other.value===this.value||other.value.startsWith(this.value+'.');}
   intersects(other){return this.contains(other)||other.contains(this);}toJSON(){return this.value;}
 }
+class FoldingRangeKind {constructor(value){Object.defineProperty(this,'value',{value,enumerable:true});}toJSON(){return this.value;}}
+for(const [name,value] of Object.entries({Comment:'comment',Imports:'imports',Region:'region'}))FoldingRangeKind[name]=new FoldingRangeKind(value);
 for(const [name,value] of Object.entries({Empty:'',QuickFix:'quickfix',Refactor:'refactor',RefactorExtract:'refactor.extract',RefactorInline:'refactor.inline',RefactorRewrite:'refactor.rewrite',Source:'source',SourceOrganizeImports:'source.organizeImports',SourceFixAll:'source.fixAll'}))CodeActionKind[name]=new CodeActionKind(value);
 class WorkspaceEdit {
   constructor(){this.changes=new Map();this.operations=[];}
@@ -151,6 +153,7 @@ module.exports=function createAPI(host,options){
   };
   vscode.commands.registerCommand=(id,fn,ctx)=>{const bound=(...args)=>fn.apply(ctx,args);bound.vscodeCommand=true;return registerCommand(id,bound,id);};
   const treeViews=require('./extension_views.cjs')(vscode);
+  vscode.FoldingRangeKind=FoldingRangeKind;
   const services=require('./extension_services.cjs')(vscode,host,options,event,makeDocument,documents);
   const ui=require('./extension_ui.cjs')(vscode,host);
   const authentication=require('./extension_auth.cjs')(vscode,options.id,host,options.authenticationProviders||[]);

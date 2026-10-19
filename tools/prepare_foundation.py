@@ -92,7 +92,7 @@ def main():
     for name in ('lib/clang','share'):
         if (llvm/name).exists():copy(llvm/name,out/'llvm'/name)
     mingw=Path('C:/msys64/ucrt64');copy(mingw,out/'mingw')
-    for name in ('gcc','g++','gdb','cmake','ninja','as','ar'):
+    for name in ('gcc','g++','gdb','cmake','ctest','ninja','as','ar'):
         if (out/f'mingw/bin/{name}.exe').exists():register(name,f'mingw/bin/{name}.exe')
     components.extend([{'id':'llvm','license':'Apache-2.0 WITH LLVM-exception','includes':['x86','x86_64','arm','arm64','riscv64']},
                        {'id':'gcc','license':'GPL-3.0 with GCC Runtime Library Exception','includes':['C standards','C++ standards','headers','CRT','libstdc++','GDB']}])

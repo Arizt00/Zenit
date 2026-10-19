@@ -54,6 +54,13 @@ class BinaryTools:
             file=file_path(name);ws=self.features.extension_services.file_workspace(file);return ws,file.name,file
         return ws,name,ws.resolve(name)
     def key(self,file):return os.path.normcase(str(file))
+    def inspect(self,body):
+        from .binary_structure import inspect
+        ws,name,file=self.scope(body.get('path'));return inspect(file,name)
+    def compare(self,body):
+        from .binary_structure import compare
+        ws,name,file=self.scope(body.get('path'));other=ws.resolve(body.get('otherPath'))
+        return {**compare(file,other,body.get('offset',0),body.get('count',65536)),'paths':[name,body.get('otherPath')]}
     def info(self,name):
         ws,path,file=self.scope(name);stem=file.stem.split('$')[0]
         sources=[p for p in ws.files() if Path(p).stem==stem and Path(p).suffix.lower() in ('.c','.cpp','.cc','.cxx','.rs','.go','.java','.n','.nc','.s','.asm')]

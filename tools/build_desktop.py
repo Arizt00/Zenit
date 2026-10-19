@@ -60,7 +60,7 @@ def bundle_python(bundle,components=None):
     preserve_python_sources(source/'python')
     target=bundle/'sdk/foundation';target.mkdir(parents=True,exist_ok=True)
     shutil.copytree(source/'python',target/'python',dirs_exist_ok=True,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
-    names=('python','pylsp','gcc','g++','gdb','cmake','ninja','as','ar','clang','clang++','clangd','llvm-objcopy','llvm-objdump','lld','ld.lld','lld-link','ncc','nasm')
+    names=('python','pylsp','gcc','g++','gdb','cmake','ctest','ninja','as','ar','clang','clang++','clangd','llvm-objcopy','llvm-objdump','lld','ld.lld','lld-link','ncc','nasm')
     selected=set(components or ('python','gcc','llvm','nc','nasm'))
     native_dirs=tuple(folder for group,folders in {'gcc':('native-mingw','native-sources'),'llvm':('llvm',),'nc':('nc',),'nasm':('nasm',)}.items() if group in selected for folder in folders)
     for folder in native_dirs:

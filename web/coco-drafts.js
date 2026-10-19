@@ -1,0 +1,8 @@
+/** Local CRDT recovery contains document updates, never invitation credentials. */
+export class CoCoDrafts {
+  constructor(Y,room){this.Y=Y;this.room=room;this.timers=new Map();this.open=new Promise(resolve=>{try{const request=indexedDB.open('zenit-coco-drafts',1);request.onupgradeneeded=()=>request.result.createObjectStore('documents');request.onsuccess=()=>resolve(request.result);request.onerror=()=>resolve(null);}catch{resolve(null);}});}
+  async restore(id,doc){try{const db=await this.open;if(!db)return;const value=await new Promise(resolve=>{const req=db.transaction('documents').objectStore('documents').get(this.room+':'+id);req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);});if(value?.update?.byteLength<=4000000&&Date.now()-value.time<604800000)this.Y.applyUpdate(doc,new Uint8Array(value.update),'local-restore');}catch{/* Keep the live buffer if local storage is unavailable. */}}
+  schedule(id,doc){clearTimeout(this.timers.get(id)?.timer);const timer=setTimeout(()=>this.flush(id,doc),450);this.timers.set(id,{timer,doc});}
+  async flush(id,doc){clearTimeout(this.timers.get(id)?.timer);this.timers.delete(id);try{if(doc.isDestroyed)return;const update=this.Y.encodeStateAsUpdate(doc);if(update.byteLength>4000000)return;const db=await this.open;if(!db)return;await new Promise(resolve=>{const tx=db.transaction('documents','readwrite');tx.objectStore('documents').put({time:Date.now(),update},this.room+':'+id);tx.oncomplete=tx.onerror=tx.onabort=resolve;});}catch{}}
+  flushAll(){return Promise.all([...this.timers].map(([id,{doc}])=>this.flush(id,doc)));}
+}

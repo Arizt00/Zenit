@@ -4,7 +4,7 @@ const EN_LABELS={idle:'Ready to start',running:'Running',paused:'Paused',finishe
 const LABELS={idle:'Listo para iniciar',running:'En ejecución',paused:'En pausa',finished:'Ejecución finalizada',error:'Error de ejecución',stopped:'Sesión detenida'};
 const ENGINES={py:'Python · integrado',pyw:'Python · integrado',js:'Node Inspector',mjs:'Node Inspector',cjs:'Node Inspector',ts:'Node Inspector',c:'LLDB · DAP',cpp:'LLDB · DAP',cc:'LLDB · DAP',cxx:'LLDB · DAP',rs:'LLDB · DAP',go:'Delve · DAP',cs:'NetCoreDbg · DAP',java:'Java · JDI',html:'Navegador · DOM/CSS',htm:'Navegador · DOM/CSS',css:'Navegador · DOM/CSS',nc:'nC · compilador local',n:'nC · compilador local'};
 import {installMachineInspector} from './machine-inspector.js';
-const TABS=[['machine','cpu','Machine'],['history','clock','Pause history'],['variables','cube','Variables'],['stack','split','Pila'],['output','terminal','Salida'],['lantern','sparkles','Lantern']];
+const TABS=[['machine','cpu','Máquina'],['history','clock','Historial de pausas'],['variables','cube','Variables'],['stack','split','Pila'],['output','terminal','Salida'],['lantern','sparkles','Lantern']];
 const control=(id,name,glyph)=>`<button class="secondary-button" data-debug="${id}" title="${name}" aria-label="${name}" disabled>${icon(glyph)}<span>${name}</span></button>`;
 
 /** The real debugger, one mounted inspector, and small controls with explicit states. */

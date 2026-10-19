@@ -95,7 +95,13 @@ class TernPortability:
                 actual=self.inventory(executable)
                 if actual['version']!=data['tools'][0]['version'] or actual['implementation']!=data['tools'][0].get('implementation'):missing.append('Python exacto '+data['tools'][0]['version']+' (disponible '+actual['version']+')')
             if data.get('platform')!={'system':platform.system(),'machine':platform.machine()}:missing.append('La plataforma del entorno difiere de este equipo; exporta ruedas compatibles desde su plataforma de destino.')
-        elif not self.features.machines.vm_base()['qemu']:missing.append('QEMU x86_64')
+        else:
+            qemu=self.features.machines.vm_base()['qemu']
+            if not qemu:missing.append('QEMU x86_64')
+            else:
+                result=subprocess.run([qemu,'--version'],capture_output=True,timeout=10,creationflags=0x08000000 if os.name=='nt' else 0)
+                lines=result.stdout.decode('utf-8','replace').splitlines();actual=lines[0][:160] if lines else ''
+                if result.returncode or actual!=data['tools'][0]['version']:missing.append('QEMU exacto '+data['tools'][0]['version']+' (disponible '+(actual or 'desconocido')+')')
         return missing
     def export(self,ws,body,event):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto para exportar su entorno.')

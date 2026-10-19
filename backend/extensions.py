@@ -332,7 +332,7 @@ class ExtensionStore(ExtensionInstallPlans):
             self.refresh_index()
             result=[]
             for x in self.installed.values():
-                item=dict(x);item['supported']=list(x.get('supported',[]))
+                item=dict(x);item['supported']=list(x.get('supported',[]));from .extension_compatibility import evidence;item['verification']=evidence(item)
                 try:
                     manifest=localized_manifest(self.root/x['directory']/'extension')
                     item.update({k:manifest.get(k,item.get(k,'')) for k in ('displayName','description')})

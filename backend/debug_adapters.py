@@ -16,7 +16,7 @@ class ProtocolDebugger:
     def __init__(self):
         self.state={'status':'idle','output':'','variables':[],'stack':[]};self.lock=threading.RLock();self.write_lock=threading.Lock()
         self.pending={};self.seq=0;self.process=None;self.closed=False;self.connection=None;self.thread_id=1;self.initialized=threading.Event()
-        self.debuggee=None;self.input_pipe=None
+        self.debuggee=None;self.input_pipe=None;self.pause_epoch=0
     def snapshot(self):
         with self.lock:return copy.deepcopy(self.state)
     def update(self,**changes):
@@ -128,7 +128,7 @@ class ProtocolDebugger:
         threading.Thread(target=self.read,args=(stream,),daemon=True).start()
         capabilities=self.request('initialize',{'clientID':'lumen','clientName':'Zénit','adapterID':'lumen','pathFormat':'path','linesStartAt1':True,'columnsStartAt1':True,'supportsVariableType':True,'supportsRunInTerminalRequest':True})
         self.capabilities=capabilities
-        self.update(machineCapabilities={'memory':capabilities.get('supportsReadMemoryRequest') is True,'disassembly':capabilities.get('supportsDisassembleRequest') is True})
+        self.update(machineCapabilities={'memory':capabilities.get('supportsReadMemoryRequest') is True,'disassembly':capabilities.get('supportsDisassembleRequest') is True},stepBackSupported=capabilities.get('supportsStepBack') is True)
         launch=dict(launch);entry=launch.pop('_lumenEntry',False);self.entry_function=launch.pop('_lumenEntryFunction',None)
         version=re.search(r'lldb version (\d+)',capabilities.get('$__lldb_version',''))
         if os.name=='nt' and self.lldb and version and int(version[1])>=22 and launch.get('console')=='internalConsole' and 'stdio' not in launch:
@@ -146,30 +146,41 @@ class ProtocolDebugger:
     def event(self,name,body):
         if name=='initialized':self.initialized.set()
         elif name=='output':self.output(body.get('output',''))
-        elif name in ('terminated','exited'):self.update(status='finished',variables=[],stack=[])
-        elif name=='continued':self.update(status='running',variables=[],stack=[])
+        elif name in ('terminated','exited'):self.pause_epoch+=1;self.update(status='finished',variables=[],stack=[],registers=[])
+        elif name=='continued':self.pause_epoch+=1;self.update(status='running',variables=[],stack=[],registers=[])
         elif name=='stopped':
             self.thread_id=body.get('threadId',1);threading.Thread(target=self.inspect,daemon=True).start()
     def inspect(self):
         try:
-            stack=self.request('stackTrace',{'threadId':self.thread_id,'startFrame':0,'levels':25}).get('stackFrames',[]);variables=[]
+            self.pause_epoch+=1;epoch=self.pause_epoch
+            stack=self.request('stackTrace',{'threadId':self.thread_id,'startFrame':0,'levels':25}).get('stackFrames',[]);variables=[];registers=[]
             if stack:
                 scopes=self.request('scopes',{'frameId':stack[0]['id']}).get('scopes',[])
-                for scope in scopes:
-                    if scope.get('expensive'):continue
-                    for item in self.request('variables',{'variablesReference':scope['variablesReference']}).get('variables',[])[:100]:variables.append({'name':item['name'],'value':item.get('value','')[:400],'type':item.get('type',''),'memoryReference':item.get('memoryReference','')})
-                    if variables:break
+                for scope in scopes[:8]:
+                    is_register=scope.get('presentationHint')=='registers' or 'register' in scope.get('name','').lower()
+                    if scope.get('expensive') and not is_register:continue
+                    items=self.request('variables',{'variablesReference':scope['variablesReference'],'count':256}).get('variables',[])[:256]
+                    if is_register:
+                        expanded=[]
+                        for item in items:
+                            if item.get('variablesReference') and len(expanded)<256:expanded.extend(self.request('variables',{'variablesReference':item['variablesReference'],'count':256-len(expanded)}).get('variables',[])[:256-len(expanded)])
+                            else:expanded.append(item)
+                        items=expanded[:256]
+                    target=registers if is_register else variables
+                    for item in items[:256 if is_register else max(0,200-len(variables))]:target.append({'name':item['name'],'value':item.get('value','')[:400],'type':item.get('type',''),'memoryReference':item.get('memoryReference','')})
+            if self.closed or epoch!=self.pause_epoch:return
             self.update(status='paused',line=stack[0].get('line',0) if stack else 0,path=stack[0].get('source',{}).get('path',self.state.get('path','')) if stack else self.state.get('path',''),
-                stack=[{'name':f.get('name',''),'path':f.get('source',{}).get('path',''),'line':f.get('line',0),'instructionPointerReference':f.get('instructionPointerReference','')} for f in stack],variables=variables)
+                stack=[{'id':f.get('id'),'name':f.get('name',''),'path':f.get('source',{}).get('path',''),'line':f.get('line',0),'instructionPointerReference':f.get('instructionPointerReference','')} for f in stack],variables=variables,registers=registers)
         except ValueError as exc:self.update(status='error',error=str(exc))
     def command(self,command):
         if command=='stop':self.stop();return self.snapshot()
-        methods={'continue':'continue','next':'next','step':'stepIn','out':'stepOut','pause':'pause'}
+        methods={'continue':'continue','next':'next','step':'stepIn','out':'stepOut','pause':'pause','back':'stepBack'}
         if command not in methods:raise ValueError('Comando de depuración no válido.')
+        if command=='back' and (not self.state.get('stepBackSupported') or self.state.get('status')!='paused'):raise ValueError('Este motor no ofrece retroceso de ejecución en la pausa actual.')
         if getattr(self,'entry_function',None):self.request('setFunctionBreakpoints',{'breakpoints':[]});self.entry_function=None
         if getattr(self,'temporary_entry',False):
             self.request('setBreakpoints',{'source':{'path':self.breakpoint_source},'breakpoints':[{'line':line} for line in self.user_points]});self.temporary_entry=False
-        self.update(status='running');self.request(methods[command],{'threadId':self.thread_id});return self.snapshot()
+        self.pause_epoch+=1;self.update(status='running',registers=[]);self.request(methods[command],{'threadId':self.thread_id});return self.snapshot()
     def stop(self):
         if self.input_pipe:self.input_pipe.close();self.input_pipe=None
         if self.closed:return

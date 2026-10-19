@@ -78,7 +78,7 @@ async function request(message){
   if(message.method==='ports'){const items=[];for(const b of bridges.values())items.push(...(await b.portAttributes(message.ports)).items);return {items};}
   if(message.method==='webviewMessage'){for(const b of bridges.values()){const result=await b.services.message(message.panel,message.message);if(result.delivered)return result;}return {delivered:false};}
   if(message.method==='webviewDispose'){for(const b of bridges.values())b.services.disposePanel(message.panel);return {ok:true};}
-  effects=[];active=message.document||active;for(const b of bridges.values())b.syncDocument(active);
+  effects=[];if(message.document){active=message.document;for(const b of bridges.values())b.syncDocument(active);}
   if(message.method==='willSave'){const edits=[];for(const b of bridges.values())edits.push(...(await b.willSave(message.reason)).edits);return {edits};}
   if(message.method==='didSave'){for(const b of bridges.values())b.didSave();return {ok:true};}
   if(message.method==='virtual'){for(const b of bridges.values())if(b.hasVirtual(message.uri))return {text:await b.readVirtual(message.uri)};throw Error('Documento virtual no registrado.');}
@@ -115,6 +115,6 @@ let queue=Promise.resolve();
 readline.createInterface({input:process.stdin}).on('line',line=>{
   let message;try{message=JSON.parse(line);}catch{return;}
   if(message.type==='serviceResult'){const p=pendingServices.get(message.id);if(p){pendingServices.delete(message.id);clearTimeout(p.timer);message.error?p.reject(Error(message.error)):p.resolve(message.result);}return;}
-  if(message.type==='serviceEvent'){for(const b of bridges.values()){b.uiEvent?.(message.name,message.value);b.services?.event(message.name,message.value);}return;}
+  if(message.type==='serviceEvent'){if(message.name==='editor.state'){const editor=message.value.editors?.find(e=>e.active)||message.value.editors?.[0];if(editor)active={path:editor.path,text:editor.text,language:editor.language,dirty:editor.dirty};}for(const b of bridges.values()){b.uiEvent?.(message.name,message.value);b.services?.event(message.name,message.value);}return;}
   queue=queue.then(async()=>{let m;try{m=JSON.parse(line);const result=await request(m);const text=JSON.stringify({id:m.id,result},(_,v)=>v instanceof Uint32Array?[...v]:v);if(Buffer.byteLength(text)>2000000)throw Error('Respuesta de extensión demasiado grande.');write(text+'\n');}catch(error){console.error(error.stack||error.message);write(JSON.stringify({id:m?.id,error:error.message})+'\n');}});
 });

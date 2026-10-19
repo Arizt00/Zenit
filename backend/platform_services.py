@@ -224,6 +224,8 @@ class PlatformServices:
         if path=='/binary/save':return self.binary_tools.save(body)
         if path=='/binary/build':return self.binary_tools.build(body)
         if path=='/binary/finish':return self.binary_tools.finish(body)
+        if path=='/binary/inspect':return self.binary_tools.inspect(body)
+        if path=='/binary/compare':return self.binary_tools.compare(body)
         if path=='/team/start':return self.team.start(ws,body)
         if path=='/team/join':return self.team.join(ws,body.get('invitation',''))
         if path=='/team/stop':return self.team.stop()

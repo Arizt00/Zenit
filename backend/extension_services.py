@@ -336,7 +336,7 @@ class ExtensionServices:
                     if documents and p not in resets:
                         doc=next((d for d in documents if file_path(d['uri'])==p),None)
                         if doc:
-                            if cached and cached['text']!=doc['text']:raise ValueError('El archivo cambió en otra ventana.')
+                            if cached and cached['text'].replace('\r\n','\n').replace('\r','\n')!=doc['text'].replace('\r\n','\n').replace('\r','\n'):raise ValueError('El archivo cambió en otra ventana.')
                             text[p]=doc['text']
                     original[p]=text[p]
                 return text[p]

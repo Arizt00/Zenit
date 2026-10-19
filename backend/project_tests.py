@@ -7,6 +7,16 @@ from .preferences import atomic_json
 
 class ProjectTests:
     def __init__(self,features):self.features=features;self.runs={};self.lock=threading.RLock()
+    @staticmethod
+    def source_hashes(ws):
+        hashes={};budget=8*1024**2
+        for name in ws.files():
+            file=ws.resolve(name)
+            if file.suffix.lower() not in ('.py','.rs','.c','.cpp','.h','.hpp','.nc','.n','.toml') or file.stat().st_size>min(1000000,budget):continue
+            try:text=file.read_text(encoding='utf-8-sig').replace('\r\n','\n')
+            except (OSError,UnicodeError):continue
+            raw=text.encode();budget-=len(raw);hashes[name]=hashlib.sha256(raw).hexdigest()
+        return hashes
     def discover(self,ws):
         files=[];frameworks=[{'id':'unittest','label':'Python · unittest'},{'id':'pytest','label':'Python · pytest (requiere el paquete)'}]
         if ws.resolve('Cargo.toml',must_exist=False).is_file():frameworks.append({'id':'cargo','label':'Rust · Cargo'})
@@ -63,6 +73,7 @@ class ProjectTests:
                 if len(self.runs)<20:break
                 if not self.active(self.runs[old]):self.runs.pop(old)
             identity=uuid.uuid4().hex;folder=ws.private_dir('testing/'+identity);output=folder/'results.json';plan=self.plan(ws,body,output)
+            sources=self.source_hashes(ws)
             record={'id':identity,'workspace':str(ws.root),'plan':plan,'request':request,'context':context,'created':time.time(),'jobs':[],'processes':[],'result':None,'folder':folder,'scheduling':True}
             self.runs[identity]=record
         dependencies=[]
@@ -77,6 +88,7 @@ class ProjectTests:
                         if job.code:raise ValueError('La preparación de pruebas falló. '+job.output[-2000:])
                         return {'process':job.id,'code':job.code}
                     result=self.read_result(ws,plan,output,job)
+                    result['sourceHashes']=sources;current_sources=self.source_hashes(ws);result['sourcesChanged']=sorted(name for name in set(sources)|set(current_sources) if sources.get(name)!=current_sources.get(name))
                     if context:
                         changed=[]
                         for name,expected in context.get('expected',{}).items():

@@ -47,4 +47,15 @@ class PortabilityTests(unittest.TestCase):
             with self.assertRaises(ValueError):p.inspect(ws,path.name)
         self.assertFalse((self.base/'outside').exists());self.assertFalse(self.app.runner.jobs)
 
+    def test_qcow_export_restores_an_independent_disk_in_another_project(self):
+        t=self.app.features.tern;p=t.portability;ws=self.app.workspace;event=threading.Event();base=self.app.features.machines.vm_base()
+        if not base.get('qimg') or not base.get('qemu'):self.skipTest('QEMU unavailable')
+        image=self.base/'tiny-base.qcow2';subprocess.run([base['qimg'],'create','-f','qcow2',str(image),'4M'],check=True,capture_output=True,timeout=15,creationflags=0x08000000 if os.name=='nt' else 0)
+        with patch.object(self.app.features.machines,'vm_base',return_value={**base,'image':str(image)}):
+            identity=t.create(ws,{'kind':'arch','name':'Portable disk fixture'},event)['environment'];t.save(ws,identity,'machine.tern');result=p.export(ws,{'file':'machine.tern'},event);self.assertTrue(result['report']['complete'],result)
+        other=self.base/'other-vm-project';other.mkdir();shutil.copy2(self.project/result['file'],other/result['file']);second=Application(ROOT,other,data_dir=self.base/'vm-profile');second.workspace.trusted=True
+        try:
+            restored=second.features.tern.portability.rebuild(second.workspace,{'file':result['file'],'consent':True},event);disk=second.features.tern.directory(second.workspace,restored['environment'])/'disk.qcow2';info=json.loads(subprocess.check_output([base['qimg'],'info','--output=json',str(disk)],timeout=15,creationflags=0x08000000 if os.name=='nt' else 0));self.assertNotIn('backing-filename',info);self.assertEqual(info['format'],'qcow2');self.assertTrue(disk.with_name('seed.iso').is_file());self.assertNotEqual(identity,restored['environment'])
+        finally:second.features.shutdown();second.runner.shutdown()
+
 if __name__=='__main__':unittest.main()

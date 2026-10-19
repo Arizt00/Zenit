@@ -28,7 +28,7 @@ class DebugManager:
         state['stepOutSupported']=not state['preparing'] and type(self.current).__name__!='JavaDebugger'
         with self.lock:
             if state.get('status')=='paused':
-                evidence={k:state.get(k) for k in ('path','line','variables','stack')}
+                evidence={k:state.get(k) for k in ('path','line','variables','registers','stack')}
                 fingerprint=hashlib.sha256(json.dumps(evidence,sort_keys=True).encode()).hexdigest()
                 if fingerprint!=self.pause_fingerprint:
                     self.pause_sequence+=1;self.pause_history.append({'id':self.pause_sequence,'captured':time.time(),**evidence})
@@ -46,7 +46,7 @@ class DebugManager:
         with self.lock:
             current=self.current;state=self.snapshot()
             if state['status']!='paused':raise ValueError('Pause execution before inspecting the machine.')
-            if not state['machineCapabilities'].get(operation) or type(current) is not ProtocolDebugger:
+            if not state['machineCapabilities'].get(operation) or not isinstance(current,ProtocolDebugger):
                 raise ValueError('This adapter does not support '+operation+'. Choose a native DAP adapter with this capability.')
         args={'memoryReference':reference.strip()}
         if operation=='memory':args['count']=count
@@ -63,7 +63,7 @@ class DebugManager:
         else:
             items=result.get('instructions',[])
             if not isinstance(items,list) or len(items)>count:raise ValueError('The adapter exceeded the requested instruction range.')
-        return {'operation':operation,'reference':reference,'result':result}
+        return {'operation':operation,'reference':reference,'pause':pause,'result':result}
     def input(self,text):
         if not isinstance(text,str) or len(text)>65536:raise ValueError('Entrada no válida.')
         if isinstance(self.current,PythonDebugger):return self.current.input(text)
