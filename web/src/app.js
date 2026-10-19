@@ -591,7 +591,8 @@ function setupEvents(){
       const first=list[0],last=list.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
     }
     const control=event.ctrlKey||event.metaKey;const key=event.key.toLowerCase();let action;
-    if(control&&event.altKey&&['1','2','3'].includes(key))action=['theme-day','theme-dark','theme-forest'][+key-1];
+    const themeDigit=['1','2','3'].includes(key)?key:/^Digit[123]$/.test(event.code)?event.code.slice(-1):null;
+    if(control&&event.altKey&&!event.getModifierState('AltGraph')&&themeDigit)action=['theme-day','theme-dark','theme-forest'][+themeDigit-1];
     else if(control&&event.altKey&&key==='b')action='collapse-right';
     else if(control&&event.altKey&&key==='n')action='toggle-rail';
     else if(control&&event.altKey&&key==='l')action='lantern';
