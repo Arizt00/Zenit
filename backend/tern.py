@@ -17,6 +17,8 @@ class Tern:
         self.sessions = {}
         self.lock = threading.RLock()
         self.errors = []
+        from .tern_portability import TernPortability
+        self.portability=TernPortability(self)
 
     def directory(self, ws, identity):
         if not isinstance(identity, str) or not re.fullmatch('[a-f0-9]{32}', identity): raise ValueError('Invalid environment identity.')
@@ -45,7 +47,7 @@ class Tern:
         state = self.features.machines.snapshot()
         return {'sessions': sessions, 'saved': [p.name for p in ws.root.glob('*.tern') if p.is_file() and not p.is_symlink()][:100],
                 'python': bool(self.features.python_packages.base()), 'vm': state['templates'][0]['available'],
-                'errors': self.errors[-5:]}
+                'bundles':[p.name for p in ws.root.glob('*.tern.zip') if p.is_file() and not p.is_symlink()][:100],'errors': self.errors[-5:]}
 
     def create(self, ws, body, event):
         if not ws.trusted: raise PermissionError('Trust this workspace before creating an environment.')
@@ -141,21 +143,20 @@ class Tern:
         session = self.get(ws, identity)
         if not ws.trusted: raise PermissionError('Trust this workspace before saving an environment.')
         if not isinstance(filename, str) or not re.fullmatch(r'[\w -]{1,80}\.tern', filename): raise ValueError('Use a filename such as experiment.tern in the workspace root.')
-        if session['saved'] == filename: return {'file': filename}
-        descriptor = {'schema': 1, 'type': 'zenit-environment', 'id': identity, 'kind': session['kind'], 'name': session['name'], 'created': session['created']}
-        if session['kind'] == 'arch': descriptor['resources'] = session.get('resources', self.resources({}))
-        else: descriptor['inherit'] = session.get('inherit', True)
-        # create=True never replaces an existing workspace file.
-        ws.save(filename, json.dumps(descriptor, ensure_ascii=False, indent=2) + '\n', None, create=True)
+        descriptor = self.portability.describe(ws,session)
+        # Only a descriptor already owned by this open session can be refreshed.
+        previous=ws.read(filename)['revision'] if session['saved']==filename else None
+        ws.save(filename, json.dumps(descriptor, ensure_ascii=False, indent=2) + '\n', previous, create=session['saved']!=filename)
         session['saved'] = filename
         return {'file': filename}
 
     def reopen(self, ws, filename):
         if not ws.trusted: raise PermissionError('Trust this workspace before restoring an environment.')
         path = ws.resolve(filename)
-        if path.suffix != '.tern' or path.stat().st_size > 16384: raise ValueError('Invalid .tern descriptor.')
+        if path.suffix != '.tern' or path.stat().st_size > 1000000: raise ValueError('Invalid .tern descriptor.')
         data = json.loads(path.read_text(encoding='utf-8'))
-        if not isinstance(data, dict) or data.get('schema') != 1 or data.get('type') != 'zenit-environment': raise ValueError('Unsupported .tern format.')
+        if not isinstance(data, dict) or data.get('schema') not in (1,2) or data.get('type') != 'zenit-environment': raise ValueError('Unsupported .tern format.')
+        if data['schema']==2:self.portability.validate(data)
         identity = data.get('id'); directory, record = self.owned(ws, identity)
         if data.get('kind') not in ('python', 'arch') or data['kind'] != record.get('kind'): raise ValueError('Environment type does not match its files.')
         with self.lock:
@@ -169,7 +170,7 @@ class Tern:
             if not all((directory / file).is_file() and not (directory / file).is_symlink() for file in ('disk.qcow2', 'seed.iso')): raise ValueError('The saved VM disk or seed is missing.')
             session['profile'] = {'id': identity, 'name': session['name'], 'type': 'arch', 'disk': str(directory / 'disk.qcow2'), 'seed': str(directory / 'seed.iso'), **session['resources']}
         elif not self.python(directory).is_file(): raise ValueError('The Python environment files are missing.')
-        else: session['inherit'] = data.get('inherit', True) is True
+        else: session['inherit'] = data.get('sourceInherit',data.get('inherit', True)) is True
         with self.lock: self.sessions[identity] = session
         return {'environment': identity}
 

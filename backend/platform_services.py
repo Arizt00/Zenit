@@ -139,6 +139,7 @@ class PlatformServices:
         if path=='/execution/targets':return self.execution.inventory(self.app.workspace,q('refresh')=='1')
         if path=='/sdk':return self.sdk.status()
         if path=='/operations':return self.hilo.snapshot(self.app.workspace.root)
+        if path=='/operations/resources':self._trusted();return self.hilo.resources(self.app.workspace.root)
         if path=='/connections':return {'connections':self.connections.inventory()}
         if path=='/accounts/extensions':return self.extension_accounts.snapshot()
         if path=='/binary/info':return self.binary_tools.info(q('path'))
@@ -147,6 +148,7 @@ class PlatformServices:
         if path=='/hilo':return self.hilo.snapshot(self.app.workspace.root)
         if path=='/hilo/connections':return {'connections':self.connections.inventory()}
         if path=='/lantern/environments':return self.tern.snapshot(self.app.workspace)
+        if path=='/lantern/environments/inspect':self._trusted();return self.tern.portability.inspect(self.app.workspace,q('file'))
         if path=='/python/packages':return self.python_packages.status(self.app.workspace)
         if path=='/ai/memory':
             key=self.ai.memory.key(str(self.app.workspace.root),q('path'),q('provider'))
@@ -241,6 +243,11 @@ class PlatformServices:
             job=next((j for j in self.hilo.snapshot(ws.root)['jobs'] if j['id']==body.get('id')),None)
             if not job:raise ValueError('Task is not in this workspace.')
             return self.hilo.cancel(body['id'])
+        if path=='/operations/priority':
+            self._trusted()
+            if not any(j['id']==body.get('id') for j in self.hilo.snapshot(ws.root)['jobs']):raise ValueError('La tarea no pertenece a este proyecto.')
+            return self.hilo.prioritize(body['id'],body.get('priority'))
+        if path=='/operations/clear':return self.hilo.clear_finished(ws.root)
         if path in ('/hilo/connect','/connections/open'):return self.connections.launch(ws,body)
         if path=='/machines/base':self._trusted();return self.machines.configure_base(body.get('directory'))
         if path.startswith('/lantern/environments/'):
@@ -248,6 +255,8 @@ class PlatformServices:
             if action=='create':return self.hilo.submit('Lantern · create environment',lambda event:self.tern.create(ws,body,event),workspace=ws.root,key='tern-create:'+str(ws.root))
             if action=='restore':return self.tern.reopen(ws,body.get('file',''))
             if action=='save':return self.tern.save(ws,body.get('id'),body.get('file'))
+            if action in ('export','rebuild'):
+                return self.hilo.submit('Lantern · '+action,lambda event:getattr(self.tern.portability,action)(ws,body,event),workspace=ws.root,key='tern-portable:'+str(ws.root))
             if action=='activate':return self.tern.activate(ws,body.get('id'))
             if action in ('console','stop'):
                 return self.hilo.submit('Lantern · '+action,lambda event:getattr(self.tern,action)(ws,body.get('id')),workspace=ws.root,key='tern:'+str(body.get('id')),priority=0)

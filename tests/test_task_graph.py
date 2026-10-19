@@ -32,4 +32,13 @@ class TaskGraphTests(unittest.TestCase):
    with self.assertRaises(ValueError):hilo.submit('missing',lambda e:None,depends=['missing'])
    with self.assertRaises(ValueError):hilo.submit('priority',lambda e:None,priority=-100)
   finally:hilo.shutdown()
+ def test_pending_priorities_reorder_actual_ready_queue(self):
+  hilo=Hilo(None);gate=threading.Event();started=threading.Event();order=[]
+  try:
+   hilo.submit('gate',lambda e:(started.set(),gate.wait(3)),workspace='one');self.assertTrue(started.wait(2))
+   first=hilo.submit('first',lambda e:order.append('first'),workspace='one',priority=0)
+   second=hilo.submit('second',lambda e:order.append('second'),workspace='one',priority=20)
+   hilo.prioritize(second['job'],-20);gate.set();wait(hilo,first['job']);self.assertEqual(order,['second','first'])
+   with self.assertRaises(ValueError):hilo.prioritize(first['job'],0)
+  finally:gate.set();hilo.shutdown()
 if __name__=='__main__':unittest.main()

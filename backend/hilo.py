@@ -111,6 +111,37 @@ class Hilo(Kernel):
                     job['stage'] = str(stage)[:160]
                     break
 
+    def prioritize(self,identity,priority):
+        import heapq
+        if type(priority) is not int or not -20<=priority<=20:raise ValueError('Prioridad inválida.')
+        with self.lock:
+            job=self.jobs.get(identity)
+            if not job or job['state']!='queued':raise ValueError('Solo puede cambiarse la prioridad de una tarea en cola.')
+            job['priority']=priority
+            with self.queue.mutex:
+                self.queue.queue=[(priority if entry[2]==identity else entry[0],*entry[1:]) for entry in self.queue.queue]
+                heapq.heapify(self.queue.queue)
+        return {'priority':priority}
+
+    def resources(self,workspace):
+        """Read our process tree only, on demand while the task center is visible."""
+        ps=getattr(self.features.hardware,'ps',None);execution=[];runner=self.features.app.runner
+        def measure(pid):
+            if not ps:return None
+            try:process=ps.Process(pid);processes=[process,*process.children(recursive=True)]
+            except ps.Error:return None
+            cpu=0;rss=0;count=0
+            for child in processes[:256]:
+                try:times=child.cpu_times();cpu+=times.user+times.system;rss+=child.memory_info().rss;count+=1
+                except ps.Error:pass
+            return {'cpuSeconds':round(cpu,3),'rssBytes':rss,'processes':count}
+        with runner.lock:
+            for job in runner.jobs.values():
+                if str(job.cwd)!=str(workspace):continue
+                with job.lock:
+                    process=job.process;execution.append({'id':job.id,'label':Path(job.commands[-1][0]).name if job.commands and isinstance(job.commands[-1],list) else 'Ejecución','state':'cancelled' if job.cancelled else 'failed' if job.done and job.code else 'done' if job.done else 'queued' if getattr(job,'queued',False) else 'running','code':job.code,'resources':measure(process.pid) if process and process.poll() is None else None})
+        return {'sampledAt':time.time(),'application':measure(os.getpid()),'execution':execution,'scope':'Zénit y sus procesos hijos; RSS sumada, CPU acumulada en segundos','available':ps is not None}
+
     def cancel_workspace(self, workspace):
         for identity, job in list(self.jobs.items()):
             if job['workspace'] == str(workspace): self.cancel(identity)

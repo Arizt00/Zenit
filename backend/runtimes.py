@@ -181,6 +181,10 @@ class Runtimes:
                 if not debug:commands.append([str(target)])
             elif not debug:commands=[[ncc,'run',str(file)]]
         result={'language':lang,'commands':commands,'target':target,'file':file,'cwd':ws.root}
+        if not check and lang in ('c','cpp') and commands:
+            from .build_reuse import BuildReuse,BuildCommands
+            depfile=folder/'build-inputs.d';commands[0][1:1]=['-MD','-MF',str(depfile),'-Wl,-t']
+            result['commands']=BuildCommands(commands,BuildReuse(ws,file,target,depfile,commands[0]))
         if not check and lang in ('c','cpp','rust','nc') and (lang!='nc' or file.suffix.lower() in ('.n','.nc')):
             from .native_project import prepare_native_project
             result['artifacts']=prepare_native_project(ws,file,lang,target,commands if debug else commands[:-1])

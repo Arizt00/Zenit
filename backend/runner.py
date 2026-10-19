@@ -72,10 +72,18 @@ class Job:
 
     def run(self):
         started = time.monotonic()
+        reuse=getattr(self.commands,'build_reuse',None);reuse_locked=False;self.reusedBuild=False
         try:
-            for command in self.commands:
+            for index,command in enumerate(self.commands):
                 if self.cancelled:
                     break
+                cache=reuse if index==0 else None
+                if cache:
+                    while not self.cancelled:
+                        if cache.lock.acquire(timeout=.1):reuse_locked=True;break
+                    if self.cancelled:break
+                    if cache.hit(self.environment()):
+                        self.reusedBuild=True;self.code=0;self.append('Compilación reutilizada: entradas y artefactos verificados.\n');cache.lock.release();reuse_locked=False;continue
                 shown = command if isinstance(command, str) else shlex.join(command)
                 self.append(f"$ {shown}\n")
                 opts = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {"start_new_session": True}
@@ -83,16 +91,21 @@ class Job:
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE, env=self.environment(), **opts)
                 if self.cancelled:self.cancel()
                 stream = self.process.stdout
-                def read_output(stream=stream):
+                def read_output(stream=stream,cache=cache):
                     import codecs
-                    decoder = codecs.getincrementaldecoder("utf-8")("replace")
+                    decoder = codecs.getincrementaldecoder("utf-8")("replace");pending=''
                     with stream:
                         while True:
                             chunk = stream.read1(4096)
                             if not chunk:
-                                self.append(decoder.decode(b"", final=True))
+                                tail=decoder.decode(b"", final=True);self.append(cache.output(pending+tail) if cache else tail)
                                 break
-                            self.append(decoder.decode(chunk))
+                            text=decoder.decode(chunk)
+                            if cache:
+                                pending+=text
+                                while '\n' in pending:
+                                    line,pending=pending.split('\n',1);self.append(cache.output(line+'\n'))
+                            else:self.append(text)
                 reader = threading.Thread(target=read_output, daemon=True)
                 reader.start()
                 while self.process.poll() is None:
@@ -105,6 +118,9 @@ class Job:
                 self.code = self.process.wait()
                 self.process.stdin.close()
                 reader.join(timeout=2)
+                if cache:
+                    if not self.code and not self.cancelled:cache.save(self.environment())
+                    cache.lock.release();reuse_locked=False
                 if self.code:
                     break
             if self.cancelled:
@@ -116,6 +132,7 @@ class Job:
             self.code = -1
             self.append(f"\nCannot run task: {exc}\n")
         finally:
+            if reuse_locked:reuse.lock.release()
             self.done = True
 
 
