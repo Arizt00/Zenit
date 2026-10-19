@@ -653,7 +653,7 @@ async function start(){
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
     new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
     installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,saveAs:path=>previewUI.saveAs(path),openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
-    teamUI=new TeamUI({platform:platformUI,editor,modal,closeModal,ensureTrust});commandDefinitions.push(['team','coco','Co-Code: compartir archivo o unirme','']);
+    teamUI=new TeamUI({platform:platformUI,editor,modal,closeModal,ensureTrust,refreshTree});commandDefinitions.push(['team','coco','Co-Code: compartir archivo o unirme','']);
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
     previewUI.tabControls=installTabControls({editor,openFile,activateFile,closeFile,safe:fn=>guard(fn)()});
     installDiagnostics();

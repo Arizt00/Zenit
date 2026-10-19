@@ -15,7 +15,7 @@ export class CoCoProjectUI{
     if(response.acceptedUpdates===false)for(const [path,updates] of sent)team.pending.set(path,[...updates,...(team.pending.get(path)||[])]);
     if(response.self?.id)team.peer=response.self.id;
     this.metadata=new Map((response.documents||[]).map(x=>[x.path,x.id]));
-    if(response.project?.files){this.tree=response.project.files;this.treeVersion=response.project.version;}
+    if(response.project?.files){const changed=this.treeVersion!==response.project.version;this.tree=response.project.files;this.treeVersion=response.project.version;if(changed&&team.state.hosting)team.host.platform.safe(()=>team.host.refreshTree?.());}
     for(const item of response.documents||[]){
       const entry=[...team.files.values()].find(x=>x.id===item.id);if(!entry||entry.path===item.path)continue;
       const editor=team.host.editor,old=entry.local,record=editor.models.get(old),active=editor.current===old;
