@@ -54,6 +54,15 @@ class ReleaseUpdateTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,'demasiado larga'):Installer(payload=payload,target=target).preflight()
    self.assertFalse(target.exists())
 
+ @unittest.skipUnless(os.name=='nt','Windows rollback path-budget preflight')
+ def test_reinstall_path_budget_includes_the_previous_payload(self):
+  from installer import Installer
+  from backend.version import VERSION,REVISION
+  with tempfile.TemporaryDirectory() as tmp:
+   base=Path(tmp);payload=base/'payload';payload.mkdir();(payload/'zenit.exe').write_bytes(b'fixture');(payload/('p'*90)).write_bytes(b'data');target=base/('t'*(145-len(str(base))-1));(target/f'app-{VERSION}-R{REVISION}').mkdir(parents=True)
+   self.assertLess(len(str(target))+19+90,260)
+   with self.assertRaisesRegex(ValueError,'demasiado larga'):Installer(payload=payload,target=target).preflight()
+
 class MachineLibraryTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.base=Path(self.temp.name);self.project=self.base/'project';self.project.mkdir();self.app=Application(ROOT,self.project,data_dir=self.base/'profile');self.app.workspace.trusted=True;self.library=self.app.features.machine_images;self.ws=self.app.workspace;self.event=threading.Event();self.qimg=self.app.features.machines.vm_base().get('qimg')
