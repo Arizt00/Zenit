@@ -6,6 +6,8 @@ Esta entrega amplía los flujos de proyecto y unifica las superficies de ayuda d
 
 Los paneles de documentación, avisos de acciones y menús contextuales tienen una superficie con 35 % de transparencia y texto opaco. La referencia muestra el símbolo, lenguaje, archivo y posición; ajusta su altura al contenido y permanece dentro de la ventana. La documentación larga conserva acceso a todo el texto. Incluye copia y preparación de una consulta en Melody, sin enviar automáticamente el contenido. Los diagnósticos mantienen su tarjeta independiente.
 
+La interfaz y Monaco componen los fondos de los temas de extensión de la misma forma. Se corrige el contraste insuficiente de números de línea, texto de campos, ayudas y sugerencias; los colores de sintaxis legibles de cada tema se conservan. Las cabeceras utilizan su propio fondo y primer plano declarados. La prueba con los paquetes instalados verifica 39 variantes, cambios de fuente, ventanas separadas y recarga sin perder el búfer pendiente.
+
 ## Proyecto y Melody
 
 El botón Proyecto de la barra de estado y la paleta abren un espacio con herramientas detectadas, plantillas revisables y acciones Comprobar, Compilar y Ejecutar. Las plantillas cubren Python con pruebas, C y C++ con cabecera y CMake/CTest, Java con Maven, NASM x86-64 y paquetes creados con el compilador nC real.

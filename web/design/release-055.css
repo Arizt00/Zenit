@@ -45,6 +45,8 @@
 #extension-results[data-view=cards] .extension-card-actions{margin-top:auto;min-height:40px;}
 #extension-results[data-view=cards] .extension-card-tags{min-height:30px;align-content:start;}
 .extension-card .extension-verification{align-self:flex-start;}
+:root[data-extension-theme] .topbar{background:var(--header);}
+:root[data-extension-theme] :is(.panel-heading,.terminal-toolbar,.platform-header,.native-window-heading,.editor-tabbar){background:var(--header);color:var(--chrome-text);--secondary:var(--chrome-secondary);--muted:var(--chrome-secondary);}
 .release-workspace{max-width:1120px;margin:0 auto;padding:28px;display:grid;gap:22px;}
 .release-workspace h3{font-size:25px;letter-spacing:-.6px;margin:0 0 10px;}.release-workspace p{line-height:1.65;color:var(--secondary);}
 .release-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}

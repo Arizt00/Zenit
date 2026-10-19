@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {themePalette,contrastRatio,applyShellTheme} from '../web/src/extension-theme.js';
+import {themePalette,contrastRatio,applyShellTheme,editorThemeColors} from '../web/src/extension-theme.js';
 test('An extension cannot make shell labels disappear through alpha or low contrast',()=>{
  const {palette:p}=themePalette({uiTheme:'vs',data:{colors:{'editor.background':'#ffffff','editor.foreground':'#fafaff11','sideBar.foreground':'#fafaff','descriptionForeground':'#eeeaff','sideBar.background':'#fff1','terminal.foreground':'#ffffff','list.activeSelectionBackground':'#7744cc','list.activeSelectionForeground':'#aa77dd'},tokenColors:[{scope:'keyword',settings:{foreground:'#fffefe'}}]}});
  for(const key of ['text','secondary','muted'])assert.ok(contrastRatio(p[key],p.surface)>=4.5,key);
@@ -22,4 +22,16 @@ test('Each field and chrome foreground uses its actual theme surface, including 
 test('Removing an external theme restores the requested native theme and removes only its tokens',()=>{
  const values=new Map([['--unrelated','stable']]),root={dataset:{theme:'forest'},style:{getPropertyValue:key=>values.get(key)||'',setProperty:(key,value)=>values.set(key,value),removeProperty:key=>values.delete(key)}};
  applyShellTheme({id:'one',uiTheme:'vs',data:{}},root,'forest');assert.equal(root.dataset.theme,'day');applyShellTheme(null,root,'forest');assert.equal(root.dataset.theme,'forest');assert.equal(root.dataset.extensionTheme,undefined);assert.deepEqual([...values],[['--unrelated','stable']]);
+});
+
+test('Monaco composites the same editor surface and repairs faint line numbers and widget text',()=>{
+ const theme={uiTheme:'vs-dark',data:{colors:{'editor.background':'#232634cc','editor.foreground':'#CED1E3','editorLineNumber.foreground':'#474D6Cff','editorLineNumber.activeForeground':'#676E95','input.background':'#333747','input.placeholderForeground':'#CED1E366','editorHoverWidget.background':'#ffffff08','editorHoverWidget.foreground':'#131313','editorSuggestWidget.selectedBackground':'#373D53ff','editorSuggestWidget.selectedForeground':'#383e54'},tokenColors:[{scope:'keyword',settings:{foreground:'#c1a0ff'}}]}};
+ const p=themePalette(theme).palette,c=editorThemeColors(theme);assert.equal(c['editor.background'],p.editor);assert.equal(c['editor.foreground'],p['editor-text']);
+ for(const [fg,bg] of [['editorLineNumber.foreground','editorGutter.background'],['editorLineNumber.activeForeground','editorGutter.background'],['input.placeholderForeground','input.background'],['editorHoverWidget.foreground','editorHoverWidget.background'],['editorSuggestWidget.selectedForeground','editorSuggestWidget.selectedBackground']])assert.ok(contrastRatio(c[fg],c[bg])>=4.5,fg);
+ assert.equal(theme.data.tokenColors[0].settings.foreground,'#c1a0ff');assert.equal(theme.data.colors['editorLineNumber.foreground'],'#474D6Cff');
+});
+
+test('Header and rail honour their own declared foregrounds instead of the editor foreground',()=>{
+ const p=themePalette({uiTheme:'vs-dark',data:{colors:{'editor.background':'#131313','editor.foreground':'#dddddd','titleBar.activeBackground':'#eeeeee','titleBar.activeForeground':'#1a1a1a','activityBar.background':'#181818','activityBar.foreground':'#aad6ee'}}}).palette;
+ assert.equal(p['chrome-text'],'#1a1a1a');assert.equal(p['rail-text'],'#aad6ee');assert.ok(contrastRatio(p['chrome-text'],p.header)>=4.5);
 });

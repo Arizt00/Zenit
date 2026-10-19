@@ -1,7 +1,7 @@
 import {installMonacoOverlays} from './monaco-overlays.js';
 import {installDiagnosticPanels} from './diagnostic-panel.js';
 import {waitForNativeBridge} from './native-ready.js';
-import {themePalette} from './extension-theme.js';
+import {themePalette,editorThemeColors} from './extension-theme.js';
 import {TextMateLanguages,textMateTheme} from './textmate.js';
 import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
 import {assemblyCompletions,assemblySyntax} from './assembly-language.js';
@@ -207,7 +207,7 @@ export class LumenEditor {
     const c=name=>css.getPropertyValue('--'+name).trim();
     const interactionColors={'editor.selectionBackground':c('selection'),'editor.inactiveSelectionBackground':c('selection'),'editor.selectionHighlightBackground':c('selected'),'editor.selectionHighlightBorder':'#00000000','editor.wordHighlightBackground':c('hover'),'editor.wordHighlightStrongBackground':c('selected'),'editor.findMatchBackground':c('selection'),'editor.findMatchHighlightBackground':c('hover'),'editor.findMatchBorder':c('focus'),'minimap.selectionHighlight':c('selection')};
     const syntax=Object.fromEntries(['keyword','type','number','string','comment','function'].map(key=>[key,c('syntax-'+key)]));
-    const external=this.extensionTheme,themeColors=external?.data?.colors||{},editorBackground=external?themePalette(external).palette.editor:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
+    const external=this.extensionTheme,themeColors=external?editorThemeColors(external):{},editorBackground=external?themeColors['editor.background']:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
     const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},themeEntries(external)));
     monaco.editor.defineTheme('lumen-theme',{
       base:document.documentElement.dataset.theme==='day'?'vs':'vs-dark',inherit:true,encodedTokensColors,
@@ -243,8 +243,8 @@ export class LumenEditor {
         'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border'),...interactionColors},
     });
     if(this.extensionTheme){
-      const theme=this.extensionTheme,{colors,dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
-      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors:{...colors,...interactionColors},encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
+      const theme=this.extensionTheme,{dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
+      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors:{...themeColors,...interactionColors},encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
     }else monaco.editor.setTheme('lumen-theme');
     for(const pane of this.panes||[])pane.view?.updateOptions({'semanticHighlighting.enabled':this.extensionTheme?.data?.semanticHighlighting!==false});
   }
