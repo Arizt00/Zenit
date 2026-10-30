@@ -1,5 +1,5 @@
 """Real ESM/CJS interoperability, status/log output, and installed Prettier."""
-import io,json,tempfile,time,unittest,zipfile
+import io,json,shutil,tempfile,time,unittest,zipfile
 from pathlib import Path
 from backend.server import Application
 from backend.extension_runtime import Host
@@ -63,9 +63,9 @@ class ESMExtensionTests(unittest.TestCase):
   self.install('esm',"""import v from 'vscode';export function activate(){v.lm.registerTool('qa.sum',{invoke:async opts=>new v.LanguageModelToolResult([new v.LanguageModelTextPart(String(opts.input.a+opts.input.b))])});v.commands.registerCommand('qa.tool',()=>v.lm.invokeTool('qa.sum',{input:{a:20,b:22}}));}""")
   self.runtime.start(self.app.workspace,'qa.esm',True);self.assertEqual(self.call('qa.tool'),{'content':[{'value':'42'}]})
  def prettier(self):
-  roots=list((Path.home()/'AppData/Local/LumenStudio/extensions').glob('esbenp.*/extension'))
+  roots=[p for profile in ('Zenit','LumenStudio') for p in (Path.home()/'AppData/Local'/profile/'extensions').glob('esbenp.prettier-vscode-*/extension')]
   if not roots:self.skipTest('El paquete real de Prettier no está instalado en este equipo.')
-  root=roots[0];manifest=localized_manifest(root,'es');eid='esbenp.prettier-vscode';options={'extensionId':eid,'manifest':manifest,'extensions':[{'id':eid,'root':str(root),'manifest':manifest}],'dependencies':[],'storage':str(self.base/'storage'),'locale':'es'}
+  root=self.base/'prettier';shutil.copytree(roots[0],root);manifest=localized_manifest(root,'es');eid='esbenp.prettier-vscode';options={'extensionId':eid,'manifest':manifest,'extensions':[{'id':eid,'root':str(root),'manifest':manifest}],'dependencies':[],'storage':str(self.base/'storage'),'locale':'es'}
   self.host=Host(find_tool('node'),root,root/manifest['main'],self.app.workspace,options,self.app.features.extension_services)
  def format(self,text):
   return self.host.request({'method':'provide','kind':'format','document':{'path':'main.js','text':text,'language':'javascript','dirty':True},'options':{'tabSize':2,'insertSpaces':True}})['items']

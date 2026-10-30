@@ -11,6 +11,7 @@ import re
 import select
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import threading
@@ -65,10 +66,12 @@ def terminal_profiles():
 
 
 class TerminalSession:
-    def __init__(self,profile,cwd,project,cols=100,rows=26,environment=None):
-        self.id=uuid.uuid4().hex;self.profile=profile;self.cwd=str(cwd);self.lock=threading.RLock();self.resize_owner=''
+    def __init__(self,profile,cwd,project,cols=100,rows=26,environment=None,governor=None):
+        self.id=uuid.uuid4().hex;self.profile=profile;self.cwd=str(cwd);self.lock=threading.RLock();self.resize_owner='';self.governor=governor
         self.output='';self.start=0;self.closed=False;self.code=None;self.fd=None;self.process=None;self.win=None;self.created=time.time()
         env=child_environment();env.update(environment or {});self.decoder=codecs.getincrementaldecoder('utf-8')('replace')
+        if governor:
+            for key,value in governor.environment().items():env.setdefault(key,value)
         argv=list(profile['argv'])
         if os.name=='nt':
             try: from winpty import PtyProcess
@@ -91,6 +94,9 @@ class TerminalSession:
             finally:os.close(slave)
             self.kind='POSIX PTY'
         self.thread=threading.Thread(target=self._read,name='lumen-pty-reader',daemon=True);self.thread.start()
+        if governor:
+            pid=self.win.pid if self.win else self.process.pid
+            governor.watch(self.id,pid,lambda:self.closed,self.close,reason=lambda text:self._append('\r\n'+text+'\r\n'))
     def _append(self,text):
         with self.lock:
             self.output+=text
@@ -101,7 +107,7 @@ class TerminalSession:
             if self.win:
                 while not self.closed:
                     try: text=self.win.read(4096)
-                    except EOFError:break
+                    except (EOFError,OSError):break
                     if text:self._append(text)
                     elif not self.win.isalive():break
             else:
@@ -134,10 +140,13 @@ class TerminalSession:
         with self.lock:
             absolute=max(int(offset),self.start)
             return {'id':self.id,'data':self.output[absolute-self.start:],'offset':self.start+len(self.output),
-                'truncated':int(offset)<self.start,'closed':self.closed,'code':self.code,'kind':self.kind}
+                'truncated':int(offset)<self.start,'closed':self.closed,'code':self.code,'kind':self.kind,
+                'execution':dict(self.execution_channel.state) if getattr(self,'execution_channel',None) else None}
     def write(self,text):
         if not isinstance(text,str) or len(text)>65536:raise ValueError('Entrada de terminal demasiado grande.')
         if self.closed:return False
+        channel=getattr(self,'execution_channel',None)
+        if channel and channel.state['running']:return channel.write(text)
         try:
             if self.win:self.win.write(text)
             else:
@@ -163,9 +172,18 @@ class TerminalSession:
                 import fcntl,termios,struct
                 fcntl.ioctl(self.fd,termios.TIOCSWINSZ,struct.pack('HHHH',rows,cols,0,0))
             return True
+    def has_exited(self):
+        if self.closed:return True
+        if self.win:return not self.win.isalive()
+        return self.process is not None and self.process.poll() is not None
     def close(self):
+        # A disk-backed guest must complete its graceful shutdown hook before
+        # any generic process-tree cancellation is allowed to run.
         callback=getattr(self,'before_close',None)
         if callback and not self.closed:callback()
+        if self.governor:self.governor.cancel_tree(self.id)
+        channel=getattr(self,'execution_channel',None)
+        if channel and channel.state['running']:channel.stop()
         if self.win:
             try:self.win.terminate(force=True)
             except (OSError,EOFError):pass
@@ -177,6 +195,11 @@ class TerminalSession:
                 try:os.killpg(self.process.pid,signal.SIGKILL)
                 except OSError:pass
         self.closed=True
+        if self.win and not self.win.isalive():
+            # ConPTY can leave its bridge socket open after the child exited.
+            # Wake the reader only after process exit has been confirmed.
+            try:self.win.fileobj.shutdown(socket.SHUT_RDWR)
+            except (OSError,AttributeError):pass
         self.thread.join(timeout=2)
 
 
@@ -196,6 +219,7 @@ class TerminalManager:
             profile=next((p for p in terminal_profiles() if p['id']==profile_id),None)
             if not profile:raise ValueError('Ese perfil no está disponible en este sistema.')
             session=TerminalSession(profile,ws.root,self.project,max(20,min(int(cols),500)),max(5,min(int(rows),200)),environment=environment)
+            session.governor=getattr(self,'governor',None)
             self.sessions[session.id]=session
             self.prefs.audit('terminal.open',profile=profile_id)
             return {'id':session.id,'profile':profile,'kind':session.kind}

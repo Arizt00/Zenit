@@ -8,6 +8,7 @@ import platform
 import secrets
 import sys
 import traceback
+import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -21,17 +22,21 @@ from .version import VERSION,REVISION
 
 
 class Application:
-    def __init__(self, project: Path, workspace: Path, allow_shell=False, data_dir=None):
+    def __init__(self, project: Path, workspace: Path, allow_shell=False, data_dir=None,timings=None):
+        initialized=time.perf_counter()
+        from .startup_metrics import StartupMetrics
+        self.timings=timings or StartupMetrics(initialized)
         self.project = project
-        self.native = NativeCore(project)
-        self.workspace = Workspace(workspace, self.native)
-        self.runner = Runner(allow_shell)
+        with self.timings.phase('native-core'):self.native = NativeCore(project)
+        with self.timings.phase('workspace'):self.workspace = Workspace(workspace, self.native)
+        with self.timings.phase('runner'):self.runner = Runner(allow_shell)
         self.assistant = LocalAssistant()
         self.token = secrets.token_urlsafe(32)
-        self.features = PlatformServices(self, data_dir)
-        self.features.restore_trust()
+        with self.timings.phase('core-services'):self.features = PlatformServices(self, data_dir)
+        with self.timings.phase('workspace-trust'):self.features.restore_trust()
         from .session import remember_workspace
-        remember_workspace(self.workspace.root, self.features.prefs.directory)
+        with self.timings.phase('session-metadata'):remember_workspace(self.workspace.root, self.features.prefs.directory)
+        self.initialization_ms=round((time.perf_counter()-initialized)*1000,2)
 
     def state(self):
         return {"version": VERSION, "revision":REVISION, "desktop":bool(getattr(self,'desktop',False)), "startup":getattr(self,'startup',{}), "workspace": str(self.workspace.root), "name": self.workspace.root.name,
@@ -193,7 +198,8 @@ class Handler(BaseHTTPRequestHandler):
             if file.name=='index.html':
                 from .startup import appearance
                 initial=appearance(self.app.features.prefs,self.app.features.extensions)
-                marker=('data-theme="'+initial['base']+'" data-initial-theme="'+initial['base']+'" data-initial-extension-theme="'+html.escape(initial['extension'],quote=True)+'"').encode('utf-8')
+                density='compact' if self.app.features.prefs.get('appearance.density')=='compact' else 'comfortable'
+                marker=('data-theme="'+initial['base']+'" data-initial-theme="'+initial['base']+'" data-initial-extension-theme="'+html.escape(initial['extension'],quote=True)+'" data-density="'+density+'"').encode('utf-8')
                 raw=raw.replace(b'data-theme="day"',marker,1)
             return self.reply(raw, content_type=mime, session=file.name == "index.html")
         except Exception as exc:
@@ -206,7 +212,7 @@ class Handler(BaseHTTPRequestHandler):
             size = int(self.headers.get("Content-Length", "0"))
             # Recovery carries several bounded buffers. JSON escaping can use
             # six wire bytes per text byte; other operations keep their limit.
-            limit = 52*1024*1024 if path in ('/api/platform/workbench/session','/api/platform/workbench/spaces/save') else 3_000_000
+            limit = 52*1024*1024 if path in ('/api/platform/workbench/session','/api/platform/workbench/spaces/save') else 26*1024*1024 if path in ('/api/platform/editor/replace/preview','/api/platform/editor/search','/api/platform/lantern/start','/api/platform/lantern/buffer') else 3_000_000
             if not 0 < size <= limit:
                 raise ValueError("Tamaño de petición no válido.")
             if not self.headers.get("Content-Type", "").startswith("application/json"):
@@ -238,15 +244,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/trust":
                 return self.reply(self.app.features.trust(body.get('trusted')))
             if path == "/api/console":
-                import shlex
-                parts=shlex.split(body.get('command',''))
-                if parts and parts[0]=='run' and len(parts)==2:
-                    from pathlib import PurePosixPath
-                    target=str(PurePosixPath(body.get('cwd',''))/parts[1])
-                    plan=self.app.features.runtimes.plan(ws,target)
-                    if plan.get('preview'):return self.reply({'preview':self.app.features.preview.start(ws,target)})
-                    return self.reply(self.app.runner.start(plan['commands'],ws.root,timeout=0))
-                return self.reply(self.app.runner.console(ws, body.get("command", ""), body.get("cwd", "")))
+                from .project_console import dispatch
+                return self.reply(dispatch(self.app.features,ws,body))
             if path == "/api/task":
                 from .runtimes import language
                 ws,target=self.app.features.execution_workspace(ws,body['path'])
@@ -260,7 +259,8 @@ class Handler(BaseHTTPRequestHandler):
                 if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de interactuar con su programa.')
                 job=self.app.runner.jobs.get(body.get('id'))
                 if not job:raise ValueError('Tarea no encontrada.')
-                job.write(body.get('text'))
+                if body.get('eof') is True:job.finish_input()
+                else:job.write(body.get('text'))
                 return self.reply({'ok':True})
             if path == "/api/stop":
                 job = self.app.runner.jobs.get(body.get("id"))

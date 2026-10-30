@@ -3,11 +3,14 @@ import {escapeHTML as esc,icon} from './icons.js';
 import {ExtensionQuickInputUI} from './extension-quickinput.js';
 import {EditorDecorations} from './editor-decorations.js';
 import {sameBufferText} from './buffer-text.js';
+import {ExtensionCommentsUI} from './extension-comments.js';
+import {ExtensionNotebooks} from './extension-notebooks.js';
 
 export class ExtensionServicesUI {
   constructor(host){this.owner=crypto.randomUUID();this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
+    if(event.command==='zenit.notebook'){this.notebooksUI ||= new ExtensionNotebooks(this.host);this.notebooksUI.update(event);return;}
     const h=this.host,p=h.platform,ed=h.editor;
     if(event.command==='zenit.editor.options'){
       const model=ed.models.get(event.path)?.model,o=event.options;if(!model)return;
@@ -73,12 +76,27 @@ export class ExtensionServicesUI {
     }
     if(event.command!=='zenit.workspace.edit')return;
     const change=event.edit;
+    if(change.resourceOperationId){this.resourceOperations ||= new Set();if(this.resourceOperations.has(change.resourceOperationId))return;this.resourceOperations.add(change.resourceOperationId);if(this.resourceOperations.size>128)this.resourceOperations.delete(this.resourceOperations.values().next().value);}
+    const renamed=(change.resources||[]).filter(resource=>resource.kind==='rename');
+    const deleted=(change.resources||[]).filter(resource=>resource.kind==='delete');
+    const desktop=h.studio.desktop;
+    for(const resource of deleted)if(desktop){for(const store of [desktop.shared,desktop.remoteBuffers])for(const path of [...store.keys()])if(path===resource.path||path.startsWith(resource.path+'/'))store.delete(path);for(const path of [...desktop.pending])if(path===resource.path||path.startsWith(resource.path+'/'))desktop.pending.delete(path);}
+    for(const resource of renamed)if(desktop){
+      for(const store of [desktop.shared,desktop.remoteBuffers])for(const [path,value] of [...store])if(path===resource.oldPath||path.startsWith(resource.oldPath+'/')){store.delete(path);const next=resource.path+path.slice(resource.oldPath.length);store.set(next,{...value,path:next});}
+      for(const path of [...desktop.pending])if(path===resource.oldPath||path.startsWith(resource.oldPath+'/')){desktop.pending.delete(path);desktop.pending.add(resource.path+path.slice(resource.oldPath.length));}
+    }
     for(const resource of change.resources||[]){
       if(resource.kind==='rename')for(const path of [...ed.models.keys()])if(path===resource.oldPath||path.startsWith(resource.oldPath+'/')){
-        const old=ed.models.get(path),active=ed.current===path,text=old.model?.getValue()??old.value,next=resource.path+path.slice(resource.oldPath.length);ed.close(path);ed.open({...old,path:next,content:text},{activate:active});ed.models.get(next).savedValue=old.savedValue;
+        const old=ed.models.get(path),active=ed.current===path,text=old.model?.getValue()??old.value,next=resource.path+path.slice(resource.oldPath.length),views=(ed.panes||[]).filter(p=>old.model&&p.view.getModel()===old.model).map(p=>({view:p.view,state:p.view.saveViewState()}));
+        ed.close(path);ed.open({...old,path:next,content:text},{activate:active});const record=ed.models.get(next);record.savedValue=old.savedValue;
+        for(const {view,state} of views){view.setModel(record.model);view.restoreViewState(state);}
+        ed.paintPaneLabels?.();
       }
       if(resource.kind==='delete')for(const path of [...ed.models.keys()])if(path===resource.path||path.startsWith(resource.path+'/'))ed.close(path);
     }
+    if(renamed.length)document.dispatchEvent(new CustomEvent('zenit:files-renamed',{detail:renamed}));
+    if(deleted.length)document.dispatchEvent(new CustomEvent('zenit:files-deleted',{detail:deleted.map(row=>row.path)}));
+    if(deleted.length&&!ed.current&&ed.visiblePaths().length)ed.activate(ed.visiblePaths().at(-1));
     for(const buffer of change.buffers||[]){
       const desktop=h.studio.desktop,known=desktop?.shared.get(buffer.path);
       // Polling may already have applied this revision, followed by a local
@@ -117,7 +135,8 @@ export class ExtensionServicesUI {
   async poll(){
     if(this.disposed)return;
     try{
-      const {panels,quickinputs=[],statusItems=[],outputs=[],editorDecorations=[]}=await this.host.platform.api('/extensions/services');
+      const {panels,quickinputs=[],statusItems=[],outputs=[],editorDecorations=[],comments=[]}=await this.host.platform.api('/extensions/services');
+      this.commentsUI ||= new ExtensionCommentsUI(this.host);this.commentsUI.sync(comments);
       this.editorDecorations ||= new EditorDecorations(this.host);this.editorDecorations.sync(editorDecorations);
       this.syncTerminalLinks();
       this.status(statusItems);this.outputUI.sync(outputs);
@@ -195,5 +214,5 @@ export class ExtensionServicesUI {
   }
   show(state){for(const value of this.panels.values()){if(value.node){value.node.hidden=true;value.node.classList.remove('active');}value.tab?.classList.remove('active');}this.host.platform.closePage();state.node.hidden=false;state.node.classList.add('active');state.tab.classList.add('active');document.documentElement.dataset.editorCovered='true';}
   async receive(event){const id=event.data?.zenitWebview,state=this.panels.get(id);if(!state||event.source!==state.frame?.contentWindow)return;if(event.data.stateUpdate){state.savedState=event.data.state;return;}try{await this.host.platform.api('/extensions/runtime/request',{id:state.panel.extension,method:'webviewMessage',panel:id,message:event.data.message});}catch(error){this.host.notify(error.message,'error');}}
-  dispose(){this.disposed=true;this.editorDecorations?.dispose();for(const value of this.terminalRegistrations?.values()||[])value.provider.dispose();this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
+  dispose(){this.disposed=true;this.commentsUI?.dispose();this.editorDecorations?.dispose();for(const value of this.terminalRegistrations?.values()||[])value.provider.dispose();this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
 }

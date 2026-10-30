@@ -10,6 +10,7 @@ export class MelodyStream {
   }
   update(value){
     if(this.disposed)return;
+    if(value===this.target&&(this.frame||this.shown>=value.length||document.hidden))return;
     if(!value.startsWith(this.target)){this.node.data='';this.shown=0;this.credit=0;}
     this.target=value;
     if(!this.frame&&!document.hidden){this.lastPaint=performance.now();this.frame=requestAnimationFrame(now=>this.paint(now));}

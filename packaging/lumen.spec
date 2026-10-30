@@ -5,6 +5,7 @@ import sys
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 ROOT=Path(SPECPATH).parent
 hidden=['lumen','backend.server','backend.platform_services','backend.preferences','backend.extensions','backend.terminals','backend.hardware','backend.toolchains','backend.lsp','backend.providers','backend.studio','backend.debugger','backend.debug_worker','psutil','keyring.backends']
+hidden+=collect_submodules('backend')+['cProfile','pstats']
 if sys.platform=='win32':hidden+=['winpty']
 if sys.platform.startswith('linux'):hidden+=['qtpy','PySide6.QtWebEngineWidgets','PySide6.QtWebEngineCore','PySide6.QtWebChannel']
 for package in ('webview','keyring','copilot','pycrdt'):
@@ -13,13 +14,16 @@ data=[(str(ROOT/'web'),'web'),(str(ROOT/'licenses'),'licenses'),(str(ROOT/'READM
 data.append((str(ROOT/'tools/asm_worker.py'),'tools'))
 data.append((str(ROOT/'tools/check_coco_station.py'),'tools'))
 data.append((str(ROOT/'tools/simulators'),'tools/simulators'))
-for name in ('debug_worker.py','lantern_memory.py','lantern_lens.py','native_package_worker.py','test_bridge.py'):data.append((str(ROOT/'backend'/name),'backend'))
+for name in ('debug_worker.py','lantern_memory.py','lantern_lens.py','native_package_worker.py','test_bridge.py','nc_test_bridge.py','nc_project_bridge.py'):data.append((str(ROOT/'backend'/name),'backend'))
 data.append((str(ROOT/'examples/asm/x86_64_sum.s'),'examples/asm'))
 data.append((str(ROOT/'tools/machine_console.py'),'tools'))
+data.append((str(ROOT/'tools/measure_startup.py'),'tools'))
 data.append((str(ROOT/'tools/machine_seed.py'),'tools'))
 # Package documentation deliberately: historical QA can contain local user paths.
 data.append((str(ROOT/'docs/PREVIEW_054_R16.md'),'docs'))
 data.append((str(ROOT/'config/extension-compatibility.json'),'config'))
+data.append((str(ROOT/'config/nc-language-reference.json'),'config'))
+data.append((str(ROOT/'docs/MEASURED_STARTUP_LANGUAGES.md'),'docs'))
 data.append((str(ROOT/'docs/PREVIEW_054_R17.md'),'docs'))
 data.append((str(ROOT/'docs/RELEASE_055.md'),'docs'))
 data.append((str(ROOT/'backend/extension_views.cjs'),'backend'))
@@ -28,6 +32,7 @@ data.append((str(ROOT/'backend/extension_quickinput.cjs'),'backend'))
 data.append((str(ROOT/'backend/extension_editors.cjs'),'backend'))
 data.append((str(ROOT/'backend/vendor'),'backend/vendor'))
 data.append((str(ROOT/'dist/integrations'),'integrations'))
+data.extend((str(ROOT/'integrations/nc-language'/name),'integrations/nc-language') for name in ('project-rename.cjs','scoped-navigation.cjs'))
 # Extension API modules are loaded with require at runtime, not Python imports.
 # Keep every module in the frozen app so newly added services cannot be omitted.
 already={Path(source).name for source,destination in data if destination=='backend'}

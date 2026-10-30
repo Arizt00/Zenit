@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "filename": "nc-language-plugin-1.0.0.21v.zip",
+  "sha256": "f8e18421f1707fb2db6270f3f694dccc083c37b6cc96489c93fb3b6823c759fb",
+  "jarSha256": "50ee6c2ff2063b6f2acc741dff504edf1457de8b850d2582c86c29535b5e9a90",
+  "id": "dev.nc.language",
+  "version": "1.0.0.21v",
+  "declarations": [
+    {
+      "point": "fileType",
+      "name": "nC Source",
+      "implementationClass": "dev.nc.jetbrains.NcFileType",
+      "fieldName": "INSTANCE",
+      "language": "nC",
+      "extensions": "n"
+    },
+    {
+      "point": "fileType",
+      "name": "nC Basal Root",
+      "implementationClass": "dev.nc.jetbrains.NcRootFileType",
+      "fieldName": "INSTANCE",
+      "language": "nC",
+      "extensions": "nb"
+    },
+    {
+      "point": "fileType",
+      "name": "nC Primitive",
+      "implementationClass": "dev.nc.jetbrains.NcPrimitiveFileType",
+      "fieldName": "INSTANCE",
+      "language": "nC",
+      "extensions": "nbb"
+    },
+    {
+      "point": "fileType",
+      "name": "nC Machine",
+      "implementationClass": "dev.nc.jetbrains.NcMachineFileType",
+      "fieldName": "INSTANCE",
+      "language": "nC",
+      "extensions": "nm"
+    },
+    {
+      "point": "fileType",
+      "name": "nC Backend Object IR",
+      "implementationClass": "dev.nc.jetbrains.NcBackendObjectFileType",
+      "fieldName": "INSTANCE",
+      "language": "nC",
+      "extensions": "nbo"
+    },
+    {
+      "point": "fileType",
+      "name": "nC Physical Hardware",
+      "implementationClass": "dev.nc.jetbrains.NcHardwareFileType",
+      "fieldName": "INSTANCE",
+      "language": "nC",
+      "extensions": "ncp"
+    },
+    {
+      "point": "lang.parserDefinition",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcParserDefinition"
+    },
+    {
+      "point": "lang.syntaxHighlighterFactory",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcSyntaxHighlighterFactory"
+    },
+    {
+      "point": "lang.braceMatcher",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcBraceMatcher"
+    },
+    {
+      "point": "colorSettingsPage",
+      "implementation": "dev.nc.jetbrains.NcColorSettingsPage"
+    },
+    {
+      "point": "completion.contributor",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcCompletionContributor"
+    },
+    {
+      "point": "codeInsight.inlayProvider",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcInlayHintsProvider"
+    },
+    {
+      "point": "lang.documentationProvider",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcDocumentationProvider"
+    },
+    {
+      "point": "gotoDeclarationHandler",
+      "implementation": "dev.nc.jetbrains.NcGotoDeclarationHandler"
+    },
+    {
+      "point": "annotator",
+      "language": "nC",
+      "implementationClass": "dev.nc.jetbrains.NcImportAnnotator"
+    },
+    {
+      "point": "editorFactoryListener",
+      "implementation": "dev.nc.jetbrains.NcAutoImportTypingListener"
+    },
+    {
+      "point": "configurationType",
+      "implementation": "dev.nc.jetbrains.NcRunConfigurationType"
+    },
+    {
+      "point": "runConfigurationProducer",
+      "implementation": "dev.nc.jetbrains.NcRunConfigurationProducer"
+    },
+    {
+      "point": "programRunner",
+      "implementation": "dev.nc.jetbrains.NcDebugProgramRunner"
+    }
+  ],
+  "actions": [
+    {
+      "id": "Nc.ResolveToolchain",
+      "text": "nC: Resolve Toolchain"
+    },
+    {
+      "id": "Nc.RouteLsp",
+      "text": "nC: Route LSP Backend"
+    },
+    {
+      "id": "Nc.RunActiveFile",
+      "text": "nC: Run Active File"
+    },
+    {
+      "id": "Nc.DebugActiveFile",
+      "text": "nC: Debug Active File"
+    }
+  ]
+}

@@ -5,27 +5,7 @@ from .preferences import atomic_json
 from .runtimes import language
 from .runtime_paths import find_tool
 
-KITS={
- 'python':{'label':'Python','tools':['python'],'entry':'main.py','files':{
-  'main.py':'def answer():\n    return 42\n\nif __name__ == "__main__":\n    print(answer())\n',
-  'pyproject.toml':'[project]\nname = "zenit-project"\nversion = "0.1.0"\nrequires-python = ">=3.10"\n',
-  'tests/test_main.py':'import unittest\nfrom main import answer\n\nclass MainTest(unittest.TestCase):\n    def test_answer(self):\n        self.assertEqual(answer(), 42)\n'}},
- 'c':{'label':'C','tools':['gcc'],'entry':'main.c','files':{
-  'main.c':'#include <stdio.h>\n#include "main.h"\nint answer(void) { return 42; }\nint main(void) { printf("%d\\n", answer()); return 0; }\n',
-  'main.h':'#ifndef ZENIT_MAIN_H\n#define ZENIT_MAIN_H\nint answer(void);\n#endif\n',
-  'CMakeLists.txt':'cmake_minimum_required(VERSION 3.20)\nproject(zenit_project C)\nset(CMAKE_C_STANDARD 17)\nadd_executable(zenit_app main.c)\nenable_testing()\nadd_test(NAME smoke COMMAND zenit_app)\nset_tests_properties(smoke PROPERTIES PASS_REGULAR_EXPRESSION "42")\n'}},
- 'cpp':{'label':'C++','tools':['g++'],'entry':'main.cpp','files':{
-  'main.cpp':'#include <iostream>\n#include "main.hpp"\nint answer() { return 42; }\nint main() { std::cout << answer() << "\\n"; }\n',
-  'main.hpp':'#pragma once\nint answer();\n',
-  'CMakeLists.txt':'cmake_minimum_required(VERSION 3.20)\nproject(zenit_project CXX)\nset(CMAKE_CXX_STANDARD 20)\nadd_executable(zenit_app main.cpp)\nenable_testing()\nadd_test(NAME smoke COMMAND zenit_app)\nset_tests_properties(smoke PROPERTIES PASS_REGULAR_EXPRESSION "42")\n'}},
- 'java':{'label':'Java','tools':['javac','java'],'entry':'Main.java','files':{
-  'Main.java':'public final class Main {\n    public static int answer() { return 42; }\n    public static void main(String[] args) {\n        if (answer() != 42) throw new AssertionError("answer");\n        System.out.println(answer());\n    }\n}\n',
-  'pom.xml':'<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion><groupId>local.zenit</groupId><artifactId>zenit-project</artifactId><version>0.1.0</version><properties><maven.compiler.release>17</maven.compiler.release></properties><build><sourceDirectory>${project.basedir}</sourceDirectory></build></project>\n'}},
- 'asm':{'label':'ASM · NASM x86-64','tools':['nasm','gcc'],'entry':'main.asm','files':{
-  'main.asm':'bits 64\nglobal main\nsection .text\nmain:\n    mov eax, 0\n    ret\n',
-  'README.txt':'NASM x86-64. El destino nativo se detecta como win64 o elf64. Para RISC-V/MIPS usa el laboratorio simulado y su toolchain.\n'}},
- 'nc':{'label':'nC','tools':['ncc'],'entry':None,'files':{}},
-}
+from .project_kits import KITS
 
 class ProjectWorkflows:
  def __init__(self,features):self.features=features;self.lock=threading.RLock();self.plans={};self.active={};self.receipts={}
@@ -33,7 +13,8 @@ class ProjectWorkflows:
   config=self.features.runtimes.config.get('tools');kits=[]
   for ident,kit in KITS.items():
    tools=[{'name':name,'path':find_tool(name,config)} for name in kit['tools']]
-   kits.append({'id':ident,'label':kit['label'],'tools':tools,'ready':all(t['path'] for t in tools),'entry':kit['entry']})
+   kits.append({'id':ident,'label':kit['label'],'tools':tools,'ready':all(t['path'] for t in tools),'entry':kit['entry'],
+                'description':kit.get('description',''),'interfaces':kit.get('interfaces',[])})
   return {'kits':kits,'workspace':str(ws.root),'history':self.history(ws),'target':self.features.workbenches.snapshot(ws).get('target','local')}
  def store(self,ws,plan):
   with self.lock:
@@ -71,7 +52,8 @@ class ProjectWorkflows:
     raise ValueError('Preparación incompleta; se conservan los archivos ya creados para revisarlos.')
   return {'folder':plan['folder'],'entry':plan['folder']+'/'+KITS[plan['language']]['entry'],'files':written}
  def fingerprints(self,ws,path):
-  parent=ws.resolve(path).parent;result={};budget=4_000_000
+  from .project_layout import project_info
+  parent=project_info(ws,ws.resolve(path),language(path))['root'];result={};budget=4_000_000
   visited=0
   for folder,dirs,files in os.walk(parent,followlinks=False):
    dirs[:]=[d for d in dirs if d not in ('.lumen','.git','.venv','node_modules','build','target','__pycache__') and not (Path(folder)/d).is_symlink() and (Path(folder)/d).resolve().is_relative_to(ws.root)]
@@ -80,27 +62,29 @@ class ProjectWorkflows:
     if len(result)>=250 or budget<=0 or visited>5000:raise ValueError('El conjunto de entradas supera el límite de este flujo. Usa un subproyecto más pequeño.')
     if not file.is_file() or file.is_symlink() or not file.resolve().is_relative_to(ws.root):continue
     rel=file.relative_to(ws.root)
-    if file.name.startswith('.env') or file.suffix.lower() not in ('.c','.h','.hpp','.cpp','.py','.java','.asm','.n','.nc','.json','.toml','.txt'):continue
+    if file.name.startswith('.env') or file.suffix.lower() not in ('.c','.h','.hpp','.cpp','.py','.pyi','.java','.asm','.inc','.s','.rs','.n','.nc','.json','.toml','.txt'):continue
     if file.stat().st_size>min(300000,budget):raise ValueError('Una entrada supera el límite del flujo revisable. Usa el ejecutor del proyecto para este archivo.')
     raw=file.read_bytes();budget-=len(raw);result[rel.as_posix()]=hashlib.sha256(raw).hexdigest()
+  dependencies=ws.resolve('.lumen/dependencies/active.json',must_exist=False)
+  if dependencies.is_file():result[dependencies.relative_to(ws.root).as_posix()]=hashlib.sha256(dependencies.read_bytes()).hexdigest()
   return result
  def plan(self,ws,body):
   action=body.get('action');path=body.get('path')
   if action not in ('check','build','run'):raise ValueError('Elige comprobar, compilar o ejecutar.')
   lang=language(path or '')
-  if lang not in KITS:raise ValueError('Este flujo admite Python, C, C++, Java, nC y ASM.')
-  plan=self.features.runtimes.plan(ws,path,check=action=='check' or action=='build' and lang=='python')
+  if lang not in KITS:raise ValueError('Este flujo admite Python, C, C++, Java, Rust, nC y ASM.')
+  plan=self.features.runtimes.plan(ws,path,check=action=='check',build_only=action=='build')
   commands=copy.copy(plan['commands'])
   remote=plan.get('executionTarget')
-  if lang=='python' and action in ('check','build') and not remote:
+  if lang=='python' and action=='check' and not remote:
    from .foundation import python_command
    commands=[[*python_command(ws,self.features.runtimes.config.get('tools')),'-c','import ast,pathlib,sys; ast.parse(pathlib.Path(sys.argv[1]).read_bytes())',str(ws.resolve(path))]]
-  if action=='build' and lang!='python':
+  if action=='build' and not plan.get('buildOnly'):
    if remote:raise ValueError('Este destino remoto no expone una compilación separada. Usa comprobar o ejecutar.')
    if len(commands)<2:raise ValueError('La configuración no ofrece una fase de compilación separada.')
    commands.pop()
   result=self.store(ws,{'kind':'execution','action':action,'path':path,'language':lang,'commands':commands,'cwd':str(plan.get('cwd',ws.root)),
-   'fingerprints':self.fingerprints(ws,path),'target':remote or str(plan.get('target','local'))})
+   'fingerprints':self.fingerprints(ws,path),'target':remote or str(plan.get('target','local')),'layout':plan.get('layout')})
   # Keep BuildCommands and its exact-input compilation cache on the server.
   self.plans[result['id']]['commands']=commands
   return result
@@ -112,10 +96,11 @@ class ProjectWorkflows:
    old=self.features.app.runner.jobs.get(self.active.get(str(ws.root)))
    if old and not old.done:raise ValueError('Ya hay un flujo de proyecto en ejecución. Espera o cancélalo desde Tareas.')
    if self.fingerprints(ws,plan['path'])!=plan['fingerprints']:raise ValueError('Las entradas cambiaron desde la revisión. Genera otro plan.')
+   evidence=self.features.investigations.capture_optional(ws,plan['commands'])
    task=self.features.app.runner.start(plan['commands'],Path(plan['cwd']),timeout=300,scheduler=self.features.hilo)
    self.active[str(ws.root)]=task['job'];plan['task']=task
    record={'id':task['job'],'action':plan['action'],'path':plan['path'],'language':plan['language'],'commands':list(plan['commands']),
-    'inputs':plan['fingerprints'],'started':time.time(),'state':'running','output':''}
+    'inputs':plan['fingerprints'],'started':time.time(),'state':'running','output':'','evidence':evidence}
    rows=self.history(ws);rows.append(record);self.receipts[str(ws.root)]=rows[-24:];self.persist(ws)
    return task
  def persist(self,ws):atomic_json(ws.private_dir('workflows')/'receipts.json',self.receipts[str(ws.root)])

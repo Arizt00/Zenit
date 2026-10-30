@@ -25,6 +25,7 @@
 :is(.top-actions,.team-copy-actions) .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed) {width:var(--reveal-width,138px);}
 .top-actions .forge-toggle.hover-reveal {--reveal-width:92px;}
 .top-actions .debug-button.hover-reveal {--reveal-width:108px;}
+.top-actions .development-tools.hover-reveal {--reveal-width:138px;}
 :is(.top-actions,.team-copy-actions) .hover-reveal:is(:hover,:focus-visible):not(.reveal-dismissed)>span {opacity:1;max-width:100px;margin-right:9px;transform:none;transition-delay:35ms;}
 .assistant-heading {height:auto;min-height:68px;padding:16px 16px 8px;gap:12px;flex-wrap:wrap;}
 .assistant-heading-title {flex:1 1 auto;gap:8px;min-width:max-content;}

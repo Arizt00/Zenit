@@ -90,7 +90,7 @@ def tool_environment():
 def status():
     from .runtime_paths import find_tool
     root, data = inventory()
-    names = ('python', 'gcc', 'g++', 'clang', 'java', 'javac', 'bash', 'ncc', 'node', 'docker', 'qemu-system-x86_64', 'mvn', 'gradle')
+    names = ('python', 'gcc', 'g++', 'clang', 'java', 'javac', 'rustc', 'cargo', 'bash', 'ncc', 'node', 'docker', 'qemu-system-x86_64', 'qemu-img', 'mvn', 'gradle')
     return {'bundle': bool(root), 'directory': str(root) if root else None,
             'components': data.get('components', []),
             'tools': [{'id': name, 'path': find_tool(name), 'bundled': bool(bundled_tool(name))} for name in names],

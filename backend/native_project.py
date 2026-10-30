@@ -22,6 +22,7 @@ def cmake_argument(value):
 
 def _create(ws, relative, text, created):
     path = ws.resolve(relative, must_exist=False)
+    path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with path.open('x', encoding='utf-8', newline='\n') as stream:
             stream.write(text)
@@ -41,29 +42,41 @@ def _managed(ws, relative, text):
     os.replace(temporary, path)
 
 
-def prepare_native_project(ws, file, lang, target, commands):
+def prepare_native_project(ws, file, lang, target, commands, folder=None, info=None):
     """Only explicit builds call this; diagnostic checks and Live copies do not."""
     if lang not in ('c', 'cpp', 'nc', 'rust') or hasattr(ws, 'python_workspace'):
         return None
     if not ws.trusted:
         raise PermissionError('Autoriza el proyecto antes de crear sus archivos de compilación.')
-    source = file.relative_to(ws.root).as_posix()
-    stem = re.sub(r'[^A-Za-z0-9_]', '_', file.stem)[:48] or 'application'
+    from .project_layout import project_info, interface_path
+    info = info or project_info(ws, file, lang)
+    folder = folder or target.parent
+    if lang == 'nc':
+        from .nc_project import prepare_nc_project
+        with _LOCK, ws.lock:return prepare_nc_project(ws,file,target,commands,folder,info)
+    entry = info['entry'] if info['owned'] else file
+    source = entry.relative_to(ws.root).as_posix()
+    stem = re.sub(r'[^A-Za-z0-9_]', '_', entry.stem)[:48] or 'application'
     identity = stem + '_' + hashlib.sha256(source.encode()).hexdigest()[:8]
     key = 'zenit_' + identity
     created = []
     with _LOCK:
         directory = ws.private_dir('native/' + identity)
         relative = directory.relative_to(ws.root).as_posix()
-        header = file.with_suffix('.hpp' if lang == 'cpp' else '.h').relative_to(ws.root).as_posix()
-        guard = 'ZENIT_' + identity.upper() + '_H'
-        explanation = ('Declare the public interface of this source here.\n'
-                       '   The source is preserved; include this header where needed.' if lang in ('c', 'cpp') else
-                       'Optional C ABI interface. Only declare functions explicitly exported with a C-compatible ABI.\n'
-                       '   Native language types are not automatically converted to C declarations.')
-        _create(ws, header, f'/* {file.name}: starter header created by Zénit.\n   {explanation}\n*/\n#ifndef {guard}\n#define {guard}\n\n#endif /* {guard} */\n', created)
+        header = None
+        sources = list(dict.fromkeys([file,*info['sources'],*info['interfaces']]))
+        if lang in ('c', 'cpp'):
+            header = interface_path(ws, file, lang, info).relative_to(ws.root).as_posix()
+            guard = 'ZENIT_' + identity.upper() + '_H'
+            explanation = ('Declare the public interface of this source here.\n'
+                           '   The source is preserved; include this header where needed.')
+            _create(ws, header, f'/* {file.name}: starter header created by Zénit.\n   {explanation}\n*/\n#ifndef {guard}\n#define {guard}\n\n#endif /* {guard} */\n', created)
+            if ws.resolve(header) not in sources:sources.append(ws.resolve(header))
 
-        dependencies = [file, ws.resolve(header)]
+        dependencies = list(sources)
+        for name in ('zenit.project.json','Cargo.toml','ncc.package.json','CMakeLists.txt'):
+            config=info['root']/name
+            if config.is_file() and config not in dependencies:dependencies.append(config)
         active = ws.resolve('.lumen/dependencies/active.json', must_exist=False)
         if active.is_file(): dependencies.append(active)
         build = '\n'.join('  COMMAND ' + ' '.join(cmake_argument(x) for x in command) for command in commands)
@@ -74,8 +87,11 @@ def prepare_native_project(ws, file, lang, target, commands):
                  f'  COMMAND "${{CMAKE_COMMAND}}" -E make_directory {cmake_argument(target.parent)}\n'
                  f'{build}\n  DEPENDS ' + ' '.join(cmake_argument(p) for p in dependencies) + '\n'
                  f'  WORKING_DIRECTORY {cmake_argument(ws.root)}\n  VERBATIM\n)\n'
-                 f'add_custom_target({key} ALL DEPENDS {cmake_argument(target)} SOURCES {cmake_argument(file)} {cmake_argument(ws.resolve(header))})\n')
+                 f'add_custom_target({key} ALL DEPENDS {cmake_argument(target)} SOURCES ' + ' '.join(cmake_argument(p) for p in sources) + ')\n')
         _managed(ws, relative + '/CMakeLists.txt', cmake)
+        export = folder / 'project'
+        export.mkdir(parents=True, exist_ok=True)
+        _managed(ws, (export / 'CMakeLists.txt').relative_to(ws.root).as_posix(), cmake)
         index = ws.resolve('.lumen/native/targets.json', must_exist=False)
         entries = json.loads(index.read_text(encoding='utf-8')) if index.is_file() else {}
         if not isinstance(entries, dict) or len(entries) >= 512 and identity not in entries:
@@ -92,23 +108,24 @@ def prepare_native_project(ws, file, lang, target, commands):
         project = ('cmake_minimum_required(VERSION 3.20)\nproject(zenit_native LANGUAGES NONE)\n'
                    'include("${CMAKE_CURRENT_LIST_DIR}/targets.cmake")\n')
         _managed(ws, '.lumen/native/CMakeLists.txt', project)
-        _create(ws, 'CMakeLists.txt', '# Created by Zénit. This file belongs to your project.\n'
-                'cmake_minimum_required(VERSION 3.20)\nproject(zenit_native LANGUAGES NONE)\n'
-                'include("${CMAKE_CURRENT_LIST_DIR}/.lumen/native/targets.cmake")\n', created)
+        root_cmake = info['root'] / 'CMakeLists.txt'
+        if not info['owned'] and lang in ('c', 'cpp'):
+            include = Path(os.path.relpath(ws.root / '.lumen/native/targets.cmake', info['root'])).as_posix()
+            _create(ws, root_cmake.relative_to(ws.root).as_posix(), '# Created by Zénit. This file belongs to your project.\n'
+                    'cmake_minimum_required(VERSION 3.20)\nproject(zenit_native LANGUAGES NONE)\n'
+                    'include("${CMAKE_CURRENT_LIST_DIR}/' + include + '")\n', created)
         manifests = []
-        if lang == 'nc':
-            manifest = {'schema': 'ncc.package.v1', 'package': {'name': stem, 'version': '0.1.0', 'language': 'nC', 'edition': '2026'},
-                        'targets': {'main': source, 'artifact_root': '.ncc', 'bin': '.ncc/bin'}, 'dependencies': [],
-                        'build': {'cc': 'nC.win64' if os.name == 'nt' else 'native', 'cpu': 'native',
-                                  'emit': ['nm', 'obj', 'exe', 'run-manifest'], 'profile': 'release-fast'}}
-            _create(ws, 'ncc.package.json', json.dumps(manifest, indent=2, ensure_ascii=False) + '\n', created)
-            manifests.append('ncc.package.json')
-        elif lang == 'rust':
+        if lang == 'rust':
             cargo = ('# Created by Zénit. This file belongs to your project.\n[package]\n'
                      f'name = {json.dumps("zenit_" + stem.lower())}\nversion = "0.1.0"\nedition = "2021"\n\n'
-                     f'[[bin]]\nname = {json.dumps(stem)}\npath = {json.dumps(source)}\n')
-            _create(ws, 'Cargo.toml', cargo, created)
-            manifests.append('Cargo.toml')
-        return {'created': created, 'header': header, 'headerKind': 'starter' if lang in ('c', 'cpp') else 'optional-c-abi',
+                     f'[[bin]]\nname = {json.dumps(stem)}\npath = {json.dumps(file.as_posix())}\n')
+            manifest=info['root']/'Cargo.toml'
+            name=(manifest if manifest.is_file() else export/'Cargo.toml').relative_to(ws.root).as_posix()
+            _create(ws, name, cargo, created)
+            manifests.append(name)
+        if lang in ('c', 'cpp') and commands and Path(commands[0][0]).name.lower() not in ('cmake','cmake.exe'):
+            atomic_json(export/'compile_commands.json',[{'directory':str(ws.root),'file':str(file),'arguments':list(commands[0])}])
+        return {'created': created, 'header': header, 'headerKind': 'starter' if header else None,
                 'cmake': relative + '/CMakeLists.txt', 'cmakeProject': '.lumen/native',
+                'exportedProject':export.relative_to(ws.root).as_posix(),
                 'manifest': manifests, 'target': target.relative_to(ws.root).as_posix()}

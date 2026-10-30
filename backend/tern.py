@@ -113,6 +113,26 @@ class Tern:
             if current['workspace'] == str(ws.root): current['active'] = current is session
         return {'active': identity, 'python': str(self.python(directory))}
 
+    def check(self,ws,identity,event):
+        session=self.get(ws,identity);directory,_=self.owned(ws,identity)
+        self.features.hilo.report(event,'Comprobando el entorno sin iniciar el proyecto')
+        if session['kind']=='arch':result=self.features.machines.readiness(session['profile'])
+        else:
+            executable=self.python(directory)
+            if not executable.is_file():raise ValueError('Falta el intérprete del entorno. Restaura su descriptor o vuelve a prepararlo.')
+            code='import json,sys,site;print("ZENIT_ENV_HEALTH="+json.dumps({"version":sys.version.split()[0],"executable":sys.executable,"isolated":sys.prefix!=sys.base_prefix,"sitePackages":site.getsitepackages()}))'
+            task=self.features.app.runner.start([[str(executable),'-I','-c',code]],ws.root,timeout=20)
+            job=self.features.app.runner.jobs[task['job']]
+            while not job.done:
+                if event.wait(.05):job.cancel()
+            if event.is_set():raise CancelledError()
+            if job.code:raise ValueError(job.output[-2000:])
+            data=next((line.partition('=')[2] for line in job.output.splitlines() if line.startswith('ZENIT_ENV_HEALTH=')),None)
+            if not data:raise ValueError('El intérprete no devolvió su diagnóstico.')
+            result={**json.loads(data),'ready':True}
+            if not result['isolated']:raise ValueError('El intérprete no pertenece a un entorno virtual aislado de paquetes.')
+        session['health']={**result,'checked':time.time()};return session['health']
+
     def refresh_interpreter(self, ws):
         manager = self.features.lsp
         profiles = []

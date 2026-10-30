@@ -19,7 +19,9 @@ class SDKManager:
    if str(root) in seen:continue
    seen.add(str(root));tools={name:str((root/path).resolve()) for name,path in data.get('tools',{}).items() if isinstance(path,str) and (root/path).resolve().is_relative_to(root) and (root/path).is_file()}
    groups.append({'directory':str(root),'managed':str(root) in self.config.get('roots',[]),'components':data.get('components',[]),'tools':tools})
-  return {'roots':groups,'packagesDirectory':str(self.directory),'format':'zenit-sdk-1','platform':sys.platform}
+  from .runtime_paths import find_tool
+  system_tools={name:tool for name in ('qemu-system-x86_64','qemu-img') if (tool:=find_tool(name,self.features.runtimes.config.get('tools',{})))}
+  return {'roots':groups,'systemTools':system_tools,'packagesDirectory':str(self.directory),'format':'zenit-sdk-1','platform':sys.platform}
  def activate(self,directory):
   if not isinstance(directory,str) or not Path(directory).is_absolute():raise ValueError('Selecciona una carpeta SDK absoluta.')
   root=Path(directory).resolve();data=foundation.read_index(root)

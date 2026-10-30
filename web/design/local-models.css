@@ -1,0 +1,11 @@
+.local-ai-models { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 18px; }
+.local-ai-models-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.local-ai-model { border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: grid; gap: 10px; margin-top: 12px; }
+.local-ai-model-title { display: flex; gap: 10px; align-items: center; }
+.local-ai-model-title > svg { width: 20px; height: 20px; flex: none; color: var(--accent); }
+.local-ai-model-title > div { display: grid; gap: 4px; }
+.local-ai-model small, .local-ai-model > a { color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }
+.local-ai-model p { margin: 0; }
+.local-ai-model progress { width: 100%; height: 5px; accent-color: var(--accent); }
+.local-ai-model-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.local-ai-model-actions > small { flex: 1; min-width: 180px; }

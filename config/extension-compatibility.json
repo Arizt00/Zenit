@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "release": "0.5.5-R1",
+  "release": "0.5.5-R6",
   "platform": "win32",
   "packages": [
     {
@@ -8,12 +8,14 @@
       "version": "1.0.0-21v",
       "sha256": "926c4329e7be8756b7e22c72cf26e9d6fac9c852c76e39d6fdfd35575889e0ac",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -21,12 +23,14 @@
       "version": "3.18.0",
       "sha256": "a0466d8e44b873d2a4e83155d4b7b68d4ff7d989a618f2f54513ae9d7c686dfa",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -34,12 +38,14 @@
       "version": "2026.10.151351",
       "sha256": "2af273b7c92697cf5d7b62a9030f8d0a4eaed6094cd327ad2b2e1e2bd57bf744",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -47,12 +53,14 @@
       "version": "5.39.0",
       "sha256": "f3fda4e1d6095d942c92467c1ad6f322a74c62160f7d29741058e4d726922fbd",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -60,12 +68,14 @@
       "version": "0.32.3",
       "sha256": "058462162cb29d4d22341d912c15dcfa2194774b1e92fc30fcba1a6ca3c91abd",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -73,12 +83,14 @@
       "version": "1.95.3",
       "sha256": "956c41e4e8377a6b113a6a64fcd5308deaad44a827288f6bfcd5cf1c83037483",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -86,12 +98,14 @@
       "version": "1.95.3",
       "sha256": "44909b81d3266860f02733c08475ab5fc66c0c1d7259b3c1b164e783559d9291",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -99,12 +113,19 @@
       "version": "7.2.5",
       "sha256": "a9c03d85ee23c5af1f4c526d192bdd21dab68fd1bdcc8d29b38cc0c1c1f58eed",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete 7.2.5 real en un proyecto y perfil temporales.",
+        "Inicialización del servidor de lenguaje 9.29.0 y registro del proveedor de sugerencias en línea.",
+        "Apertura del chat real, confirmación appReady y permanencia después de su watchdog de 10 segundos.",
+        "Recursos locales con respuesta HTTP 200 y aislamiento de origen del iframe.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "No se han enviado consultas ni comprobado una cuenta o licencia GitLab.",
+        "Git 1.95.3 no ofrece el API opcional de detalles del historial solicitado por GitLab 7.2.5.",
+        "Shell integration y Knowledge Graph requieren sus herramientas y configuración.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -112,12 +133,14 @@
       "version": "12.4.0",
       "sha256": "fb730ea4306d09cdc0a3aaa9e9baae28058cc97a4fbfce8b056b377a0639a9fe",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -125,12 +148,14 @@
       "version": "2026.9.5",
       "sha256": "2ac391974ab6348ae81c8680fa81082ccca043f65b185b7f479912310719b00a",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
-        "Activación del paquete real en un proyecto y perfil temporales."
+        "Activación del paquete real en un proyecto y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor."
+        "La activación no certifica todas las funciones de la extensión. Las funciones remotas requieren una cuenta y permisos del proveedor.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -138,13 +163,15 @@
       "version": "0.18.2",
       "sha256": "cbc0370ff204bc16d84a3ee6830536fc04355856fa0e895ab064e1a03cfcb84a",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
         "Activación del paquete real en un proyecto y perfil temporales.",
-        "Ajustes de EditorConfig aplicados al modelo real de Monaco."
+        "Ajustes de EditorConfig aplicados al modelo real de Monaco.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "Las capacidades no enumeradas aquí no están certificadas."
+        "Las capacidades no enumeradas aquí no están certificadas.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
@@ -152,68 +179,245 @@
       "version": "0.21.2",
       "sha256": "f3dc44f1c551edef397a79f0f8c5db4066c6a547e210b5c3cec4400bf173b008",
       "verified": true,
-      "release": "0.5.4-R17",
+      "release": "0.5.5-R2",
       "tested": [
         "Activación del paquete real en un proyecto y perfil temporales.",
         "Formato TOML aplicado al búfer sin escribir el archivo.",
         "Ctrl+Z restaura la edición en una transacción.",
         "Servidor TOML devuelve símbolos del documento real.",
-        "Plegado TOML con tipos Region reales y serialización hacia Monaco."
+        "Plegado TOML con tipos Region reales y serialización hacia Monaco.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "Las capacidades no enumeradas aquí no están certificadas."
+        "Las capacidades no enumeradas aquí no están certificadas.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
       "id": "DEVSENSE.composer-php-vscode",
       "version": "1.75.19425",
       "sha256": "5f4cd17c16bd5f23b109c40fa3fef4f1a74fe5534a4fd22e5c572d1fccc392c0",
-      "verified": false,
-      "release": "0.5.5-R1",
+      "verified": true,
+      "release": "0.5.5-R2",
       "tested": [
-        "Importación y activación del paquete real en un proyecto Git y perfil temporales."
+        "Importación y activación del paquete real en un proyecto Git y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas."
+        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
       "id": "shd101wyy.markdown-preview-enhanced",
       "version": "0.8.40",
       "sha256": "1d7973cd154b9b90b5361f7e2d611ad9c7da931756b5301188ca084050f43409",
-      "verified": false,
-      "release": "0.5.5-R1",
+      "verified": true,
+      "release": "0.5.5-R2",
       "tested": [
-        "Importación y activación del paquete real en un proyecto Git y perfil temporales."
+        "Importación y activación del paquete real en un proyecto Git y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas."
+        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
       ]
     },
     {
       "id": "ms-toolsai.jupyter",
       "version": "2025.9.1",
       "sha256": "110660656944c4ab0ff687db488c2e8c59c67ec121dcf09bcaa54b6edd9ce71f",
-      "verified": false,
-      "release": "0.5.5-R1",
+      "verified": true,
+      "release": "0.5.5-R2",
       "tested": [
-        "Carga real de Jupyter: FileSystemError corregido; activación detenida al consultar vscode.workspace.notebookDocuments."
+        "Carga real de Jupyter: FileSystemError corregido; activación detenida al consultar vscode.workspace.notebookDocuments.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba.",
+        "Cuaderno .ipynb real abierto en celdas; ejecución Python local, salida 42 y guardado nbformat comprobados en la interfaz."
       ],
       "notVerified": [
-        "No se ha validado la API ni la interfaz de documentos notebook; el paquete no es compatible aún."
+        "No se ha validado la API ni la interfaz de documentos notebook; el paquete no es compatible aún.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias.",
+        "El kernel Python local de Zénit no equivale a un servidor Jupyter remoto. No se verifican magias IPython, widgets ni kernels externos."
       ]
     },
     {
       "id": "zhuangtongfa.material-theme",
       "version": "3.20.3",
       "sha256": "fac19c53133cab9d4236bee87838d81992c8c3627795b7caeb519a009e4e74eb",
-      "verified": false,
-      "release": "0.5.5-R1",
+      "verified": true,
+      "release": "0.5.5-R2",
       "tested": [
-        "Importación y activación del paquete real en un proyecto Git y perfil temporales."
+        "Importación y activación del paquete real en un proyecto Git y perfil temporales.",
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
       ],
       "notVerified": [
-        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas."
+        "La activación no certifica comandos, proveedores ni integración visual. Estas funciones necesitan pruebas específicas.",
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
+      ]
+    },
+    {
+      "id": "ardonplay.vscode-jetbrains-icon-theme",
+      "version": "0.0.4",
+      "sha256": "998d5b28669bcf41b5e3c00e46f106994856a3c2bd130b3e043dfc4faf88c60f",
+      "verified": true,
+      "release": "0.5.5-R2",
+      "tested": [
+        "Paquete declarativo: manifiesto y temas de iconos cargados en el inventario."
+      ],
+      "notVerified": [
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
+      ]
+    },
+    {
+      "id": "bastndev.lynx-theme",
+      "version": "5.3.6",
+      "sha256": "3257b9ef290ee4420a449ba3b1a03dea300430586335e97db4baee2515bad330",
+      "verified": true,
+      "release": "0.5.5-R2",
+      "tested": [
+        "Activación del paquete instalado en un perfil aislado; sin APIs ausentes en esta prueba."
+      ],
+      "notVerified": [
+        "La activación no certifica todos sus comandos. Servicios de cuentas, red y servidores requieren pruebas y configuración propias."
+      ]
+    },
+    {
+      "id": "nc-lang.nc-language",
+      "version": "1.0.0-21v.zenit.2",
+      "sha256": "6d9f8160ffd0177469e72d847609f2ff53ae02cb18c26cc678fb9b91a3c3f710",
+      "verified": true,
+      "release": "0.5.5-R2",
+      "tested": [
+        "Trece superficies de edición invocadas contra el plugin real: documentación, completado, inlay, lentes, definición, referencias, símbolos, acciones, formato, formato al escribir, renombrado, semántica y diagnósticos.",
+        "Grafo real del proyecto abierto en detalle persistente desde la interfaz.",
+        "Cuatro tareas detectadas con argv y compilador del kit seleccionado; tarea Run ejecutada con salida y código 0.",
+        "Formato nfmt corregido para alias .cmd de Windows.",
+        "Configuración declarativa real: cierre y coincidencia de parejas, indentación con Enter y comentarios Ctrl+/.",
+        "Siete variantes de archivo con gramática e icono del paquete: .n, .nm, .nb, .nbb, .ncp, .nbo y .init.",
+        "Colores semánticos del compilador mediante semanticTokenScopes y temas nC claro y oscuro; los tipos desconocidos conservan la sintaxis léxica."
+      ],
+      "notVerified": [
+        "Las respuestas vacías de acciones o diagnósticos sobre un archivo válido no certifican todos los casos del lenguaje.",
+        "Depuración nativa, attach, QEMU y primitivas dependen de las capacidades de ncc y de la toolchain del destino; requieren casos propios."
+      ]
+    },
+    {
+      "id": "nc-lang.nc-language",
+      "version": "1.0.0-21v.zenit.3",
+      "sha256": "fbf6fb3e6615651f8d6c4aa684d68ee6e424d939a547442403ef64d888781484",
+      "verified": true,
+      "release": "0.5.5-R3",
+      "tested": [
+        "Trece superficies de edición invocadas contra el plugin real: documentación, completado, inlay, lentes, definición, referencias, símbolos, acciones, formato, formato al escribir, renombrado, semántica y diagnósticos.",
+        "Grafo real del proyecto abierto en detalle persistente desde la interfaz.",
+        "Cuatro tareas detectadas con argv y compilador del kit seleccionado; tarea Run ejecutada con salida y código 0.",
+        "Formato nfmt corregido para alias .cmd de Windows.",
+        "Configuración declarativa real: cierre y coincidencia de parejas, indentación con Enter y comentarios Ctrl+/.",
+        "Seis SVG idénticos al JAR de la distribución JetBrains seleccionada por el usuario.",
+        "Parejas de colores claro/oscuro extraídas de NcTextAttributes.class; comprobación de colores renderizados y cambio de tema.",
+        "Sintaxis compacta actual, servicios del compilador, cierre de parejas, indentación, iconos por extensión y documento IR textual.",
+        "El diagnóstico automático usa el compilador nativo seleccionado y muestra un error sintáctico real sin redirigirlo a WSL.",
+        "wslpath recibe --exec y conserva las rutas de Windows con espacios.",
+        "Carga declarativa del catálogo completo de 18 paquetes: 15 gramáticas y 14 temas de iconos sin interrupción por lenguajes sin sufijos."
+      ],
+      "notVerified": [
+        "Las respuestas vacías de acciones o diagnósticos sobre un archivo válido no certifican todos los casos del lenguaje.",
+        "Depuración nativa, attach, QEMU y primitivas dependen de las capacidades de ncc y de la toolchain del destino; requieren casos propios.",
+        "Adaptación de recursos de JetBrains; no ejecuta el plugin JVM ni certifica sus APIs internas."
+      ],
+      "visualSource": {
+        "source": "JetBrains distribution selected by the user",
+        "filename": "nc-language-plugin-1.0.0.21v.zip",
+        "sha256": "f8e18421f1707fb2db6270f3f694dccc083c37b6cc96489c93fb3b6823c759fb",
+        "jarSha256": "50ee6c2ff2063b6f2acc741dff504edf1457de8b850d2582c86c29535b5e9a90",
+        "attributeClassSha256": "9282387b79055374bd9725b6b3b87f5853f320e647c7807bb0d4b24c41c4a058",
+        "lexerClassSha256": "5c7e7a0098ab5bcae7a1a7776f995aba992811bb8cdf6adc0fda833e65d4567a",
+        "highlighterClassSha256": "bd9459a3d3f96ef64d625a46917c2629763f23324188f02fc793fecd258f5953",
+        "serviceSource": "C:\\Users\\arist\\Documents\\Codex\\2026-04-24\\proyecto-nc-ncc-objetivo-construir-un\\ncc_codex_bundle\\codex_bundle\\tools\\vscode\\nc-language",
+        "serviceSourceSha256": "1d2eefe8aa451bd14c2b8fd30537542e9d526d438ef2fae6cd12d4b1894044a9",
+        "iconSha256": {
+          "n": "11e8c70ff05f44d77dd677520c13e41b8636cc2fa95f36ba4932d9817ab36e0c",
+          "nm": "9766ac977d3a9749fc298f70bf1ea73593cd59f1634f98af7e805db8ac94f96e",
+          "nb": "c80e45de736eec07948be19917afaa68bd25afdf07a54c4cc1b6fa2cda6e43ff",
+          "nbb": "a64d5f0266f2bcb4d674bea6c2b63b6a416daf345c6e03bd17db62d909d62c1b",
+          "ncp": "1025ba9782127a453fbea829077f493048dff64450137d591cfc483faadc0627",
+          "nbo": "536d49500524f0d1712ae274ff216a9cb28a341887bfec954139376c4f207277"
+        }
+      }
+    },
+    {
+      "id": "nc-lang.nc-language",
+      "version": "1.0.0-21v.zenit.4",
+      "sha256": "1b63f323a6fba0d73cf051e124e27470b7becc5784ac2b9f74b06736e6168aa4",
+      "verified": true,
+      "release": "0.5.5-R3",
+      "tested": [
+        "Navegación, dos referencias y renombrado exactos entre contenedores con nombres iguales; parámetros, colisiones y posiciones UTF-16.",
+        "Esquema de símbolos con rangos e hijos del contenedor y función correctos.",
+        "F12 y F2 reales en Monaco, revisión del cambio y Ctrl+Z sin guardar fuentes.",
+        "Acción de migración de familia sobre el archivo capturado, sin renombrar otro documento ni terminar el motor.",
+        "Recorrido de muestra: compilación con NCC, prueba de humo y pausa/paso del depurador."
+      ],
+      "notVerified": [
+        "El índice por ámbitos es local. No certifica vínculos semánticos globales ni refactorizaciones en todas las familias nC.",
+        "El PSI de IntelliJ no se ejecuta en Zénit.",
+        "NCC test es una prueba de humo de main, no una suite de aserciones ni validación de cualquier programa."
+      ],
+      "visualSource": {
+        "source": "JetBrains distribution selected by the user",
+        "filename": "nc-language-plugin-1.0.0.21v.zip",
+        "sha256": "f8e18421f1707fb2db6270f3f694dccc083c37b6cc96489c93fb3b6823c759fb",
+        "jarSha256": "50ee6c2ff2063b6f2acc741dff504edf1457de8b850d2582c86c29535b5e9a90",
+        "attributeClassSha256": "9282387b79055374bd9725b6b3b87f5853f320e647c7807bb0d4b24c41c4a058",
+        "lexerClassSha256": "5c7e7a0098ab5bcae7a1a7776f995aba992811bb8cdf6adc0fda833e65d4567a",
+        "highlighterClassSha256": "bd9459a3d3f96ef64d625a46917c2629763f23324188f02fc793fecd258f5953",
+        "serviceSource": "C:\\Users\\arist\\Documents\\Codex\\2026-04-24\\proyecto-nc-ncc-objetivo-construir-un\\ncc_codex_bundle\\codex_bundle\\tools\\vscode\\nc-language",
+        "serviceSourceSha256": "1d2eefe8aa451bd14c2b8fd30537542e9d526d438ef2fae6cd12d4b1894044a9",
+        "iconSha256": {
+          "n": "11e8c70ff05f44d77dd677520c13e41b8636cc2fa95f36ba4932d9817ab36e0c",
+          "nm": "9766ac977d3a9749fc298f70bf1ea73593cd59f1634f98af7e805db8ac94f96e",
+          "nb": "c80e45de736eec07948be19917afaa68bd25afdf07a54c4cc1b6fa2cda6e43ff",
+          "nbb": "a64d5f0266f2bcb4d674bea6c2b63b6a416daf345c6e03bd17db62d909d62c1b",
+          "ncp": "1025ba9782127a453fbea829077f493048dff64450137d591cfc483faadc0627",
+          "nbo": "536d49500524f0d1712ae274ff216a9cb28a341887bfec954139376c4f207277"
+        }
+      }
+    },
+    {
+      "id": "nc-lang.nc-language",
+      "version": "1.0.0-21v.zenit.6",
+      "sha256": "b2060a8e23057ca6212f691d0c88c174d836948463f521687ec7f83502c3e233",
+      "verified": true,
+      "release": "0.5.5-R6",
+      "tested": [
+        "Colores, iconos y corchetes del plugin JetBrains seleccionado: ocho comprobaciones visuales.",
+        "F12 en símbolos locales y miembros cualificados de módulos; renombrado local por ámbito con diferencias y Ctrl+Z.",
+        "Recorrido de proyecto, navegación, refactorización local, compilación, prueba de humo y depuración de una entrada monofichero.",
+        "Comprobación y ejecución de módulos adyacentes mediante NCC en copias privadas, sin generar CMake."
+      ],
+      "notVerified": [
+        "El renombrado semántico entre varios módulos todavía no está implementado.",
+        "La depuración y las refactorizaciones entre varios módulos requieren más pruebas; se ha comprobado el enlace y ejecución nativos de una muestra de dos módulos.",
+        "La prueba de humo NCC ejecuta main; no equivale a una suite de aserciones."
+      ]
+    },
+    {
+      "id": "nc-lang.nc-language",
+      "version": "1.0.0-21v.zenit.7",
+      "sha256": "059aed6da49049ab430d25fe16f61b6f34932ecd86ad7aeadc56c91be301280e",
+      "verified": true,
+      "release": "0.5.5-R6",
+      "tested": [
+        "Ocho comprobaciones visuales del paquete: iconos exactos del JAR JetBrains elegido, gramáticas, colores claro/oscuro, parejas, indentación y renombrado local con Ctrl+Z.",
+        "F12 sobre funciones públicas de módulos escritos en formato compacto; las importaciones no ocultan otras declaraciones en la misma línea.",
+        "F2 entre dos módulos con AST y comprobación NCC de los candidatos anterior y posterior, revisión, Ctrl+Z y rehacer del conjunto.",
+        "Se rechazan nombres en conflicto, módulos ambiguos, proyectos inválidos y revisiones con dependencias o búferes modificados.",
+        "Ejecución real del proyecto renombrado: salida 42, sin cabeceras C ni CMake."
+      ],
+      "notVerified": [
+        "El renombrado entre módulos está limitado a funciones públicas de contenedores y llamadas explícitas módulo.contenedor.función en fuentes .n/.nc; no cubre todos los símbolos, aliases, llamadas dinámicas ni todas las familias nC.",
+        "La depuración sincronizada entre múltiples módulos todavía requiere pruebas adicionales.",
+        "La comprobación del proyecto requiere NCC local; no certifica runtimes remotos ni una suite universal de aserciones."
       ]
     }
   ]

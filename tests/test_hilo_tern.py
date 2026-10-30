@@ -179,6 +179,11 @@ class TernTests(unittest.TestCase):
         deadline = time.monotonic() + 15
         while 'TERN_LIVE' not in terminal.output and time.monotonic() < deadline: time.sleep(.1)
         self.assertIn('TERN_LIVE', terminal.output)
+        boot_metrics=[self.features.machines.performance()[-1]]
+        self.assertIn('qemu-spawned',[p['name'] for p in boot_metrics[-1]['guest']['phases']])
+        if os.environ.get('ZENIT_VM_METRICS_OUTPUT'):
+            Path(os.environ['ZENIT_VM_METRICS_OUTPUT']+'.prompt.txt').write_text(repr(terminal.output[-600:]),encoding='utf-8')
+        self.assertIn('shell-prompt',[p['name'] for p in boot_metrics[-1]['guest']['phases']])
         tern.save(ws, identity, 'live.tern'); tern.stop(ws, identity)
         self.assertTrue(terminal.closed)
         tern.reopen(ws, 'live.tern'); self.assertTrue(tern.directory(ws, identity).joinpath('disk.qcow2').exists())
@@ -196,6 +201,9 @@ class TernTests(unittest.TestCase):
         while 'TERN_LIVE' not in terminal.output and time.monotonic() < deadline: time.sleep(.1)
         self.assertIn('TERN_LIVE', terminal.output)
         tern.stop(ws, identity)
+        boot_metrics.append(self.features.machines.performance()[-1])
+        if os.environ.get('ZENIT_VM_METRICS_OUTPUT'):
+            Path(os.environ['ZENIT_VM_METRICS_OUTPUT']).write_text(json.dumps(boot_metrics,indent=2),encoding='utf-8')
 
     def test_external_adapter_argv_and_no_shell(self):
         ws = self.app.workspace; c = self.features.connections

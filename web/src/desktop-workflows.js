@@ -25,7 +25,7 @@ export class DesktopWorkflows{
     this.channel.onmessage=e=>this.safe(async()=>{if(e.data.type==='workspace-changed'&&this.query.has('panel')){this.freezeWorkspace();return;}if(e.data.workspace!==h.service().workspace)return;if(['run-main','task','terminal-main','terminal-created'].includes(e.data.type)){await this.sessionMessage(e.data);return;}if(e.data.type==='open'&&!this.query.has('panel'))await h.openFile(e.data.path);if(e.data.type==='active'&&e.data.path&&this.query.get('panel')==='assistant')await h.openFile(e.data.path);if(e.data.type==='active'&&this.query.get('panel')==='forge')await this.followForgeFile(e.data.path);if(e.data.type==='forge-terminal'&&!this.query.has('panel'))await this.openForgeTerminal();});
     if(!this.query.has('panel')){const active=h.editor.callbacks.active;h.editor.callbacks.active=(path,...args)=>{active?.(path,...args);this.activeFile(path);};}
     for(const [panel,node] of Object.entries(h.dock.panels)){
-      const b=document.createElement('button');b.className='icon-button';b.title='Abrir '+{project:'Proyecto',assistant:'asistente',console:'terminal'}[panel]+' en el escritorio';b.setAttribute('aria-label',b.title);b.innerHTML=icon('detach');b.onclick=()=>this.safe(()=>this.detach(panel));node.querySelector(panel==='console'?'.terminal-tools':'.heading-actions').append(b);
+      const b=document.createElement('button');b.className='icon-button';b.dataset.panelDetach=panel;b.title='Abrir '+{project:'Proyecto',assistant:'asistente',console:'terminal'}[panel]+' en el escritorio';b.setAttribute('aria-label',b.title);b.innerHTML=icon('detach');b.onclick=()=>this.safe(()=>this.detach(panel));node.querySelector(panel==='console'?'.terminal-tools':'.heading-actions').append(b);
     }
     h.editor.callbacks.detached=path=>this.safe(()=>this.focusEditor(path));
     this.returned=e=>this.safe(()=>this.restorePanel(e.detail.panel,e.detail.path));window.addEventListener('lumen:native-return',this.returned);
@@ -75,7 +75,8 @@ export class DesktopWorkflows{
   }
   async openForgeTerminal(){
     const h=this.host;this.forgeIntegrated=true;
-    h.studio.enter();if(options.quiet)h.showConsole();else this.showForgeConsole();this.paintHacker();
+    h.studio.enter();this.showForgeConsole();this.paintHacker();
+    await this.refreshForgeTools();
     if(h.service().trusted){const data=await h.platform.api('/terminals');for(const t of data.sessions)if(t.profile.kind==='hacker'&&!h.platform.terminals.has(t.id))await h.platform.attachTerminal(t);}
   }
   async openForgeWindow(){
@@ -101,7 +102,8 @@ export class DesktopWorkflows{
   }
   async handle(action){
     const h=this.host;
-    if(action==='stop-task'&&this.regularRun&&this.forgeRun?.terminal){await h.platform.api('/terminals/close',{id:this.forgeRun.terminal});const terminal=h.platform.terminals.get(this.forgeRun.terminal);if(terminal){terminal.closed=true;terminal.input?.close();}this.syncRunButton();return true;}
+    if(action==='stop-task'){const p=h.platform,t=p.showingPTY&&p.terminals.get(p.activeTerminal);if(t?.execution?.running){await p.api('/terminals/stop-run',{id:t.id});return true;}}
+    if(action==='stop-task'&&this.regularRun&&this.forgeRun?.terminal){const terminal=h.platform.terminals.get(this.forgeRun.terminal);if(terminal?.execution?.running){await h.platform.api('/terminals/stop-run',{id:terminal.id});return true;}await h.platform.api('/terminals/close',{id:this.forgeRun.terminal});if(terminal){terminal.closed=true;terminal.input?.close();}this.syncRunButton();return true;}
     if(action==='toggle-terminal'&&this.editorShell){await this.toggleEditorTerminal();return true;}
     if(action==='split-editor'){h.studio.enter();const paths=h.editor.visiblePaths(),path=paths.find(p=>p!==h.editor.current)||h.editor.current;if(!path)throw Error('Abre un archivo para dividir el editor.');h.editor.split(path);return true;}
     if(action==='close-split-editor'){h.editor.closeSplit();return true;}
@@ -123,10 +125,16 @@ export class DesktopWorkflows{
   async runFile(path){
     if(this.staleWorkspace)throw Error('Este editor pertenece a un proyecto anterior. Vuelve a Zénit antes de ejecutar.');
     if(this.runPending)return;this.runPending=true;this.regularRun=true;
-    try{return await this.runHacker('file',{path,quiet:true});}finally{this.runPending=false;this.syncRunButton();}
+    try{
+      const p=this.host.platform,t=p.showingPTY&&p.terminals.get(p.activeTerminal);
+      if(t&&!t.closed&&!t.profile.id.startsWith('extension:')&&t.profile.id!=='hacker'){
+        const result=await p.runInTerminal(t.id,path);if(result?.execution)this.forgeRun={mode:'file',path,started:Date.now(),terminal:t.id,selectedTerminal:true};return result;
+      }
+      return await this.runHacker('file',{path,quiet:true});
+    }finally{this.runPending=false;this.syncRunButton();}
   }
   async runBinary(path,args=[]){if(this.runPending)return;if(this.staleWorkspace)throw Error('Vuelve al proyecto actual antes de ejecutar.');this.runPending=true;this.regularRun=true;try{return await this.runHacker('binary',{path,args,quiet:true,saved:true});}finally{this.runPending=false;this.syncRunButton();}}
-  syncRunButton(){if(!this.regularRun)return;const terminal=this.host.platform.terminals.get(this.forgeRun?.terminal),running=!!terminal&&!terminal.closed;if(this.lastRunButton!==running){this.lastRunButton=running;this.host.setRunState?.(running);}}
+  syncRunButton(){const p=this.host.platform,selected=p.showingPTY&&p.terminals.get(p.activeTerminal),shell=selected&&selected.profile.id!=='hacker'&&!selected.profile.id.startsWith('extension:');if(!shell&&!this.regularRun)return;const terminal=p.terminals.get(this.forgeRun?.terminal),running=shell?!!selected.execution?.running:!!terminal&&!terminal.closed&&(this.forgeRun?.selectedTerminal?!!terminal.execution?.running:true);if(this.lastRunButton!==running){this.lastRunButton=running;this.host.setRunState?.(running);}}
   async runHacker(mode,options={}){
     if(this.forgeBusy||this.forgeFollowing)return;
     const h=this.host,path=options.path||h.editor.current,record=h.editor.models.get(path),content=record?.model?.getValue()??record?.value??'';if(!path)throw Error('Abre el archivo que quieres ejecutar.');if(!await h.ensureTrust())return;
@@ -140,7 +148,7 @@ export class DesktopWorkflows{
       if(result.artifacts?.created?.length){await h.refreshTree();h.notify(h.platform.t('Archivos de compilación preparados: ','Build files prepared: ')+result.artifacts.created.join(' · '));}
       if(result.preview){h.studio.lantern.showPreview(result.preview);return;}
       if(result.terminal){await h.platform.attachTerminal(result.terminal);this.forgeRun.terminal=result.terminal.id;this.publishTerminal(result.terminal.id);return;}
-      h.showConsole();await h.watchJob(result.job,path);
+      if(h.showTaskConsole)h.showTaskConsole();else h.showConsole();await h.watchJob(result.job,path,{preparing:true});
       const terminal=await h.platform.api('/hacker/attach',{job:result.job});await h.platform.attachTerminal(terminal);this.forgeRun.terminal=terminal.id;
       this.publishTerminal(terminal.id);h.notify(mode==='file'?'Forge · ejecutando '+path:'Forge · GDB listo en main. Usa next, step, print variable, continue o quit.');
     }catch(error){this.forgeError=true;throw error;}

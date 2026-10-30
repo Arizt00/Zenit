@@ -1,4 +1,5 @@
 import {icon} from './icons.js';
+import {TaskFlow} from './task-flow.js';
 
 /** One aligned working surface for all package managers. */
 export function mountDependencyLayout(root,p){
@@ -12,4 +13,6 @@ export function mountDependencyLayout(root,p){
   for(const selector of ['.python-list-toolbar','.python-package-list']){const node=root.querySelector(selector);if(node)inventory.append(node);}
   grid.append(setup,inventory);root.querySelector('.python-footnote').before(grid);
   const mark=document.createElement('span');mark.className='dependency-mark';mark.innerHTML=icon(native?'cpu':'code');root.querySelector('.python-heading').prepend(mark);
+  const review=document.createElement('div');setup.querySelector('.python-task').before(review);
+  return new TaskFlow(root,{t,before:root.querySelector('.native-language')||grid,reviewHost:review,configure:()=>root.querySelector('.python-install input').focus()});
 }

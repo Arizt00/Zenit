@@ -14,6 +14,23 @@ export function byteValue(bytes,index,little=true){
 }
 export function binaryState(item){return item.binaryState ||= {revision:item.revision,patches:new Map(),undo:[],redo:[],saving:false};}
 export function binaryPatches(state){const groups=[];for(const [offset,p] of [...state.patches].sort((a,b)=>a[0]-b[0])){let group=groups.at(-1);if(!group||group.offset+group.before.length!==offset||group.before.length>=4096){group={offset,before:[],after:[]};groups.push(group);}group.before.push(p.before);group.after.push(p.after);}const encode=bytes=>btoa(bytes.map(x=>String.fromCharCode(x)).join(''));return groups.map(g=>({offset:g.offset,before:encode(g.before),after:encode(g.after)}));}
+export function captureBinary(item,offset=0){
+  const state=binaryState(item);
+  return {revision:state.revision,patches:binaryPatches(state),offset};
+}
+export function restoreBinary(item,recovery){
+  const patches=new Map(),undo=[];
+  for(const group of recovery.patches){
+    const before=Uint8Array.from(atob(group.before),c=>c.charCodeAt(0)),after=Uint8Array.from(atob(group.after),c=>c.charCodeAt(0));
+    for(let i=0;i<before.length;i++)if(before[i]!==after[i]){
+      const offset=group.offset+i;patches.set(offset,{before:before[i],after:after[i]});
+      undo.push({offset,before:before[i],after:after[i],original:before[i]});
+    }
+  }
+  item.binaryState={revision:recovery.revision,patches,undo,redo:[],saving:false};
+  item.recoveryConflict=item.revision!==recovery.revision;
+  return !item.recoveryConflict;
+}
 /** Page data stays small; edits survive tab changes and never decode bytes as text. */
 export class BinaryView{
   constructor(mount,item,load,actions={}){
@@ -42,6 +59,7 @@ export class BinaryView{
     this.node.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&['z','y'].includes(e.key.toLowerCase())){e.preventDefault();e.stopImmediatePropagation();this.undo(e.shiftKey||e.key.toLowerCase()==='y');}};
     this.actions.info?.().then(info=>{if(!this.node.isConnected)return;this.node.querySelector('[data-binary-run]').disabled=!info.canRun;this.node.querySelector('[data-binary-run]').title=info.runReason||'Ejecutar en la terminal seleccionada';}).catch(error=>this.error(error.message));
     this.paintControls();
+    if(item.recoveryConflict)this.error('Se recuperaron tus bytes pendientes, pero el archivo cambió en disco. Exporta los cambios antes de revisar el binario; no se mezclan revisiones.');
   }
   error(message){const node=this.node.querySelector('.binary-error');node.classList.remove('binary-save-result');node.textContent=message;node.hidden=!message;}
   async page(offset){if(this.state.saving)return;const epoch=++this.epoch;this.error('');this.node.setAttribute('aria-busy','true');try{const item=await this.load(this.item.path,offset);if(epoch===this.epoch&&this.node.isConnected){if(item.revision!==this.state.revision&&this.state.patches.size)throw Error('El archivo cambió en disco. Tus cambios permanecen aquí; expórtalos antes de volver a abrirlo. No se mezclan revisiones.');this.state.revision=item.revision;this.render(item);}}catch(e){if(epoch===this.epoch)this.error(e.message);}finally{if(epoch===this.epoch)this.node.removeAttribute('aria-busy');}}
@@ -52,16 +70,16 @@ export class BinaryView{
   }
   paintSelection(){this.node.querySelectorAll('[data-byte]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.byte===this.selected)));this.value();this.paintControls();}
   paintControls(){
-    const selected=this.selected!==null,editable=this.editing&&!this.item.readOnly&&!this.state.saving;
+    const selected=this.selected!==null,editable=this.editing&&!this.item.readOnly&&!this.state.saving&&!this.record.recoveryConflict;
     this.node.querySelector('[data-binary-edit]').setAttribute('aria-pressed',String(this.editing));this.node.querySelector('[data-binary-edit]').disabled=this.item.readOnly||this.state.saving;
     const input=this.node.querySelector('[data-binary-edit-form] input');input.disabled=!editable||!selected;if(selected&&document.activeElement!==input)input.value=this.bytes[this.selected].toString(16).padStart(2,'0');this.node.querySelector('[data-binary-edit-form] button').disabled=input.disabled;
     this.node.querySelector('[data-binary-undo]').disabled=!this.state.undo.length||this.state.saving;this.node.querySelector('[data-binary-redo]').disabled=!this.state.redo.length||this.state.saving;
-    this.node.querySelector('[data-binary-save]').disabled=!this.state.patches.size||this.state.saving;this.node.querySelector('[data-binary-build]').disabled=this.state.saving;
+    this.node.querySelector('[data-binary-save]').disabled=!this.state.patches.size||this.state.saving||!!this.record.recoveryConflict;this.node.querySelector('[data-binary-build]').disabled=this.state.saving||!!this.record.recoveryConflict;
     this.node.querySelector('.binary-modified').textContent=this.state.saving?'Guardando…':this.state.patches.size?this.state.patches.size+' bytes modificados':'Sin cambios';
     this.node.querySelector('[data-byte-prev]').disabled=this.item.offset===0||this.state.saving;this.node.querySelector('[data-byte-next]').disabled=this.item.offset+this.item.count>=this.item.size||this.state.saving;
   }
   edit(hex){
-    if(!this.editing||this.state.saving||this.item.readOnly||this.selected===null)return;
+    if(!this.editing||this.state.saving||this.item.readOnly||this.record.recoveryConflict||this.selected===null)return;
     if(!/^[\da-f]{2}$/i.test(hex))return this.error('Escribe exactamente dos dígitos hexadecimales.');
     const offset=this.item.offset+this.selected,after=parseInt(hex,16),before=this.bytes[this.selected];if(after===before)return;
     if(!this.state.patches.has(offset)&&this.state.patches.size>=65536)return this.error('Guarda antes de modificar más de 64 KiB.');

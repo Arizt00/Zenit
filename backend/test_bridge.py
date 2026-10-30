@@ -3,7 +3,7 @@ import argparse,inspect,json,os,sys,time,traceback,unittest
 from pathlib import Path
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--workspace',required=True);parser.add_argument('--output',required=True);parser.add_argument('--framework',choices=('unittest','pytest'),required=True);parser.add_argument('--selection',default='');parser.add_argument('--coverage',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--workspace',required=True);parser.add_argument('--output',required=True);parser.add_argument('--framework',choices=('unittest','pytest'),required=True);parser.add_argument('--selection',action='append',default=[]);parser.add_argument('--coverage',action='store_true');args=parser.parse_args()
     root=Path(args.workspace).resolve();output=Path(args.output).resolve();sys.path.insert(0,str(root));os.chdir(root);items=[];started=time.monotonic();coverage=None;data={'results':items,'framework':args.framework,'coverage':None,'error':None}
     def location(test,error=None):
         path=None;line=1
@@ -19,7 +19,8 @@ def main():
         def startTest(self,test):super().startTest(test);test._zenit_started=time.monotonic()
         def record(self,test,status,error=None,message=''):
             if len(items)>=5000:raise RuntimeError('Se superaron 5000 resultados de pruebas.')
-            items.append({'id':test.id(),'name':str(test),'status':status,'seconds':round(time.monotonic()-getattr(test,'_zenit_started',time.monotonic()),4),**location(test,error),'message':(''.join(traceback.format_exception(*error)) if error else message)[-12000:]})
+            definition=location(test);selector=definition['path']+'::'+type(test).__qualname__+'.'+getattr(test,'_testMethodName','') if definition['path'] else None
+            items.append({'id':test.id(),'name':str(test),'selector':selector,'status':status,'seconds':round(time.monotonic()-getattr(test,'_zenit_started',time.monotonic()),4),**location(test,error),'message':(''.join(traceback.format_exception(*error)) if error else message)[-12000:]})
         def addSuccess(self,test):super().addSuccess(test);self.record(test,'passed')
         def addError(self,test,error):super().addError(test,error);self.record(test,'error',error)
         def addFailure(self,test,error):super().addFailure(test,error);self.record(test,'failed',error)
@@ -41,11 +42,11 @@ def main():
                     if isinstance(test,unittest.TestSuite):yield from flatten(test)
                     else:yield test
             if args.selection:
-                file,name=args.selection.split('::',1);target=(root/file).resolve();selected=[]
+                requested=[value.split('::',1) for value in args.selection];selected=[]
                 for test in flatten(suite):
                     loc=location(test)
-                    if loc['path']==file and test.id().endswith('.'+name):selected.append(test)
-                if not selected:raise ValueError('La prueba seleccionada no se encontró después de descubrir la suite.')
+                    if any(loc['path']==file and test.id().endswith('.'+name) for file,name in requested):selected.append(test)
+                if len(selected)!=len(requested):raise ValueError('Una prueba seleccionada no se encontró después de descubrir la suite.')
                 suite=unittest.TestSuite(selected)
             result=unittest.TextTestRunner(verbosity=2,resultclass=Result).run(suite);code=0 if result.wasSuccessful() and result.testsRun else 1
         else:
@@ -56,8 +57,8 @@ def main():
                     if len(items)>=5000:raise RuntimeError('Se superaron 5000 resultados de pruebas.')
                     file,line,name=report.location
                     items.append({'id':report.nodeid,'name':name,'path':file,'line':line+1,'status':'failed' if report.failed else 'skipped' if report.skipped else 'passed','seconds':round(report.duration,4),'message':str(report.longrepr)[-12000:] if report.longrepr else ''})
-            selection=args.selection if args.selection else 'tests' if (root/'tests').is_dir() else '.'
-            code=int(pytest.main(['-q','--color=no',selection],plugins=[Reports()]))
+            selections=args.selection or ['tests' if (root/'tests').is_dir() else '.']
+            code=int(pytest.main(['-q','--color=no',*selections],plugins=[Reports()]))
     except BaseException as error:
         data['error']=str(error)[:2000];traceback.print_exc();code=2
     finally:

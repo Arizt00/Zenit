@@ -228,7 +228,8 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("Task stopped", job.output)
 
     def test_protected_console_and_read_commands(self):
-        self.assertIn("local command console", self.runner.console(self.ws, "help")["output"])
+        help_text=self.runner.console(self.ws, "help")["output"]
+        for command in ('help','pwd','ls','check','build','run','clear'):self.assertIn(command,help_text)
         self.assertIn(str(self.root), self.runner.console(self.ws, "pwd")["output"])
         self.assertIn("Examples/", self.runner.console(self.ws, "ls")["output"])
         self.assertEqual(self.runner.console(self.ws, "cd Examples")["cwd"], "Examples")

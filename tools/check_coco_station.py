@@ -11,6 +11,7 @@ import json
 import platform
 from pathlib import Path
 import shutil
+import secrets
 import socket
 import sys
 import tempfile
@@ -52,7 +53,7 @@ time.sleep(2)
             target=app.features.prefs.directory/'tools/coco'/VERSION/name;target.parent.mkdir(parents=True);shutil.copy2(args.connector,target)
         report={'mode':args.mode,'hostStation':station_id(),'hostName':socket.gethostname(),'checks':[],'errors':[]}
         try:
-            state=app.features.team.start(app.workspace,{'documents':documents,'mode':args.mode,'allowRun':True});deadline=time.monotonic()+100
+            state=app.features.team.start(app.workspace,{'protocol':2,'shareProject':True,'documents':documents,'mode':args.mode,'allowRun':True});deadline=time.monotonic()+100
             while state['connection']['phase'] not in ('ready','failed') and time.monotonic()<deadline:time.sleep(.2);state=app.features.team.status()
             if state['connection']['phase']!='ready':raise RuntimeError(state['connection'].get('error') or 'Transport not ready')
             write_report(args.exchange/'invitation.json',{'invitation':state['invitation'],'hostStation':station_id(),'mode':args.mode})
@@ -60,6 +61,10 @@ time.sleep(2)
             print('Endpoint:',state['invitation'].split('#')[0],flush=True)
             deadline=time.monotonic()+args.seconds
             while time.monotonic()<deadline:
+                # This dedicated fixture grants its joining probe permission to
+                # execute only the two generated test files, never personal code.
+                for member in list(app.features.team.room.project.members.values()):
+                    if member['role']=='viewer' and member.get('name')=='Station acceptance probe':app.features.team.request({'action':'permissions','participant':member['id'],'role':'runner'})
                 if any(c['label']=='STATION_PROBE_COMPLETE' for c in app.features.team.room.checkpoints):break
                 time.sleep(.2)
             else:raise TimeoutError('No completed peer proof received; this is not a two-station pass.')
@@ -80,9 +85,12 @@ def join(args):
     if url.scheme not in ('http','https') or not url.hostname or url.username or url.path not in ('','/') or not 32<=len(url.fragment)<=100:raise ValueError('Invalid fixture invitation')
     distinct=invitation['hostStation']!=station_id()
     if not distinct and not args.allow_same_station:raise ValueError('This is the host computer. Use a different station; same-station tests do not validate two machines.')
-    wire=TeamService(None);remote=(url._replace(fragment='',path='/v1').geturl(),url.fragment);peer=uuid.uuid4().hex
-    def request(body):return wire.contact(remote,{'peer':peer,'name':'Station acceptance probe','station':socket.gethostname(),'vectors':{},**body})
+    wire=TeamService(None);remote=(url._replace(fragment='',path='/v1').geturl(),url.fragment);peer=uuid.uuid4().hex;resume=secrets.token_urlsafe(32)
+    def request(body):return wire.contact(remote,{'peer':peer,'resumeKey':resume,'name':'Station acceptance probe','station':socket.gethostname(),'vectors':{},**body})
     result=request({'action':'sync'});room=result['room'];paths={'station_a.py','station_b.py'}
+    deadline=time.monotonic()+15
+    while not result.get('self',{}).get('permissions',{}).get('run') and time.monotonic()<deadline:time.sleep(.2);result=request({'action':'sync'})
+    if not result.get('self',{}).get('permissions',{}).get('run'):raise ValueError('The fixture host did not grant execution permission.')
     if set(result['paths'])!=paths:raise ValueError('Use the fixture host command, not a session containing personal project files.')
     updates={}
     for path in paths:

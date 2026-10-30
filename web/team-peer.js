@@ -1,16 +1,20 @@
 import * as Y from '/team-vendor/yjs.mjs';
 import {SharedExecutions} from '/team-execution.js';
 import {CoCoDrafts} from '/coco-drafts.js';
+import {CoCoRunIntents} from '/coco-intents.js';
 const $=s=>document.querySelector(s),key=location.hash.slice(1),identityKey='coco:'+key,files=new Map();
 let identity;try{identity=JSON.parse(sessionStorage.getItem(identityKey));}catch{}identity||={peer:crypto.randomUUID()};
+// Persist before the first sync: its acknowledgement can be lost in transit.
+identity.resumeKey||=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
+try{sessionStorage.setItem(identityKey,JSON.stringify(identity));}catch{}
 let current,editor,busy=false,running=false,applying=false,timer,syncError=false,pending=new Map(),tree=[],treeVersion,permissions={edit:true},snapshot,drafts;
-const executions=new SharedExecutions(request),runIntents=new Map();
+const executions=new SharedExecutions(request),runIntents=new CoCoRunIntents();
 const encode=bytes=>{let s='';for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(s);},decode=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function request(body){
   for(let attempt=0;attempt<2;attempt++){
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);let response,result;
     try{response=await fetch('/v1',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({...body,...identity}),signal:controller.signal});result=await response.json();}
-    catch(error){if(attempt||body.action!=='run'||!body.requestId)throw error;continue;}finally{clearTimeout(timeout);}
+    catch(error){if(attempt||!(body.action==='run'&&body.requestId||body.action==='sync'&&identity.resumeKey||['project-create','project-rename'].includes(body.action)&&body.operationId))throw error;continue;}finally{clearTimeout(timeout);}
     if(!response.ok)throw Error(result.error||'Conexión rechazada.');return result;
   }
 }
@@ -32,7 +36,7 @@ async function sync(){
   try{
     const result=await request({action:'sync',name:$('#name').value,station:'Navegador · CoCo',path:current,cursor:editor.getPosition(),treeVersion,documentIds:Object.fromEntries([...files].map(([path,e])=>[path,e.id])),vectors:Object.fromEntries([...files].map(([path,e])=>[path,encode(Y.encodeStateVector(e.doc))])),updates:Object.fromEntries([...sent].map(([path,updates])=>[path,encode(Y.mergeUpdates(updates))]))});
     if(result.self?.resumeKey){identity.resumeKey=result.self.resumeKey;try{sessionStorage.setItem(identityKey,JSON.stringify(identity));}catch{}}
-    snapshot=result;permissions=result.self?.permissions||{edit:true,save:result.allowRun,run:result.allowRun};if(result.acceptedUpdates===false)requeue(sent);drafts||=new CoCoDrafts(Y,result.room);reconcile(result.documents);if(result.project?.files)tree=result.project.files;treeVersion=result.project?.version;
+    runIntents.configure(result.room);snapshot=result;permissions=result.self?.permissions||{edit:true,save:result.allowRun,run:result.allowRun};if(result.acceptedUpdates===false)requeue(sent);drafts||=new CoCoDrafts(Y,result.room);reconcile(result.documents);if(result.project?.files)tree=result.project.files;treeVersion=result.project?.version;
     for(const [path,value] of Object.entries(result.updates)){
       let entry=files.get(path),fresh=false;if(!entry){fresh=true;const doc=new Y.Doc();entry={id:result.documents?.find(d=>d.path===path)?.id||path,path,doc,text:doc.getText('text')};entry.undo=new Y.UndoManager(entry.text,{trackedOrigins:new Set(['local'])});files.set(path,entry);doc.on('update',(u,origin)=>{if(origin==='remote')return;const path=entry.path;if(!pending.has(path))pending.set(path,[]);pending.get(path).push(u);drafts.schedule(entry.id,doc);clearTimeout(timer);timer=setTimeout(sync,60);});}
       Y.applyUpdate(entry.doc,decode(value),'remote');if(fresh)await drafts.restore(entry.id,entry.doc);const text=entry.text.toString();
@@ -51,12 +55,14 @@ $('#connect').onclick=()=>act(async()=>{if(key.length<32)throw Error('Necesitas 
 async function flush(){await synchronize();if(pending.size)throw Error('Aún quedan cambios sin confirmar.');}
 $('#save').onclick=()=>act(async()=>{await flush();await request({action:'save',path:current});status('Guardado en el anfitrión.');});
 $('#run').onclick=async()=>{
-  const path=current;let intent=runIntents.get(path);if(intent?.promise)return intent.promise;
-  if(!intent){intent={requestId:identity.peer+':'+crypto.randomUUID()};runIntents.set(path,intent);}let acknowledged=false;
+  const path=current,intentKey=files.get(path)?.id||path;let intent=runIntents.get(intentKey);if(intent?.promise)return intent.promise;
+  if(!intent){intent={requestId:identity.peer+':'+crypto.randomUUID()};runIntents.set(intentKey,intent);}let acknowledged=false;
   intent.promise=act(async()=>{await flush();const result=await request({action:'run',path,requestId:intent.requestId});acknowledged=true;while(running){const data=await executions.read(path,result);if(!data)break;if(current===path)$('#output').textContent=data.text;if(data.done)break;await new Promise(r=>setTimeout(r,300));}});
-  try{await intent.promise;}finally{intent.promise=null;if(acknowledged)runIntents.delete(path);}
+  try{await intent.promise;}finally{intent.promise=null;if(acknowledged)runIntents.delete(intentKey);}
 };
 $('#undo').onclick=()=>{if(permissions.edit)files.get(current)?.undo.undo();};$('#project-search').oninput=paintProject;
-$('#new-file').onclick=()=>act(async()=>{const path=prompt('Ruta del nuevo archivo dentro del proyecto');if(!path)return;await request({action:'project-create',path});await synchronize();choose(path);});
-$('#rename-file').onclick=()=>act(async()=>{const newPath=prompt('Nueva ruta del archivo',current);if(!newPath||newPath===current)return;await request({action:'project-rename',path:current,newPath});await synchronize();choose(newPath);});
+$('#new-file').onclick=()=>act(async()=>{const path=prompt('Ruta del nuevo archivo dentro del proyecto');if(!path)return;await mutation({action:'project-create',path});await synchronize();choose(path);});
+$('#rename-file').onclick=()=>act(async()=>{const newPath=prompt('Nueva ruta del archivo',current);if(!newPath||newPath===current)return;await mutation({action:'project-rename',path:current,newPath});await synchronize();choose(newPath);});
 window.addEventListener('pagehide',()=>{drafts?.flushAll();running=false;clearTimeout(timer);});
+
+async function mutation(body){const intentKey=JSON.stringify([body.action,body.path,body.newPath]);let intent=runIntents.get(intentKey);if(!intent){intent={requestId:crypto.randomUUID()};runIntents.set(intentKey,intent);}const result=await request({...body,operationId:intent.requestId});runIntents.delete(intentKey);return result;}

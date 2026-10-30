@@ -1,4 +1,6 @@
 @import url('/design/support.css');
+@import url('/design/editor-depth.css');
+@import url('/design/performance-report.css');
 @import url('/design/tokens.css');
 @import url('/design/startup.css');
 @import url('/design/shell.css');
@@ -46,3 +48,14 @@
 @import url('/design/coherence-r16.css');
 @import url('/design/workflows-r17.css');
 @import url('/design/release-055.css');
+@import url('/design/code-help.css');
+@import url('/design/task-flow.css');
+@import url('/design/typography.css');
+@import url('/design/panel-chrome.css');
+@import url('/design/local-models.css');
+@import url('./design/project-organizer.css');
+@import url('/design/experience-055.css');
+
+@import url("./design/experience-r2.css");
+@import url('/design/interface-r6.css');
+@import url('/design/investigations.css');

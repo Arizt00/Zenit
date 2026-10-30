@@ -131,7 +131,10 @@ class Downloads:
             target=self.root/item['name']
             if target.exists(): raise ValueError('El destino ya existe.')
             partial.rename(target)
-            with self.lock:item.update(status='complete',path=str(target),speed=0)
+            stat=target.stat()
+            with self.lock:item.update(status='complete',path=str(target),speed=0,
+                verifiedSize=stat.st_size if item['sha256'] else None,
+                verifiedMtimeNs=stat.st_mtime_ns if item['sha256'] else None)
         except Exception as exc:
             with self.lock:item.update(status='paused' if event.is_set() else 'error',error=str(exc),speed=0)
         finally:

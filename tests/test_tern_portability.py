@@ -26,10 +26,16 @@ class PortabilityTests(unittest.TestCase):
         other=self.base/'other';other.mkdir();shutil.copy2(self.project/bundle['file'],other/bundle['file']);second=Application(ROOT,other,data_dir=self.base/'other-profile');second.workspace.trusted=True
         try:
             target=second.features.tern;checked=target.portability.inspect(second.workspace,bundle['file']);self.assertTrue(checked['report']['complete'],checked)
-            result=target.portability.rebuild(second.workspace,{'file':bundle['file'],'consent':True},event);self.assertTrue(result['offline']);self.assertNotEqual(result['environment'],identity)
+            result=target.portability.rebuild(second.workspace,{'file':bundle['file'],'bundleSha256':checked['report']['bundleSha256'],'consent':True},event);self.assertTrue(result['offline']);self.assertNotEqual(result['environment'],identity)
             python=target.python(target.directory(second.workspace,result['environment']))
             output=subprocess.check_output([str(python),'-I','-c','import zenit_qa_package;print(zenit_qa_package.VALUE)'],text=True,creationflags=0x08000000 if os.name=='nt' else 0)
             self.assertIn('actual wheel 1.0.0',output);self.assertTrue((directory/'environment').is_dir());self.assertTrue((other/result['file']).is_file())
+            self.assertEqual(result['receipt']['environmentId'],bundle['report']['environmentId']);self.assertIn('pip-check',result['receipt']['verified'])
+            receipt=target.directory(second.workspace,result['environment'])/'reconstruction.json';self.assertEqual(json.loads(receipt.read_text())['bundleSha256'],checked['report']['bundleSha256'])
+            with (other/bundle['file']).open('ab') as changed:changed.write(b'CHANGED_AFTER_REVIEW')
+            existing=set(target.sessions)
+            with self.assertRaisesRegex(ValueError,'cambió desde la revisión'):target.portability.rebuild(second.workspace,{'file':bundle['file'],'bundleSha256':checked['report']['bundleSha256'],'consent':True},event)
+            self.assertEqual(set(target.sessions),existing)
         finally:second.features.shutdown();second.runner.shutdown()
 
     def test_bundle_rejects_unknown_steps_traversal_and_tampered_resources(self):
@@ -55,7 +61,43 @@ class PortabilityTests(unittest.TestCase):
             identity=t.create(ws,{'kind':'arch','name':'Portable disk fixture'},event)['environment'];t.save(ws,identity,'machine.tern');result=p.export(ws,{'file':'machine.tern'},event);self.assertTrue(result['report']['complete'],result)
         other=self.base/'other-vm-project';other.mkdir();shutil.copy2(self.project/result['file'],other/result['file']);second=Application(ROOT,other,data_dir=self.base/'vm-profile');second.workspace.trusted=True
         try:
-            restored=second.features.tern.portability.rebuild(second.workspace,{'file':result['file'],'consent':True},event);disk=second.features.tern.directory(second.workspace,restored['environment'])/'disk.qcow2';info=json.loads(subprocess.check_output([base['qimg'],'info','--output=json',str(disk)],timeout=15,creationflags=0x08000000 if os.name=='nt' else 0));self.assertNotIn('backing-filename',info);self.assertEqual(info['format'],'qcow2');self.assertTrue(disk.with_name('seed.iso').is_file());self.assertNotEqual(identity,restored['environment'])
+            restored=second.features.tern.portability.rebuild(second.workspace,{'file':result['file'],'bundleSha256':result['report']['bundleSha256'],'consent':True},event);disk=second.features.tern.directory(second.workspace,restored['environment'])/'disk.qcow2';info=json.loads(subprocess.check_output([base['qimg'],'info','--output=json',str(disk)],timeout=15,creationflags=0x08000000 if os.name=='nt' else 0));self.assertNotIn('backing-filename',info);self.assertEqual(info['format'],'qcow2');self.assertTrue(disk.with_name('seed.iso').is_file());self.assertNotEqual(identity,restored['environment'])
+
         finally:second.features.shutdown();second.runner.shutdown()
 
+    def fixture_bundle(self,name='fixture.tern.zip',incompatible=False,missing_dependency=False):
+        import hashlib,platform
+        p=self.app.features.tern.portability;actual=p.inventory(self.app.features.python_packages.base());filename=wheel(self.project);source=self.project/'.lumen'/filename
+        if missing_dependency:
+            with zipfile.ZipFile(source) as archive:entries={i:archive.read(i) for i in archive.namelist()}
+            metadata=next(i for i in entries if i.endswith('/METADATA'));entries[metadata]+=b'Requires-Dist: zenit-qa-deliberately-absent>=1\n'
+            with zipfile.ZipFile(source,'w') as archive:
+                for key,value in entries.items():archive.writestr(key,value)
+        payload=source.read_bytes();filename=filename.replace('py3-none-any','cp27-cp27m-manylinux1_i686') if incompatible else filename
+        data={'schema':2,'type':'zenit-environment','kind':'python','name':'Offline check','target':{'kind':'local'},'platform':{'system':platform.system(),'machine':platform.machine()},'dependencies':[{'name':'zenit-qa-package','version':'1.0.0'}],'tools':[{'name':'python','version':actual['version'],'implementation':actual['implementation']}],'preparation':[{'action':'python.venv'},{'action':'python.install-locked'}],'artifacts':[{'path':'wheels/'+filename,'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()}]}
+        with zipfile.ZipFile(self.project/name,'w') as archive:archive.writestr('environment.tern',json.dumps(data));archive.writestr('wheels/'+filename,payload)
+        return p.inspect(self.app.workspace,name)
+
+    def test_incompatible_wheel_is_reported_before_any_preparation(self):
+        report=self.fixture_bundle(incompatible=True)['report'];self.assertFalse(report['complete']);self.assertTrue(any('incompatible' in m for m in report['missing']));self.assertFalse(self.app.runner.jobs)
+
+    def test_inspection_is_cancellable_and_runs_through_the_maintenance_queue(self):
+        from concurrent.futures import CancelledError
+        checked=self.fixture_bundle();event=threading.Event();event.set()
+        with self.assertRaises(CancelledError):self.app.features.tern.portability.inspect(self.app.workspace,'fixture.tern.zip',event=event)
+        task=self.app.features.post('/lantern/environments/inspect',{'file':'fixture.tern.zip'});job=wait(self.app.features.hilo,task['job'],60)
+        self.assertEqual(job['state'],'done',job);self.assertEqual(job['result']['report']['bundleSha256'],checked['report']['bundleSha256']);self.assertFalse(self.app.features.tern.sessions)
+
+    def test_failed_dependency_check_removes_only_the_new_environment(self):
+        result=self.fixture_bundle(missing_dependency=True);self.assertTrue(result['report']['complete'],result)
+        t=self.app.features.tern;sentinel=self.project/'keep.txt';sentinel.write_text('existing project')
+        with self.assertRaisesRegex(ValueError,'Comprobar dependencias reconstruidas falló'):t.portability.rebuild(self.app.workspace,{'file':'fixture.tern.zip','bundleSha256':result['report']['bundleSha256'],'consent':True},threading.Event())
+        self.assertFalse(t.sessions);self.assertEqual(sentinel.read_text(),'existing project');self.assertFalse(list(self.project.glob('.lumen/tern/*/environment')))
+
+    def test_export_refuses_stale_inventory_without_creating_a_bundle(self):
+        t=self.app.features.tern;p=t.portability;data=self.fixture_bundle()['descriptor'];data['id']='a'*32
+        (self.project/'stale.tern').write_text(json.dumps(data))
+        with patch.object(t,'owned',return_value=(self.project,{})),patch.object(p,'inventory',return_value={'version':data['tools'][0]['version'],'implementation':data['tools'][0]['implementation'],'dependencies':[]}):
+            with self.assertRaisesRegex(ValueError,'entorno cambió'):p.export(self.app.workspace,{'file':'stale.tern'},threading.Event())
+        self.assertFalse((self.project/'stale.tern.zip').exists())
 if __name__=='__main__':unittest.main()

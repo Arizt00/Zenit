@@ -25,7 +25,11 @@ class TeamProject:
         if current is None:
             if action!='sync':raise PermissionError('Conecta primero esta estación a CoCo.')
             if sum(len(str(m)) for m in self.members.values())>4000000:raise ValueError('La sesión alcanzó su presupuesto de participantes en memoria.')
-            new_key=secrets.token_urlsafe(32);current={'id':peer,'role':'viewer','created':time.time(),'resumeHash':hashlib.sha256(new_key.encode()).hexdigest()};self.members[peer]=current
+            # A client-generated credential exists before the first response. Losing
+            # that response must not strand the participant or create a second one.
+            supplied=body.get('resumeKey')
+            if supplied is not None and (not isinstance(supplied,str) or not re.fullmatch(r'[A-Za-z0-9_-]{32,100}',supplied)):raise ValueError('Credencial de reconexión inválida.')
+            new_key=supplied or secrets.token_urlsafe(32);current={'id':peer,'role':'viewer','created':time.time(),'resumeHash':hashlib.sha256(new_key.encode()).hexdigest()};self.members[peer]=current
         elif current['role']=='host' or not isinstance(body.get('resumeKey'),str) or not hmac.compare_digest(current['resumeHash'],hashlib.sha256(body['resumeKey'].encode()).hexdigest()):raise PermissionError('La identidad de esta estación no coincide. Utiliza su credencial de reconexión o entra como una estación nueva.')
         current.update(name=str(body.get('name',current.get('name','Invitado')))[:80],station=str(body.get('station',current.get('station','Otra IDE')))[:100],seen=time.monotonic())
         result={'id':peer,'role':current['role'],'permissions':self.permissions(current['role'])}

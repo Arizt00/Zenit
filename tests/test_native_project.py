@@ -107,7 +107,12 @@ class NativeProjectTests(unittest.TestCase):
         self.assertTrue(plan['target'].is_file())
         manifest = json.loads((self.ws / 'ncc.package.json').read_text())
         self.assertEqual(manifest['targets']['main'], 'main.n')
-        self.assertTrue((self.ws / 'main.h').is_file())
+        self.assertFalse((self.ws / 'main.h').exists())
+        self.assertIsNone(plan['artifacts']['header'])
+        self.assertIsNone(plan['artifacts']['cmake'])
+        self.assertFalse(list(self.ws.rglob('CMakeLists.txt')))
+        descriptor=json.loads((self.ws/plan['artifacts']['descriptor']).read_text())
+        self.assertIn('build-native',json.dumps(descriptor))
         before = (self.ws / 'ncc.package.json').read_bytes()
         self.assertIn('REAL_NC', self.execute(self.rt.plan(self.app.workspace, path.name)['commands']))
         self.assertEqual((self.ws / 'ncc.package.json').read_bytes(), before)
@@ -116,13 +121,29 @@ class NativeProjectTests(unittest.TestCase):
         (self.ws / 'sample.rs').write_text('fn main() { println!("RUST_OK"); }')
         with patch('backend.runtimes.find_tool', return_value='rustc'):
             plan = self.rt.plan(self.app.workspace, 'sample.rs')
-        manifest = tomllib.loads((self.ws / 'Cargo.toml').read_text())
-        self.assertEqual(manifest['bin'][0]['path'], 'sample.rs')
-        self.assertEqual(plan['artifacts']['headerKind'], 'optional-c-abi')
+        exported = self.ws / plan['artifacts']['manifest'][0]
+        manifest = tomllib.loads(exported.read_text())
+        self.assertEqual(Path(manifest['bin'][0]['path']), self.ws / 'sample.rs')
+        self.assertIsNone(plan['artifacts']['headerKind'])
+        self.assertIsNone(plan['artifacts']['header'])
+        self.assertFalse((self.ws / 'sample.h').exists())
         (self.ws / 'Cargo.toml').write_text('# Customized by the programmer\n')
         with patch('backend.runtimes.find_tool', return_value='rustc'):
-            self.rt.plan(self.app.workspace, 'sample.rs')
+            with self.assertRaisesRegex(ValueError,'Cargo'):self.rt.plan(self.app.workspace, 'sample.rs')
         self.assertEqual((self.ws / 'Cargo.toml').read_text(), '# Customized by the programmer\n')
+
+    def test_nc_preserves_existing_headers_without_adding_them_to_the_build(self):
+        from backend.native_project import prepare_native_project
+        path = self.ws / 'main.n';path.write_text('app { to main { println("nC"); } fa: return true; }')
+        header = self.ws / 'main.h';header.write_text('// Existing interface; belongs to the user.\n')
+        before = header.read_bytes()
+        target = self.app.workspace.private_dir('run') / 'main.exe'
+        artifact = prepare_native_project(self.app.workspace, path, 'nc', target,
+            [['ncc', 'compiler', 'build-native', str(path), '--out', str(target), '--no-run', '--strict']])
+        self.assertEqual(header.read_bytes(), before)
+        self.assertIsNone(artifact['header'])
+        self.assertIsNone(artifact['cmake'])
+        self.assertNotIn('main.h',(self.ws/artifact['descriptor']).read_text())
 
     @unittest.skipUnless(find_tool('rustc'), 'Rust is not installed on this station')
     def test_installed_rust_compiles_and_runs(self):

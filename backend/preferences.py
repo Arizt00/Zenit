@@ -64,6 +64,7 @@ SCHEMA = {
  'appearance.motion': ('appearance',True,'Animaciones','Animations','bool'),
  'appearance.motionDuration': ('appearance',220,'Transición de paneles (ms)','Panel transition (ms)',[80,400]),
  'appearance.decorations': ('appearance',True,'Paisaje y esfera','Landscape and pearl','bool'),
+ 'appearance.helpContrast': ('appearance',False,'Fondo sólido en menús y ayudas','Solid background for menus and code help','bool'),
  'appearance.lanternMonitor': ('appearance',True,'Monitor Lantern en Proyecto','Lantern project monitor','bool'),
  'appearance.errorColor': ('appearance','red','Color de los errores de código','Code error color',['red','rose','amber','mint']),
  'editor.autoLanguageServer': ('editor',True,'Conectar servidor del lenguaje en proyectos de confianza','Connect language server in trusted projects','bool'),
@@ -117,6 +118,8 @@ SCHEMA = {
  'hardware.enabled': ('hardware',False,'Métricas locales de CPU y memoria','Local CPU and memory metrics','bool'),
  'hardware.interval': ('hardware',2500,'Intervalo de muestreo (ms)','Sampling interval (ms)',[1000,10000]),
  'hardware.gpu': ('hardware',False,'Consultar GPU NVIDIA mediante nvidia-smi','Query NVIDIA GPU using nvidia-smi','bool'),
+ 'hardware.toolCores': ('hardware',0,'Núcleos para herramientas (0: automático)','Tool CPU cores (0: automatic)',[0,64]),
+ 'hardware.toolMemoryMB': ('hardware',4096,'Presupuesto global de RAM de herramientas (MiB, muestreado)','Global tool RAM budget (MiB, sampled)',[256,65536]),
 }
 
 

@@ -2,7 +2,7 @@ import {icon,escapeHTML as esc} from './icons.js';
 
 /** Results belong to a specific buffer and architecture. Editing invalidates them. */
 export class AssemblyWorkbench{
-  constructor(profiles){this.profiles=profiles;this.host=profiles.host;this.architecture='x86_64';this.engine='llvm';this.system='linux';this.execution='simulation';this.engines=new Map();this.systems=new Map();this.architectures=new Map();this.resultTab=null;this.stdin='';this.steps=0;this.sequence=0;this.exampleIndex=0;this.decimal=false;}
+  constructor(profiles){this.profiles=profiles;this.host=profiles.host;this.architecture='x86_64';this.engine='llvm';this.system='linux';this.execution='simulation';this.engines=new Map();this.systems=new Map();this.architectures=new Map();this.resultTab=null;this.stdin='';this.steps=0;this.sequence=0;this.exampleIndex=0;this.decimal=false;this.baselines=new Map();this.onlyChanged=false;this.registerQuery='';}
   async load(){if(this.catalog)return;this.catalog=await this.host.platform.api('/simulation');this.paint();}
   paint(){
     const container=this.profiles.tools,text=this.host.editor.getValue?.()||'',path=this.host.editor.current||'';
@@ -29,13 +29,25 @@ export class AssemblyWorkbench{
       if(action==='native'||action==='run'&&this.execution==='native')return this.runNative();
       if(action==='reset'){this.result=null;this.previousRegisters={};this.steps=0;this.paint();return;}
       if(action==='format'){this.decimal=!this.decimal;this.paint();return;}
+      if(action==='pin'){this.baselines.set(this.baselineKey(),{registers:{...this.result.registers},pc:this.result.pc,executed:this.result.executed});while(this.baselines.size>12)this.baselines.delete(this.baselines.keys().next().value);this.paint();return;}
+      if(action==='unpin'){this.baselines.delete(this.baselineKey());this.paint();return;}
+      if(action==='changes'){this.onlyChanged=!this.onlyChanged;this.paint();return;}
+      if(action==='follow'){this.followPC=this.followPC===false;this.paint();return;}
+      if(action==='copy'){await navigator.clipboard.writeText(JSON.stringify({path,engine:this.engine,architecture:this.architecture,system:this.system,...this.result},null,2));return;}
       if(action==='example'){if(text.trim()&&!await this.host.platform.host.confirmDialog('Cargar ejemplo ASM','Sustituir el búfer actual por el ejemplo de '+architecture.label+'. Puedes deshacerlo con Ctrl+Z.','Cargar ejemplo'))return;this.host.editor.insertText(examples[this.exampleIndex]?.source||architecture.example,true);this.paint();return;}
       if(!await this.host.ensureTrust())return;
       const seq=++this.sequence;this.busy=true;this.paint();
       try{const result=await this.host.platform.api('/simulation/run',{engine:this.engine,system:this.system,path,stdin:this.stdin,architecture:this.architecture,source:this.host.editor.getValue(),steps:action==='step'?Math.min(++this.steps,10000):10000});if(seq===this.sequence){this.previousRegisters=this.result?.registers||{};this.result=result;this.steps=result.executed||0;}}
       finally{this.busy=false;this.paint();if(this.result)container.scrollTop=Math.max(0,container.querySelector('.asm-result').offsetTop-container.offsetTop-container.querySelector('.asm-heading').offsetHeight);}
     }));
-    for(const tab of container.querySelectorAll('[data-asm-result]'))tab.onclick=()=>{this.resultTab=tab.dataset.asmResult;this.paint();};
+    const registerFilter=container.querySelector('[data-register-filter]');if(registerFilter)registerFilter.oninput=e=>{this.registerQuery=e.target.value;this.filterRegisters();};this.filterRegisters();
+    const resultTabs=[...container.querySelectorAll('[data-asm-result]')];container.querySelector('.asm-result-tabs')?.setAttribute('role','tablist');
+    for(const tab of resultTabs){tab.setAttribute('role','tab');tab.setAttribute('aria-selected',tab.getAttribute('aria-pressed'));tab.tabIndex=tab.getAttribute('aria-pressed')==='true'?0:-1;tab.onclick=()=>{this.resultTab=tab.dataset.asmResult;this.paint();};tab.onkeydown=e=>{const index=resultTabs.indexOf(tab),next=e.key==='ArrowRight'?(index+1)%resultTabs.length:e.key==='ArrowLeft'?(index+resultTabs.length-1)%resultTabs.length:e.key==='Home'?0:e.key==='End'?resultTabs.length-1:null;if(next!==null){e.preventDefault();const id=resultTabs[next].dataset.asmResult;this.resultTab=id;this.paint();container.querySelector('[data-asm-result="'+id+'"]').focus();}};}
+
+    const instructions=container.querySelector('.asm-instructions'),current=instructions?.querySelector('.current');
+    if(current&&this.followPC!==false)instructions.scrollTop=Math.max(0,current.offsetTop-instructions.offsetTop-instructions.clientHeight/2+current.clientHeight/2);
+    const resultPanel=container.querySelector('.asm-result-content');
+    if(resultPanel){resultPanel.id='asm-result-panel';resultPanel.setAttribute('role','tabpanel');const selected=resultTabs.find(t=>t.getAttribute('aria-selected')==='true');if(selected){selected.id='asm-selected-tab';selected.setAttribute('aria-controls',resultPanel.id);resultPanel.setAttribute('aria-labelledby',selected.id);}}
     if(!this.catalog)this.profiles.safe(()=>this.load());
   }
   async runNative(){
@@ -48,6 +60,8 @@ export class AssemblyWorkbench{
       return await this.host.perform('run');
     }finally{this.busy=false;this.paint();}
   }
+  baselineKey(){return [this.host.editor.current,this.engine,this.architecture,this.system].join('|');}
+  filterRegisters(){for(const row of this.profiles.tools.querySelectorAll('[data-register-name]'))row.hidden=!row.dataset.registerName.toLowerCase().includes(this.registerQuery.toLowerCase())||(this.onlyChanged&&!row.classList.contains('changed'));}
   resultMarkup(){
     if(this.busy)return '<div class="asm-waiting" role="status">Ensamblando y ejecutando el búfer…</div>';
     if(this.execution==='native')return '<div class="asm-idle asm-native-mode"><span>'+icon('terminal')+'</span><div><strong>Máquina real · '+esc(this.catalog?.nativeSystem||'equipo')+'</strong><p>Guarda, ensambla y ejecuta el archivo en una terminal propia. El programa usa los recursos y permisos de tu equipo. El sistema y la arquitectura deben coincidir; para otro destino utiliza una estación o una VM compatible.</p></div></div>';
@@ -57,9 +71,10 @@ export class AssemblyWorkbench{
     const active=tabs.some(([id])=>id===this.resultTab)?this.resultTab:tabs[0][0];
     let content='';
     if(active==='output')content='<pre class="asm-program-output" aria-label="Salida del programa">'+esc(r.output||'El programa no ha escrito salida.')+'</pre>';
-    if(active==='registers')content='<dl class="asm-registers">'+Object.entries(r.registers||{}).map(([key,value])=>`<div class="${key in this.previousRegisters&&this.previousRegisters[key]!==value?'changed':''}"><dt>${key}</dt><dd title="${esc(value)}">${esc(this.decimal?BigInt(value).toString():value)}</dd></div>`).join('')+'</dl>';
-    if(active==='instructions')content='<div class="asm-instructions">'+r.instructions.map(i=>`<div class="${i.address===r.pc?'current':''}"><code>${esc(i.address)}</code><code>${esc(i.bytes)}</code><code>${esc(i.text)}</code></div>`).join('')+'</div>';
+    if(active==='registers')content='<dl class="asm-registers">'+Object.entries(r.registers||{}).map(([key,value])=>`<div data-register-name="${esc(key)}" class="${key in (this.baselines.get(this.baselineKey())?.registers||this.previousRegisters)&&(this.baselines.get(this.baselineKey())?.registers||this.previousRegisters)[key]!==value?'changed':''}"><dt>${key}</dt><dd title="${esc(value)}">${esc(this.decimal?BigInt(value).toString():value)}</dd></div>`).join('')+'</dl>';
+    if(active==='instructions')content=`<div class="asm-register-tools"><button class="secondary-button" data-asm="follow" aria-pressed="${this.followPC!==false}">${icon('arrow-right')}Seguir instrucción actual</button></div><div class="asm-instructions" tabindex="0" aria-label="Instrucciones desensambladas">`+r.instructions.map(i=>`<div class="${i.address===r.pc?'current':''}"><code>${esc(i.address)}</code><code>${esc(i.bytes)}</code><code>${esc(i.text)}</code></div>`).join('')+'</div>';
     if(active==='memory')content='<pre class="asm-memory">'+esc(r.memory)+'</pre>';
-    return `<header class="asm-status"><span class="asm-state-dot"></span><strong>${esc({complete:'Finalizada',paused:'En pausa',fault:'Error de CPU'}[r.status]||r.status)}</strong><span>${r.executed??'—'} instrucciones${r.exitCode!==undefined&&r.exitCode!==null?' · salida '+esc(r.exitCode):''}${r.format?' · '+esc(r.format):''}${r.pc?' · '+esc(r.pc):''}</span><button class="text-button" data-asm="format">${this.decimal?'Decimal':'Hexadecimal'}</button></header><nav class="asm-result-tabs" aria-label="Resultados ASM">${tabs.map(([id,label])=>`<button type="button" data-asm-result="${id}" aria-pressed="${id===active}">${label}</button>`).join('')}</nav><div class="asm-result-content">${r.error?'<pre class="lab-error">'+esc(r.error)+'</pre>':''}${content}</div><p class="asm-adapter-note">${esc(r.note)}</p>`;
+    if(active==='registers')content=`<div class="asm-register-tools"><label>${icon('search')}<input data-register-filter aria-label="Filtrar registros" value="${esc(this.registerQuery)}" placeholder="Registro…"></label><button class="secondary-button" data-asm="changes" aria-pressed="${this.onlyChanged}">Solo cambios</button></div>`+content;
+    return `<header class="asm-status"><span class="asm-state-dot"></span><strong>${esc({complete:'Finalizada',paused:'En pausa',fault:'Error de CPU'}[r.status]||r.status)}</strong><span>${r.executed??'—'} instrucciones${r.exitCode!==undefined&&r.exitCode!==null?' · salida '+esc(r.exitCode):''}${r.format?' · '+esc(r.format):''}${r.pc?' · '+esc(r.pc):''}</span><button class="text-button" data-asm="format">${this.decimal?'Decimal':'Hexadecimal'}</button></header><div class="asm-evidence-tools"><button class="text-button" data-asm="pin">${icon('pin')}Fijar referencia</button>${this.baselines.has(this.baselineKey())?`<span>Referencia · ${this.baselines.get(this.baselineKey()).executed} instrucciones</span><button class="icon-button" data-asm="unpin" aria-label="Quitar referencia">${icon('close')}</button>`:''}<button class="text-button" data-asm="copy">${icon('copy')}Copiar estado</button></div><nav class="asm-result-tabs" aria-label="Resultados ASM">${tabs.map(([id,label])=>`<button type="button" data-asm-result="${id}" aria-pressed="${id===active}">${label}</button>`).join('')}</nav><div class="asm-result-content">${r.error?'<pre class="lab-error">'+esc(r.error)+'</pre>':''}${content}</div><p class="asm-adapter-note">${esc(r.note)}</p>`;
   }
 }

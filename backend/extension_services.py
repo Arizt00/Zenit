@@ -296,13 +296,25 @@ class ExtensionServices:
                 if item['owner'] is host:del self.status_items[key]
             for key,item in list(getattr(self,'outputs',{}).items()):
                 if item['owner'] is host:del self.outputs[key]
+            for key,item in list(getattr(self,'comments',{}).items()):
+                if item['owner'] is host:del self.comments[key]
+            for key,item in list(getattr(self,'notebooks',{}).items()):
+                if item['owner'] is host:del self.notebooks[key];self.emit('zenit.notebook',uri=item['uri'],disposed=True,ownerExtension=host.extension_id)
             for ident,panel in list(self.panels.items()):
                 if panel['owner'] is host:self.dispose_panel(ident)
             for ident,item in list(self.quickinputs.items()):
                 if item['owner'] is host:
                     del self.quickinputs[ident];self.emit('zenit.quickinput',id=ident,visible=False)
     def snapshot(self):
-        with self.lock:return {'editorDecorations':copy.deepcopy(list(getattr(self,'editor_decorations',{}).values())),'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()], 'outputs':[{k:copy.deepcopy(v) for k,v in item.items() if k not in ('owner','text')} for item in self.outputs.values()]}
+        with self.lock:return {'comments':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'comments',{}).values()],'editorDecorations':copy.deepcopy(list(getattr(self,'editor_decorations',{}).values())),'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()], 'outputs':[{k:copy.deepcopy(v) for k,v in item.items() if k not in ('owner','text')} for item in self.outputs.values()]}
+    def comment_control(self,extension,controller,thread,action):
+        if action not in ('collapse','dispose'):raise ValueError('Acción de comentario inválida.')
+        with self.lock:
+            item=next((v for v in getattr(self,'comments',{}).values() if v['extension']==extension and v['id']==controller),None)
+            if not item or not any(t['id']==thread for t in item['threads']):raise ValueError('El comentario ya no está disponible.')
+            owner=item['owner']
+        owner.event('commentControl',{'controller':controller,'thread':thread,'action':action})
+        return {'sent':True}
     def output(self,extension,key,action=None,level=None):
         with self.lock:
             item=next((v for v in self.outputs.values() if v['extension']==extension and v['key']==key),None)
@@ -406,6 +418,31 @@ class ExtensionServices:
     def call(self,host,method,p):
         ws=host.workspace
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
+        if method=='runtime.capabilities':
+            if not isinstance(p,dict) or not isinstance(p.get('commands'),list) or not isinstance(p.get('providers'),list) or len(json.dumps(p))>1_000_000:raise ValueError('Capacidades de extensión inválidas.')
+            icons=getattr(host,'command_icons',{})
+            for command in p['commands']:
+                if command.get('id') in icons:command['icon']=icons[command['id']]
+            host.capabilities={**getattr(host,'capabilities',{}),**p}
+            return {'ok':True}
+        if method=='notebook.update':
+            if not isinstance(p.get('uri'),str) or not isinstance(p.get('cells'),list) or len(json.dumps(p))>1_500_000:raise ValueError('Cuaderno demasiado grande o inválido.')
+            with self.lock:
+                if not hasattr(self,'notebooks'):self.notebooks={}
+                previous=self.notebooks.get((host,p['uri']))
+                if previous and p.get('version',0)<=previous.get('version',0):return {'stale':True}
+                source=p.get('source');target=file_path(p['uri'])
+                if isinstance(source,str) and target.is_relative_to(ws.root) and (p.get('dirty') or previous and previous.get('dirty')):
+                    relative=target.relative_to(ws.root).as_posix();buffers=self.platform.buffers
+                    with buffers.lock:
+                        old=buffers.items.get(relative)
+                        if old and old['text'] not in (source,p.get('before')):raise ValueError('El código del cuaderno cambió en el editor. Se conserva el búfer local.')
+                        import hashlib
+                        revision=hashlib.sha256(target.read_bytes()).hexdigest()
+                        buffers.update(ws,{'path':relative,'text':source,'saved':not p.get('dirty'),'sequence':old['sequence'] if old else 0,'revision':revision})
+                self.notebooks[host,p['uri']]={**p,'owner':host,'extension':host.extension_id}
+            self.emit('zenit.notebook',**{k:v for k,v in p.items() if k not in ('source','before')},ownerExtension=host.extension_id)
+            return {'ok':True}
         if method=='editor.options':
             target=file_path(p.get('uri'));key=self.key(ws,target)
             if not target.is_relative_to(ws.root):self.file_workspace(target)
@@ -508,6 +545,14 @@ class ExtensionServices:
                 if not hasattr(self,'environments'):self.environments={}
                 self.environments[host]=p['collections']
             return {'ok':True}
+        if method=='comments.update':
+            if not isinstance(p.get('id'),str) or not isinstance(p.get('threads'),list) or len(json.dumps(p))>64000:raise ValueError('Hilos de comentarios inválidos.')
+            with self.lock:
+                if not hasattr(self,'comments'):self.comments={}
+                key=(host,p['id'])
+                if p.get('disposed'):self.comments.pop(key,None)
+                else:self.comments[key]={**p,'owner':host,'extension':host.extension_id}
+            return {'ok':True}
         if method in ('output.update','output.dispose'):
             if not isinstance(p.get('key'),str) or len(json.dumps(p))>400000:raise ValueError('Canal de salida inválido.')
             with self.lock:
@@ -566,6 +611,10 @@ class ExtensionServices:
             self.emit('zenit.quickinput',id=p['id'],visible=False);return {'ok':True}
         if method=='context.set':self.contexts[p['key']]=p.get('value');return None
         if method=='command.execute':
+            if p['id']=='zenit.nc.projectDiagnostics':
+                if host.extension_id!='nc-lang.nc-language':raise PermissionError('Servicio reservado al adaptador nC.')
+                from .nc_diagnostics import check
+                return check(self.platform,ws,(p.get('args') or [{}])[0])
             if p['id'] in ('workbench.action.selectTheme','workbench.action.selectIconTheme','workbench.action.showCommands','workbench.action.quickOpen','workbench.action.openSettings'):
                 ident=uuid.uuid4().hex;reply=threading.Event();prompt={'reply':reply,'result':None}
                 with self.lock:self.prompts[ident]=prompt
@@ -584,9 +633,11 @@ class ExtensionServices:
             if opts.get('pty'):session=VirtualTerminal(host,p['id'],opts.get('name','Terminal'))
             else:
                 if not self.platform.prefs.get('security.terminals'):raise PermissionError('Terminales desactivadas en Ajustes.')
-                profiles=terminal_profiles();command=opts.get('shellPath') or (profiles[0]['argv'][0] if profiles else None)
+                profiles=terminal_profiles();preferred=self.platform.prefs.get('terminal.defaultProfile')
+                profile=next((row for row in profiles if row['id']==preferred),profiles[0] if profiles else None)
+                command=opts.get('shellPath') or (profile['argv'][0] if profile else None)
                 if not command:raise ValueError('No se encontró un shell local.')
-                args=opts.get('shellArgs',[])
+                args=opts.get('shellArgs',[] if opts.get('shellPath') else profile['argv'][1:])
                 if isinstance(args,str):
                     import shlex
                     args=shlex.split(args,posix=os.name!='nt')

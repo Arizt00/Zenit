@@ -1,7 +1,8 @@
 import {themeIcon,installIconFonts} from './file-icon-theme.js';
 /** Lumen Line. Original 24-unit vector family; local and theme-aware. */
-export const ICON_NAMES=Object.freeze(["flask","layers","link","coco","undo","redo","team","person","editor-window", "workspace", "float", "detach", "clock", "speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
+export const ICON_NAMES=Object.freeze(["rename","flask","layers","link","coco","undo","redo","team","person","editor-window", "workspace", "float", "detach", "clock", "speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
 const paths = {
+  "rename": '<path d="M3 7h7M3 12h5M3 17h7M15 3h6m-3 0v18m-3 0h6"/>',
   "flask": '<path d="M9 3h6M10 3v6l-6 10a1.3 1.3 0 0 0 1.2 2h13.6a1.3 1.3 0 0 0 1.2-2L14 9V3M7 15h10"/>',
   "layers": '<path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/>',
   "link": '<path d="m10 13 4-4m-5 7-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 0 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0"/>',
@@ -107,13 +108,18 @@ export function renderIcons(root=document) {
 export function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-let activeFileIcons=null;
+let activeFileIcons=null,ncFileIcons=null;
 let iconKind='dark',iconLanguage=()=>'';
-export function setFileIcons(theme,kind='dark',language=()=> ''){if(activeFileIcons!==theme)installIconFonts(theme);activeFileIcons=theme||null;iconKind=kind;iconLanguage=language;if(typeof document!=='undefined')document.documentElement.dataset.iconArrows=theme?.hidesExplorerArrows?'hidden':'visible';}
+export function setFileIcons(theme,kind='dark',language=()=> '',ncTheme=null){if(activeFileIcons!==theme)installIconFonts(theme);activeFileIcons=theme||null;ncFileIcons=ncTheme;iconKind=kind;iconLanguage=language;if(typeof document!=='undefined')document.documentElement.dataset.iconArrows=theme?.hidesExplorerArrows?'hidden':'visible';}
 export function folderIcon(path,expanded=false,root=false){if(activeFileIcons==='none')return '';return activeFileIcons?themeIcon(activeFileIcons,path,{folder:true,expanded,root,kind:iconKind}):icon(expanded?'folder-open':'folder');}
 export function fileIcon(path) {
   if(activeFileIcons==='none')return '';
-  if(/\.(?:nc|n|nm|ncp|nb|nbb)$/i.test(path))return `<span class="file-type file-type-nc"><img src="/assets/languages/nc.png" alt="" aria-hidden="true" draggable="false"></span>`;
+  if(/\.(?:nc|n|nm|ncp|nb|nbb|nbo)$/i.test(path)||iconLanguage(path)==='nc-target-init'){
+    const native=themeIcon(ncFileIcons,path,{language:iconLanguage(path),kind:iconKind});if(native)return native;
+    if(iconLanguage(path)==='nc-target-init')return `<span class="file-type">${icon('file')}</span>`;
+    const suffix=String(path).split('.').at(-1).toLowerCase(),label={nm:'M',nb:'B',nbb:'P',ncp:'H',nbo:'IR',init:'I'}[suffix]||'';
+    return `<span class="file-type file-type-nc" title="nC · .${escapeHTML(suffix)}"><img src="/assets/languages/nc.png" alt="" aria-hidden="true" draggable="false">${label?`<small>${label}</small>`:''}</span>`;
+  }
   const themed=themeIcon(activeFileIcons,path,{language:iconLanguage(path),kind:iconKind});if(themed)return themed;
   const ext = path.split('.').pop().toLowerCase();
   if(['html','htm'].includes(ext))return `<span class="file-type file-type-html">${icon('html')}</span>`;

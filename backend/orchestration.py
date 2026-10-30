@@ -19,7 +19,21 @@ class Kernel:
         return service
 
     def resolve(self,name):
-        with self.lifecycle_lock:return self.services[name]['service']
+        with self.lifecycle_lock:
+            entry=self.services[name];service=entry['service'];factory=entry.get('factory')
+        if service is None and factory:
+            with entry['create_lock']:
+                with self.lifecycle_lock:
+                    if self.stopping:raise RuntimeError('El núcleo se está cerrando.')
+                    service=entry['service']
+                if service is None:
+                    service=factory()
+                    with self.lifecycle_lock:entry['service']=service
+        return service
+
+    def register_deferred(self,name,factory,**options):
+        self.register(name,None,**options)
+        with self.lifecycle_lock:self.services[name].update(factory=factory,create_lock=threading.RLock())
 
     def subscribe(self,event,callback):
         with self.lifecycle_lock:

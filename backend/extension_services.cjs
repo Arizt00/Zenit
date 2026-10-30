@@ -10,7 +10,8 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
     const ready=call('terminal.create',{id,options:{...opts,pty:!!opts.pty}}).then(info=>{t._pid=info.pid;t._sessionId=info.id;event('terminalOpen').fire(t);if(opts.pty)opts.pty.open(info.dimensions);return info;});
     t.processId=ready.then(info=>info.pid);t._ready=ready;
     const invoke=(method,params={})=>ready.then(()=>call(method,{id,...params})).catch(e=>host.notify(e.message));
-    t.sendText=(text,addNewLine=true)=>{t.state.isInteractedWith=true;invoke('terminal.write',{text:String(text)+(addNewLine?'\r':'')});};
+    const interacted=()=>{if(!t.state.isInteractedWith){t.state={...t.state,isInteractedWith:true};event('terminalState').fire(t);}};
+    t.sendText=(text,addNewLine=true)=>{const value=String(text)+(addNewLine?'\r':'');ready.then(()=>call('terminal.write',{id,text:value})).then(()=>{if(value)interacted();}).catch(e=>host.notify(e.message));};
     t.show=(preserveFocus=false)=>{activeTerminal=t;invoke('terminal.show',{preserveFocus});event('activeTerminal').fire(t);};
     t.hide=()=>invoke('terminal.hide');t.dispose=()=>invoke('terminal.close');terminals.set(id,t);
     if(opts.pty){opts.pty.onDidWrite(text=>invoke('terminal.append',{text}));opts.pty.onDidClose?.(code=>invoke('terminal.finish',{code}));opts.pty.onDidChangeName?.(name=>{t.name=name;invoke('terminal.name',{name});});}
@@ -197,7 +198,7 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
       if(name==='debug.stop'&&session){session._tracker?.onWillStopSession?.();inline.get(value.id)?.dispose();inline.delete(value.id);sessions.delete(value.id);event('debugStop').fire(session);event('activeDebug').fire(v.debug.activeDebugSession);}
   }
   return {
-    runTask,openWith,visualize,
+    runTask,openWith,visualize,taskTypes:()=>[...taskProviders.keys()],listTasks:async()=>(await v.tasks.fetchTasks()).map(t=>({name:t.name,source:t.source,type:t.definition?.type,execution:t.execution instanceof v.ProcessExecution?{process:t.execution.process,args:t.execution.args,options:t.execution.options}:t.execution instanceof v.ShellExecution?{command:t.execution.command,commandLine:t.execution.commandLine,args:t.execution.args,options:t.execution.options}:undefined})),
     async message(id,message){const p=panels.get(id);if(!p)return {delivered:false};p._receive.fire(message);return {delivered:true};},disposePanel(id){panels.get(id)?.dispose();return {ok:true};},
     event:serviceEvent
   };

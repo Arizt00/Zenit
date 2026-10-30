@@ -566,7 +566,7 @@ class ExtensionStore(ExtensionInstallPlans):
             if stream.tell() > 48*1024**2: raise ValueError('La exportación web admite VSIX de hasta 48 MB; el paquete instalado se conserva en el perfil de Zénit.')
             return {'filename': item['id'] + '-' + item['version'] + '.vsix', 'data': base64.b64encode(stream.getvalue()).decode('ascii')}
     def contributions(self):
-        output={'languages':[],'grammars':[],'snippets':[],'themes':[],'iconThemes':[],'commands':[],'errors':[]}
+        output={'languages':[],'grammars':[],'snippets':[],'themes':[],'iconThemes':[],'commands':[],'semanticTokenTypes':[],'semanticTokenScopes':[],'languageStyles':[],'errors':[]}
         grammar_bytes=0
         if not self.prefs.get('extensions.loadContributions'): return output
         for info in self.list():
@@ -579,7 +579,20 @@ class ExtensionStore(ExtensionInstallPlans):
                     lid=language.get('id','')
                     if not isinstance(lid,str) or not re.fullmatch(r'[a-zA-Z0-9_+.-]{1,80}',lid): continue
                     extensions=[x for x in language.get('extensions',[])[:60] if isinstance(x,str) and re.fullmatch(r'\.[\w.+-]{1,30}',x)]
-                    output['languages'].append({'id':lid,'extensions':extensions,'aliases':[str(x)[:80] for x in language.get('aliases',[])[:4]],'owner':info['id']})
+                    item={'id':lid,'extensions':extensions,'aliases':[str(x)[:80] for x in language.get('aliases',[])[:4]],'owner':info['id']}
+                    if language.get('configuration'):
+                        try:
+                            configuration=json_resource(root,language['configuration'])
+                            if not isinstance(configuration,dict):raise ValueError('La configuración debe ser un objeto.')
+                            item['configuration']=configuration
+                        except (OSError,ValueError,TypeError,UnicodeError) as e:output['errors'].append({'id':info['id'],'error':'Configuración de '+lid+': '+str(e)[:300]})
+                    output['languages'].append(item)
+                for entry in c.get('semanticTokenTypes',[])[:512]:
+                    if isinstance(entry,dict) and isinstance(entry.get('id'),str):output['semanticTokenTypes'].append({k:entry[k] for k in ('id','superType') if isinstance(entry.get(k),str)})
+                for entry in c.get('semanticTokenScopes',[])[:200]:
+                    if not isinstance(entry,dict) or not isinstance(entry.get('scopes'),dict):continue
+                    scopes={k:[s[:500] for s in v[:20] if isinstance(s,str)] for k,v in list(entry['scopes'].items())[:512] if isinstance(k,str) and isinstance(v,list)}
+                    output['semanticTokenScopes'].append({'language':str(entry.get('language',''))[:80],'scopes':scopes})
                 for declaration in c.get('grammars',[])[:200]:
                     try:
                         scope=declaration.get('scopeName','')
@@ -595,6 +608,7 @@ class ExtensionStore(ExtensionInstallPlans):
                         maps={key:{str(k):v for k,v in declaration.get(key,{}).items() if isinstance(k,str) and isinstance(v,str)} for key in ('embeddedLanguages','tokenTypes') if isinstance(declaration.get(key,{}),dict)}
                         output['grammars'].append({'scopeName':scope,'language':str(declaration.get('language',''))[:80],
                             'path':relative,'content':text,'injectTo':[x for x in declaration.get('injectTo',[])[:100] if isinstance(x,str)],
+                            **{k:[x for x in declaration[k][:100] if isinstance(x,str)] for k in ('balancedBracketScopes','unbalancedBracketScopes') if isinstance(declaration.get(k),list)},
                             **maps,'owner':info['id']})
                     except (OSError,ValueError,TypeError,AttributeError,UnicodeError) as e:
                         output['errors'].append({'id':info['id'],'error':'Gramática: '+str(e)[:350]})
@@ -615,6 +629,17 @@ class ExtensionStore(ExtensionInstallPlans):
                     data=color_theme(root,declaration.get('path'))
                     if isinstance(data,dict): output['themes'].append({'id':info['id']+':'+str(declaration.get('id',declaration.get('label','theme'))),'label':str(declaration.get('label','Theme'))[:160],'uiTheme':declaration.get('uiTheme','vs-dark'),'data':data,'owner':info['id']})
                 custom=manifest.get('lumen',{})
+                if isinstance(custom,dict) and isinstance(custom.get('languageStyles'),str):
+                    style_data=json_resource(root,custom['languageStyles'])
+                    if isinstance(style_data,dict):
+                        styles={'owner':info['id'],'provenance':style_data.get('provenance',{})}
+                        for mode in ('light','dark'):
+                            raw=style_data.get(mode,{})
+                            if not isinstance(raw,dict):continue
+                            entries=raw.get('tokenColors',[]);semantic=raw.get('semanticTokenColors',{})
+                            styles[mode]={'tokenColors':[e for e in entries[:2000] if isinstance(e,dict) and isinstance(e.get('settings'),dict) and isinstance(e.get('scope'),(str,list))] if isinstance(entries,list) else [],
+                                          'semanticTokenColors':{k:v for k,v in list(semantic.items())[:2000] if isinstance(k,str) and isinstance(v,(str,dict))} if isinstance(semantic,dict) else {}}
+                        output['languageStyles'].append(styles)
                 for declaration in c.get('iconThemes',[])[:5]:
                     output['iconThemes'].append(icon_theme(root,declaration,info['id']))
                 for cmd in (custom.get('commands',[]) if isinstance(custom,dict) else [])[:80]:

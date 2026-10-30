@@ -29,4 +29,14 @@ def configure(profile,ws):
                 argv=[*argv,'--compile-commands-dir='+str(folder)];profile['argv']=argv
         gcc=bundled_tool('gcc');gxx=bundled_tool('g++')
         if gcc and gxx and not any(x.startswith('--query-driver') for x in argv):profile['argv']=[*argv,'--query-driver='+','.join([gcc,gxx])]
+    if name=='rust-analyzer':
+        # Prime expensive standard-library caches lazily; explicit user choices
+        # remain authoritative. Semantic requests still use the complete sysroot.
+        options=profile.setdefault('initializationOptions',{})
+        if 'cachePriming.enable' not in options:options.setdefault('cachePriming',{}).setdefault('enable',False)
+        # rust-analyzer asks workspace/configuration after initialization. An
+        # empty answer there resets its initial options back to the defaults.
+        settings=profile.setdefault('settings',{}).setdefault('rust-analyzer',{})
+        if 'cachePriming.enable' not in settings:
+            settings.setdefault('cachePriming',{}).setdefault('enable',options.get('cachePriming.enable',options.get('cachePriming',{}).get('enable',False)))
     return profile

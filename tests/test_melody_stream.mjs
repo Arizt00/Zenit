@@ -11,6 +11,6 @@ test('Melody pauses display work in hidden windows, resumes latest text and resp
   stream.update('Hola 🪐 '.repeat(50));tick();assert.ok(element.node.data.length>0);assert.ok(element.node.data.length<stream.target.length);
   doc.hidden=true;doc.dispatchEvent(new Event('visibilitychange'));assert.equal(frames.size,0);const shown=element.node.data;stream.update('Hola 🪐 '.repeat(100));assert.equal(element.node.data,shown);assert.equal(frames.size,0);
   scroll.scrollTop=20;scroll.dispatchEvent(new Event('scroll'));doc.hidden=false;doc.dispatchEvent(new Event('visibilitychange'));assert.equal(frames.size,1);for(let i=0;i<100;i++)tick();assert.equal(element.node.data,stream.target);assert.equal(scroll.scrollTop,20);
-  stream.update('Respuesta nueva');tick();stream.finish();assert.equal(element.node.data,'Respuesta nueva');stream.dispose();doc.dispatchEvent(new Event('visibilitychange'));assert.equal(frames.size,0);
+  stream.update('Respuesta nueva');tick();stream.finish();assert.equal(element.node.data,'Respuesta nueva');stream.update('Respuesta nueva');assert.equal(frames.size,0);stream.dispose();doc.dispatchEvent(new Event('visibilitychange'));assert.equal(frames.size,0);
  }finally{for(const [k,v] of Object.entries(saved))if(v===undefined)delete globalThis[k];else globalThis[k]=v;}
 });

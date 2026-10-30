@@ -11,6 +11,7 @@ export class SharedExecutions {
     record.pending=(async()=>{
       const data=await this.request({action:'job',job:record.job,offset:record.offset});
       record.text=(record.text+data.output).slice(-512000);record.offset=data.offset;record.done=data.done&&!data.more;record.code=data.code;
+      record.interrupted=Boolean(data.interrupted);record.state=data.state;record.truncated=Boolean(data.truncated);
       return record;
     })();
     try{return await record.pending;}finally{record.pending=null;}

@@ -8,6 +8,8 @@ PLUGIN=r"""
 const v=require('vscode');const closed=[];
 exports.activate=()=>{
  v.commands.registerCommand('qa.shell',()=>v.env.shell);
+ v.commands.registerCommand('qa.handshake',()=>new Promise((resolve,reject)=>{const panel=v.window.createWebviewPanel('qa.handshake','Handshake',v.ViewColumn.One,{enableScripts:true});const timer=setTimeout(()=>reject(Error('Handshake timed out')),3000);panel.webview.onDidReceiveMessage(message=>{clearTimeout(timer);resolve(message.value+1);});panel.webview.html='<p>Waiting for acknowledgement</p>';}));
+ v.commands.registerCommand('qa.defaultTerminal',async()=>{const changes=[];const subscription=v.window.onDidChangeTerminalState(t=>changes.push({name:t.name,interacted:t.state.isInteractedWith}));const t=v.window.createTerminal({name:'Default profile QA'});await t.processId;t.sendText('one');t.sendText('two');await new Promise(r=>setTimeout(r,300));subscription.dispose();return {id:t._id,pid:await t.processId,changes};});
  v.window.onDidCloseTerminal(t=>closed.push({name:t.name,code:t.exitStatus?.code}));
  v.commands.registerCommand('qa.terminal',async()=>{const t=v.window.createTerminal({name:'Extensión ñ',shellPath:process.execPath,shellArgs:['-e','console.log("terminal ñ");setTimeout(()=>{},300)']});await t.processId;t.show();return {id:t._id,pid:await t.processId};});
  v.commands.registerCommand('qa.closed',()=>closed);
@@ -50,6 +52,20 @@ class ExtensionServicesTest(unittest.TestCase):
   info=self.call('qa.terminal');self.assertGreater(info['pid'],0)
   result=self.wait(lambda:self.call('qa.closed'));self.assertEqual(result[0]['name'],'Extensión ñ')
   terminal=next(iter(self.app.features.terminals.sessions.values()));self.assertIn('terminal ñ',terminal.read()['data'])
+ def test_webview_can_acknowledge_a_command_while_that_command_is_awaiting_it(self):
+  from concurrent.futures import ThreadPoolExecutor
+  with ThreadPoolExecutor() as pool:
+   command=pool.submit(self.call,'qa.handshake')
+   panel=self.wait(lambda:next((p for p in self.app.features.extension_services.snapshot()['panels'] if p['viewType']=='qa.handshake'),None))
+   reply=self.runtime.request(self.app.workspace,{'id':'qa.services-053','method':'webviewMessage','panel':panel['id'],'message':{'value':41}})
+   self.assertTrue(reply['delivered']);self.assertEqual(command.result(timeout=2),42)
+ def test_default_terminal_respects_profile_arguments_and_emits_interaction_once(self):
+  from unittest.mock import patch
+  self.app.features.prefs.update({'terminal.defaultProfile':'chosen'})
+  profiles=[{'id':'other','argv':['must-not-start']},{'id':'chosen','argv':[sys.executable,'-u','-c','import sys; print("PROFILE_ARGS_OK", flush=True); print("VALUES="+sys.stdin.readline().strip()+"/"+sys.stdin.readline().strip(),flush=True)']}]
+  with patch('backend.extension_services.terminal_profiles',return_value=profiles):result=self.call('qa.defaultTerminal')
+  self.assertEqual(result['changes'],[{'name':'Default profile QA','interacted':True}]);terminal=next(t for t in self.app.features.terminals.sessions.values() if t.profile['label']=='Default profile QA')
+  self.wait(lambda:terminal.closed);self.assertIn('PROFILE_ARGS_OK',terminal.output);self.assertIn('VALUES=one/two',terminal.output);self.assertEqual(terminal.profile['argv'],profiles[1]['argv'])
  def test_shell_is_the_executable_used_by_default_extension_terminal(self):
    from backend.terminals import terminal_profiles
    profiles=terminal_profiles();self.assertTrue(profiles)

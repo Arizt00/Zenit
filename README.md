@@ -9,10 +9,10 @@
 **Code, execution and AI assistance in one desktop workspace — even across windows.**
 
 [![Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-7b61ff)](LICENSE)
-[![Public preview](https://img.shields.io/badge/preview-0.5.4_R11-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11)
-[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe)
+[![Public preview](https://img.shields.io/badge/preview-0.5.5_R7-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.5-preview.7)
+[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.5-preview.7/Zenit-0.5.5-R7-Windows-Setup.exe)
 
-[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
+[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.5-preview.7) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
 
 [Read the launch article on DEV Community](https://dev.to/aristote_motehernndez/zenit-a-desktop-workspace-for-code-ai-assistance-and-real-execution-1np8)
 
@@ -63,7 +63,7 @@ change that public release.
 
 **Windows 10/11 x64** with Microsoft Edge WebView2:
 
-1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Portable.zip).
+1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.5-preview.7/Zenit-0.5.5-R7-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.5-preview.7/Zenit-0.5.4-R11-Windows-Portable.zip).
 2. Run the installer, then open **Zénit**. For the portable version, extract the entire ZIP and run `Zenit/zenit.exe`.
 3. Choose **Open project**, select a folder, open a source file and use **Run** or **Forge**.
 

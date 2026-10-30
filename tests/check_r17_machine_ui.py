@@ -13,7 +13,7 @@ def main():
     state=debug.snapshot()
     if state['status'] in ('paused','error'):break
     time.sleep(.05)
-   assert state['status']=='paused',state;binary=next((ws/'.lumen/run').rglob('*.exe'));relative=binary.relative_to(ws).as_posix();copy=ws/'previous.exe';data=binary.read_bytes();copy.write_bytes(data[:500]+bytes([data[500]^1])+data[501:]);server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
+   assert state['status']=='paused',state;binary=next((ws/'build').rglob('*.exe'));relative=binary.relative_to(ws).as_posix();copy=ws/'previous.exe';data=binary.read_bytes();copy.write_bytes(data[:500]+bytes([data[500]^1])+data[501:]);server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
    try:
     with sync_playwright() as pw:
      browser=pw.chromium.launch(channel='msedge',headless=True);page=browser.new_page(viewport={'width':1600,'height':1000});page.on('pageerror',lambda e:errors.append(str(e)))

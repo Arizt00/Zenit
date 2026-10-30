@@ -36,6 +36,13 @@ def main():
         index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
         critical={'_internal/web/src/release-055.js','_internal/web/src/code-popovers.js','_internal/web/src/machine-library.js','_internal/web/design/release-055.css','_internal/docs/RELEASE_055.md','zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
         critical.update('_internal/web/'+name for name in (
+            'src/panel-chrome.js','src/development-tools.js','src/code-detail.js','src/task-flow.js',
+            'src/product-ui.js','src/controls.js','src/chrome-locale.js',
+            'src/local-models.js','design/local-models.css',
+            'src/project-organizer.js','src/temporary-tab-groups.js','design/project-organizer.css',
+            'src/python-packages.js','src/native-packages.js',
+            'design/panel-chrome.css','design/code-help.css','design/task-flow.css','design/typography.css','design.css'))
+        critical.update('_internal/web/'+name for name in (
             'src/workbench.js','src/foundation-ui.js','src/session-workbench.js','src/workbench-session.js','src/sdk-manager.js','design/coherence-r16.css',
             'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',
             'src/desktop-workflows.js','src/editor.js','src/diagnostic-panel.js','design/diagnostic-panel.css','src/explorer-menu.js','src/preview.js','src/tab-controls.js','src/editor-context-menu.js','src/icons.js','src/dependency-layout.js','design/refine-r14.css','design/refine-r15.css','src/team.js','team-peer.js','team-vendor/yjs.mjs',
@@ -44,7 +51,14 @@ def main():
             'design/co-code.css','design/assembly-workspace.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
         critical.update('_internal/web/'+name for name in ('src/team-project.js','coco-drafts.js','src/task-center.js','src/tern-portability.js','src/project-tests.js','src/git-conflicts.js','src/machine-inspector.js','src/extension-command-icon.js','src/extension-accounts.js','design/workflows-r17.css'))
-        critical.update(('_internal/config/extension-compatibility.json','_internal/docs/PREVIEW_054_R17.md','_internal/backend/test_bridge.py'))
+        critical.update(('_internal/config/extension-compatibility.json','_internal/docs/PREVIEW_054_R17.md','_internal/backend/test_bridge.py','_internal/backend/nc_test_bridge.py'))
+        critical.add('_internal/backend/emma_bridge.mjs')
+        critical.add('_internal/backend/extension_selectors.cjs')
+        critical.add('_internal/backend/extension_diagnostics.cjs')
+        critical.update(('_internal/web/src/experience-r2.js','_internal/web/design/experience-r2.css'))
+        critical.update('_internal/web/'+name for name in (
+            'src/focused-context.js','src/melody-countercheck.js','src/lantern-rules.js',
+            'src/studio-start.js','design/experience-055.css'))
         for name in sorted(critical):
             assert hashlib.sha256(archive.extract(entries['payload/'+name])).hexdigest()==sha256(payload/name), name
     if sys.platform=='darwin':

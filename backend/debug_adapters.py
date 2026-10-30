@@ -130,6 +130,11 @@ class ProtocolDebugger:
         self.capabilities=capabilities
         self.update(machineCapabilities={'memory':capabilities.get('supportsReadMemoryRequest') is True,'disassembly':capabilities.get('supportsDisassembleRequest') is True},stepBackSupported=capabilities.get('supportsStepBack') is True)
         launch=dict(launch);entry=launch.pop('_lumenEntry',False);self.entry_function=launch.pop('_lumenEntryFunction',None)
+        # Line 1 often contains an include or a comment and has no executable
+        # location. Use the adapter's function breakpoint instead of letting
+        # the program finish before the user sees its first pause.
+        if entry and capabilities.get('supportsFunctionBreakpoints'):
+            self.entry_function=self.entry_function or 'main';entry=False
         version=re.search(r'lldb version (\d+)',capabilities.get('$__lldb_version',''))
         if os.name=='nt' and self.lldb and version and int(version[1])>=22 and launch.get('console')=='internalConsole' and 'stdio' not in launch:
             from .debug_input import DebugInput

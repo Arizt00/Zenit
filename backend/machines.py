@@ -8,6 +8,7 @@ import subprocess
 import threading
 import time
 import uuid
+import hashlib
 from .foundation import inventory
 from .preferences import atomic_json
 from .runtime_paths import find_tool
@@ -17,6 +18,7 @@ class Machines:
     def __init__(self,features):
         self.features=features;self.root=features.prefs.directory/'machines';self.root.mkdir(exist_ok=True)
         self.index=self.root/'profiles.json';self.lock=threading.RLock();self.active={}
+        self.boots={};self.metrics_root=self.root/'performance'
         try:self.profiles=json.loads(self.index.read_text(encoding='utf-8'))
         except (ValueError,OSError):self.profiles=[]
         self.base_index=self.root/'vm-base.json'
@@ -25,9 +27,12 @@ class Machines:
     def vm_base(self,directory=None):
         root,data=inventory()
         if directory or self.base_root:
-            root=Path(directory or self.base_root).resolve()
-            data=json.loads((root/'tool-index.json').read_text(encoding='utf-8'))
-        if not root:return {'qemu':None,'qimg':None,'image':None,'directory':None}
+            candidate=Path(directory or self.base_root).resolve()
+            try:data=json.loads((candidate/'tool-index.json').read_text(encoding='utf-8'));root=candidate
+            except (OSError,ValueError):
+                if directory:raise
+        tools=self.features.runtimes.config.get('tools',{})
+        if not root:return {'qemu':find_tool('qemu-system-x86_64',tools),'qimg':find_tool('qemu-img',tools),'image':None,'directory':None}
         def file(relative):
             if not isinstance(relative,str):return None
             path=(root/relative).resolve()
@@ -44,8 +49,8 @@ class Machines:
                     target=(candidate/resource).resolve()
                     if target.is_relative_to(candidate) and target.is_file():image=str(target);image_root=candidate;break
                 except (OSError,ValueError):continue
-        return {'qemu':file(data.get('tools',{}).get('qemu-system-x86_64')) or find_tool('qemu-system-x86_64'),
-                'qimg':file(data.get('tools',{}).get('qemu-img')) or find_tool('qemu-img'),
+        return {'qemu':file(data.get('tools',{}).get('qemu-system-x86_64')) or find_tool('qemu-system-x86_64',tools),
+                'qimg':file(data.get('tools',{}).get('qemu-img')) or find_tool('qemu-img',tools),
                 'image':image,'directory':str(image_root)}
     def configure_base(self,directory):
         if not isinstance(directory,str) or not Path(directory).is_absolute():raise ValueError('Choose an absolute prepared SDK folder.')
@@ -87,6 +92,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     lock_passwd: true
 ssh_pwauth: false
+ssh_genkeytypes: [ed25519]
 write_files:
   - path: /etc/systemd/system/serial-getty@ttyS0.service.d/autologin.conf
     content: |
@@ -132,6 +138,34 @@ ethernets:
         with self.lock:
             candidate=[*self.profiles,profile];atomic_json(self.index,candidate);self.profiles=candidate
         return self.snapshot()
+    def readiness(self,profile):
+        """Cheap explicit health checks; never boot or fetch a guest image."""
+        if profile.get('mode')=='ssh':return {'ready':bool(find_tool('ssh')),'checks':[{'name':'OpenSSH','ok':bool(find_tool('ssh'))}]}
+        checks=[];base=self.vm_base()
+        checks.append({'name':'QEMU','ok':bool(base.get('qemu'))})
+        for key,label in [('disk','Disco de la sesión'),('seed','Medio de arranque')]:
+            value=profile.get(key)
+            if value:checks.append({'name':label,'ok':Path(value).is_file() and not Path(value).is_symlink()})
+            elif key=='disk':checks.append({'name':label,'ok':False})
+        import psutil,shutil
+        available=int(psutil.virtual_memory().available/1024**2)
+        registry={p['id']:p for p in self.profiles}
+        registry.update(getattr(getattr(self.features,'machine_images',None),'sessions',{}))
+        registry.update({key:session.get('profile',{}) for key,session in getattr(getattr(self.features,'tern',None),'sessions',{}).items() if session.get('kind')=='arch'})
+        reserved_memory=reserved_cpus=0
+        for identity,terminal_id in list(self.active.items()):
+            terminal=self.features.terminals.sessions.get(terminal_id);other=registry.get(identity,{})
+            if identity==profile.get('id') or not terminal or terminal.closed or other.get('mode')=='ssh':continue
+            reserved_memory+=other.get('memory',2048);reserved_cpus+=other.get('cpus',1)
+        checks.append({'name':'RAM disponible y reservada por otras máquinas','ok':profile.get('memory',2048)+reserved_memory<=available*.8})
+        checks.append({'name':'Presupuesto de CPU de las máquinas','ok':profile.get('cpus',1)+reserved_cpus<=(os.cpu_count() or 1)})
+        disk=Path(profile.get('disk') or self.root);parent=disk.parent
+        free=shutil.disk_usage(parent if parent.exists() else self.root).free
+        checks.append({'name':'Espacio libre para el disco','ok':free>=64*1024**2})
+        from .machine_acceleration import detect
+        acceleration=detect(base.get('qemu'))
+        checks.append({'name':'Aceleración · '+acceleration['preferred'].upper()+(' · software' if acceleration['preferred']=='tcg' else ' · inicialización comprobada'),'ok':bool(base.get('qemu'))})
+        return {'ready':all(c['ok'] for c in checks),'checks':checks,'availableMemoryMiB':available,'freeDiskBytes':free,'reservedMemoryMiB':reserved_memory,'reservedCpus':reserved_cpus,'acceleration':acceleration}
     def start(self,ws,key,profile=None):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de abrir su consola.')
         with self.lock:
@@ -139,44 +173,70 @@ ethernets:
             if not profile:raise ValueError('Máquina desconocida.')
             old=self.active.get(key);session=self.features.terminals.sessions.get(old)
             if session and not session.closed:return {'id':session.id,'profile':session.profile,'kind':session.kind}
+            from .startup_metrics import StartupMetrics
+            trace=StartupMetrics();record={'id':key,'name':profile['name'],'startedAt':time.time(),'trace':trace,'kind':profile.get('mode','qemu')};self.boots[key]=record
+            while len(self.boots)>16:self.boots.pop(next(iter(self.boots)))
             if profile.get('mode')=='ssh':
                 ssh=find_tool('ssh')
                 if not ssh:raise ValueError('Instala OpenSSH para conectar esta máquina.')
                 # SSH retains host-key verification and prompts in the real PTY.
                 argv=[ssh,'-tt','-p',str(profile['port']),'-l',profile['user'],profile['host']]
             else:
+                with trace.phase('machine-preflight'):health=self.readiness(profile)
+                record['acceleration']=health.get('acceleration');record['memoryMiB']=profile.get('memory');record['cpus']=profile.get('cpus')
+                if not health['ready']:raise ValueError('Revisa la máquina: '+', '.join(c['name'] for c in health['checks'] if not c['ok']))
                 qemu=self.vm_base()['qemu']
                 if not qemu:raise ValueError('Prepara QEMU en la base de Zénit.')
                 with socket.socket() as probe:
                     probe.bind(('127.0.0.1',0));control_port=probe.getsockname()[1]
-                argv=[qemu,'-machine','q35,hpet=off','-accel','tcg','-cpu','max','-m',str(profile['memory']),'-smp',str(profile['cpus']),'-display','none',
+                from .machine_acceleration import cpu_arguments
+                cache='writeback' if profile.get('type')=='arch' else 'writethrough'
+                record['diskCache']=cache
+                argv=[qemu,'-machine','q35,hpet=off','-accel',health['acceleration']['preferred'],*cpu_arguments(health['acceleration']['preferred']),'-m',str(profile['memory']),'-smp',str(profile['cpus']),'-display','none',
                       '-smbios','type=1,serial=ds=nocloud',
                       '-serial','--serial-placeholder','-monitor','none','-qmp',f'tcp:127.0.0.1:{control_port},server=on,wait=off',
-                      '-drive','file='+profile['disk'].replace(',',',,')+',format=qcow2,if='+('ide' if profile.get('system','').startswith('windows') else 'virtio')+',cache=writethrough',
+                      '-drive','file='+profile['disk'].replace(',',',,')+',format=qcow2,if='+('ide' if profile.get('system','').startswith('windows') else 'virtio')+',cache='+cache,
                       *(['-drive','file='+profile['seed'].replace(',',',,')+',format=raw,media=cdrom,readonly=on','-boot','once=d'] if profile.get('seed') else []),
                       '-netdev','user,id=net0','-device',('e1000' if profile.get('system','').startswith('windows') else 'virtio-net-pci')+',netdev=net0,mac=52:54:00:12:34:56']
+                if not profile.get('system','').startswith('windows'):
+                    argv+=['-object','rng-builtin,id=zenit-rng','-device','virtio-rng-pci,rng=zenit-rng,max-bytes=1024,period=1000']
                 if profile.get('display')=='graphic':
                     # QEMU selects an available native graphical backend. The
                     # programmer explicitly requested a separate guest window.
                     index=argv.index('-display');del argv[index:index+2]
                 from .foundation import python_command
                 worker=Path(__file__).resolve().parents[1]/'tools/machine_console.py'
-                argv=[*python_command(),str(worker),*argv]
-            result=self.features.hacker._terminal(argv,profile['name']+' · consola',ws.root)
+                self.metrics_root.mkdir(parents=True,exist_ok=True)
+                metrics=self.metrics_root/(hashlib.sha256(str(key).encode()).hexdigest()+'.json');metrics.unlink(missing_ok=True);record['metricsFile']=metrics
+                argv=[*python_command(),str(worker),'--metrics',str(metrics),'--launch-clock',str(trace.started),*argv]
+            # VM CPU/RAM reservations belong to readiness(). Generic tool
+            # budgets may kill a process tree and must not own guest disks.
+            with trace.phase('terminal-launch'):result=self.features.hacker._terminal(argv,profile['name']+' · consola',ws.root,managed=False)
             if profile.get('mode')!='ssh':
                 session=self.features.terminals.sessions[result['id']]
                 session.before_close=lambda:self.poweroff(control_port,session)
             self.active[key]=result['id'];return result
+
+    def performance(self):
+        records=[]
+        for record in list(self.boots.values()):
+            row={k:v for k,v in record.items() if k not in ('trace','metricsFile')};row['phases']=record['trace'].snapshot()['phases'];file=record.get('metricsFile')
+            if file and file.is_file() and not file.is_symlink() and file.stat().st_size<32000:
+                try:row['guest']=json.loads(file.read_text(encoding='utf-8'))
+                except (OSError,ValueError):row['guest']={'state':'unavailable'}
+            terminal=self.features.terminals.sessions.get(self.active.get(record['id']));row['terminalClosed']=terminal.closed if terminal else True;records.append(row)
+        return records
     @staticmethod
     def poweroff(port,session):
         """ACPI shutdown, then QMP quit if needed: do not kill a writing qcow2."""
-        if session.closed:return
+        finished=lambda:session.closed or session.has_exited()
+        if finished():return
         deadline=time.monotonic()+5;control=None
-        while time.monotonic()<deadline and not session.closed:
+        while time.monotonic()<deadline and not finished():
             try:control=socket.create_connection(('127.0.0.1',port),timeout=2);break
             except OSError:time.sleep(.1)
         if control is None:
-            if session.closed:return
+            if finished():return
             raise ValueError('La máquina todavía no ofrece su canal de apagado. Intenta detenerla de nuevo.')
         with control:
             control.settimeout(3)
@@ -191,12 +251,13 @@ ethernets:
                 if 'QMP' not in greeting:raise ValueError('Canal de control QEMU no válido.')
                 command('qmp_capabilities');command('system_powerdown')
                 deadline=time.monotonic()+30
-                while not session.closed and time.monotonic()<deadline:time.sleep(.1)
-                if not session.closed:
+                while not finished() and time.monotonic()<deadline:time.sleep(.1)
+                if not finished():
                     session._append('\r\nLa máquina no respondió al apagado ACPI; QEMU vaciará y cerrará su disco.\r\n')
                     command('quit')
                     deadline=time.monotonic()+5
-                    while not session.closed and time.monotonic()<deadline:time.sleep(.1)
+                    while not finished() and time.monotonic()<deadline:time.sleep(.1)
+                    if not finished():raise ValueError('QEMU no ha terminado de cerrar el disco. No se forzará el cierre; vuelve a detener la máquina.')
     def stop(self,key):
         terminal=self.active.get(key)
         if terminal:

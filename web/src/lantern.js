@@ -2,6 +2,8 @@ import {icon,escapeHTML as esc} from './icons.js';
 import {languageFor} from './editor.js';
 import {renderLanternReview} from './lantern-review.js';
 import {lanternConsultation} from './lantern-evidence.js';
+import {lanternRules,renderLanternRules} from './lantern-rules.js';
+import {captureLanternBuffers,sameLanternCapture} from './lantern-buffers.js';
 const $=s=>document.querySelector(s);
 const labels={idle:'En espera',stopped:'Detenido',preparing:'Preparando',running:'En ejecución',watching:'Escuchando cambios',debouncing:'Esperando estabilidad',waiting:'Esperando código válido',error:'Revisa los errores'};
 const englishLabels={idle:'Idle',stopped:'Stopped',preparing:'Preparing',running:'Running',watching:'Watching changes',debouncing:'Waiting for stable edits',waiting:'Waiting for valid code',error:'Review errors'};
@@ -11,12 +13,13 @@ export class LanternView{
   constructor(studio){this.studio=studio;this.host=studio.host;this.state={active:false,status:'idle',revision:0};this.disposed=false;this.previewRevision=-1;}
   init(){
     const card=document.createElement('section');card.className='lantern-monitor';card.id='lantern-monitor';card.setAttribute('aria-label','Monitor Lantern');
-    card.innerHTML=`<header><span>${icon('sparkles')} LANTERN</span><button class="icon-button" data-lantern="hide" aria-label="Ocultar monitor Lantern">${icon('close')}</button></header><button class="lantern-open" data-lantern="open"><span class="lantern-led"></span><strong data-lantern-status>En espera</strong>${icon('detach')}</button><small data-lantern-path>Continuidad para tu código</small><p data-lantern-summary>Ejecuta, edita y revisa cada cambio.</p><div class="lantern-monitor-actions"><button class="primary-button" data-lantern="start">${icon('play')}Iniciar</button><button class="secondary-button" data-lantern="analyze">Analizar con IA</button><button class="text-button" data-lantern="stop" disabled>Detener</button></div>`;
+    card.innerHTML=`<header><span>${icon('sparkles')} Lantern</span><button class="icon-button" data-lantern="rules" aria-label="Entrada y verificación de Lantern" title="Entrada y verificación">${icon('sliders')}</button><button class="icon-button" data-lantern="hide" aria-label="Ocultar monitor Lantern">${icon('close')}</button></header><button class="lantern-open" data-lantern="open"><span class="lantern-led"></span><strong data-lantern-status>En espera</strong>${icon('detach')}</button><small data-lantern-path>Continuidad para tu código</small><p data-lantern-summary>Ejecuta, edita y revisa cada cambio.</p><div class="lantern-monitor-actions"><button class="primary-button" data-lantern="start">${icon('play')}Iniciar</button><button class="secondary-button" data-lantern="analyze">Analizar con IA</button><button class="text-button" data-lantern="stop" disabled>Detener</button></div>`;
     $('#sidebar-content').after(card);
     this.click=e=>{const action=e.target.closest('[data-lantern]')?.dataset.lantern;if(action)this.studio.safe(()=>this.action(action));};document.addEventListener('click',this.click);
     this.host.platform.lantern=this;this.render();this.poll();
   }
   async action(action){
+    if(action==='rules')return lanternRules(this);
     if(action==='environments'){await this.studio.desktop.handle('lantern-environments');return;}
     if(action==='pin'){await this.host.platform.savePreference('lantern.followActive',this.host.platform.prefs['lantern.followActive']===false);this.render();if(this.host.platform.prefs['lantern.followActive'])await this.follow();return;}
     if(action==='detach'){await this.studio.desktop.detach('lantern',this.state.path||this.host.editor.current||'');return;}
@@ -44,7 +47,7 @@ export class LanternView{
       this.clearLens();this.submitted=this.capture();
       const buffer=this.submitted;
       this.enabled=true;await this.control(()=>this.host.api('/platform/lantern/start',buffer));
-      if(this.host.editor.current===path&&this.host.editor.getValue()!==buffer.content)this.changed();
+      if(!sameLanternCapture(this.capture(path),buffer))this.changed();
       this.openInline();
     }else {if(action!=='restart'){this.enabled=false;clearTimeout(this.followTimer);clearTimeout(this.bufferTimer);}await this.control(()=>this.host.api('/platform/lantern/'+(action==='restart'?'restart':'stop'),{}));}
     this.render();this.renderLens();
@@ -62,7 +65,7 @@ export class LanternView{
   async control(operation){
     const epoch=this.controlEpoch=(this.controlEpoch||0)+1;this.controlPending=true;this.render();
     const task=(this.controlQueue||Promise.resolve()).catch(()=>{}).then(async()=>{if(epoch!==this.controlEpoch)return;const state=await operation();if(epoch===this.controlEpoch)this.state=state;});
-    this.controlQueue=task;try{await task;}finally{if(epoch===this.controlEpoch)this.controlPending=false;}
+    this.controlQueue=task;try{await task;}finally{if(epoch===this.controlEpoch){this.controlPending=false;this.pendingCapture=null;}}
   }
   openInline(){
     this.studio.enter();if(this.host.platform.page)this.host.platform.closePage();
@@ -84,6 +87,7 @@ export class LanternView{
   }
   render(){
     const s=this.state,monitor=$('#lantern-monitor'),hidden=!this.host.platform.prefs['appearance.lanternMonitor'];if(monitor&&monitor.hidden!==hidden)monitor.hidden=hidden;
+    renderLanternRules(this);
     this.renderedStates ||= new WeakMap();const signature=JSON.stringify([s.status,s.active,s.path,s.revision,s.diagnostics?.length,s.error,s.code,s.output,s.preview,s.history,this.controlPending,this.host.platform.prefs['lantern.followActive'],this.studio.t('es','en')]);
     for(const root of document.querySelectorAll('.lantern-monitor,.lantern-workbench')){
       if(this.renderedStates.get(root)===signature)continue;this.renderedStates.set(root,signature);
@@ -100,25 +104,27 @@ export class LanternView{
       const preview=root.querySelector('.lantern-preview');if(preview){preview.hidden=!s.preview;if(s.preview&&preview.dataset.revision!==String(s.revision)){preview.replaceChildren(this.frame(s.preview));preview.dataset.revision=String(s.revision);}}
     }
   }
-  capture(){const ed=this.host.editor;return {path:ed.current,content:ed.getValue(),version:ed.models.get(ed.current)?.model?.getVersionId()??(this.bufferVersion=(this.bufferVersion||0)+1)};}
+  capture(path=this.host.editor.current){return captureLanternBuffers(this.host.editor,path);}
   changed(){
     if(new URLSearchParams(location.search).has('panel'))return;
     if(!this.state.active)return;this.clearLens();clearTimeout(this.bufferTimer);
-    const buffer=this.capture();if(!buffer.path||buffer.path!==this.state.path)return;
+    const buffer=this.capture(this.state.path);if(!buffer)return;
+    if(sameLanternCapture(buffer,this.submitted)){this.pendingCapture=null;return;}
+    this.pendingCapture=buffer;
     this.state={...this.state,status:'debouncing',lens:[],diagnostics:[]};this.render();
     // Send revisions in order; the backend handles syntax gating and debounce.
     this.bufferTimer=setTimeout(()=>{this.bufferQueue=(this.bufferQueue||Promise.resolve()).catch(()=>{}).then(async()=>{
-      if(!this.state.active||this.host.editor.current!==buffer.path||this.host.editor.getValue()!==buffer.content)return;
+      if(!this.state.active||this.state.path!==buffer.path||!sameLanternCapture(this.capture(buffer.path),buffer))return;
       this.submitted=buffer;
       const epoch=this.controlEpoch,result=await this.host.api('/platform/lantern/buffer',buffer);
-      if(!result.ignored&&!this.controlPending&&epoch===this.controlEpoch&&this.host.editor.current===buffer.path&&this.host.editor.getValue()===buffer.content){this.state=result;this.render();}
+      if(!result.ignored&&!this.controlPending&&epoch===this.controlEpoch&&this.state.path===buffer.path&&sameLanternCapture(this.capture(buffer.path),buffer)){if(this.pendingCapture===buffer)this.pendingCapture=null;this.state=result;this.render();}
     }).catch(e=>this.host.notify(e.message,'error'));},80);
   }
   clearLens(){
     if(this.lensModel&&!this.lensModel.isDisposed())this.lensModel.deltaDecorations(this.lensIds||[],[]);
     this.lensModel=null;this.lensIds=[];this.lensKey='';
   }
-  matchesBuffer(){const ed=this.host.editor;return this.state.active&&this.state.path===ed.current&&this.submitted?.path===ed.current&&this.submitted.content===ed.getValue()&&this.state.bufferVersion===this.submitted.version;}
+  matchesBuffer(){const ed=this.host.editor;return !this.pendingCapture&&this.state.active&&this.state.path===ed.current&&sameLanternCapture(this.capture(),this.submitted)&&this.state.bufferVersion===this.submitted.version;}
   renderLens(){
     const ed=this.host.editor,model=ed.models.get(ed.current)?.model;
     if(!this.matchesBuffer()||!model||!window.monaco||this.host.platform.prefs['lantern.lens']===false){this.clearLens();return;}
@@ -137,7 +143,7 @@ export class LanternView{
   showPreview(preview){this.studio.enter();this.host.platform.openPage('preview',`<div class="preview-toolbar"><span>${esc(preview.path)}</span><button class="secondary-button" id="refresh-preview">${icon('refresh')}Recargar</button><button class="primary-button" data-lantern="start">${icon('sparkles')}Continuar con Lantern</button></div><div class="embedded-preview"></div>`);$('.embedded-preview').append(this.frame(preview));$('#refresh-preview').onclick=()=>$('.embedded-preview').replaceChildren(this.frame(preview));}
   async poll(){
     if(this.disposed)return;
-    try{const epoch=this.controlEpoch;const s=await this.host.api('/platform/lantern');if(this.disposed)return;if(!this.controlPending&&epoch===this.controlEpoch){this.state=s;this.render();this.renderLens();
+    try{const epoch=this.controlEpoch;const s=await this.host.api('/platform/lantern');if(this.disposed)return;if(!this.controlPending&&!this.pendingCapture&&epoch===this.controlEpoch){this.state=s;this.render();this.renderLens();
       if(this.matchesBuffer()&&s.status!=='preparing')this.host.editor.setDiagnostics(s.path,s.diagnostics||[],'lumen-build');
       }
     }catch(error){if(!this.disposed)this.state={...this.state,status:'error',error:error.message};}

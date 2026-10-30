@@ -124,7 +124,16 @@ class Updates:
         except (OSError,ValueError):seen=None
         if ack:atomic_json(file,{'version':CURRENT,'seenAt':time.time()})
         return {'version':CURRENT,'show':not ack and seen!=CURRENT,'previous':seen,
-                'items':['Paneles de documentación y acciones legibles, con superficie translúcida y tamaño adaptable.',
+                'items':['R7: nC · renombrado revisado entre módulos con comprobación NCC, deshacer y rehacer.',
+                         'Consultas de extensiones cancelables al escribir; F2 conserva su proveedor al actualizar el estado.',
+                         'Correcciones de fluidez en Melody, resultados de Lantern y gestión interna de recursos.',
+                         'nC: parejas de corchetes, indentación y diagnósticos con el kit nativo o WSL elegido.',
+                         'Inicio y actividad con iconos acotados, navegación y arrastre más fluidos.',
+                         'Melody: Dossier de fallo, Huella de cambio y Contraprueba con evidencia revisable.',
+                         'Lantern: casos guardados por archivo y referencia de comportamiento entre revisiones.',
+                         'Laboratorio y depuración: seguimiento de instrucciones y referencias de variables.',
+                         'Terminales de extensiones: perfil elegido, argumentos y eventos de interacción.',
+                         'Paneles de documentación y acciones legibles, con superficie translúcida y tamaño adaptable.',
                          'Flujos de proyecto para Python, C, C++, Java, NASM y nC: plantillas, revisión de órdenes y recibos de ejecución.',
                          'Melody puede preparar tareas con archivos consultados, diagnósticos y resultados reales del proyecto.',
                          'Biblioteca de imágenes y clones QCOW2 ligeros para el laboratorio de máquinas.',

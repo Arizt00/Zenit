@@ -61,8 +61,11 @@ module.exports=function createAPI(host,options){
   const config=options.manifest.contributes?.configuration;
   for(const section of (Array.isArray(config)?config:[config]).filter(Boolean))for(const [key,value] of Object.entries(section.properties||{}))defaults[key]=value.default;
   const configuration=(section='')=>{
-    const prefix=section?section+'.':'';const values={};for(const [key,val] of Object.entries({...defaults,...settings}))if(key.startsWith(prefix))values[key.slice(prefix.length)]=val;
-    return Object.assign(values,{get:(key,fallback)=>settings[prefix+key]??defaults[prefix+key]??fallback,has:key=>prefix+key in settings||prefix+key in defaults,inspect:key=>({key:prefix+key,defaultValue:defaults[prefix+key],globalValue:settings[prefix+key]}),update:async(key,value)=>{const full=prefix+key;if(value===undefined)delete settings[full];else settings[full]=value;save('configuration.json',settings);event('configuration').fire({affectsConfiguration:s=>full===s||full.startsWith(s+'.')});}});
+    const prefix=section?section+'.':'';
+    const tree=source=>{const result=Object.create(null);for(const [key,value] of Object.entries(source)){const parts=key.split('.');let node=result;for(const part of parts.slice(0,-1)){if(['__proto__','prototype','constructor'].includes(part))break;if(!node[part]||typeof node[part]!=='object')node[part]=Object.create(null);node=node[part];}const last=parts.at(-1);if(!['__proto__','prototype','constructor'].includes(last))node[last]=value;}return result;};
+    const readKey=(source,key)=>{let value=tree(source);if(!key)return value;for(const part of key.split('.')){if(value==null||!Object.hasOwn(value,part))return undefined;value=value[part];}return value;};
+    const merged={...defaults,...settings},values=readKey(merged,section)||Object.create(null);
+    return Object.assign(typeof values==='object'?values:{},{get:(key,fallback)=>readKey({...defaults,...settings},prefix+key)??fallback,has:key=>readKey({...defaults,...settings},prefix+key)!==undefined,inspect:key=>({key:prefix+key,defaultValue:readKey(defaults,prefix+key),globalValue:readKey(settings,prefix+key)}),update:async(key,value)=>{const full=prefix+key;if(value===undefined)delete settings[full];else settings[full]=value;save('configuration.json',settings);event('configuration').fire({affectsConfiguration:s=>full===s||full.startsWith(s+'.')||s.startsWith(full+'.')});}});
   };
   const themeConfiguration=(section='')=>{
     const original=configuration(section),prefix=section==='workbench'?'':section===''?'workbench.':null;
@@ -90,9 +93,11 @@ module.exports=function createAPI(host,options){
     if(!previous)event('open').fire(doc);else if(previous.getText()!==doc.getText())event('change').fire({document:doc,contentChanges:[{range:new Range(new Position(0,0),previous.positionAt(previous.getText().length)),rangeOffset:0,rangeLength:previous.getText().length,text:doc.getText()}]});
     if(changed)event('activeEditor').fire(vscode.window.activeTextEditor);
   };
-  const selectorLanguages=selector=>[...new Set((Array.isArray(selector)?selector:[selector]).map(s=>typeof s==='string'?s:s.language||'*'))];
+  let matchDocument=()=>0;
+  const selectorLanguages=selector=>[...new Set((Array.isArray(selector)?selector:[selector]).filter(Boolean).map(s=>typeof s==='string'?s:s.language||'*'))];
   const provider=(kind,method)=>(selector,p,...extra)=>Disposable.from(...selectorLanguages(selector).map(language=>register(kind,language,async c=>{
-    const token={isCancellationRequested:false,onCancellationRequested:event('cancellation').event};
+    if(!matchDocument(selector,current))return undefined;
+    const token=c.token||require('./extension_cancellation.cjs').none;
     const position=c.position?new Position(c.position.line,c.position.character):undefined;
     const range=c.range?new Range(new Position(c.range.start.line,c.range.start.character),new Position(c.range.end.line,c.range.end.character)):undefined;
     if(['semantic','symbols','codelens','folding','links','colors'].includes(kind))return kind==='folding'?p[method](current,{},token):p[method](current,token);
@@ -107,8 +112,10 @@ module.exports=function createAPI(host,options){
     if(kind==='actions')return p[method](current,range,{diagnostics:(c.context?.diagnostics||[]).map(d=>({...d,range:new Range(new Position(d.range.start.line,d.range.start.character),new Position(d.range.end.line,d.range.end.character))})),triggerKind:c.context?.triggerKind||1,only:c.context?.only?new CodeActionKind(c.context.only):undefined},token);
     if(kind==='rename')return p[method](current,position,c.newName,token);
     if(kind==='signature')return p[method](current,position,token,{triggerKind:1,isRetrigger:false});
+    if(kind==='inlineCompletion')return p[method](current,position,{triggerKind:c.context?.triggerKind===0?0:1,selectedCompletionInfo:c.context?.selectedCompletionInfo},token);
+    if(kind==='completion')return p[method](current,position,token,{triggerKind:[0,1,2].includes(c.context?.triggerKind)?c.context.triggerKind:0,triggerCharacter:c.context?.triggerCharacter});
     return p[method](current,kind==='inlay'?range:position,token,{triggerKind:1,diagnostics:[]});
-  },{legend:kind==='semantic'?extra[0]:undefined,triggers:extra.filter(x=>typeof x==='string'),resolver:kind==='actions'&&p.resolveCodeAction?(action)=>p.resolveCodeAction(action,{isCancellationRequested:false,onCancellationRequested:event('cancellation').event}):undefined})));
+  },{legend:kind==='semantic'?extra[0]:undefined,triggers:extra.filter(x=>typeof x==='string'),resolver:kind==='actions'&&p.resolveCodeAction?(action,token)=>p.resolveCodeAction(action,token||require('./extension_cancellation.cjs').none):kind==='completion'&&p.resolveCompletionItem?(item,token)=>p.resolveCompletionItem(item,token||require('./extension_cancellation.cjs').none):undefined})));
   const memento=name=>{const state=read(name);return {keys:()=>Object.keys(state),get:(key,fallback)=>state[key]??fallback,update:async(key,value)=>{if(value===undefined)delete state[key];else state[key]=value;save(name,state);},setKeysForSync:()=>{}};};
   const extensions=(options.extensions||[]).map(info=>({id:info.id,extensionPath:info.root,extensionUri:Uri.file(info.root),packageJSON:info.manifest,get isActive(){return host.extensionState?.(info.id)?.active||false;},extensionKind:1,get exports(){return host.extensionState?.(info.id)?.exports;},activate:async()=>{if(host.activateExtension)return host.activateExtension(info.id);throw Error('Autoriza la dependencia '+info.id+' con su paquete desde Extensiones de Zénit.');}}));
   const output=name=>{if(outputChannels.has(name))return outputChannels.get(name);let text='';const channel={name,append:t=>{text=(text+t).slice(-64000);console.info(t);},appendLine:t=>channel.append(t+'\n'),replace:t=>{text=String(t).slice(-64000);},clear:()=>{text='';},show:()=>host.effect({output:text,title:name}),hide:()=>{},dispose:()=>outputChannels.delete(name)};outputChannels.set(name,channel);return channel;};
@@ -139,6 +146,11 @@ module.exports=function createAPI(host,options){
     static NoPermissions(v){return new this('No permissions: '+(v||''),'NoPermissions');}
     static Unavailable(v){return new this('Unavailable: '+(v||''),'Unavailable');}
   };
+  require('./extension_diagnostics.cjs')(vscode,diagnostics,EventEmitter);
+  require('./extension_comments.cjs')(vscode,host,event);
+  vscode.InlineCompletionTriggerKind={Invoke:0,Automatic:1};
+  vscode.CompletionTriggerKind={Invoke:0,TriggerCharacter:1,TriggerForIncompleteCompletions:2};vscode.CompletionItemTag={Deprecated:1};
+  vscode.languages.registerInlineCompletionItemProvider=provider('inlineCompletion','provideInlineCompletionItems');
   vscode.LogLevel={Off:0,Trace:1,Debug:2,Info:3,Warning:4,Error:5};
   vscode.workspace.onDidCreateFiles=event('createFiles').event;vscode.workspace.onDidDeleteFiles=event('deleteFiles').event;vscode.workspace.onDidRenameFiles=event('renameFiles').event;
   vscode.workspace.fs.writeFile=async(u,data)=>{const existed=fs.existsSync(u.fsPath);await fs.promises.writeFile(u.fsPath,data);if(!existed)event('createFiles').fire({files:[u]});};
@@ -148,6 +160,17 @@ module.exports=function createAPI(host,options){
   vscode.workspace.fs.copy=async(a,b,opts={})=>fs.promises.cp(a.fsPath,b.fsPath,{recursive:true,force:!!opts.overwrite,errorOnExist:!opts.overwrite});
   const globPattern=pattern=>{
     const raw=String(pattern);let re='^';for(let i=0;i<raw.length;i++){const c=raw[i];if(c==='*'){if(raw[i+1]==='*'){i++;if(raw[i+1]==='/'){i++;re+='(?:.*/)?';}else re+='.*';}else re+='[^/]*';}else if(c==='?')re+='[^/]';else if(c==='{')re+='(?:';else if(c==='}')re+=')';else if(c===',')re+='|';else re+=c.replace(/[.()+^$|[\]\\]/g,'\\$&');}return new RegExp(re+'$');
+  };
+  matchDocument=require('./extension_selectors.cjs')(globPattern);
+  vscode.languages.match=matchDocument;
+  vscode.workspace.getWorkspaceFolder=uri=>{
+    const folder=vscode.workspace.workspaceFolders[0];if(!uri||uri.scheme!==folder.uri.scheme||uri.authority!==folder.uri.authority)return undefined;
+    const relative=path.relative(folder.uri.fsPath,uri.fsPath);return relative===''||!path.isAbsolute(relative)&&relative!=='..'&&!relative.startsWith('..'+path.sep)?folder:undefined;
+  };
+  vscode.workspace.asRelativePath=(value,includeWorkspaceFolder=false)=>{
+    const uri=typeof value==='string'?Uri.file(value):value,folder=vscode.workspace.getWorkspaceFolder(uri);
+    if(!folder)return typeof value==='string'?value:uri.fsPath;
+    const relative=path.relative(folder.uri.fsPath,uri.fsPath).split(path.sep).join('/');return includeWorkspaceFolder?folder.name+'/'+relative:relative;
   };
   vscode.workspace.findFiles=async(include,exclude,maxResults=10000,token)=>{
     const base=typeof include==='string'?options.workspace:include.baseUri?.fsPath||include.base||options.workspace,match=globPattern(typeof include==='string'?include:include.pattern),skip=exclude?globPattern(typeof exclude==='string'?exclude:exclude.pattern):null,out=[];
@@ -197,7 +220,7 @@ module.exports=function createAPI(host,options){
       if(resource.kind==='create')event('createFiles').fire({files:[uri]});
       if(resource.kind==='delete'){for(const [key,old] of [...documents])if(old.fileName===uri.fsPath||old.fileName.startsWith(uri.fsPath+path.sep)){old.isClosed=true;documents.delete(key);if(current===old)current=null;event('close').fire(old);}event('deleteFiles').fire({files:[uri]});}
     }
-    for(const item of result.buffers||[]){const uri=Uri.file(path.resolve(options.workspace,item.path)),old=documents.get(uri.toString()),doc=makeDocument({uri,text:item.text,language:old?.languageId,dirty:true,version:(old?.version||0)+1});documents.set(uri.toString(),doc);if(current===old)current=doc;event('change').fire({document:doc,contentChanges:[{rangeOffset:0,rangeLength:item.before.length,text:item.text}]});}
+    for(const item of result.buffers||[]){const uri=Uri.file(path.resolve(options.workspace,item.path)),old=documents.get(uri.toString()),before=item.before??old?.getText()??'',lines=before.split(/\r?\n/),doc=makeDocument({uri,text:item.text,language:old?.languageId,dirty:true,version:(old?.version||0)+1});documents.set(uri.toString(),doc);if(current===old)current=doc;event('change').fire({document:doc,contentChanges:[{range:new Range(0,0,lines.length-1,lines.at(-1).length),rangeOffset:0,rangeLength:before.length,text:item.text}]});}
     return result.applied===true;
   };
   decorateEditor=require('./extension_decoration_types.cjs')(vscode,host);
@@ -275,7 +298,23 @@ module.exports=function createAPI(host,options){
   let activeTheme=Object.freeze({kind:[1,2,3,4].includes(options.themeKind)?options.themeKind:1});
   Object.defineProperty(vscode.window,'activeColorTheme',{get:()=>activeTheme,configurable:false});
   const updateEditors=require('./extension_editors.cjs')(vscode,options,event,makeDocument,documents,doc=>{current=doc;},decorateEditor,host);
-  const serviceEvent=services.event;services.event=(name,value)=>{if(name==='uri'){event('uri').fire(Uri.parse(value.uri));return;}if(name==='icons.changed'){if(iconTheme!==value.configurationId){iconTheme=value.configurationId;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.iconTheme'});}return;}if(name==='theme.changed'){if(typeof value.label==='string'&&themeLabel!==value.label){themeLabel=value.label;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.colorTheme'});}if([1,2,3,4].includes(value.kind)){activeTheme=Object.freeze({kind:value.kind});event('theme').fire(activeTheme);}return;}if(name==='editor.state'){updateEditors(value);return;}if(name==='document.saved'){const uri=Uri.file(value.uri),old=documents.get(uri.toString());if(old&&old.getText()===value.text){old._revision=value.revision;old.isDirty=false;event('save').fire(old);}return;}return serviceEvent(name,value);};
+  const notebooks=require('./extension_notebooks.cjs')(vscode,host,event,makeDocument,documents);
+  const localNotebookKernel=require('./extension_python_kernel.cjs')(vscode,options);if(localNotebookKernel)context.subscriptions.push(localNotebookKernel);
+  vscode.languages.getLanguages=async()=>[...new Set(['plaintext','python','c','cpp','rust','java','javascript','typescript','json','html','css','markdown','shell','powershell','asm',...(options.extensions||[]).flatMap(e=>(e.manifest.contributes?.languages||[]).map(l=>l.id)),...documents.values()].map(x=>typeof x==='string'?x:x.languageId))];
+  vscode.window.showTextDocument=async(value,columnOrOptions)=>{
+    const doc=value?.getText?value:await vscode.workspace.openTextDocument(value);
+    if(doc.uri.scheme==='file')host.effect({open:doc.fileName});
+    else host.effect({virtualDocument:{uri:doc.uri.toString(),title:path.basename(doc.uri.path)||doc.uri.scheme,text:doc.getText(),language:doc.languageId}});
+    return {document:doc,selection:new Selection(0,0,0,0),selections:[new Selection(0,0,0,0)],options:{},viewColumn:typeof columnOrOptions==='number'?columnOrOptions:columnOrOptions?.viewColumn,edit:async()=>{throw Error('Este documento virtual es de solo lectura.');}};
+  };
+  const serviceEvent=services.event;services.event=(name,value)=>{if(name==='files.renamed'){
+    const files=(value.files||[]).map(row=>({oldUri:Uri.file(path.resolve(options.workspace,row.oldPath)),newUri:Uri.file(path.resolve(options.workspace,row.path))}));
+    for(const row of files)for(const [key,doc] of [...documents])if(doc.fileName===row.oldUri.fsPath||doc.fileName.startsWith(row.oldUri.fsPath+path.sep)){
+      documents.delete(key);doc.isClosed=true;event('close').fire(doc);
+      const uri=Uri.file(row.newUri.fsPath+doc.fileName.slice(row.oldUri.fsPath.length)),next=makeDocument({uri,text:doc.getText(),language:doc.languageId,dirty:doc.isDirty,version:doc.version+1});documents.set(uri.toString(),next);if(current===doc)current=next;event('open').fire(next);
+    }
+    if(files.length)event('renameFiles').fire({files});return;
+  }if(name==='uri'){event('uri').fire(Uri.parse(value.uri));return;}if(name==='icons.changed'){if(iconTheme!==value.configurationId){iconTheme=value.configurationId;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.iconTheme'});}return;}if(name==='theme.changed'){if(typeof value.label==='string'&&themeLabel!==value.label){themeLabel=value.label;event('configuration').fire({affectsConfiguration:s=>s==='workbench'||s==='workbench.colorTheme'});}if([1,2,3,4].includes(value.kind)){activeTheme=Object.freeze({kind:value.kind});event('theme').fire(activeTheme);}return;}if(name==='editor.state'){updateEditors(value);return;}if(name==='document.saved'){const uri=Uri.file(value.uri),old=documents.get(uri.toString());if(old&&old.getText()===value.text){old._revision=value.revision;old.isDirty=false;event('save').fire(old);}return;}return serviceEvent(name,value);};
   function didSave(){if(current){if(current.uri.scheme==='file')try{current._revision=require('node:crypto').createHash('sha256').update(fs.readFileSync(current.uri.fsPath)).digest('hex');}catch{}current.isDirty=false;event('save').fire(current);}}
-  return {vscode,context,services,terminalLinks,editSessionIdentity,uiEvent:ui.event,syncDocument,willSave,didSave,treeViews,fileDecorations,portAttributes,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme)||fileSystems.has(value),readVirtual:async value=>{if(fileSystems.has(value))return fileSystems.read(value);const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
+  return {vscode,context,services,notebooks,terminalLinks,editSessionIdentity,uiEvent:(name,value)=>{if(name==='commentControl')event(name).fire(value);else ui.event(name,value);},syncDocument,willSave,didSave,treeViews,fileDecorations,portAttributes,hasFileDecorations:()=>decorationProviders.size>0,unsupportedApis,getDiagnostics:()=>current?[...diagnostics.values()].flatMap(map=>map.get(current.uri.toString())||[]):[],diagnosticCollections:diagnostics,hasVirtual:value=>virtual.has(Uri.parse(value).scheme)||fileSystems.has(value),readVirtual:async value=>{if(fileSystems.has(value))return fileSystems.read(value);const u=Uri.parse(value);const p=virtual.get(u.scheme);if(!p)throw Error('Documento virtual no registrado.');return p.provideTextDocumentContent(u);}};
 };

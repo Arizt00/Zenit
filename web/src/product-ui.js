@@ -1,10 +1,13 @@
 import {icon} from './icons.js';
 import {installMelodyExperience} from './melody-experience.js';
 import {installChromeLocale} from './chrome-locale.js';
+import {installDevelopmentTools} from './development-tools.js';
+import {installPanelChrome} from './panel-chrome.js';
 
 /** Keep existing actions and handlers; expose secondary tools through one menu. */
 export function installProductUI(host){
   const platform=host.platform;
+  const development=installDevelopmentTools(host);
   const railAnimations=new Map(),pressRail=event=>{
     const button=event.target.closest?.('.activity-rail .rail-item,.activity-rail .rail-settings');
     if(!button||event.type==='click'&&event.detail!==0||document.documentElement.dataset.motion==='off'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -17,6 +20,7 @@ export function installProductUI(host){
   if(platform?.sessionbar){
     const picker=document.createElement('button');picker.className='console-mode zenit-terminal-picker';picker.setAttribute('aria-haspopup','menu');picker.setAttribute('aria-label','Seleccionar terminal');picker.innerHTML=icon('terminal')+'<span>Consola</span>'+icon('chevron-down');
     document.querySelector('.terminal-tools').prepend(picker);
+    if(platform.runTerminalButton)picker.after(platform.runTerminalButton);
     picker.onclick=()=>host.showMenu(picker,[{label:'Consola de tareas',icon:'terminal',run:()=>platform.useConsole()},...Array.from(platform.terminals.values()).map(t=>({label:platform.terminalLabel(t),icon:platform.showingPTY&&t.id===platform.activeTerminal?'check':'terminal',run:()=>platform.selectTerminal(t.id)})),{separator:true},{label:'Nueva terminal',icon:'plus',run:()=>platform.terminalProfiles()},...(platform.showingPTY&&platform.activeTerminal?[{label:'Cerrar esta sesión',icon:'trash',run:()=>platform.closeTerminal(platform.activeTerminal)}]:[])],'Terminales');
     const original=platform.renderActiveTerminal.bind(platform);platform.renderActiveTerminal=(...args)=>{const result=original(...args),terminal=platform.terminals.get(platform.activeTerminal),label=platform.showingPTY&&terminal?platform.terminalLabel(terminal):'Consola';if(picker.querySelector('span').textContent!==label)picker.querySelector('span').textContent=label;return result;};
     platform.sessionbar.classList.add('zenit-sessions-hidden');document.querySelector('.console-mode:not(.zenit-terminal-picker)')?.classList.add('zenit-overflow-action');
@@ -69,6 +73,7 @@ export function installProductUI(host){
   let locale;
   const refresh=()=>{
     const next=platform.prefs['general.locale'];if(locale===next)return;locale=next;
+    development.refresh();
     const t=(es,en)=>platform.t(es,en),set=(selector,text)=>{const node=document.querySelector(selector);if(node)node.textContent=text;};
     const english=[['Explain this code','I’ll walk you through it'],['Generate a function','From a description'],['Search your project','Find files, classes and symbols…'],['Resolve an error','Understand the problem and its solution']];
     cards.forEach(([button,,heading,detail],i)=>{if(button){button.querySelector('strong').textContent=t(heading,english[i][0]);button.querySelector('small').textContent=t(detail,english[i][1]);}});
@@ -81,6 +86,7 @@ export function installProductUI(host){
   };
   const applyPreferences=platform.applyPreferences.bind(platform);platform.applyPreferences=(...args)=>{const result=applyPreferences(...args);refresh();return result;};refresh();
   const melody=installMelodyExperience(host);
+  const panelChrome=installPanelChrome(host);
   const localeUI=installChromeLocale(platform);
-  return {dispose(){localeUI.dispose();melody.dispose();document.removeEventListener('pointerdown',pressRail,true);document.removeEventListener('click',pressRail,true);for(const animation of railAnimations.values())animation.cancel();document.removeEventListener('zenit:breadcrumbs',updateCrumbs);document.removeEventListener('pointerdown',providerPointer);document.removeEventListener('keydown',providerKey);}};
+  return {dispose(){panelChrome.dispose();development.dispose();localeUI.dispose();melody.dispose();document.removeEventListener('pointerdown',pressRail,true);document.removeEventListener('click',pressRail,true);for(const animation of railAnimations.values())animation.cancel();document.removeEventListener('zenit:breadcrumbs',updateCrumbs);document.removeEventListener('pointerdown',providerPointer);document.removeEventListener('keydown',providerKey);}};
 }

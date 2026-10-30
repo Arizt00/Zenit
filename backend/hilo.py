@@ -18,12 +18,17 @@ class Hilo(Kernel):
     def __init__(self, features):
         super().__init__()
         self.features = features
+        from .resource_budget import ResourceBudget
+        self.budget=ResourceBudget(features.prefs if features else None)
+        if features:features.app.runner.governor=self.budget
         self.lock = threading.RLock()
         self.queue = queue.PriorityQueue(maxsize=24)
+        self.interactive_queue=queue.PriorityQueue(maxsize=24);self.interactive_worker=None
         self.jobs = OrderedDict()
         self.cache = {}
         self.reads = {}
         self.cache_generation=0
+        self.cache_metrics={'hits':0,'misses':0,'shared':0,'discarded':0,'failures':0,'readMs':0}
         self.sequence = 0
         self.closed = False
         # One maintenance worker leaves foreground execution and HTTP independent.
@@ -60,28 +65,38 @@ class Hilo(Kernel):
             prerequisites=[self.jobs[x] for x in job['depends'] if x in self.jobs]
             if any(x['state'] in ('failed','cancelled') for x in prerequisites):
                 job['event'].set();job.update(state='cancelled',stage='Dependencia no completada',finished=time.time())
-                if job['cancel']:job['cancel']()
+                self._cancel_cleanup(job)
                 continue
             if any(x['state']!='done' for x in prerequisites):job['stage']='Esperando otros trabajos';continue
             self.sequence+=1
-            try:self.queue.put_nowait((job['priority'],self.sequence,job['id'],job['operation']));job['enqueued']=True
+            work_queue=self.interactive_queue if job['priority']<0 else self.queue
+            try:
+                work_queue.put_nowait((job['priority'],self.sequence,job['id'],job['operation']));job['enqueued']=True
+                if work_queue is self.interactive_queue and (not self.interactive_worker or not self.interactive_worker.is_alive()):
+                    self.interactive_worker=threading.Thread(target=self._work,args=(work_queue,),name='zenit-interaction',daemon=True);self.interactive_worker.start()
             except queue.Full:break
 
-    def _work(self):
+    def _work(self,work_queue=None):
+        work_queue=self.queue if work_queue is None else work_queue
         while True:
-            try: _, _, identity, operation = self.queue.get(timeout=.2)
+            try: _, _, identity, operation = work_queue.get(timeout=.2)
             except queue.Empty:
                 if self.closed: return
+                if work_queue is self.interactive_queue:
+                    with self.lock:
+                        if work_queue.empty():self.interactive_worker=None;return
                 continue
             with self.lock:
                 job = self.jobs.get(identity)
-                if job:job['enqueued']=False
-            if job is None:self.queue.task_done();continue
+                if job:
+                    job['enqueued']=False
+                    if job['state']!='queued':job=None
+                    else:job.update(state='running',stage='Preparing',started=time.time())
+            if job is None:work_queue.task_done();continue
             result = None; error = None
             cpu_started=time.thread_time()
             try:
                 if job['event'].is_set(): raise CancelledError()
-                with self.lock: job.update(state='running', stage='Preparing', started=time.time())
                 result = operation(job['event'])
                 state = 'cancelled' if job['event'].is_set() else 'done'
             except CancelledError: state = 'cancelled'
@@ -91,7 +106,7 @@ class Hilo(Kernel):
                 with self.lock:
                     job.update(state=state, result=result, error=error, finished=time.time(),workerCpuMs=round((time.thread_time()-cpu_started)*1000,2))
                     self._release_waiting()
-                self.queue.task_done()
+                work_queue.task_done()
 
     def cancel(self, identity):
         with self.lock:
@@ -99,10 +114,18 @@ class Hilo(Kernel):
             if not job: raise ValueError('Operación desconocida.')
             if job['state'] in ('queued', 'running'):
                 job['event'].set()
-                if job['cancel']: job['cancel']()
+                self._cancel_cleanup(job)
                 if job['state']=='queued':job.update(state='cancelled',stage='Cancelada',finished=time.time())
                 self._release_waiting()
             return {'cancelled': job['event'].is_set()}
+
+    @staticmethod
+    def _cancel_cleanup(job):
+        # A failed adapter cleanup must not terminate the only scheduler worker
+        # or prevent dependent jobs from being cancelled.
+        if job['cancel']:
+            try:job['cancel']()
+            except Exception as error:job['cleanupError']=str(error)[:1000]
 
     def report(self, event, stage):
         with self.lock:
@@ -118,9 +141,14 @@ class Hilo(Kernel):
             job=self.jobs.get(identity)
             if not job or job['state']!='queued':raise ValueError('Solo puede cambiarse la prioridad de una tarea en cola.')
             job['priority']=priority
-            with self.queue.mutex:
-                self.queue.queue=[(priority if entry[2]==identity else entry[0],*entry[1:]) for entry in self.queue.queue]
-                heapq.heapify(self.queue.queue)
+            for work_queue in (self.queue,self.interactive_queue):
+                removed=False
+                with work_queue.mutex:
+                    kept=[entry for entry in work_queue.queue if entry[2]!=identity]
+                    if len(kept)!=len(work_queue.queue):
+                        work_queue.queue=kept;heapq.heapify(work_queue.queue);removed=True;work_queue.not_full.notify()
+                if removed:work_queue.task_done();job['enqueued']=False;break
+            self._release_waiting()
         return {'priority':priority}
 
     def resources(self,workspace):
@@ -140,7 +168,7 @@ class Hilo(Kernel):
                 if str(job.cwd)!=str(workspace):continue
                 with job.lock:
                     process=job.process;execution.append({'id':job.id,'label':Path(job.commands[-1][0]).name if job.commands and isinstance(job.commands[-1],list) else 'Ejecución','state':'cancelled' if job.cancelled else 'failed' if job.done and job.code else 'done' if job.done else 'queued' if getattr(job,'queued',False) else 'running','code':job.code,'resources':measure(process.pid) if process and process.poll() is None else None})
-        return {'sampledAt':time.time(),'application':measure(os.getpid()),'execution':execution,'scope':'Zénit y sus procesos hijos; RSS sumada, CPU acumulada en segundos','available':ps is not None}
+        return {'sampledAt':time.time(),'application':measure(os.getpid()),'execution':execution,'budget':self.budget.snapshot(),'scope':'Zénit y sus procesos hijos; RSS sumada, CPU acumulada en segundos','available':ps is not None}
 
     def cancel_workspace(self, workspace):
         for identity, job in list(self.jobs.items()):
@@ -159,31 +187,57 @@ class Hilo(Kernel):
             if job.queued: job.done = True
         return self.submit('Packages · ' + Path(job.cwd).name, run, workspace=job.cwd, key='process:' + job.id, cancel=cancel)
 
-    def cached(self, key, read, ttl=15):
+    def cached(self, key, read, ttl=15, *, cancel=None):
         # Concurrent windows share one discovery instead of starting identical
         # filesystem/tool scans. Errors wake every waiter and are never cached.
-        with self.lock:
-            item = self.cache.get(key)
-            if item and item[0] > time.monotonic(): return copy.deepcopy(item[1])
-            pending=self.reads.get(key)
-            owner=pending is None
-            if owner:pending={'event':threading.Event(),'generation':self.cache_generation};self.reads[key]=pending
-        if not owner:
-            if not pending['event'].wait(30):raise TimeoutError('La detección de herramientas sigue ocupada.')
-            if 'error' in pending:raise pending['error']
-            if pending['generation']!=self.cache_generation:return self.cached(key,read,ttl)
-            return copy.deepcopy(pending['value'])
-        try:
-            value=read()
+        deadline=time.monotonic()+30
+        while True:
+            if self.closed or cancel is not None and cancel.is_set():raise CancelledError()
+            if time.monotonic()>deadline:raise TimeoutError('La detección de herramientas sigue ocupada.')
             with self.lock:
-                pending['value']=value
-                if pending['generation']==self.cache_generation:self.cache[key]=(time.monotonic()+ttl,value)
-                if len(self.cache)>32:self.cache.pop(next(iter(self.cache)))
-            return copy.deepcopy(value)
-        except BaseException as error:
-            pending['error']=error;raise
-        finally:
-            with self.lock:self.reads.pop(key,None);pending['event'].set()
+                item = self.cache.get(key)
+                if item and item[0] > time.monotonic():
+                    self.cache_metrics['hits']+=1
+                    return copy.deepcopy(item[1])
+                self.cache.pop(key,None)
+                pending=self.reads.get(key)
+                owner=pending is None
+                if owner:
+                    pending={'event':threading.Event(),'generation':self.cache_generation};self.reads[key]=pending
+                    self.cache_metrics['misses']+=1
+                else:self.cache_metrics['shared']+=1
+            if not owner:
+                while not pending['event'].wait(.05):
+                    if self.closed or cancel is not None and cancel.is_set():raise CancelledError()
+                    if time.monotonic()>deadline:raise TimeoutError('La detección de herramientas sigue ocupada.')
+                if self.closed or cancel is not None and cancel.is_set():raise CancelledError()
+                if pending['generation']!=self.cache_generation:continue
+                if 'error' in pending:raise pending['error']
+                return copy.deepcopy(pending['value'])
+            started=time.monotonic()
+            try:
+                value=read()
+                with self.lock:
+                    pending['value']=value
+                    current=pending['generation']==self.cache_generation and not self.closed
+                    if current:self.cache[key]=(time.monotonic()+ttl,value)
+                    else:self.cache_metrics['discarded']+=1
+                    if len(self.cache)>32:self.cache.pop(next(iter(self.cache)))
+            except BaseException as error:
+                with self.lock:pending['error']=error;self.cache_metrics['failures']+=1
+                raise
+            finally:
+                with self.lock:
+                    self.cache_metrics['readMs']+=round((time.monotonic()-started)*1000,2)
+                    self.reads.pop(key,None);pending['event'].set()
+            # A settings/SDK change invalidates the initiating caller too.
+            # Previously only waiters retried and the owner saw the old result.
+            if current:
+                if cancel is not None and cancel.is_set():raise CancelledError()
+                return copy.deepcopy(value)
+
+    def cache_stats(self):
+        with self.lock:return {**self.cache_metrics,'active':len(self.reads),'entries':len(self.cache)}
 
     def invalidate(self):
         with self.lock:self.cache.clear();self.cache_generation+=1
@@ -198,12 +252,13 @@ class Hilo(Kernel):
     def snapshot(self, workspace=None):
         with self.lock:
             jobs = [{k: v for k, v in j.items() if k not in ('event', 'cancel', 'key','operation','enqueued')} for j in self.jobs.values() if workspace is None or j['workspace'] == str(workspace)]
+            workers=1+int(bool(self.interactive_worker and self.interactive_worker.is_alive()))
         pending = sorted((j for j in jobs if j['state'] == 'queued'), key=lambda j:(j['priority'],j['created']))
         for job in jobs:
             job['queuePosition'] = next((i+1 for i,j in enumerate(pending) if j['id']==job['id']), None)
             job['elapsedMs'] = max(0, round(((job.get('finished') or time.time())-(job['started'] or job['created']))*1000))
         counts={state:sum(j['state']==state for j in jobs) for state in ('queued','running','done','failed','cancelled')}
-        return {'automatic': True, 'administrator': False, 'workers': 1, 'queueLimit': 24, 'jobs': jobs, 'counts':counts, 'cacheEntries': len(self.cache),'execution':self.features.app.runner.snapshot() if getattr(self.features,'app',None) else None}
+        return {'automatic': True, 'administrator': False, 'workers': workers, 'queueLimit': 24, 'jobs': jobs, 'counts':counts, 'cacheEntries': len(self.cache),'execution':self.features.app.runner.snapshot() if getattr(self.features,'app',None) else None}
 
     def shutdown(self):
         with self.lifecycle_lock:
@@ -212,7 +267,10 @@ class Hilo(Kernel):
         self.closed = True
         for identity in list(self.jobs): self.cancel(identity)
         self.worker.join(timeout=5)
+        interactive=self.interactive_worker
+        if interactive:interactive.join(timeout=5)
         self.lifecycle('shutdown')
+        if not self.budget.closed:self.budget.shutdown()
         self.invalidate()
 
 

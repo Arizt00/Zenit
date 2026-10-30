@@ -1,4 +1,7 @@
+import {projectURI} from './navigation-state.js';
+import {registerLanguageDepth} from './language-depth.js';
 import {MelodyStream} from './melody-stream.js';
+import {focusedContext} from './focused-context.js';
 import {mountConnections} from './session-workbench.js';
 import {TaskCenter} from './task-center.js';
 import {ProjectTestsUI} from './project-tests.js';
@@ -21,6 +24,7 @@ import {validDiagnostics} from './language-diagnostics.js';
 import {PythonPackagesUI} from './python-packages.js';
 import {NativePackagesUI} from './native-packages.js';
 import {ExtensionView} from './extension-view.js';
+import {mountLocalModels} from './local-models.js';
 
 const PLATFORM_CATEGORIES=[
  ['general','globe','General','General'],['appearance','sun','Apariencia','Appearance'],['editor','code','Editor de texto','Text editor'],
@@ -69,6 +73,8 @@ export class LumenPlatform {
     if(changed.some(key=>key.startsWith('editor.')||['appearance.motion','appearance.density','appearance.theme'].includes(key)))this.host.applyPlatformSettings(p);
     if(has('general.locale'))root.lang=p['general.locale'];
     if(has('appearance.decorations'))root.dataset.decorations=p['appearance.decorations']?'on':'off';
+    if(has('appearance.helpContrast'))root.dataset.helpContrast=p['appearance.helpContrast']?'solid':'glass';
+    if(has('appearance.density'))for(const label of document.querySelectorAll('[data-density-value]'))label.textContent=this.t(...PLATFORM_OPTION_NAMES[p['appearance.density']==='compact'?'compact':'comfortable']);
     if(has('appearance.motionDuration'))root.style.setProperty('--motion-layout',p['appearance.motionDuration']+'ms');
     if(has('terminal.fontSize'))root.style.setProperty('--pty-font',p['terminal.fontSize']+'px');
     if(has('appearance.errorColor'))root.style.setProperty('--error-color',({red:'#e33655',rose:'#df458f',amber:'#bb7109',mint:'#16885e'})[p['appearance.errorColor']]||'#e33655');
@@ -91,7 +97,7 @@ export class LumenPlatform {
   applyFileIcons(){
     if(!this.contributionsReady)return;const selected=this.prefs['appearance.iconTheme']||'auto',themes=this.extensionContributions.iconThemes||[],theme=selected==='none'?'none':selected==='zenit'?null:selected==='auto'?themes.find(t=>t.owner!=='nc-lang.nc-language')||null:themes.find(t=>t.id===selected)||null,kind=this.host.editor.extensionTheme?.uiTheme?.startsWith('hc-')?'contrast':document.documentElement.dataset.theme==='day'?'light':'dark';
     this.iconSignatures ||= new WeakMap();let content=theme;if(theme&&typeof theme==='object'){content=this.iconSignatures.get(theme);if(content===undefined){content=JSON.stringify(theme);this.iconSignatures.set(theme,content);}}
-    const signature=kind+':'+content;if(signature===this.appliedIcons)return;this.appliedIcons=signature;setFileIcons(theme,kind,languageFor);this.host.refreshFileViews?.();
+    const ncTheme=themes.find(t=>t.owner==='nc-lang.nc-language'),signature=kind+':'+content+':'+JSON.stringify(ncTheme||null);if(signature===this.appliedIcons)return;this.appliedIcons=signature;setFileIcons(theme,kind,languageFor,ncTheme);this.host.refreshFileViews?.();
     if(!theme&&!['auto','zenit'].includes(selected))this.host.notify(this.t('El tema de iconos guardado no está disponible. Se muestran los iconos de Zénit.','The saved icon theme is unavailable. Zénit icons are shown.'),'info',5000,'icons-unavailable');
   }
   async savePreference(key,value){
@@ -139,7 +145,7 @@ export class LumenPlatform {
     const sidebar=document.getElementById('sidebar-title');if(sidebar&&['Project','Proyecto'].includes(sidebar.textContent))sidebar.textContent=this.t('Proyecto','Project');
     const subtitle=document.getElementById('assistant-subtitle');if(subtitle&&!this.aiJob)subtitle.textContent=this.t('Convierte ideas en realidad. Más simple. Más lejos.','Turn ideas into reality. Simpler. Further.');
   }
-  pageTitle(kind){if(kind==='workflows')return this.t('Proyecto','Project');if(kind==='updates')return this.t('Actualizaciones','Updates');if(kind==='testing')return this.t('Pruebas','Tests');if(kind==='conflicts')return this.t('Conflictos de Git','Git conflicts');if(kind==='tasks')return this.t('Tareas','Tasks');if(kind==='foundation')return this.t('Laboratorio','Laboratory');if(kind==='search')return this.t('Buscar','Search');if(kind==='debug')return this.t('Depuración','Debug');return kind==='settings'?this.t('Ajustes','Settings'):kind==='extensions'?this.t('Extensiones','Extensions'):kind==='tools'?this.t('Herramientas de desarrollo','Development tools'):kind==='hardware'?this.t('Sistema y rendimiento','System and performance'):kind==='snippets'?this.t('Fragmentos de código','Code snippets'):kind;}
+  pageTitle(kind){if(kind==='investigation')return this.t('Investigación verificable','Verifiable investigation');if(kind==='workflows')return this.t('Proyecto','Project');if(kind==='updates')return this.t('Actualizaciones','Updates');if(kind==='testing')return this.t('Pruebas','Tests');if(kind==='conflicts')return this.t('Conflictos de Git','Git conflicts');if(kind==='tasks')return this.t('Tareas','Tasks');if(kind==='foundation')return this.t('Laboratorio','Laboratory');if(kind==='search')return this.t('Buscar','Search');if(kind==='debug')return this.t('Depuración','Debug');return kind==='settings'?this.t('Ajustes','Settings'):kind==='extensions'?this.t('Extensiones','Extensions'):kind==='tools'?this.t('Herramientas de desarrollo','Development tools'):kind==='hardware'?this.t('Sistema y rendimiento','System and performance'):kind==='snippets'?this.t('Fragmentos de código','Code snippets'):kind;}
   openPage(kind,content,preserve=false){
     this.extensionServices?.hide();
     const changed=this.page!==kind;
@@ -240,11 +246,14 @@ export class LumenPlatform {
       'general.showWelcome':['Ver la pantalla de bienvenida al iniciar la aplicación.','Show Welcome when the application starts.'],
       'general.restoreLayout':['Mantiene tu distribución de paneles y pestañas entre sesiones.','Keep your panels and tabs between sessions.'],
       'appearance.theme':['Elige el tema visual de la interfaz.','Choose the visual theme of the interface.'],
+      'appearance.density':['Cómoda deja más espacio; Compacta reduce márgenes y alturas. La letra mantiene su tamaño y la interfaz sigue el escalado de la ventana.','Comfortable leaves more space; Compact reduces margins and heights. Text keeps its size and the interface follows window scaling.'],
       'appearance.motion':['Activa animaciones y transiciones suaves en la interfaz.','Enable smooth interface animations and transitions.']
     };
     const hint=hints[s.key]?this.t(...hints[s.key]):'';
-    return `<div class="preference-row ${disabled?'unavailable':''}"><label class="preference-label" for="${id}"><strong>${this.e(label)}</strong><small>${this.e(hint)}${disabled?' · '+(copilotLimit?this.t('no aplicado por Copilot SDK','not applied by Copilot SDK'):this.t('motor no instalado','engine not installed')):''}</small></label><div class="preference-control">${control}</div></div>`;
+    const density=s.key==='appearance.density';if(density)control=control.replace(' aria-label=',` aria-describedby="${id}-hint" aria-label=`);
+    return `<div class="preference-row ${disabled?'unavailable':''}"><label class="preference-label" for="${id}"><strong>${this.e(label)}</strong><small ${density?`id="${id}-hint"`:''}>${this.e(hint)}${disabled?' · '+(copilotLimit?this.t('no aplicado por Copilot SDK','not applied by Copilot SDK'):this.t('motor no instalado','engine not installed')):''}</small></label><div class="preference-control">${control}</div></div>${density?this.densityPreview():''}`;
   }
+  densityPreview(){return `<section class="density-preview" aria-label="${this.t('Vista previa de tipografía y densidad','Typography and density preview')}"><div><strong class="density-sample-title">${this.t('Proyecto','Project')}</strong><span class="density-sample-body">${this.t('Archivo listo para revisar','File ready to review')}</span><span class="density-sample-description">${this.t('Configura la tarea y comprueba su resultado.','Configure the task and check its result.')}</span><span class="density-sample-metadata">main.py · ${this.t('Ejemplo de metadatos','Example metadata')}</span></div><span data-density-value>${this.t(...PLATFORM_OPTION_NAMES[this.prefs['appearance.density']==='compact'?'compact':'comfortable'])}</span></section>`;}
   themePreviews(){return `<div class="platform-theme-previews">${['day','dark','forest'].map(id=>`<button class="platform-theme-card ${this.prefs['appearance.theme']===id&&!this.extensionThemes?.some(t=>t.id===this.prefs['appearance.extensionTheme'])?'active':''}" data-platform-theme="${id}"><span class="preview-window ${id}"><i></i><i></i><i></i></span><strong>${this.t(...PLATFORM_OPTION_NAMES[id])}</strong><small>${this.t('Composición Zénit','Zénit composition')}</small></button>`).join('')}</div>`;}
   iconThemeOptions(){const choice=this.prefs['appearance.iconTheme']||'auto',theme=this.extensionContributions.iconThemes?.find(t=>t.id===choice),label=theme?.label||({auto:this.t('Automático','Automatic'),zenit:'Zénit',none:this.t('Sin iconos','No icons')})[choice]||choice;return `<section class="extension-theme-summary icon-theme-summary"><div><h4>${this.t('Iconos de archivos y carpetas','File and folder icons')}</h4><p data-effective-icons>${this.e(label)}</p></div><button class="secondary-button" data-icon-theme-picker="">${this.glyph('files')}${this.t('Elegir iconos','Choose icons')}</button></section>`;}
   externalThemeOptions(){const themes=this.extensionThemes||[],selected=themes.find(t=>t.id===this.prefs['appearance.extensionTheme']);return themes.length?`<section class="extension-theme-summary"><div><h4>${this.t('Temas de extensiones','Extension themes')}</h4><p>${this.e(selected?.label||this.t('Tema de Zénit','Zénit theme'))} · ${themes.length} ${this.t('disponibles','available')}</p></div><button class="secondary-button" data-theme-picker="">${this.glyph('palette')}${this.t('Elegir tema','Choose theme')}</button></section>`:'';}
@@ -365,7 +374,7 @@ export class LumenPlatform {
   async loadContributions(){
     const sequence=this.contributionSequence=(this.contributionSequence||0)+1;
     const data=await this.api('/extensions/contributions');if(sequence!==this.contributionSequence||this.disposed)return data;this.contributionsReady=true;this.extensionContributions=data;
-    this.host.editor.configureLanguages?.(data.languages,this.development.associations);this.renderExtensionThemes(data.themes||[]);
+    this.host.editor.configureLanguages?.(data.languages,this.development.associations);this.host.editor.languageStyles=data.languageStyles||[];this.host.editor.semanticStyles?.configure(data);this.renderExtensionThemes(data.themes||[]);
     try{data.errors.push(...await this.host.editor.configureGrammars?.(data.grammars||[])||[]);}
     catch(error){data.errors.push({id:'textmate',error:error.message});this.host.notify('No se pudo cargar el resaltado TextMate local: '+error.message,'error');}
     if(sequence!==this.contributionSequence||this.disposed)return data;
@@ -393,6 +402,7 @@ export class LumenPlatform {
     return `<div class="provider-settings"><div class="provider-grid">${Object.entries(PLATFORM_NAMES).map(([id,name])=>{const state=this.providers.find(p=>p.id===id);return `<button class="provider-card ${selected===id?'selected':''}" data-provider="${id}"><span class="provider-monogram">${providerIcon(id)}</span><strong>${providerName(id)}</strong><span class="provider-kind">${providerKind(id)}</span><small>${state?.credential?this.t('Credencial disponible','Credential available'):id==='emma'?this.t('Motor local de Emma','Emma local engine'):id==='ollama'?this.t('Servidor local','Local server'):ACCOUNT_PROVIDERS.has(id)?this.t('Iniciar sesión con tu cuenta','Sign in with your account'):this.t('Configurar credencial','Set up credential')}</small></button>`;}).join('')}</div><div class="provider-detail"><div class="provider-detail-heading"><h4>${PLATFORM_NAMES[selected]}</h4><span class="capability-badge">${this.t('Chat + contexto + revisión','Chat + context + review')}</span></div><p>${selected==='emma'?this.t('Usa el motor y el modelo local de tu carpeta de Emma. La sesión de Zénit es independiente de sus conversaciones y recuerdos; no necesita copiar credenciales. La primera respuesta carga el modelo.','Uses the engine and local model in your Emma folder. Zénit has its own session, separate from Emma conversations and memories. No copied credentials. The first response loads the model.'):selected==='openai'?this.t('Integración mediante la API de OpenAI, no mediante la sesión web de ChatGPT.','Integrated through the OpenAI API, not your ChatGPT web session.'):ACCOUNT_PROVIDERS.has(selected)?this.t('Acceso mediante el cliente oficial. Usa Iniciar sesión para vincular tu cuenta; su plan determina la disponibilidad.','Official client access. Sign in to connect your account; your plan determines availability.'):selected==='copilot'?this.t('Usa el SDK oficial y Copilot CLI autenticada. El adaptador no concede permisos para ejecutar herramientas.','Uses the official SDK and authenticated Copilot CLI. The adapter does not grant permission to execute tools.'):selected==='ollama'?this.t('Conecta un modelo instalado en el servidor local indicado arriba.','Connect a model installed in the local server configured above.'):this.t('Conexión nativa a la API del proveedor. No se emula el servicio con otro modelo.','Native provider API connection. No substitution with another model.')}</p>${accountPanel(this,selected)}${needsKey?`<form id="provider-credential-form"><label class="field-label" for="provider-key">${this.t('Credencial de API','API credential')}</label><div class="credential-field"><input type="password" id="provider-key" autocomplete="new-password" placeholder="${info?.credential?this.t('Ya hay una credencial. Escribe otra para sustituirla.','Credential available. Enter a new one to replace it.'):this.t('Solo se envía al backend local','Sent only to the local backend')}" required><button class="secondary-button" type="submit">${this.t('Guardar','Save')}</button></div><label class="checkbox-note"><input type="checkbox" id="provider-remember">${this.t('Recordar en el almacén seguro del sistema, si está disponible.','Remember in the native secure store, when available.')}</label><p class="muted-small">${this.t('Sin marcar: solo esta sesión. No se guarda en JSON ni en localStorage.','Unchecked: this session only. Never saved in JSON or localStorage.')}</p></form>`:''}<div class="provider-detail-actions"><button class="secondary-button" id="provider-fetch-models">${this.glyph('refresh')}${this.t('Consultar modelos','Fetch models')}</button>${needsKey?`<button class="text-button" id="provider-forget-key">${this.t('Olvidar credencial','Forget credential')}</button>`:''}<span id="provider-validation-state" role="status"></span></div><div id="provider-model-results"></div></div></div>`;
   }
   bindProviders(){
+    mountLocalModels(this);
     bindAccount(this);const form=document.getElementById('provider-credential-form');if(form)form.onsubmit=event=>{event.preventDefault();this.safe(async()=>{
       const field=document.getElementById('provider-key'),key=field.value;field.value='';
       await this.api('/ai/credential',{provider:this.prefs['ai.provider'],key,remember:document.getElementById('provider-remember').checked});
@@ -439,7 +449,8 @@ export class LumenPlatform {
     this.conversation=crypto.randomUUID?.()||String(Date.now());this.updateProviderBar();
   }
   updateProviderBar(){this.updateIdentity();const select=document.getElementById('active-ai-provider');if(select)select.value=this.prefs['ai.provider']||'openai';const label=document.getElementById('active-ai-model');if(label){label.textContent=this.prefs['ai.model']||this.t('Configurar modelo','Configure model');label.title=this.prefs['ai.model']||this.t('Abrir ajustes de IA','Open AI settings');}}
-  async sendAI(question,{edit=false,consult=false}={}){
+  async sendAI(question,{edit=false,consult=false,evidenceOnly=null}={}){
+    if(evidenceOnly&&!consult)throw Error('Una investigación utiliza una consulta de solo lectura.');
     if(this.aiStarting)return;
     if(this.aiJob||!question.trim())return;
     if(!consult&&requestsRealtimeHelp(question)&&this.companion){if(!this.companion.session.enabled)await this.companion.toggle();if(this.companion.session.enabled)document.getElementById('ai-input').value='';return;}
@@ -450,25 +461,28 @@ export class LumenPlatform {
     const live=!consult&&!filePlan&&(edit===true||requestsLiveEdit(question));
     if(filePlan&&!await this.host.ensureTrust())return;
     const fullContent=editor.getValue(),selectedContent=editor.getSelection();
-    const content=filePlan?'':melodyContext({file:fullContent,selection:selectedContent,scope:mode,editing:live}).content;const file=editor.current||'';
+    const originalFile=editor.current||'';let content=filePlan?'':evidenceOnly?String(evidenceOnly.content||''):melodyContext({file:fullContent,selection:selectedContent,scope:mode,editing:live}).content;const file=evidenceOnly?.path||originalFile;
+    let focus=null;if(content.length>64000&&!live&&!filePlan&&!selectedContent){focus=focusedContext({text:content,question,line:editor.view?.getPosition()?.lineNumber||1,diagnostics:this.diagnosticMap.get(file)||[]});content=focus.content;}
     if(live&&!file)throw new Error('Abre o crea un archivo antes de autorizar la edición.');
     if(content.length>64000)throw new Error(this.t('Selecciona un fragmento menor de 64000 caracteres.','Select less than 64000 characters.'));
     const consent=await this.confirmRoutine(this.t('Revisar envío al modelo','Review model request'),filePlan?`Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu orden, el texto actual de los archivos que nombras y hasta 300 nombres del proyecto. Cada cambio tendrá una copia de recuperación y deshacer.`:this.t(
       `Destino: ${PLATFORM_NAMES[provider]} · ${model}. Se enviarán tu pregunta y ${content.length} caracteres ${content?'de '+file:'de código'}. El proveedor puede aplicar sus propias condiciones y costes. No se enviará el resto del proyecto. ${live?'Has solicitado edición: confirmarás el archivo antes de aplicar cambios en vivo.':'Esta petición es de consulta y no modificará tus archivos.'}`,
       `Destination: ${PLATFORM_NAMES[provider]} · ${model}. Your question and ${content.length} characters ${content?'from '+file:'of code'} will be sent. Provider terms and charges may apply. The rest of the project will not be sent. ${live?'You requested editing: confirm the file before live changes begin.':'This request is read-only and will not modify your files.'}`),this.t('Enviar esta petición','Send this request'));
     if(!consent)return;
-    if(!filePlan&&(file!==(editor.current||'')||fullContent!==editor.getValue()||mode==='selection'&&selectedContent!==editor.getSelection()))throw new Error('The file or selection changed while confirming. Send the request again with the current context.');
+    if(!filePlan&&!evidenceOnly&&(originalFile!==(editor.current||'')||fullContent!==editor.getValue()||mode==='selection'&&selectedContent!==editor.getSelection()))throw new Error('The file or selection changed while confirming. Send the request again with the current context.');
     if(live&&!await this.confirmRoutine('Autorizar edición en vivo',`La IA podrá reemplazar, añadir y borrar código solamente en ${file} para esta petición. Podrá continuar mientras trabajas en otro archivo. Si modificas o cierras ${file}, se detendrá. Se suspende el autoguardado de ese archivo y Ctrl+Z permite deshacer.`, 'Permitir esta edición'))return;
-    if(!filePlan&&(file!==(editor.current||'')||fullContent!==editor.getValue()||mode==='selection'&&selectedContent!==editor.getSelection()))throw new Error('The file or selection changed. Send the request again.');
+    if(!filePlan&&!evidenceOnly&&(originalFile!==(editor.current||'')||fullContent!==editor.getValue()||mode==='selection'&&selectedContent!==editor.getSelection()))throw new Error('The file or selection changed. Send the request again.');
+    if(evidenceOnly?.workspace&&evidenceOnly.workspace!==this.host.workspace())throw Error('El proyecto cambió mientras se revisaba la consulta.');
     const userQuestion=question;
+    if(focus?.partial){question+='\nEl contexto adjunto es parcial, con líneas numeradas e intervalos omitidos. Analiza esos fragmentos y pide cualquier sección que falte; no propongas reemplazar el archivo completo con esos fragmentos.';this.host.notify(this.t('Se adjunta contexto focalizado del archivo extenso; no el archivo completo.','Focused excerpts from the large file are attached, not the complete file.'));}
     if(live)question+='\n\nEDICIÓN EN VIVO AUTORIZADA: devuelve el contenido COMPLETO del archivo en un único bloque de código con triple acento grave. Sin explicaciones dentro del bloque. El usuario verá los tokens aplicarse a su búfer.';
     const scope=melodyContext({file:fullContent,selection:selectedContent,scope:mode,editing:live}).kind;
-    const snapshot={path:editor.current,text:editor.getValue(),version:editor.view?.getModel?.()?.getVersionId(),scope,selection:scope==='selection'?{...editor.view.getSelection()}:null,selectedText:scope==='selection'?selectedContent:''};this.aiSnapshot=snapshot;
+    const snapshot={path:editor.current,text:editor.getValue(),version:editor.view?.getModel?.()?.getVersionId(),scope:focus?.partial?'partial':scope,selection:scope==='selection'?{...editor.view.getSelection()}:null,selectedText:scope==='selection'?selectedContent:''};this.aiSnapshot=snapshot;
     const generation=++this.aiGeneration;
-    if(this.aiStarting||this.aiJob)return;this.aiStarting=true;this.filePlanRunning=filePlan;let result;try{if(filePlan){clearTimeout(this.saveTimer);await this.melodyFiles.capture();}result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation,filePlan,memory:!!file&&mode!=='none'&&this.melodyMemoryEnabled!==false,memoryQuestion:userQuestion});}finally{this.aiStarting=false;if(!result)this.filePlanRunning=false;}
+    if(this.aiStarting||this.aiJob)return;this.aiStarting=true;this.filePlanRunning=filePlan;let result;try{if(filePlan){clearTimeout(this.saveTimer);await this.melodyFiles.capture();}result=await this.api('/ai/start',{provider,model,question,content,path:file,consent:true,conversation:this.conversation,filePlan,memory:!evidenceOnly&&!!file&&mode!=='none'&&this.melodyMemoryEnabled!==false,memoryQuestion:userQuestion});}finally{this.aiStarting=false;if(!result)this.filePlanRunning=false;}
     this.aiJob=result.id;document.getElementById('ai-input').value='';document.querySelector('.send-button').disabled=true;document.getElementById('ai-cancel-generation').hidden=false;
     document.querySelector('.provider-status-dot').classList.add('generating');
-    this.host.appendChat(userQuestion,'user',this.t('TÚ','YOU'));
+    this.host.appendChat(evidenceOnly?('Investigación · '+evidenceOnly.path+'\n'+(evidenceOnly.question||'Fuentes y resultados revisados.')):userQuestion,'user',this.t('TÚ','YOU'));
     const element=this.host.appendChat('', 'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);const stream=document.createElement('div');stream.className='ai-stream';element.appendChild(stream);const smoothStream=new MelodyStream(stream,document.getElementById('chat-messages'));
     let offset=0,text='',completed=false;this.liveEditing=live;this.filePlanRunning=filePlan;this.liveEditingPath=live?file:null;if(live)clearTimeout(this.saveTimer);
     const liveSession=live?new LiveEditSession(editor,snapshot):null;
@@ -480,7 +494,7 @@ export class LumenPlatform {
         if(update.done){
           completed=!update.error&&!update.cancelled;window.dispatchEvent(new Event('zenit:melody-memory'));
           smoothStream.finish();const chat=document.getElementById('chat-messages'),readingTop=chat.scrollTop,follow=smoothStream.follow;element.remove();
-          if(text){const answer=this.host.appendChat(filePlan?'Plan recibido. Comprobando rutas y conflictos…':text,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);if(filePlan&&completed){try{await this.melodyFiles.review(result.id,answer);}catch(error){answer.textContent=error.message;}}else if(!filePlan){this.addReviewButtons(answer,text,snapshot);if(completed)this.voice.attach(answer,text);}}
+          if(text){let answerText=text;if(evidenceOnly){try{const structured=JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g,''));if(typeof structured.interpretation==='string')answerText=structured.interpretation+'\n\nPropuesta recibida para revisión por fragmentos; aún no aplicada.';}catch{}}const answer=this.host.appendChat(filePlan?'Plan recibido. Comprobando rutas y conflictos…':answerText,'assistant',`${PLATFORM_NAMES[provider]} · ${model}`);if(filePlan&&completed){try{await this.melodyFiles.review(result.id,answer);}catch(error){answer.textContent=error.message;}}else if(!filePlan){if(!evidenceOnly)this.addReviewButtons(answer,text,snapshot);if(completed)this.voice.attach(answer,answerText);}}
           if(update.error)this.host.appendChat(update.error,'assistant',this.t('ERROR DEL PROVEEDOR','PROVIDER ERROR'));
           if(update.cancelled)this.host.appendChat(this.t('Generación cancelada. El proveedor puede haber procesado parte de la petición.','Generation cancelled. The provider may have processed part of the request.'),'assistant',this.t('CANCELADA','CANCELLED'));
           if(!follow)chat.scrollTop=readingTop;
@@ -490,6 +504,7 @@ export class LumenPlatform {
       }
     }catch(error){await this.api('/ai/cancel',{id:result.id}).catch(()=>{});smoothStream.update(error.message);smoothStream.finish();throw error;}
     finally{smoothStream.dispose();liveSession?.dispose();if(live&&completed){this.host.notify(liveSession.complete?`Edición finalizada en ${file}. Revisa el archivo antes de guardarlo; Ctrl+Z permite deshacer.`:'La respuesta no contiene un archivo completo. Revisa los cambios parciales o usa Ctrl+Z.');}this.liveEditing=false;this.filePlanRunning=false;this.liveEditingPath=null;document.querySelector('.ai-live-control').classList.remove('is-editing');document.querySelector('.ai-live-control small').textContent='Preguntar no modifica tu archivo.';this.aiJob=null;document.querySelector('.send-button').disabled=false;document.getElementById('ai-edit-file').disabled=false;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('.provider-status-dot').classList.remove('generating');}
+    return {completed,text,provider,model};
   }
   async cancelAI(){if(this.aiJob)await this.api('/ai/cancel',{id:this.aiJob});}
   async clearAI(){await this.voice?.stop();if(this.aiJob)await this.cancelAI();this.aiGeneration++;this.aiJob=null;document.getElementById('ai-cancel-generation').hidden=true;document.querySelector('#ai-form .send-button').disabled=false;await this.api('/ai/clear',{});this.conversation=crypto.randomUUID?.()||String(Date.now());}
@@ -518,13 +533,16 @@ export class LumenPlatform {
       this.host.closeModal();this.closePage();editor.insertText(proposed,replace);this.host.notify(this.t('Propuesta aplicada al búfer. Puedes deshacerla antes de guardar.','Proposal applied to the buffer. Undo is available before saving.'));
     };
     document.getElementById('review-insert').onclick=()=>this.safe(()=>apply(false));document.getElementById('review-replace').onclick=()=>this.safe(()=>apply(true));
+    if(snapshot.scope==='partial'){const replace=document.getElementById('review-replace');replace.disabled=true;replace.title=this.t('La consulta usó contexto parcial. Revisa un archivo completo antes de reemplazarlo.','The request used partial context. Review the whole file before replacing it.');}
   }
   createTerminalBar(){
     this.sessionbar=document.createElement('div');this.sessionbar.className='pty-session-bar';this.sessionbar.hidden=true;
-    this.sessionbar.innerHTML=`<button class="pty-console-button">${this.glyph('terminal')}${this.t('Tareas','Tasks')}</button><div class="pty-session-tabs"></div><button class="icon-button pty-new" aria-label="${this.t('Nueva terminal','New terminal')}">${this.glyph('plus')}</button>`;
+    this.sessionbar.innerHTML=`<button class="pty-console-button">${this.glyph('terminal')}${this.t('Tareas','Tasks')}</button><div class="pty-session-tabs"></div><button class="icon-button pty-run-file" aria-label="${this.t('Ejecutar archivo actual en esta terminal','Run current file in this terminal')}" title="${this.t('Ejecutar archivo actual aquí · destino del proyecto','Run current file here · project destination')}">${this.glyph('play')}</button><button class="icon-button pty-new" aria-label="${this.t('Nueva terminal','New terminal')}">${this.glyph('plus')}</button>`;
     this.ptyMount=document.createElement('div');this.ptyMount.className='pty-mount';this.ptyMount.hidden=true;
     const panel=document.getElementById('terminal-panel');panel.append(this.sessionbar,this.ptyMount);
     this.sessionbar.querySelector('.pty-console-button').onclick=()=>this.useConsole();this.sessionbar.querySelector('.pty-new').onclick=()=>this.safe(()=>this.terminalProfiles());
+    this.sessionbar.querySelector('.pty-run-file').onclick=()=>this.safe(async()=>{const t=this.terminals.get(this.activeTerminal);if(t?.execution?.running){await this.api('/terminals/stop-run',{id:t.id});return;}await this.runInTerminal(this.activeTerminal,this.host.editor.current);});
+    this.runTerminalButton=this.sessionbar.querySelector('.pty-run-file');
     let terminalSize='';this.terminalObserver=new ResizeObserver(entries=>{const r=entries[0]?.contentRect,key=r?.width+':'+r?.height;if(key===terminalSize||!r?.width||!r?.height)return;terminalSize=key;const t=this.terminals.get(this.activeTerminal);if(t?.fit&&this.showingPTY){try{t.fit.fit();this.resizeTerminal(t);}catch(_){}}});this.terminalObserver.observe(this.ptyMount);
   }
   async terminalProfiles(){
@@ -553,9 +571,26 @@ export class LumenPlatform {
     const result=await this.api('/terminals/create',{profile:profileId,consent:true,cols:100,rows:26});
     return this.attachTerminal(result);
   }
+  async runInTerminal(id,path){
+    if(!path)throw Error(this.t('Abre el archivo que quieres ejecutar.','Open the file you want to run.'));
+    if(this.terminalRunPending?.has(id))return;
+    this.terminalRunPending ||= new Set();this.terminalRunPending.add(id);
+    const selection=this.terminalSelectionVersion||0,workspace=this.host.workspace();
+    try{
+      if(!await this.host.ensureTrust())return;
+      if(this.host.editor.isDirty(path))await this.host.saveFile(path);
+      if(this.host.workspace()!==workspace)throw Error(this.t('El proyecto cambió antes de ejecutar.','The project changed before execution.'));
+      const result=await this.api('/terminals/run',{id,path});
+      if(result.preview){this.host.studio.lantern.showPreview(result.preview);return result;}
+      const terminal=this.terminals.get(id);if(terminal)terminal.execution=result.execution;
+      if(this.activeTerminal===id&&(this.terminalSelectionVersion||0)===selection){this.selectTerminal(id);this.host.studio?.desktop?.publishTerminal(id);}else this.renderActiveTerminal();
+      if(result.artifacts?.created?.length)await this.host.refreshTree?.();
+      return result;
+    }finally{this.terminalRunPending.delete(id);}
+  }
   async attachTerminal(result){
     if(this.terminals.has(result.id)){this.selectTerminal(result.id);return result;}
-    const terminal={...result,offset:0,closed:false};this.terminals.set(result.id,terminal);
+    const terminal={...result,created:Date.now(),offset:0,closed:false};this.terminals.set(result.id,terminal);
     terminal.input=new OrderedTerminalInput(async data=>{const response=await this.api('/terminals/write',{id:result.id,data});if(response.closed)terminal.closed=true;});
     terminal.mount=document.createElement('div');terminal.mount.className='pty-session';terminal.mount.dataset.sessionId=result.id;this.ptyMount.append(terminal.mount);
     try{await this.loadTerminalEngine();}catch(error){this.host.notify(this.t('Motor xterm no disponible; consola interactiva básica activa.','xterm unavailable; basic interactive console active.'));}
@@ -588,8 +623,9 @@ export class LumenPlatform {
   themeTerminal(terminal){if(!terminal.xterm)return;const css=getComputedStyle(document.documentElement),get=k=>css.getPropertyValue('--'+k).trim(),theme=this.extensionThemes?.find(t=>t.id===this.prefs['appearance.extensionTheme']);terminal.xterm.options.theme=terminalTheme(theme,{background:get('terminal-bg'),foreground:get('terminal-text')||get('text'),cursor:get('accent'),selectionBackground:get('selection'),black:get('bg'),red:get('danger'),green:get('success'),yellow:get('syntax-string'),blue:get('syntax-function'),magenta:get('syntax-keyword'),cyan:get('syntax-type'),white:get('text')});}
   selectTerminal(id){
     if(!this.terminals.has(id))return;
+    this.terminalSelectionVersion=(this.terminalSelectionVersion||0)+1;
     this.activeTerminal=id;this.showingPTY=true;if(!this.host.studio?.desktop?.showEditorTerminal?.(true))this.host.dock.show('console');this.renderActiveTerminal();
-    this.focusTerminal(id);
+    this.focusTerminal(id);this.host.studio?.desktop?.syncRunButton();
   }
   focusTerminal(id){
     cancelAnimationFrame(this.terminalFocusFrame);const terminal=this.terminals.get(id);if(!terminal||terminal.closed||!this.showingPTY||this.activeTerminal!==id)return;
@@ -601,6 +637,8 @@ export class LumenPlatform {
     const same=[...this.terminals.values()].filter(t=>t.profile.label===terminal.profile.label);return terminal.profile.label+(same.length>1?' · '+(same.indexOf(terminal)+1):'');
   }
   renderActiveTerminal(){
+    const active=this.terminals.get(this.activeTerminal),run=this.runTerminalButton;
+    if(run){run.disabled=!this.showingPTY||!active||active.closed||active.profile.id==='hacker'||active.profile.id.startsWith('extension:');run.innerHTML=this.glyph(active?.execution?.running?'stop':'play');run.setAttribute('aria-label',active?.execution?.running?this.t('Detener ejecución en esta terminal','Stop execution in this terminal'):this.t('Ejecutar archivo actual en esta terminal','Run current file in this terminal'));}
     this.extensionServices?.outputUI?.setVisible(!this.showingPTY&&document.querySelector('[data-terminal=output]').classList.contains('active'));
     this.sessionbar.hidden=!this.terminals.size;this.ptyMount.hidden=!this.showingPTY;
     if(this.showingPTY){document.getElementById('terminal-scroll').classList.add('hidden');document.getElementById('terminal-content').classList.add('hidden');document.querySelector('.terminal-signature').classList.add('hidden');}
@@ -615,8 +653,9 @@ export class LumenPlatform {
     if(this.disposed||!this.terminals.has(terminal.id))return;
     try{
       const data=await this.api('/terminals/read?id='+terminal.id+'&offset='+terminal.offset);terminal.offset=data.offset;
+      if(JSON.stringify(terminal.execution)!==JSON.stringify(data.execution)){terminal.execution=data.execution;this.renderActiveTerminal();this.host.studio?.desktop?.syncRunButton();}
       if(data.data){if(terminal.xterm)terminal.xterm.write(data.data);else{terminal.output.textContent=(terminal.output.textContent+this.stripTerminal(data.data)).slice(-180000);terminal.output.scrollTop=terminal.output.scrollHeight;}}
-      if(data.closed){terminal.closed=true;terminal.code=data.code;terminal.input.close();this.renderActiveTerminal();return;}
+      if(data.closed){terminal.closed=true;terminal.code=data.code;terminal.input.close();this.renderActiveTerminal();this.host.studio?.desktop?.syncRunButton();return;}
     }catch(error){terminal.closed=true;terminal.input.close(error);if(terminal.output)terminal.output.textContent+='\n'+error.message;this.renderActiveTerminal();return;}
     this.later(()=>this.pollTerminal(terminal),document.hidden?1000:80);
   }
@@ -691,27 +730,29 @@ export class LumenPlatform {
       for(const path of [...s.documents.keys()])if(!this.host.editor.models.has(path)){await this.api('/lsp/notify',{id:s.id,method:'textDocument/didClose',params:{textDocument:{uri:this.uriFor(s,path)}}});s.documents.delete(path);}
     });return s.syncChain;
   }
-  async requestLSP(method,position,path=this.host.editor.current,extra={}){
-    const s=this.activeLSP(path);if(!s)throw new Error(this.t('Configura e inicia un servidor LSP para este lenguaje.','Configure and start an LSP server for this language.'));
+  async requestLSP(method,position,path=this.host.editor.current,extra={},session=null){
+    const s=session||this.activeLSP(path);if(!s)throw new Error(this.t('Configura e inicia un servidor LSP para este lenguaje.','Configure and start an LSP server for this language.'));
     await this.syncLSP(s);const params={...extra,textDocument:{uri:this.uriFor(s,path)}};if(position)params.position=position;
     return (await this.api('/lsp/request',{id:s.id,method,params})).result;
   }
   registerLSP(s){
     if(this.host.editor.kind!=='monaco')return;
     const m=window.monaco,pathOf=model=>[...this.host.editor.models.entries()].find(([,r])=>r.model===model)?.[0];
+    const request=(method,position,path,extra={})=>this.requestLSP(method,position,path,extra,s);
+    registerLanguageDepth(this,s);
     for(const lang of s.languages){
       if(s.capabilities.completionProvider)s.disposables.push(m.languages.registerCompletionItemProvider(lang,{triggerCharacters:s.capabilities.completionProvider.triggerCharacters||[],provideCompletionItems:async(model,position)=>{
-        const path=pathOf(model);if(!path)return {suggestions:[]};try{const result=await this.requestLSP('textDocument/completion',{line:position.lineNumber-1,character:position.column-1},path),items=Array.isArray(result)?result:result?.items||[],word=model.getWordUntilPosition(position);
+        const path=pathOf(model);if(!path)return {suggestions:[]};try{const result=await request('textDocument/completion',{line:position.lineNumber-1,character:position.column-1},path),items=Array.isArray(result)?result:result?.items||[],word=model.getWordUntilPosition(position);
           return {suggestions:items.slice(0,300).map(item=>{const edit=item.textEdit,r=edit?.range||edit?.replace;return {label:item.label,detail:item.detail||'',kind:Math.max(0,(item.kind||1)-1),insertText:edit?.newText??item.insertText??item.label,insertTextRules:item.insertTextFormat===2?m.languages.CompletionItemInsertTextRule.InsertAsSnippet:undefined,range:r?{startLineNumber:r.start.line+1,startColumn:r.start.character+1,endLineNumber:r.end.line+1,endColumn:r.end.character+1}:{startLineNumber:position.lineNumber,endLineNumber:position.lineNumber,startColumn:word.startColumn,endColumn:word.endColumn},sortText:item.sortText,filterText:item.filterText};})};
         }catch(_){return {suggestions:[]};}
       }}));
-      if(s.capabilities.hoverProvider)s.disposables.push(m.languages.registerHoverProvider(lang,{provideHover:async(model,pos)=>{try{const result=await this.requestLSP('textDocument/hover',{line:pos.lineNumber-1,character:pos.column-1},pathOf(model));if(!result)return null;const c=result.contents,text=Array.isArray(c)?c.map(x=>typeof x==='string'?x:x.value).join('\n\n'):typeof c==='string'?c:c?.value||'';return {contents:[{value:text,isTrusted:false,supportHtml:false}]};}catch(_){return null;}}}));
-      if(s.capabilities.definitionProvider)s.disposables.push(m.languages.registerDefinitionProvider(lang,{provideDefinition:async(model,pos)=>{try{const result=await this.requestLSP('textDocument/definition',{line:pos.lineNumber-1,character:pos.column-1},pathOf(model));const locations=[];for(const item of (Array.isArray(result)?result:result?[result]:[])){const uri=item.uri||item.targetUri,path=this.relativeURI(s,uri),r=item.range||item.targetSelectionRange;if(!path||!r)continue;locations.push({uri:this.host.editor.models.get(path)?.model?.uri||m.Uri.parse('file:///'+path),range:{startLineNumber:r.start.line+1,startColumn:r.start.character+1,endLineNumber:r.end.line+1,endColumn:r.end.character+1}});}return locations;}catch(_){return [];}}}));
-      if(s.capabilities.inlayHintProvider)s.disposables.push(m.languages.registerInlayHintsProvider(lang,{provideInlayHints:async(model,range)=>{try{const result=await this.requestLSP('textDocument/inlayHint',null,pathOf(model),{range:{start:{line:range.startLineNumber-1,character:range.startColumn-1},end:{line:range.endLineNumber-1,character:range.endColumn-1}}});return {hints:(result||[]).map(h=>({position:{lineNumber:h.position.line+1,column:h.position.character+1},label:typeof h.label==='string'?h.label:h.label.map(p=>p.value).join(''),kind:h.kind,paddingLeft:h.paddingLeft,paddingRight:h.paddingRight,tooltip:typeof h.tooltip==='string'?h.tooltip:h.tooltip?.value})),dispose(){}};}catch(_){return {hints:[],dispose(){}};}}}));
-      if(s.capabilities.semanticTokensProvider?.legend)s.disposables.push(m.languages.registerDocumentSemanticTokensProvider(lang,{getLegend:()=>s.capabilities.semanticTokensProvider.legend,releaseDocumentSemanticTokens(){},provideDocumentSemanticTokens:async(model)=>{try{const result=await this.requestLSP('textDocument/semanticTokens/full',null,pathOf(model));return result?{data:new Uint32Array(result.data),resultId:result.resultId}:null;}catch(_){return null;}}}));
+      if(s.capabilities.hoverProvider)s.disposables.push(m.languages.registerHoverProvider(lang,{provideHover:async(model,pos)=>{try{const result=await request('textDocument/hover',{line:pos.lineNumber-1,character:pos.column-1},pathOf(model));if(!result)return null;const c=result.contents,text=Array.isArray(c)?c.map(x=>typeof x==='string'?x:x.value).join('\n\n'):typeof c==='string'?c:c?.value||'';return {contents:[{value:text,isTrusted:false,supportHtml:false}]};}catch(_){return null;}}}));
+      if(s.capabilities.definitionProvider)s.disposables.push(m.languages.registerDefinitionProvider(lang,{provideDefinition:async(model,pos)=>{try{const result=await request('textDocument/definition',{line:pos.lineNumber-1,character:pos.column-1},pathOf(model));const locations=[];for(const item of (Array.isArray(result)?result:result?[result]:[])){const uri=item.uri||item.targetUri,path=this.relativeURI(s,uri),r=item.range||item.targetSelectionRange;if(!path||!r)continue;locations.push({uri:this.host.editor.models.get(path)?.model?.uri||m.Uri.parse('file:///'+path),range:{startLineNumber:r.start.line+1,startColumn:r.start.character+1,endLineNumber:r.end.line+1,endColumn:r.end.character+1}});}return locations;}catch(_){return [];}}}));
+      if(s.capabilities.inlayHintProvider)s.disposables.push(m.languages.registerInlayHintsProvider(lang,{provideInlayHints:async(model,range)=>{try{const result=await request('textDocument/inlayHint',null,pathOf(model),{range:{start:{line:range.startLineNumber-1,character:range.startColumn-1},end:{line:range.endLineNumber-1,character:range.endColumn-1}}});return {hints:(result||[]).map(h=>({position:{lineNumber:h.position.line+1,column:h.position.character+1},label:typeof h.label==='string'?h.label:h.label.map(p=>p.value).join(''),kind:h.kind,paddingLeft:h.paddingLeft,paddingRight:h.paddingRight,tooltip:typeof h.tooltip==='string'?h.tooltip:h.tooltip?.value})),dispose(){}};}catch(_){return {hints:[],dispose(){}};}}}));
+      if(s.capabilities.semanticTokensProvider?.legend)s.disposables.push(m.languages.registerDocumentSemanticTokensProvider(lang,{getLegend:()=>this.host.editor.semanticStyles?.legend||s.capabilities.semanticTokensProvider.legend,releaseDocumentSemanticTokens(){},provideDocumentSemanticTokens:async(model)=>{try{const result=await request('textDocument/semanticTokens/full',null,pathOf(model)),styles=this.host.editor.semanticStyles;return result?{data:styles?styles.rewrite(result.data,s.capabilities.semanticTokensProvider.legend,model.getLanguageId()):new Uint32Array(result.data),resultId:result.resultId}:null;}catch(_){return null;}}}));
     }
   }
-  relativeURI(s,uri){const prefix=s.rootUri.replace(/\/$/,'')+'/';if(typeof uri!=='string'||!uri.startsWith(prefix))return null;try{return decodeURIComponent(uri.slice(prefix.length));}catch(_){return null;}}
+  relativeURI(s,uri){return projectURI(s.rootUri,uri);}
   async pollLSP(s){
     if(this.disposed||!this.lspSessions.has(s.id))return;
     try{const result=await this.api('/lsp/events?id='+s.id+'&after='+s.offset);if(!this.lspSessions.has(s.id))return;s.offset=result.sequence;
@@ -778,7 +819,7 @@ export class LumenPlatform {
     const data=this.hardwareState,p=this.prefs;const format=bytes=>bytes==null?'—':(bytes/1073741824).toFixed(1)+' GB';
     return `<div class="hardware-overview"><div class="hardware-chip">${this.glyph('cpu')}<span>${this.e(data?.system||'LOCAL')} · ${this.e(data?.machine||'')}</span></div><h3>${this.t('Tu sistema. Datos reales.','Your system. Real measurements.')}</h3><p>${this.t('Lectura mediante las API del sistema operativo. Sin controladores propios, cambios de frecuencia ni acceso privilegiado.','Read-only operating-system APIs. No custom drivers, clock changes or privileged access.')}</p><div class="hardware-metrics">${[[this.t('CPU del sistema','System CPU'),data?.cpuPercent==null?'—':data.cpuPercent.toFixed(1)+'%'],[this.t('RAM utilizada','Memory in use'),format(data?.memoryUsed)],[this.t('RAM del servicio Python','Python service memory'),data?.processRSS==null?'—':Math.round(data.processRSS/1048576)+' MB']].map(([label,value])=>`<div><span>${label}</span><strong>${p['hardware.enabled']?value:'—'}</strong></div>`).join('')}</div><p class="form-hint">${p['hardware.enabled']?this.t('El proceso mostrado es el servicio Python, no la suma de todos los procesos del navegador. La disponibilidad de GPU depende de nvidia-smi.','The process measurement covers Python, not all browser processes. GPU information depends on nvidia-smi.'):this.t('La lectura está desactivada. Actívala expresamente en ajustes.','Monitoring is off. Enable it explicitly in settings.')}</p>${data?.gpus?.length?`<div class="gpu-list">${data.gpus.map(g=>`<div><strong>${this.e(g.name)}</strong><span>${this.e(g.utilization)}% · ${this.e(g.memoryUsedMiB)} / ${this.e(g.memoryTotalMiB)} MiB</span></div>`).join('')}</div>`:''}<div class="hardware-capabilities"><span>${this.t('Editor','Editor')}: ${this.e(this.host.editor.kind)}</span><span>${this.t('Gráficos','Graphics')}: ${this.e(this.host.graphicsKind())}</span><span>PTY: ${this.state.xterm?'xterm.js':this.t('visor básico','basic view')}</span></div></div>`;
   }
-  async hardware(){this.hardwareState=await this.api('/hardware');this.openPage('hardware',`<div class="platform-content">${this.hardwareMarkup()}<button class="secondary-button" data-setting-category="hardware">${this.glyph('sliders')}${this.t('Configurar lecturas','Configure monitoring')}</button></div>`);}
+  async hardware(){this.hardwareState=await this.api('/hardware');this.openPage('hardware',`<div class="platform-content">${this.hardwareMarkup()}<button class="secondary-button" data-action="performance-report">${this.glyph('cpu')}${this.t('Informe de esta sesión','Session performance report')}</button><button class="secondary-button" data-setting-category="hardware">${this.glyph('sliders')}${this.t('Configurar lecturas','Configure monitoring')}</button></div>`);}
   async scheduleHardware(){
     if(this.disposed)return;
     if(this.prefs['hardware.enabled']&&!document.hidden){try{this.hardwareState=await this.api('/hardware');this.updateSystemStatus();if(this.page==='hardware'){const div=this.workbench.querySelector('.hardware-overview');if(div)div.outerHTML=this.hardwareMarkup();}}catch(_){} }
@@ -833,5 +874,5 @@ export class LumenPlatform {
     clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();t.mount.remove();}this.terminals.clear();this.activeTerminal=null;this.showingPTY=false;this.renderActiveTerminal();
     for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.lspSessions.clear();this.diagnosticMap.clear();this.lastContent.clear();this.voice?.stop().catch(()=>{});this.aiGeneration++;this.aiJob=null;this.conversation=crypto.randomUUID?.()||String(Date.now());this.closePage();this.updateSystemStatus();
   }
-  dispose(){window.removeEventListener('focus',this.terminalWindowFocus);this.voice?.dispose();this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
+  dispose(){this.consoleContext?.dispose();window.removeEventListener('focus',this.terminalWindowFocus);this.voice?.dispose();this.disposed=true;this.companion?.dispose();this.timers.forEach(clearTimeout);clearTimeout(this.saveTimer);clearTimeout(this.changeTimer);clearTimeout(this.syntaxTimer);this.terminalObserver?.disconnect();document.removeEventListener('click',this.globalClick);document.removeEventListener('keydown',this.keyHandler);for(const t of this.terminals.values()){t.input.close();t.xterm?.dispose();}for(const s of this.lspSessions.values())s.disposables.forEach(d=>d.dispose());this.contributionDisposables.forEach(d=>d.dispose());}
 }

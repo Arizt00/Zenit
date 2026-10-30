@@ -13,7 +13,7 @@ class StudioState:
         self.path = directory / 'studio.json'
         self.lock = threading.RLock()
         self.data = {'displayName': getpass.getuser(), 'avatar': '', 'onboarded': False,
-                     'layout': None, 'recent': [], 'workspaceStyle': 'general'}
+                     'layout': None, 'recent': [], 'workspaceStyle': 'general','pinnedProjects':[],'pinnedSpaces':[]}
         try:
             self.update(json.loads(self.path.read_text(encoding='utf-8')), save=False)
         except (OSError, ValueError, TypeError):
@@ -55,6 +55,16 @@ class StudioState:
                 elif key == 'layout':
                     if value is not None and (not isinstance(value, dict) or len(json.dumps(value)) > 6000):
                         raise ValueError('Distribución no válida.')
+                elif key == 'pinnedProjects':
+                    if not isinstance(value,list) or len(value)>12 or any(not isinstance(p,str) or not p or len(p)>2048 or any(ord(c)<32 for c in p) for p in value):raise ValueError('Fija hasta 12 proyectos con rutas válidas.')
+                    value=list(dict.fromkeys(value))
+                elif key == 'pinnedSpaces':
+                    if not isinstance(value,list) or len(value)>16:raise ValueError('Fija hasta 16 espacios.')
+                    clean=[]
+                    for item in value:
+                        if not isinstance(item,dict) or set(item)!={'workspace','name'} or any(not isinstance(v,str) or not v or len(v)>(60 if k=='name' else 2048) or any(ord(c)<32 for c in v) for k,v in item.items()):raise ValueError('Espacio fijado no válido.')
+                        if item not in clean:clean.append(item)
+                    value=clean
                 elif key == 'recent':
                     if not isinstance(value, list) or len(value) > 30:
                         raise ValueError('Historial no válido.')

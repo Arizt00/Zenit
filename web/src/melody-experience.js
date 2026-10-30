@@ -5,6 +5,9 @@ import {installModelPicker} from './melody-model-picker.js';
 import {providerIcon,providerName} from './provider-identity.js';
 import {installMelodyWorkflow} from './melody-workflow.js';
 import {installMelodyUtilities} from './melody-utilities.js';
+import {installCountercheck} from './melody-countercheck.js';
+import {showFootprint,showDossier} from './experience-r2.js';
+import {InvestigationsUI} from './investigations.js';
 
 /** A visible context, destination, and stop action throughout a conversation. */
 export function installMelodyExperience(host){
@@ -23,10 +26,18 @@ export function installMelodyExperience(host){
   const context=document.querySelector('.composer-context>button');
   const tasks=document.createElement('div');tasks.className='melody-context-actions';
   tasks.innerHTML=`<button type="button" data-melody-task="diagnostics">${icon('bug')}<span>Review diagnostics</span></button><button type="button" data-melody-task="tests">${icon('flask')}<span>Plan tests</span></button>`;
-  modes.before(tasks);installMelodyResearch(host);
+  tasks.insertAdjacentHTML('beforeend',`<button type="button" data-melody-task="countercheck">${icon('flask')}<span>Contraprueba</span></button>`);
+  tasks.insertAdjacentHTML('beforeend',`<button type="button" data-melody-task="footprint">${icon('git')}<span>Huella de cambio</span></button>`);
+  tasks.insertAdjacentHTML('beforeend',`<button type="button" data-melody-task="dossier">${icon('bug')}<span>Dossier de fallo</span></button>`);
+  p.investigationsUI=new InvestigationsUI(p);tasks.insertAdjacentHTML('beforeend',`<button type="button" data-melody-task="investigation">${icon('git')}<span>Investigar resultado</span></button>`);
+  modes.before(tasks);installMelodyResearch(host);const countercheck=installCountercheck(p);
   const workflow=installMelodyWorkflow(p,input);
   const utilities=installMelodyUtilities(p);
   tasks.onclick=e=>{const b=e.target.closest('[data-melody-task]');if(!b||b.disabled)return;p.safe(async()=>{
+    if(b.dataset.melodyTask==='countercheck')return p.openCountercheck();
+    if(b.dataset.melodyTask==='footprint')return showFootprint(p);
+    if(b.dataset.melodyTask==='dossier')return showDossier(p);
+    if(b.dataset.melodyTask==='investigation')return p.investigationsUI.open();
     if(!ed.current)throw Error(t('Abre un archivo primero.','Open a file first.'));
     const items=p.diagnosticMap.get(ed.current)||[];
     const question=b.dataset.melodyTask==='tests'?'Propose a focused test plan for the supplied code. Cover behavior, edge cases and realistic failure cases. Explain how to run the tests; do not change any files.':'Review these current editor diagnostics. Prioritize the failures, explain the cause and propose a reviewable fix. Do not edit files.\n'+JSON.stringify({path:ed.current,diagnostics:items},null,2);
@@ -37,9 +48,11 @@ export function installMelodyExperience(host){
     {label:t('Archivo completo','Whole file'),icon:'file',run:()=>p.savePreference('ai.context','file')},
     {label:t('Sin código','No code'),icon:'chat',run:()=>p.savePreference('ai.context','none')}
   ],t('Contexto de Melody','Melody context'));};
-  const refresh=()=>{
+  let frame=0,disposed=false;const refresh=()=>{if(!frame&&!disposed)frame=requestAnimationFrame(()=>{frame=0;paint();});};
+  const paint=()=>{
+    if(disposed)return;
     const busy=!!p.aiJob||p.aiStarting,editing=p.melodyMode==='edit';
-    const c=melodyContext({file:ed.getValue(),selection:ed.getSelection(),scope:p.prefs['ai.context'],editing});
+    const c=melodyContext({file:ed.models.get(ed.current)?.value||'',selection:ed.getSelection(),scope:p.prefs['ai.context'],editing});
     const path=(ed.current||'').replaceAll('\\','/').split('/').pop();
     const text=c.kind==='none'?t('Sin código','No code'):c.kind==='selection'?t('Selección','Selection')+' · '+c.content.length+' '+t('caracteres','chars'):path||t('Sin archivo','No file');
     context.querySelector('span').textContent=text;context.title=(ed.current||'')+' · '+c.kind;context.dataset.scope=c.kind;
@@ -71,5 +84,5 @@ export function installMelodyExperience(host){
   const observer=new MutationObserver(refresh);observer.observe(document.querySelector('.provider-status-dot'),{attributes:true,attributeFilter:['class']});
   const hero=document.getElementById('assistant-hero');
   const kicker=document.createElement('span');kicker.className='melody-hero-kicker';kicker.textContent=t('TU COMPAÑERA DE CÓDIGO','YOUR CODING COMPANION');hero.querySelector('.melody-copy').prepend(kicker);
-  refresh();return {dispose(){modelPicker.dispose();workflow.dispose();utilities.dispose();delete p.setMelodyMode;selection?.dispose();observer.disconnect();document.removeEventListener('zenit:provider-state',refresh);}};
+  refresh();return {dispose(){disposed=true;cancelAnimationFrame(frame);countercheck.dispose();modelPicker.dispose();workflow.dispose();utilities.dispose();delete p.setMelodyMode;selection?.dispose();observer.disconnect();document.removeEventListener('zenit:provider-state',refresh);}};
 }

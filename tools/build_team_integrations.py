@@ -13,13 +13,13 @@ ROOT=Path(__file__).resolve().parents[1]
 SDK='252.28539.108'
 
 def vscode(out):
-    source=ROOT/'integrations/team-vscode';target=out/'zenit-team-0.2.0.vsix'
+    source=ROOT/'integrations/team-vscode';target=out/'zenit-team-0.2.2.vsix'
     with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as archive:
         for file in source.rglob('*'):
             if file.is_file():archive.write(file,'extension/'+file.relative_to(source).as_posix())
         archive.write(ROOT/'LICENSE','extension/LICENSE')
         archive.writestr('[Content_Types].xml','<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="json" ContentType="application/json"/><Default Extension="cjs" ContentType="application/javascript"/><Default Extension="vsixmanifest" ContentType="text/xml"/></Types>')
-        archive.writestr('extension.vsixmanifest','<?xml version="1.0"?><PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011"><Metadata><Identity Language="es-ES" Id="zenit-team" Version="0.2.0" Publisher="zenit"/><DisplayName>Co-Code</DisplayName><Description xml:space="preserve">Edición simultánea con Zénit.</Description></Metadata><Installation><InstallationTarget Id="Microsoft.VisualStudio.Code"/></Installation><Dependencies/><Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/></Assets></PackageManifest>')
+        archive.writestr('extension.vsixmanifest','<?xml version="1.0"?><PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011"><Metadata><Identity Language="es-ES" Id="zenit-team" Version="0.2.2" Publisher="zenit"/><DisplayName>Co-Code</DisplayName><Description xml:space="preserve">Edición simultánea con Zénit.</Description></Metadata><Installation><InstallationTarget Id="Microsoft.VisualStudio.Code"/></Installation><Dependencies/><Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/></Assets></PackageManifest>')
     return target
 
 def jetbrains(out):

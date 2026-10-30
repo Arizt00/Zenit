@@ -1,4 +1,5 @@
 import {icon} from './icons.js';
+import {showCodeDetail} from './code-detail.js';
 
 /** One bounded, scroll-free diagnostic card per editor window. No polling. */
 export function installDiagnosticPanels(editor){return new DiagnosticPanel(editor);}
@@ -6,13 +7,14 @@ class DiagnosticPanel{
   constructor(editor){
     this.editor=editor;this.bindings=new Map();this.cache=new Map();this.sequence=0;
     this.node=document.createElement('section');this.node.className='zenit-diagnostic-panel';this.node.hidden=true;this.node.tabIndex=-1;this.node.setAttribute('role','dialog');this.node.setAttribute('aria-label',this.t('Diagnóstico del código','Code diagnostic'));
-    this.node.innerHTML='<header class="diagnostic-heading"><span class="diagnostic-mark"></span><div><small></small><strong></strong></div><button type="button" class="diagnostic-close">'+icon('close')+'</button></header><div class="diagnostic-file">'+icon('file')+'<span></span><small></small></div><div class="diagnostic-body"><p class="diagnostic-message"></p></div><footer><span class="diagnostic-origin"></span><div class="diagnostic-navigation"><button type="button" data-diagnostic-prev>'+icon('chevron-left')+'</button><span aria-live="polite"></span><button type="button" data-diagnostic-next>'+icon('chevron-right')+'</button></div><button type="button" data-diagnostic-copy>'+icon('copy')+'</button></footer>';
+    this.node.innerHTML='<header class="diagnostic-heading"><span class="diagnostic-mark"></span><div><small></small><strong></strong></div><button type="button" class="diagnostic-close">'+icon('close')+'</button></header><div class="diagnostic-file">'+icon('file')+'<span></span><small></small></div><div class="diagnostic-body"><p class="diagnostic-message"></p></div><footer><span class="diagnostic-origin"></span><div class="diagnostic-navigation"><button type="button" data-diagnostic-prev>'+icon('chevron-left')+'</button><span aria-live="polite"></span><button type="button" data-diagnostic-next>'+icon('chevron-right')+'</button></div><button type="button" data-diagnostic-detail>'+icon('dock-bottom')+'<span></span></button><button type="button" data-diagnostic-copy>'+icon('copy')+'</button></footer>';
     document.body.append(this.node);
     const button=(selector,es,en,run)=>{const b=this.node.querySelector(selector);b.title=this.t(es,en);b.setAttribute('aria-label',b.title);b.onclick=()=>{this.node.focus({preventScroll:true});run();};};
     button('.diagnostic-close','Cerrar diagnóstico','Close diagnostic',()=>this.hide(true));
     button('[data-diagnostic-prev]','Diagnóstico anterior','Previous diagnostic',()=>this.turn(-1));
     button('[data-diagnostic-next]','Siguiente diagnóstico','Next diagnostic',()=>this.turn(1));
     button('[data-diagnostic-copy]','Copiar diagnóstico','Copy diagnostic',()=>navigator.clipboard.writeText(this.text()));
+    button('[data-diagnostic-detail]','Abrir detalle','Open details',()=>{const m=this.items[this.item];showCodeDetail({kind:'diagnostic',title:this.node.querySelector('.diagnostic-heading strong').textContent,context:{path:this.editor.pathFor(this.view.getModel())||'',line:m.startLineNumber,column:m.startColumn},text:this.items.map(marker=>(marker.source?marker.source+'\n':'')+marker.message+(marker.relatedInformation?.length?'\n\n'+marker.relatedInformation.map(r=>`${r.resource?.path||''}:${r.startLineNumber} · ${r.message}`).join('\n'):'')).join('\n\n────────────────\n\n')});this.hide();});
     this.node.onpointerenter=()=>{this.pointerInside=true;clearTimeout(this.closeTimer);};this.node.onpointerleave=()=>{this.pointerInside=false;this.scheduleHide();};
     this.node.onfocusout=()=>queueMicrotask(()=>{if(!this.node.contains(document.activeElement))this.scheduleHide();});
     this.node.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();this.hide(true);}else if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();this.turn(e.key==='ArrowLeft'?-1:1);}};
@@ -83,7 +85,8 @@ class DiagnosticPanel{
   render(){
     const m=this.items[this.item],kind=m.severity>=8?'error':m.severity>=4?'warning':'info',code=typeof m.code==='object'?m.code.value:m.code;
     this.node.dataset.severity=kind;this.node.querySelector('.diagnostic-mark').innerHTML=icon(kind==='error'?'error-circle':kind==='warning'?'warning':'info');
-    this.node.querySelector('.diagnostic-heading small').textContent=this.t('ZÉNIT · DIAGNÓSTICO','ZÉNIT · DIAGNOSTIC');this.node.querySelector('.diagnostic-heading strong').textContent=kind==='error'?this.t('Revisa este punto','Review this issue'):kind==='warning'?this.t('Algo que revisar','Something to review'):this.t('Una observación','An observation');
+    this.node.querySelector('.diagnostic-heading small').textContent=this.t('Diagnóstico del código','Code diagnostic');this.node.querySelector('.diagnostic-heading strong').textContent=kind==='error'?this.t('Revisa este punto','Review this issue'):kind==='warning'?this.t('Algo que revisar','Something to review'):this.t('Una observación','An observation');
+    this.node.querySelector('[data-diagnostic-detail] span').textContent=this.t('Abrir detalle','Open details');
     const path=this.editor.pathFor(this.view.getModel())||'';this.node.querySelector('.diagnostic-file>span').textContent=path.split(/[\\/]/).at(-1);this.node.querySelector('.diagnostic-file>span').title=path;
     this.node.querySelector('.diagnostic-file>small').textContent=this.t('Línea ','Line ')+m.startLineNumber+' · '+this.t('Col. ','Col. ')+m.startColumn;
     const origin=this.node.querySelector('.diagnostic-origin');origin.textContent=(m.source||this.t('Analizador','Analyzer'))+(code?' · '+code:'');origin.title=origin.textContent;

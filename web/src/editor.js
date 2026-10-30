@@ -3,6 +3,8 @@ import {installDiagnosticPanels} from './diagnostic-panel.js';
 import {waitForNativeBridge} from './native-ready.js';
 import {themePalette,editorThemeColors} from './extension-theme.js';
 import {TextMateLanguages,textMateTheme} from './textmate.js';
+import {languageConfiguration} from './language-configuration.js';
+import {SemanticStyles} from './semantic-styles.js';
 import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
 import {assemblyCompletions,assemblySyntax} from './assembly-language.js';
 import {escapeHTML, icon} from './icons.js';
@@ -14,7 +16,8 @@ window.addEventListener('unhandledrejection',event=>{
   if(reason?.name==='Canceled'&&reason?.message==='Canceled'&&String(reason.stack).includes('/vendor/monaco/'))event.preventDefault();
 });
 
-const languages = Object.assign(Object.create(null), {cs:'csharp',fs:'fsharp',fsx:'fsharp',vb:'vb',js:'javascript',jsx:'javascript',mjs:'javascript',cjs:'javascript',ts:'typescript',tsx:'typescript',json:'json',jsonc:'json',py:'python',pyw:'python',c:'c',h:'cpp',hpp:'cpp',cpp:'cpp',cc:'cpp',cxx:'cpp',rs:'rust',css:'css',scss:'scss',less:'less',html:'html',htm:'html',htmll:'html',md:'markdown',markdown:'markdown',s:'asm',asm:'asm',n:'nc',nc:'nc',nm:'nc',ncp:'nc',nb:'nc',nbb:'nc',xml:'xml',svg:'xml',sh:'shell',bash:'shell',zsh:'shell',ps1:'powershell',psm1:'powershell',bat:'bat',cmd:'bat',yml:'yaml',yaml:'yaml',java:'java',go:'go',kt:'kotlin',kts:'kotlin',swift:'swift',rb:'ruby',php:'php',pl:'perl',pm:'perl',lua:'lua',r:'r',jl:'julia',dart:'dart',ex:'elixir',exs:'elixir',erl:'erlang',hrl:'erlang',hs:'haskell',scala:'scala',clj:'clojure',sql:'sql',toml:'ini',ini:'ini',conf:'ini',cmake:'cmake',make:'makefile',zig:'zig',pas:'pascal',f90:'fortran',f:'fortran',cob:'cobol',tex:'latex',proto:'protobuf',graphql:'graphql',vue:'html',svelte:'html',ipynb:'json'});
+const languages = Object.assign(Object.create(null), {cs:'csharp',fs:'fsharp',fsx:'fsharp',vb:'vb',js:'javascript',jsx:'javascript',mjs:'javascript',cjs:'javascript',ts:'typescript',tsx:'typescript',json:'json',jsonc:'json',py:'python',pyw:'python',pyi:'python',c:'c',h:'cpp',hpp:'cpp',cpp:'cpp',cc:'cpp',cxx:'cpp',rs:'rust',css:'css',scss:'scss',less:'less',html:'html',htm:'html',htmll:'html',md:'markdown',markdown:'markdown',s:'asm',asm:'asm',n:'nc',nc:'nc',nm:'nc',ncp:'nc',nb:'nc',nbb:'nc',xml:'xml',svg:'xml',sh:'shell',bash:'shell',zsh:'shell',ps1:'powershell',psm1:'powershell',bat:'bat',cmd:'bat',yml:'yaml',yaml:'yaml',java:'java',go:'go',kt:'kotlin',kts:'kotlin',swift:'swift',rb:'ruby',php:'php',pl:'perl',pm:'perl',lua:'lua',r:'r',jl:'julia',dart:'dart',ex:'elixir',exs:'elixir',erl:'erlang',hrl:'erlang',hs:'haskell',scala:'scala',clj:'clojure',sql:'sql',toml:'ini',ini:'ini',conf:'ini',cmake:'cmake',make:'makefile',zig:'zig',pas:'pascal',f90:'fortran',f:'fortran',cob:'cobol',tex:'latex',proto:'protobuf',graphql:'graphql',vue:'html',svelte:'html',ipynb:'json'});
+Object.assign(languages,{nm:'nc-machine',nb:'nc-root',nbb:'nc-primitive',ncp:'nc-hardware',nbo:'nc-backend-object',init:'nc-target-init'});
 let contributedAssociations=new Map();
 export const languageFor = path => {
   const normalized=String(path||'').replaceAll('\\','/').toLowerCase(),name=normalized.split('/').at(-1);
@@ -22,7 +25,7 @@ export const languageFor = path => {
   const extra=[...contributedAssociations.entries()].sort((a,b)=>b[0].length-a[0].length).find(([suffix])=>normalized.endsWith(suffix));
   return extra?.[1]||languages[normalized.split('.').pop()]||'plaintext';
 };
-export const languageLabel = path => ({csharp:'C#',javascript:'JavaScript',typescript:'TypeScript',cpp:'C++',c:'C',python:'Python',rust:'Rust',asm:'ASM',nc:'nC',plaintext:'Plain Text',markdown:'Markdown',json:'JSON',css:'CSS',html:'HTML'}[languageFor(path)] || languageFor(path));
+export const languageLabel = path => ({csharp:'C#',javascript:'JavaScript',typescript:'TypeScript',cpp:'C++',c:'C',python:'Python',rust:'Rust',asm:'ASM',nc:'nC','nc-root':'nC · Basal','nc-machine':'nC · Máquina','nc-primitive':'nC · Primitivas','nc-hardware':'nC · Hardware','nc-backend-object':'nC · Objeto IR','nc-target-init':'nC · Inicio de destino',plaintext:'Plain Text',markdown:'Markdown',json:'JSON',css:'CSS',html:'HTML'}[languageFor(path)] || languageFor(path));
 const keywords = new Set(('using namespace public private protected internal class sealed abstract static readonly const void float double int long short byte string bool char var new return if else for foreach while do switch case default break continue null true false this base override virtual async await interface enum struct get set in out ref try catch finally throw sizeof typeof import from def print for in is not and or pass with as lambda yield global nonlocal elif None True False match fn let mut impl use pub mod self trait extern unsafe auto unsigned signed volatile template typename std include define primitive stc fa strictly binary bind raw probe').split(' '));
 const types = new Set(('MonoBehaviour Vector2 Vector3 Vector4 Quaternion Transform Rigidbody Camera Time Input Mathf Debug Header SerializeField List Dictionary HashSet Console String Object Task int32_t uint32_t size_t uint64_t float32 bool8 vec3 mat4').split(' '));
 
@@ -95,6 +98,7 @@ export class LumenEditor {
         [/"([^"\\]|\\.)*"/,'string'],[/\b\d+\b/,'number']
       ]}};this.languageSyntax.set(id,syntax);monaco.languages.setMonarchTokensProvider(id,syntax);
     }
+    this.semanticStyles=new SemanticStyles(()=>this.refreshSemanticStyles());
     this.textmate=new TextMateLanguages(monaco,()=>this.defineMonacoTheme(),id=>this.prepareGrammarLanguage(id),(id,current)=>this.restoreGrammarLanguage(id,current));
     this.defineMonacoTheme();
     this.panes=[];this.mount.classList.add('editor-panes');
@@ -107,10 +111,12 @@ export class LumenEditor {
       minimap:{enabled:this.settings.minimap,renderCharacters:false,maxColumn:80,scale:1},
       padding:{top:3,bottom:24},tabSize:this.settings.tabSize,insertSpaces:true,wordWrap:this.settings.wordWrap?'on':'off',
       guides:{indentation:true,highlightActiveIndentation:false,bracketPairs:false},
-      bracketPairColorization:{enabled:false},folding:true,showFoldingControls:'mouseover',
+      bracketPairColorization:{enabled:this.settings.bracketColors!==false},folding:true,showFoldingControls:'mouseover',
       overviewRulerLanes:0,hideCursorInOverviewRuler:true,overviewRulerBorder:false,
       scrollbar:{vertical:'hidden',horizontal:'hidden',verticalScrollbarSize:0,horizontalScrollbarSize:0,useShadows:false},
-      fixedOverflowWidgets:true,overflowWidgetsDomNode:document.body,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Editor de código de Zénit',
+      // Keep interactive widgets in Monaco's focus tree. Moving them to body
+      // makes rename cancel itself as soon as its input receives focus.
+      fixedOverflowWidgets:true,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Editor de código de Zénit',
       hover:{above:false,delay:240,hidingDelay:200,sticky:true},
       quickSuggestions:{other:true,comments:false,strings:false},suggest:{preview:true},inlineSuggest:{enabled:true},
       tabCompletion:'on',wordBasedSuggestions:'currentDocument',
@@ -147,7 +153,7 @@ export class LumenEditor {
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
     const model=this.models.get(path||this.current)?.model;if(!model)return;
     let pane=this.panes[1];
-    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
+    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model,automaticLayout:true});this.bindPane(pane);}
     this.mount.dataset.splitAxis=['top','bottom'].includes(side)?'vertical':'horizontal';
     pane.node.style.order=['left','top'].includes(side)?'-1':'1';
     pane.view.setModel(this.models.get(path||this.current)?.model||null);this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();pane.view.focus();this.callbacks.active?.(this.current);
@@ -208,8 +214,10 @@ export class LumenEditor {
     const interactionColors={'editor.selectionBackground':c('selection'),'editor.inactiveSelectionBackground':c('selection'),'editor.selectionHighlightBackground':c('selected'),'editor.selectionHighlightBorder':'#00000000','editor.wordHighlightBackground':c('hover'),'editor.wordHighlightStrongBackground':c('selected'),'editor.findMatchBackground':c('selection'),'editor.findMatchHighlightBackground':c('hover'),'editor.findMatchBorder':c('focus'),'minimap.selectionHighlight':c('selection')};
     const syntax=Object.fromEntries(['keyword','type','number','string','comment','function'].map(key=>[key,c('syntax-'+key)]));
     const external=this.extensionTheme,themeColors=external?editorThemeColors(external):{},editorBackground=external?themeColors['editor.background']:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
-    const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},themeEntries(external)));
-    monaco.editor.defineTheme('lumen-theme',{
+    const styleMode=document.documentElement.dataset.theme==='day'?'light':'dark',languageEntries=(this.languageStyles||[]).flatMap(s=>s[styleMode]?.tokenColors||[]);
+    this.semanticStyles?.setTheme(external,{editor:editorBackground,text:editorForeground,...syntax},styleMode);
+    const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},[...themeEntries(external),...languageEntries]));
+    this.monacoTheme={id:'lumen-theme',data:{
       base:document.documentElement.dataset.theme==='day'?'vs':'vs-dark',inherit:true,encodedTokensColors,
       rules:[{token:'',foreground:c('text').slice(1)},{token:'keyword',foreground:c('syntax-keyword').slice(1)},
         {token:'type',foreground:c('syntax-type').slice(1)},{token:'type.identifier',foreground:c('syntax-type').slice(1)},
@@ -241,13 +249,16 @@ export class LumenEditor {
         'input.placeholderForeground':c('muted'),'keybindingLabel.background':c('field'),
         'keybindingLabel.foreground':c('secondary'),'keybindingLabel.border':c('border'),
         'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border'),...interactionColors},
-    });
+    }};
     if(this.extensionTheme){
       const theme=this.extensionTheme,{dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
-      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors:{...themeColors,...interactionColors},encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
-    }else monaco.editor.setTheme('lumen-theme');
+      this.monacoTheme={id:'lumen-extension-theme',data:{base,inherit:true,rules,colors:{...themeColors,...interactionColors},encodedTokensColors}};
+    }
+    this.applyMonacoTheme();
     for(const pane of this.panes||[])pane.view?.updateOptions({'semanticHighlighting.enabled':this.extensionTheme?.data?.semanticHighlighting!==false});
   }
+  applyMonacoTheme(){const theme=this.monacoTheme;if(!theme||!window.monaco)return;monaco.editor.defineTheme(theme.id,{...theme.data,rules:[...theme.data.rules,...this.semanticStyles?.rules||[]]});monaco.editor.setTheme(theme.id);}
+  refreshSemanticStyles(){if(this.semanticThemeFrame)return;this.semanticThemeFrame=requestAnimationFrame(()=>{this.semanticThemeFrame=0;this.applyMonacoTheme();});}
   initBase() {
     this.kind='base';
     this.mount.innerHTML=`<div class="fallback-editor"><div class="code-gutter" aria-hidden="true"><div class="gutter-lines"></div></div><div class="code-scroller"><div class="code-canvas"><pre class="code-highlight" aria-hidden="true"></pre><textarea class="code-input" aria-label="Editor de código" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea></div></div><div class="code-minimap" title="Navegar por el archivo"><canvas></canvas><div class="minimap-window"></div></div><div class="editor-find hidden"><input placeholder="Find..." aria-label="Buscar en el archivo"><small></small><button class="icon-button find-next" title="Siguiente">${icon('chevron-down')}</button><button class="icon-button find-close" title="Cerrar búsqueda">${icon('close')}</button></div></div>`;
@@ -320,7 +331,10 @@ export class LumenEditor {
     for(const [suffix,id] of Object.entries(associations||{}))contributedAssociations.set(suffix.toLowerCase(),id);
     if(this.kind==='monaco'){
       const registered=new Set(monaco.languages.getLanguages().map(x=>x.id));
-      for(const id of new Set([...Object.values(languages),...contributedAssociations.values()]))if(!registered.has(id)){monaco.languages.register({id});registered.add(id);}
+      const declaredIds=(items||[]).map(item=>item.id).filter(id=>typeof id==='string'&&id);
+      for(const id of new Set([...Object.values(languages),...contributedAssociations.values(),...declaredIds]))if(!registered.has(id)){monaco.languages.register({id});registered.add(id);}
+      for(const d of this.languageConfigurations||[])d.dispose();this.languageConfigurations=[];
+      for(const item of items)if(item.configuration)this.languageConfigurations.push(monaco.languages.setLanguageConfiguration(item.id,languageConfiguration(item.configuration,monaco.languages.IndentAction)));
       for(const [path,record] of this.models)if(record.model)monaco.editor.setModelLanguage(record.model,languageFor(path));
     }else this.schedulePaint();
   }

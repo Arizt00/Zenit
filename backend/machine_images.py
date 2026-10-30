@@ -9,7 +9,7 @@ CATALOG=[
  {'id':'arch','name':'Arch Linux','url':'https://archlinux.org/download/','note':'Usa la imagen del SDK o importa un disco QCOW2 independiente o su ISO oficial.'},
  {'id':'debian','name':'Debian','url':'https://cloud.debian.org/images/cloud/','note':'Las imágenes cloud configuradas para consola serie pueden abrirse dentro de Zénit.'},
  {'id':'kali','name':'Kali Linux','url':'https://www.kali.org/get-kali/','note':'Importa una imagen QEMU o una ISO del distribuidor. El modo gráfico abre QEMU en otra ventana.'},
- {'id':'windows11','name':'Windows 11','url':'https://www.microsoft.com/software-download/windows11','note':'Importa tu medio con licencia. Esta edición del laboratorio usa QEMU x86-64 por software; no configura TPM ni Secure Boot.'},
+ {'id':'windows11','name':'Windows 11','url':'https://www.microsoft.com/software-download/windows11','note':'Importa tu medio con licencia. Esta edición del laboratorio usa QEMU x86-64 y detecta la aceleración disponible; no configura TPM ni Secure Boot.'},
  {'id':'windows7','name':'Windows 7','url':'https://www.microsoft.com/windows','note':'Importa tu medio con licencia o conecta una VM existente por SSH. No se incluyen imágenes.'},
  {'id':'macos','name':'macOS','url':'https://support.apple.com/macos','note':'Conecta un Mac o una VM en hardware Apple mediante SSH; no se ofrece arranque local macOS.'},
 ]
@@ -21,7 +21,7 @@ class MachineImages:
   except (OSError,ValueError):self.images=[]
  def snapshot(self,ws):
   base=self.features.machines.vm_base()
-  return {'images':self.images,'catalog':CATALOG,'ready':bool(base.get('qemu') and base.get('qimg')),'sessions':[dict(p,saved=p.get('saved')) for p in self.sessions.values() if p['workspace']==str(ws.root)],
+  return {'images':self.images,'catalog':CATALOG,'tools':{'qemu':bool(base.get('qemu')),'qemu-img':bool(base.get('qimg'))},'ready':bool(base.get('qemu') and base.get('qimg')),'sessions':[dict(p,saved=p.get('saved'),running=bool((terminal:=self.features.terminals.sessions.get(self.features.machines.active.get(p['id']))) and not terminal.closed)) for p in self.sessions.values() if p['workspace']==str(ws.root)],
    'saved':[p.name for p in ws.root.glob('*.tern') if p.is_file() and not p.is_symlink() and self.is_descriptor(p)][:100]}
  @staticmethod
  def is_descriptor(file):
@@ -104,8 +104,8 @@ class MachineImages:
   self.owned(ws,identity);return profile
  def start(self,ws,identity):
   p=self.get(ws,identity)
-  import psutil
-  if p['memory']>psutil.virtual_memory().available/1024**2*.8:raise ValueError('No hay suficiente RAM libre. Reduce los recursos o cierra otra máquina.')
+  # Machines.start reuses an existing terminal before checking resources for a
+  # new guest. Reopening its console must not reserve a second machine's RAM.
   return self.features.machines.start(ws,identity,profile=p)
  def save(self,ws,body):
   p=self.get(ws,body.get('id'));name=body.get('file','')

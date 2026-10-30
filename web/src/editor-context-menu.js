@@ -19,7 +19,8 @@ export class EditorContextMenu {
   }
   items(view){
     const h=this.h,p=h.platform,t=(es,en)=>p.t(es,en),item=(label,run,glyph='code',shortcut='')=>({label,run,glyph,shortcut});
-    const action=(id,es,en,key='')=>{const a=view.getAction(id);return a?.isSupported()?{...item(t(es,en),()=>a.run(),'code',key),...commandAppearance({id,title:en})}:null;};
+    const commands={'editor.action.revealDefinition':'definition','editor.action.revealDeclaration':'declaration','editor.action.goToTypeDefinition':'typeDefinition','editor.action.goToImplementation':'implementation','editor.action.goToReferences':'references'};
+    const action=(id,es,en,key='')=>{const a=view.getAction(id),run=a?.isSupported()?()=>a.run():commands[id]&&p.editorDepth?.can(commands[id])?()=>view.trigger('zenit',id,{}):null;return run?{...item(t(es,en),run,'code',key),...commandAppearance({id,title:en})}:null;};
     const group=(label,glyph,items)=>({label,glyph,children:items.filter(Boolean)});
     const supported=(entries)=>entries.map(x=>action(...x)).filter(Boolean);
     const navigation=supported([
@@ -55,6 +56,9 @@ export class EditorContextMenu {
       group(t('Archivo','File'),'file',[
         item(t('Guardar','Save'),()=>h.saveFile(h.editor.current),'check','Ctrl S'),
         item(t('Guardar como…','Save As…'),()=>this.preview.saveAs(),'file'),
+        item(t('Cambiar nombre de archivo…','Rename File…'),()=>this.preview.renameFile(h.editor.current),'rename'),
+        item(t('Eliminar archivo','Delete File'),()=>this.preview.deleteFile(h.editor.current),'trash'),
+        ...(this.preview.canRestoreDeleted?.()?[item(t('Deshacer eliminación','Undo File Deletion'),()=>this.preview.restoreDeleted(),'undo')]:[]),
         item(t('Copiar ruta relativa','Copy Relative Path'),()=>navigator.clipboard.writeText(h.editor.current),'copy'),
         item(t('Abrir en otra ventana','Open in Another Window'),()=>this.preview.newWindow(h.editor.current),'detach')]),
       extensionActions.length?{separator:true}:null,extensionActions.length?group(t('Extensiones activas','Active Extensions'),'extensions',extensionActions):null,
@@ -68,8 +72,10 @@ export class EditorContextMenu {
     this.scroll=e=>{if(!e.target.closest?.('.editor-context-menu'))this.close(false);};
     document.addEventListener('pointerdown',this.outside,true);window.addEventListener('resize',this.outside);document.addEventListener('wheel',this.scroll,{capture:true,passive:true});
   }
-  render(items,level,x,y,search=false){
-    this.trim(level);const menu=document.createElement('section');menu.className='editor-context-menu';menu.setAttribute('role','menu');menu.setAttribute('aria-label',level?'Submenu':'Editor actions');
+  render(items,level,x,y,search=false,heading=null){
+    this.trim(level);const menu=document.createElement('section');menu.className='editor-context-menu';menu.setAttribute('role','menu');
+    const title=heading?.label||this.h.platform.t('Acciones del código','Code actions');menu.setAttribute('aria-label',title);
+    const header=document.createElement('header');header.className='editor-menu-heading';header.innerHTML=(heading?.logo?'<i class="editor-menu-extension-icon">'+heading.logo+'</i>':icon(heading?.glyph||'code'))+'<span>'+esc(title)+'</span>';menu.append(header);
     if(search){const label=document.createElement('label');label.className='editor-menu-search';label.innerHTML=icon('search')+'<input type="search" autocomplete="off" placeholder="'+esc(this.h.platform.t('Buscar acción…','Search actions…'))+'" aria-label="'+esc(this.h.platform.t('Buscar acción','Search actions'))+'">';menu.append(label);label.querySelector('input').oninput=e=>this.filter(e.target.value);}
     const list=document.createElement('div');list.className='editor-menu-items';menu.append(list);document.body.append(menu);this.levels.push(menu);this.fill(list,items,level);
     menu.style.left=Math.max(8,Math.min(x,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.max(8,Math.min(y,innerHeight-menu.offsetHeight-8))+'px';this.positionChain();
@@ -80,7 +86,7 @@ export class EditorContextMenu {
     items.forEach((item,i)=>{
       if(item.separator){if(!previousSeparator&&items.slice(i+1).some(x=>!x.separator)){const hr=document.createElement('hr');hr.setAttribute('role','separator');list.append(hr);}previousSeparator=true;return;}previousSeparator=false;
       const b=document.createElement('button');b.type='button';b.setAttribute('role','menuitem');b.tabIndex=-1;b.title=item.detail||item.label;b.innerHTML=(item.logo?'<i class="editor-menu-extension-icon">'+item.logo+'</i>':icon(item.glyph||'code'))+'<span>'+esc(item.label)+'</span>'+(item.children?icon('chevron-right'):'<kbd>'+esc(item.shortcut||'')+'</kbd>');list.append(b);
-      const expand=()=>{if(!b.isConnected)return;this.trim(level+1);if(!item.children)return;const r=b.getBoundingClientRect(),parent=this.levels[level].getBoundingClientRect();this.render(item.children,level+1,parent.right+14,r.top);b.setAttribute('aria-expanded','true');};
+      const expand=()=>{if(!b.isConnected)return;this.trim(level+1);if(!item.children)return;const r=b.getBoundingClientRect(),parent=this.levels[level].getBoundingClientRect();this.render(item.children,level+1,parent.right+14,r.top,false,item);b.setAttribute('aria-expanded','true');};
       if(item.children){b.setAttribute('aria-haspopup','menu');b.setAttribute('aria-expanded','false');b.expand=expand;}
       b.onpointerenter=()=>{clearTimeout(this.hover);this.hover=setTimeout(()=>{if(item.children){const previous=document.activeElement;expand();previous?.focus();}else this.trim(level+1);},140);};
       b.onclick=()=>{clearTimeout(this.hover);if(item.children)return expand();this.close();this.preview.safe(item.run);};

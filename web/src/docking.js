@@ -3,7 +3,7 @@ import {outsideViewport} from './document-drag.js';
 import {defaultLayout,normalizeLayout,layoutPreset,movePanel,setCollapsed,sideOf,persistedLayout,SIDES,LAYOUT_KEY,PRESET_NAMES} from './layout-state.js';
 
 const PANEL_LABELS={project:'Proyecto',assistant:'Melody',console:'Consola'};
-const PANEL_ICONS={project:'files',assistant:'sparkles',console:'terminal'};
+const PANEL_ICONS={project:'folder',assistant:'sparkles',console:'terminal'};
 const SIDE_LABELS={left:'izquierda',right:'derecha',bottom:'abajo'};
 const PANEL_SELECTORS={project:'#project-panel',assistant:'#assistant-panel',console:'#terminal-panel'};
 
@@ -218,6 +218,7 @@ export class DockManager {
     trigger?.setAttribute('aria-label','Organizar paneles. Distribución: '+(PRESET_NAMES[this.state.preset]||'Personalizada'));
     document.querySelector('[data-action="toggle-ai"]')?.setAttribute('aria-pressed',String(this.isVisible('assistant')));
     this.onChange();
+    this.root.dispatchEvent(new CustomEvent('lumen:layout-rendered'));
   }
   limits(){
     const small=innerWidth<=1450;

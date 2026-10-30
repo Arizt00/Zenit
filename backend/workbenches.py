@@ -39,7 +39,13 @@ class Workbenches:
    path=str(Path(path).resolve())
   else:ws.resolve(path,must_exist=False)
   result={'path':path,'dirty':item.get('dirty') is True}
-  if result['dirty']:
+  if item.get('kind')=='binary':
+   result['kind']='binary'
+   if result['dirty']:
+    from .binary_recovery import normalize
+    result['binary']=normalize(item.get('binary'))
+    result['dirty']=bool(result['binary']['patches'])
+  elif result['dirty']:
    text=item.get('content')
    if not isinstance(text,str) or len(text.encode('utf-8'))>MAX_TEXT:raise ValueError('El búfer de recuperación admite hasta 2 MiB.')
    result['content']=text
@@ -58,6 +64,7 @@ class Workbenches:
   docs=[self._document(ws,x) for x in docs]
   if len({x['path'] for x in docs})!=len(docs):raise ValueError('Documento repetido.')
   if sum(len(x.get('content','').encode()) for x in docs)>4*MAX_TEXT:raise ValueError('La recuperación admite 8 MiB de texto sin guardar.')
+  if sum(len(json.dumps(x.get('binary',{}))) for x in docs)>4*MAX_TEXT:raise ValueError('La recuperación admite 8 MiB de parches binarios.')
   paths={x['path'] for x in docs};active=raw.get('active')
   layout=raw.get('layout')
   if layout is not None and (not isinstance(layout,dict) or len(json.dumps(layout))>10000):raise ValueError('Distribución no válida.')
@@ -65,7 +72,15 @@ class Workbenches:
   if style not in ('general','web','data','design','assembly'):raise ValueError('Estilo no válido.')
   panes=raw.get('panes',[])
   if not isinstance(panes,list) or len(panes)>2:raise ValueError('División no válida.')
-  return {'documents':docs,'active':active if active in paths else (docs[0]['path'] if docs else None),'layout':layout,'style':style,'panes':[p for p in panes if p in paths],'axis':'vertical' if raw.get('axis')=='vertical' else 'horizontal'}
+  groups=raw.get('tabGroups',[]);clean=[];grouped=set()
+  if not isinstance(groups,list) or len(groups)>24:raise ValueError('Grupos de pestañas no válidos.')
+  for group in groups:
+   if not isinstance(group,dict) or not isinstance(group.get('id'),str) or len(group['id'])>80 or not isinstance(group.get('name'),str) or len(group['name'])>60 or not isinstance(group.get('paths'),list) or len(group['paths'])>48:raise ValueError('Grupo temporal no válido.')
+   if any(not isinstance(p,str) for p in group['paths']):raise ValueError('Ruta de grupo no válida.')
+   members=list(dict.fromkeys(p for p in group['paths'] if p in paths and p not in grouped));grouped.update(members)
+   if members:clean.append({'id':group['id'],'name':group['name'],'paths':members})
+  return {'documents':docs,'active':active if active in paths else (docs[0]['path'] if docs else None),'layout':layout,'style':style,'panes':[p for p in panes if p in paths],'axis':'vertical' if raw.get('axis')=='vertical' else 'horizontal',
+          'tabGroups':clean,'activeTabGroup':raw.get('activeTabGroup') if raw.get('activeTabGroup') in {g['id'] for g in clean} else None}
  def checkpoint(self,ws,body):
   session=self._session(ws,body.get('session'))
   auxiliary=body.get('auxiliary') is True
@@ -81,27 +96,32 @@ class Workbenches:
    remote={x['path']:x for x in self.features.buffers.snapshot()['buffers']}
    for doc in session['documents']:
     shared=remote.get(doc['path'])
-    if shared and doc['path'] in shared_paths:
+    if shared and doc.get('kind')!='binary' and doc['path'] in shared_paths:
      doc['dirty']=not shared['saved'];doc['revision']=shared.get('revision')
      if doc['dirty']:doc['content']=shared['text']
      else:doc.pop('content',None)
    session=self._session(ws,session)
    if data.get('session')!=session:data['session']=session;self._write(ws,data)
    return {'saved':True,'documents':len(session['documents'])}
- def discard(self,ws,path):
+ def discard(self,ws,path,recursive=False):
+  affected=lambda name:name==path or recursive and name.startswith(path+'/')
   with self.lock:
    data=copy.deepcopy(self._read(ws));session=data.get('session')
    if session:
-    session['documents']=[x for x in session['documents'] if x['path']!=path]
-    session['panes']=[x for x in session.get('panes',[]) if x!=path]
-    if session.get('active')==path:session['active']=next((x['path'] for x in session['documents']),None)
+    session['documents']=[x for x in session['documents'] if not affected(x['path'])]
+    session['panes']=[x for x in session.get('panes',[]) if not affected(x)]
+    if affected(session.get('active') or ''):session['active']=next((x['path'] for x in session['documents']),None)
+    for group in session.get('tabGroups',[]):group['paths']=[p for p in group['paths'] if not affected(p)]
+    session['tabGroups']=[g for g in session.get('tabGroups',[]) if g['paths']]
+    if session.get('activeTabGroup') not in {g['id'] for g in session['tabGroups']}:session['activeTabGroup']=None
     self._write(ws,data)
    return {'removed':True}
  def save_space(self,ws,body):
   name=body.get('name')
   if not isinstance(name,str) or not name.strip() or len(name)>60 or any(ord(c)<32 for c in name):raise ValueError('El nombre debe tener entre 1 y 60 caracteres.')
   session=self._session(ws,body.get('session'))
-  for doc in session['documents']:doc.pop('content',None);doc['dirty']=False
+  for doc in session['documents']:
+   doc.pop('content',None);doc.pop('binary',None);doc['dirty']=False
   with self.lock:
    data=copy.deepcopy(self._read(ws));spaces=[x for x in data['spaces'] if x['name'].casefold()!=name.strip().casefold()]
    if len(spaces)>=12:raise ValueError('Puedes guardar hasta 12 espacios por proyecto.')
@@ -113,5 +133,15 @@ class Workbenches:
  def set_target(self,ws,target,options=None):
   with self.lock:
    data=copy.deepcopy(self._read(ws));data['target']=target;data['targetOptions']=options or {};self._write(ws,data)
+ def relocate(self,ws,remap):
+  with self.lock:
+   data=copy.deepcopy(self._read(ws))
+   for session in [data.get('session'),*[s.get('session') for s in data.get('spaces',[])]]:
+    if not session:continue
+    for document in session.get('documents',[]):document['path']=remap(document['path'])
+    session['active']=remap(session['active']) if session.get('active') else None
+    session['panes']=[remap(p) for p in session.get('panes',[])]
+    for group in session.get('tabGroups',[]):group['paths']=[remap(p) for p in group['paths']]
+   self._write(ws,data)
  def clear(self):
   with self.lock:self.cache.clear()

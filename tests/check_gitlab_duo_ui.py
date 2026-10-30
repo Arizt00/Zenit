@@ -7,6 +7,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import time
 
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from backend.server import Application,LumenServer
@@ -38,6 +39,15 @@ def main():
                 page.goto(f'http://127.0.0.1:{server.server_port}');page.wait_for_function('window.lumen?.ready',timeout=45000)
                 page.locator('[data-file="main.py"]').click();page.wait_for_function('window.lumen.activeFile==="main.py"');page.wait_for_timeout(700)
                 future=pool.submit(runtime.start,app.workspace,'GitLab.gitlab-workflow',True)
+                deadline=time.monotonic()+35
+                while not future.done() and time.monotonic()<deadline:page.wait_for_timeout(100)
+                host=future.result(timeout=1)['hosts'][0]
+                assert host['running'] and any(p['kind']=='inlineCompletion' for p in host['providers']),host
+                output='\n'.join(row['text'] for row in app.features.extension_services.outputs.values() if row['name']=='GitLab Language Server')
+                assert 'GitLab Language Server has started' in output and 'Server initialization failed' not in output,output[-5000:]
+                assert not any('failed to start' in str(row.get('tooltip','')).lower() for row in app.features.extension_services.status_items.values())
+                checks.append('The real language server completes its initialization, registers inline completions and leaves no failed-start status')
+                opened=pool.submit(runtime.request,app.workspace,{'id':'GitLab.gitlab-workflow','method':'command','command':'gl.openChat','document':{'path':'main.py','text':'print(42)','language':'python'}})
                 frame=page.frame_locator('.extension-webview-surface iframe')
                 expect(frame.locator('body')).to_contain_text('I am GitLab Duo Chat',timeout=25000)
                 checks.append('The unmodified installed GitLab extension starts its real Duo Chat interface with its actual JavaScript and styles')
@@ -46,7 +56,8 @@ def main():
                 page.wait_for_timeout(11000)
                 expect(frame.locator('body')).not_to_contain_text('Error initializing GitLab Duo Chat')
                 assert 'appReady' in received,received
-                assert future.done() and any(host['id']=='GitLab.gitlab-workflow' and host['running'] for host in future.result()['hosts'])
+                assert opened.done(), 'The actual chat command did not finish its startup handshake'
+                opened.result()
                 checks.append('Duo Chat sends appReady through the real extension host and stays initialized past its ten-second watchdog')
                 assert len(resources)>=2 and all(item['status']==200 for item in resources),resources
                 checks.append('The sandbox loads scoped local resources successfully without parent-origin blob URLs')

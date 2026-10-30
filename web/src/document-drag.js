@@ -31,6 +31,7 @@ export class DocumentDrag{
       if(!e.dataTransfer.types.includes(DOCUMENT_TYPE))return;e.preventDefault();e.stopPropagation();if(this.start)this.start.handled=true;
       const side=dropSide(e.clientX,e.clientY,host.editor.mount.getBoundingClientRect());this.overlay.hidden=true;
       const data=JSON.parse(e.dataTransfer.getData(DOCUMENT_TYPE)),internal=!!this.start;
+      if(this.start&&!this.start.editor)data.paths=host.dragPaths?.()||[data.path];
       host.safe(()=>this.receive(data,side,internal,!!this.start?.editor));
     });
     this.listen(document,'drop',()=>{if(this.start)this.start.handled=true;},true);
@@ -44,6 +45,7 @@ export class DocumentDrag{
   async receive(data,side='center',internal=false,fromEditor=false){
     const h=this.host;if(!data?.path||data.workspace!==h.service().workspace)throw Error('Arrastra archivos de este mismo proyecto.');
     const previous=h.editor.current,existing=h.editor.models.get(data.path);
+    if(internal&&Array.isArray(data.paths)&&data.paths.length>1){for(const path of data.paths.slice(0,128))await h.openFile(path);return;}
     // Within one window the live model wins over the drag snapshot.
     if(!internal&&existing&&typeof data.content==='string'&&h.editor.isDirty(data.path)&&!await h.confirmDialog('Recibir archivo','El búfer de destino tiene cambios. ¿Reemplazarlo por el de la otra ventana?','Reemplazar búfer'))return;
     if(side==='center'&&internal&&fromEditor)h.editor.closeSplit(data.path);

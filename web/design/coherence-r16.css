@@ -1,8 +1,15 @@
 /* R16: stable panel geometry and responsive project controls. */
 .dock-content,.dock-slot,.editor-area,.editor-panel,.workspace-profile-bar,.heading-actions{min-width:0;min-height:0}
-#project-panel>.panel-heading,.editor-tabbar,#assistant-panel>.assistant-heading{box-sizing:border-box;min-height:52px;margin-top:0;align-items:center}
+#project-panel>.panel-heading,.editor-tabbar,#assistant-panel>.assistant-heading{box-sizing:border-box;height:var(--panel-header-height);min-height:var(--panel-header-height);flex:0 0 var(--panel-header-height);margin-top:0;align-items:center}
 #project-panel>.panel-heading{padding:8px 12px;gap:8px}
-#assistant-panel>.assistant-heading{height:52px;flex:0 0 52px;padding:8px 12px;gap:8px;flex-wrap:nowrap;border-bottom:1px solid var(--border)}
+#assistant-panel>.assistant-heading{padding:8px 12px;gap:8px;flex-wrap:nowrap;border-bottom:1px solid var(--border);background:var(--header)}
+/* Tabs keep their lower edge joined to the editor; tools share the header centre. */
+.editor-tabbar{padding-inline:12px}
+.editor-tabbar>.icon-button{width:28px;height:28px;min-width:28px;align-self:flex-start;margin-top:calc((var(--panel-header-height) - 28px)/2 - 8px)}
+.dock-strip{height:var(--panel-header-height);min-height:var(--panel-header-height);align-items:center}
+.dock-strip>.dock-tabs{height:100%}
+.dock-strip .dock-group-actions{align-items:center;gap:4px}
+.dock-strip .dock-group-actions>.icon-button{width:28px;height:28px;min-width:28px}
 #assistant-panel .assistant-heading-title{min-width:0;flex:1 1 0;gap:8px}
 #assistant-panel .assistant-heading-title h2{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #assistant-panel .assistant-heading-title>.sparkles,#assistant-panel .melody-beta{flex:none}
