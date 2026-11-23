@@ -1,0 +1,76 @@
+name: Zénit nC 0.5.5 R8 - verify and publish Windows update
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'web/assets/languages/**'
+      - 'tests/test_nc_language_integration.py'
+      - '.github/workflows/zenit-nc-r8-update.yml'
+  push:
+    branches: ['feature/zenit-nc-lsp-debug-extension-update']
+    paths: ['tools/publish_nc_r8.flag']
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test nC discovery, LSP lifecycle and existing debugger
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -p 'test_nc_language_integration.py' -v
+          python -m unittest discover -s tests -p 'test_backend.py' -v
+          npm run check
+          npm test
+      - name: Install desktop build requirements
+        run: python -m pip install -r requirements-build.txt -r requirements-copilot.txt
+      - name: Prepare original design and nC icon
+        run: python tools/setup_assets.py
+      - name: Build native core
+        run: python tools/build_native.py
+      - name: Build updated Windows installer and portable bundle
+        run: python tools/build_desktop.py --require-assets --installer
+      - name: Verify installed package and manifest
+        run: python tools/verify_native_package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Zenit-0.5.5-R8-Windows
+          path: dist/Zenit-*
+          if-no-files-found: error
+          retention-days: 30
+  publish:
+    needs: test-and-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/feature/zenit-nc-lsp-debug-extension-update'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Zenit-0.5.5-R8-Windows
+          path: release-assets
+      - name: Publish verified 0.5.5 R8 update (do not replace an existing release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -f docs/PREVIEW_055_R8.md
+          test "$(python3 -c "from backend.version import RELEASE_TAG; print(RELEASE_TAG)")" = "v0.5.5-preview.8"
+          if gh release view v0.5.5-preview.8 >/dev/null 2>&1; then
+            echo "::error::Release already exists. Refusing to replace or retarget it."
+            exit 1
+          fi
+          find release-assets -maxdepth 1 -type f -name 'Zenit-*' -print | sort
+          find release-assets -maxdepth 1 -type f -name '*.exe' -print -quit | grep -q .
+          gh release create v0.5.5-preview.8 release-assets/Zenit-* \
+            --target "$GITHUB_SHA" \
+            --title "Zénit 0.5.5 R8 · nC LSP, debugging and official icon" \
+            --notes-file docs/PREVIEW_055_R8.md --prerelease
