@@ -89,9 +89,16 @@ class DebugManager:
         try:
             plan=self.runtimes.plan(ws,path,debug=True);lang=plan['language'];file=plan['file'];target=plan['target']
             custom=self.runtimes.config['languages'].get(lang,{}).get('debug');port=0
+            if lang=='nc' and file.suffix.lower()=='.nm' and not custom:
+                raise ValueError('nC Machine .nm uses ncc machine debug-bridge / debug-attach, not a source DAP session.')
+            nc_use_dap=lang=='nc' and file.suffix.lower() in ('.n','.nc') and os.environ.get('ZENIT_NC_DEBUG_ENGINE','native').lower()=='ncc'
+            if nc_use_dap:
+                # NCC's own DAP launches the source; avoid a second unrelated LLVM build.
+                plan['commands']=[]
+
             if lang not in ('javascript','typescript','java') or custom:
                 if custom:adapter=custom['adapter'];launch=custom['launch'];transport=custom.get('transport','stdio')
-                elif lang in ('c','cpp','rust','asm') or lang=='nc' and file.suffix.lower() in ('.n','.nc'):
+                elif lang in ('c','cpp','rust','asm') or (lang=='nc' and file.suffix.lower() in ('.n','.nc') and not nc_use_dap):
                     adapter=[self.runtimes.executable('lldb-dap','lldb-vscode')];transport='stdio';launch={'program':str(target),'cwd':str(ws.root),'stopOnEntry':False,'console':'internalConsole','_lumenEntry':True}
                 elif lang=='csharp':
                     adapter=[self.runtimes.executable('netcoredbg'),'--interpreter=vscode'];transport='stdio';launch={'program':str(target),'cwd':str(ws.root),'stopAtEntry':True,'console':'integratedTerminal'}
@@ -111,7 +118,7 @@ class DebugManager:
                     time.sleep(.05)
                 if self.build.code:raise ValueError('La compilación no terminó correctamente.\n'+self.build.output[-7000:])
             if generation!=self.generation:return
-            if lang=='nc' and not custom and file.suffix.lower() in ('.n','.nc'):
+            if lang=='nc' and not custom and not nc_use_dap and file.suffix.lower() in ('.n','.nc'):
                 # Read the compiler's emitted debug metadata, never guess nC syntax.
                 for ir in list((target.parent/'lowering').glob('*.ll'))[:20]:
                     metadata=ir.read_text(encoding='utf-8',errors='replace')
