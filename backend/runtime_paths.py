@@ -34,6 +34,10 @@ def find_tool(name, configured=None):
             file=base/channel/('bin/'+name+'.exe')
             if file.is_file():return str(file)
     if found:=shutil.which(name):return found
+    if os.name=='nt' and name in ('ncc', 'nclsp', 'nc-sys-lsp'):
+        suite=Path(os.environ.get('LOCALAPPDATA',Path.home()/'AppData/Local'))/'nC'/'bin'
+        candidate=suite/(name+'.exe')
+        if candidate.is_file():return str(candidate)
     if name=='dlv':
         file=Path(__file__).resolve().parents[1]/'debugger-support/delve/dlv.exe'
         if file.is_file():return str(file)
