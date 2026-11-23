@@ -1,0 +1,18 @@
+{
+  "rars": {
+    "file": "rars1_6.jar",
+    "version": "1.6",
+    "sha256": "780f730eb457b1ba609e968accc2c8b77d8f92c3d9dbf30cc7fdb3cfb14e8c24",
+    "url": "https://github.com/TheThirdOne/rars/releases/download/v1.6/rars1_6.jar",
+    "source": "https://github.com/TheThirdOne/rars/tree/v1.6",
+    "license": "MIT"
+  },
+  "mars": {
+    "file": "Mars4_5.jar",
+    "version": "4.5",
+    "sha256": "ac340b676ba2b62246b9df77e62f81ad4447bcfd329ab539716bcd09950b7096",
+    "url": "https://github.com/dpetersanderson/MARS/releases/download/v.4.5.1/Mars4_5.jar",
+    "source": "https://github.com/dpetersanderson/MARS/tree/v.4.5.1",
+    "license": "MIT"
+  }
+}

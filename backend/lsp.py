@@ -15,8 +15,12 @@ from pathlib import Path
 from urllib.parse import urlparse,unquote
 from .toolchains import validate_argv
 from .terminals import child_environment
+from .version import VERSION
 
-METHODS={'textDocument/inlayHint','textDocument/semanticTokens/full','textDocument/references','textDocument/completion','completionItem/resolve','textDocument/hover','textDocument/definition','textDocument/documentSymbol'}
+class LanguageRequestCancelled(ValueError):
+    """A server discarded a request whose document or cancellation state changed."""
+
+METHODS={'textDocument/inlayHint','textDocument/semanticTokens/full','textDocument/references','textDocument/completion','completionItem/resolve','textDocument/hover','textDocument/definition','textDocument/documentSymbol','textDocument/declaration','textDocument/typeDefinition','textDocument/implementation','textDocument/documentHighlight','textDocument/foldingRange','textDocument/formatting','textDocument/prepareRename','textDocument/rename','textDocument/codeAction','codeAction/resolve','workspace/executeCommand'}
 NOTIFICATIONS={'textDocument/didOpen','textDocument/didChange','textDocument/didClose','textDocument/didSave'}
 MAX_MESSAGE=4_000_000
 
@@ -29,19 +33,26 @@ class LanguageSession:
         self.sequence=0;self.events=[];self.event_seq=0;self.closed=False;self.stderr=''
         argv=validate_argv(profile['argv'])
         opts={'creationflags':subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW} if os.name=='nt' else {'start_new_session':True}
-        self.process=subprocess.Popen(argv,cwd=self.root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=child_environment(),**opts)
+        environment=child_environment()
+        # A real rust-analyzer in a selected toolchain must find its sibling
+        # cargo/rustc, rather than a rustup proxy with no default configured.
+        if Path(argv[0]).is_absolute():environment['PATH']=str(Path(argv[0]).parent)+os.pathsep+environment.get('PATH','')
+        self.process=subprocess.Popen(argv,cwd=self.root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=environment,**opts)
         self.reader=threading.Thread(target=self._read,daemon=True);self.reader.start()
         threading.Thread(target=self._stderr,daemon=True).start()
         try:
-            self.capabilities=self.request('initialize',{'processId':os.getpid(),'clientInfo':{'name':'Zénit','version':'0.4.0'},'rootUri':self.root.as_uri(),
+            self.capabilities=self.request('initialize',{'processId':os.getpid(),'clientInfo':{'name':'Zénit','version':VERSION},'rootUri':self.root.as_uri(),
                 'workspaceFolders':[{'uri':self.root.as_uri(),'name':self.root.name}],
-                'capabilities':{'general':{'positionEncodings':['utf-16']},'textDocument':{'synchronization':{'didSave':True},
+                'capabilities':{'experimental':{'serverStatusNotification':True},'window':{'workDoneProgress':True},'general':{'positionEncodings':['utf-16']},'textDocument':{'synchronization':{'didSave':True},
                     'completion':{'completionItem':{'snippetSupport':True}},'hover':{'contentFormat':['plaintext','markdown']},
-                    'definition':{'linkSupport':True},'inlayHint':{'dynamicRegistration':False},'semanticTokens':{'requests':{'full':True},'tokenTypes':['namespace','type','class','enum','interface','struct','typeParameter','parameter','variable','property','enumMember','event','function','method','macro','keyword','modifier','comment','string','number','regexp','operator'],'tokenModifiers':['declaration','definition','readonly','static','deprecated','abstract','async','modification','documentation','defaultLibrary'],'formats':['relative']},'publishDiagnostics':{'versionSupport':True}},'workspace':{'applyEdit':False,'configuration':True}},
+                    'definition':{'linkSupport':True},'declaration':{'linkSupport':True},'typeDefinition':{'linkSupport':True},'implementation':{'linkSupport':True},'references':{'dynamicRegistration':False},'documentSymbol':{'hierarchicalDocumentSymbolSupport':True},'rename':{'prepareSupport':True},'formatting':{'dynamicRegistration':False},'foldingRange':{'lineFoldingOnly':True},'codeAction':{'codeActionLiteralSupport':{'codeActionKind':{'valueSet':['quickfix','refactor','refactor.extract','refactor.inline','refactor.rewrite','source','source.organizeImports','source.fixAll']}},'resolveSupport':{'properties':['edit','command']}},'inlayHint':{'dynamicRegistration':False},'semanticTokens':{'requests':{'full':True},'tokenTypes':['namespace','type','class','enum','interface','struct','typeParameter','parameter','variable','property','enumMember','event','function','method','macro','keyword','modifier','comment','string','number','regexp','operator'],'tokenModifiers':['declaration','definition','readonly','static','deprecated','abstract','async','modification','documentation','defaultLibrary'],'formats':['relative']},'publishDiagnostics':{'versionSupport':True}},'workspace':{'applyEdit':False,'configuration':True,'workspaceFolders':True}},
                 'initializationOptions':profile.get('initializationOptions')},timeout=profile.get('initializationTimeout',12)).get('capabilities',{})
             if self.capabilities.get('positionEncoding','utf-16')!='utf-16':raise ValueError('Este cliente requiere posiciones LSP UTF-16.')
             self.notify('initialized',{})
-        except Exception:self.close();raise
+        except Exception as error:
+            self.close()
+            if self.stderr.strip():raise ValueError(str(error)+' · '+self.stderr.strip()[-1200:]) from error
+            raise
     def _stderr(self):
         try:
             for line in iter(self.process.stderr.readline,b''):
@@ -80,6 +91,7 @@ class LanguageSession:
                                 for key in str(item.get('section','')).split('.'):
                                     if key:value=value.get(key,{}) if isinstance(value,dict) else {}
                                 result.append(value)
+                        elif method=='workspace/workspaceFolders':result=[{'uri':self.root.as_uri(),'name':self.root.name}]
                         elif method=='workspace/applyEdit':result={'applied':False,'failureReason':'Zénit requires explicit user review.'}
                         else:result=None
                         self._write({'jsonrpc':'2.0','id':message['id'],'result':result})
@@ -104,7 +116,10 @@ class LanguageSession:
             try:response=channel.get(timeout=timeout)
             except queue.Empty:
                 self.notify('$/cancelRequest',{'id':ident});raise ValueError('Tiempo de espera LSP agotado.')
-            if 'error' in response:raise ValueError(str(response['error'].get('message','Error LSP'))[:600])
+            if 'error' in response:
+                error=response['error'];message=str(error.get('message','Error LSP'))[:600]
+                if error.get('code') in (-32800,-32801,-32802):raise LanguageRequestCancelled(message)
+                raise ValueError(message)
             return response.get('result')
         finally:
             with self.lock:self.pending.pop(ident,None)
@@ -148,12 +163,13 @@ class LanguageSession:
 
 
 class LanguageServers:
-    def __init__(self,prefs,toolchains):self.prefs=prefs;self.toolchains=toolchains;self.sessions={};self.lock=threading.RLock()
+    def __init__(self,prefs,toolchains):self.prefs=prefs;self.toolchains=toolchains;self.sessions={};self.retired=[];self.lock=threading.RLock();self.closing=False
     def start(self,ws,profile_id,consent=False):
         if not ws.trusted or consent is not True:raise PermissionError('Autoriza este ejecutable LSP en un proyecto de confianza.')
         profile=next((p for p in self.toolchains.config['servers'] if p['id']==profile_id),None)
         if not profile:raise FileNotFoundError('Servidor de lenguaje no configurado.')
         with self.lock:
+            if self.closing:raise ValueError('El servicio de lenguajes se está cerrando.')
             if len(self.sessions)>=5:raise ValueError('Detén un servidor antes de abrir otro.')
             session=LanguageSession(profile,ws);self.sessions[session.id]=session
         self.prefs.audit('lsp.start',id=profile_id)
@@ -164,13 +180,27 @@ class LanguageServers:
             return self.sessions[sid]
     def request(self,sid,method,params):
         if method not in METHODS:raise PermissionError('Método LSP no expuesto por Zénit.')
-        s=self.get(sid);return {'result':s.request(method,s.validate_params(params))}
+        if not isinstance(params,dict):raise ValueError('Parámetros LSP no válidos.')
+        s=self.get(sid)
+        if method=='workspace/executeCommand' and params.get('command') not in s.capabilities.get('executeCommandProvider',{}).get('commands',[]):raise PermissionError('El servidor no anunció este comando.')
+        try:return {'result':s.request(method,s.validate_params(params))}
+        except LanguageRequestCancelled:return {'result':None,'cancelled':True}
     def notify(self,sid,method,params):
         if method not in NOTIFICATIONS:raise PermissionError('Notificación LSP no admitida.')
+        if sid in self.retired:return {'ok':True,'retired':True}
         s=self.get(sid);s.notify(method,s.validate_params(params));return {'ok':True}
+    def poll(self,sid,after):
+        with self.lock:
+            if sid in self.retired:return {'sequence':after,'events':[],'closed':True,'retired':True}
+            session=self.get(sid)
+        return session.poll(after)
     def stop(self,sid):
-        with self.lock:s=self.sessions.pop(sid,None)
+        with self.lock:
+            s=self.sessions.pop(sid,None)
+            if s:self.retired=(self.retired+[sid])[-64:]
         if s:s.close()
         return {'stopped':bool(s)}
-    def shutdown(self):
-        for sid in list(self.sessions):self.stop(sid)
+    def shutdown(self,permanent=False):
+        with self.lock:
+            if permanent:self.closing=True
+            for sid in list(self.sessions):self.stop(sid)

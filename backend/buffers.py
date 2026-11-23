@@ -6,6 +6,24 @@ class Buffers:
     def __init__(self):self.lock=threading.RLock();self.items={}
     def snapshot(self):
         with self.lock:return {'buffers':[dict(x) for x in self.items.values()]}
+    def document(self,ws,path):
+        """Hydrate a child from disk metadata and its current unsaved buffer."""
+        from pathlib import Path
+        from .workspace import Workspace
+        if not isinstance(path,str) or not path or '\x00' in path:raise ValueError('Ruta no válida.')
+        external=Path(path).is_absolute()
+        if external:path=str(Path(path).resolve())
+        with self.lock:remote=dict(self.items[path]) if path in self.items else None
+        if external:
+            if not ws.trusted or remote is None:raise PermissionError('Abre el archivo en la sesión antes de separarlo.')
+            target=Path(path);reader=Workspace(target.parent,ws.native);name=target.name
+        else:target=ws.resolve(path,must_exist=False);reader=ws;name=path
+        if target.exists():
+            item=reader.open_file(name);item['path']=path
+        elif remote is not None:
+            item={'path':path,'name':target.name,'content':remote['text'],'revision':None,'newline':'LF','bom':False,'transient':True}
+        else:raise FileNotFoundError('No se encuentra el archivo o un búfer compartido abierto.')
+        return {'file':item,'buffer':remote}
     def update(self, ws, body):
         path=body.get('path')
         from pathlib import Path

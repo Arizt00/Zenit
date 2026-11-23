@@ -24,35 +24,42 @@ class Hacker:
             if helper.is_file():return str(helper)
         return executable
 
-    def _terminal(self, argv, label, cwd, environment=None):
+    def _terminal(self, argv, label, cwd, environment=None, context=None, managed=True):
         manager=self.features.terminals
         if not self.features.prefs.get('security.terminals'):raise PermissionError('Activa las terminales en Ajustes.')
         with manager.lock:
             if sum(not s.closed for s in manager.sessions.values())>=6:raise ValueError('Cierra una terminal antes de abrir otra.')
+            for identity in [k for k,s in manager.sessions.items() if s.closed][:-12]:del manager.sessions[identity]
             profile={'id':'hacker','label':label,'argv':argv,'kind':'hacker'}
+            if context:profile['context']=context
             # GCC/GDB depend on companion DLLs next to their executables on Windows.
             from .foundation import tool_environment
             env=dict(environment or {});env['PATH']=str(Path(argv[0]).parent)+os.pathsep+tool_environment()['PATH']
-            s=TerminalSession(profile,cwd,manager.project,100,26,environment=env)
+            s=TerminalSession(profile,cwd,manager.project,100,26,environment=env,governor=self.features.hilo.budget if managed else None)
             manager.sessions[s.id]=s
             return {'id':s.id,'profile':profile,'kind':s.kind}
 
-    def start(self, ws, path, content, mode):
+    def start(self, ws, path, content, mode, args=None):
         if not ws.trusted:raise PermissionError('Autoriza el proyecto para ejecutar su código.')
-        project=ws.root;ws,path=self.features.execution_workspace(ws,path)
+        if mode!='file' and getattr(self.features,'execution',None):self.features.execution.require_local(ws,'Esta acción de Forge')
+        project=ws.root
+        if mode=='binary':ws,path,_=self.features.binary_tools.scope(path)
+        else:ws,path=self.features.execution_workspace(ws,path)
         file=ws.resolve(path)
         if not isinstance(content,str) or len(content)>2_000_000:raise ValueError('El búfer admite hasta 2 MB.')
+        if mode=='binary':return {'terminal':self._terminal(self.features.binary_tools.run_plan(ws,path,args),'Binario · '+file.name,ws.root)}
         if mode=='file':
             from .runtimes import language
             plan=self.features.runtimes.plan(ws,path)
             if plan.get('preview'):return {'preview':self.features.preview.start(ws,path)}
             commands=plan['commands']
             if not commands:raise ValueError('No hay una orden de ejecución para este archivo.')
-            label=language(path)+' · '+file.name
-            if len(commands)==1:return {'terminal':self._terminal(commands[0],label,ws.root)}
+            label=plan.get('language',language(path,self.features.runtimes.config.get('languages')))+' · '+file.name
+            context={'path':path,'target':plan.get('executionTarget') or self.features.execution.selected(ws),'evidence':self.features.investigations.capture_optional(ws,commands),'commands':commands}
+            if len(commands)==1:return {'terminal':self._terminal(commands[0],label,ws.root,context=context),'artifacts':plan.get('artifacts')}
             result=self.features.app.runner.start(commands[:-1],ws.root,timeout=120)
-            self.builds[result['job']]={'argv':commands[-1],'workspace':ws.root,'project':project,'name':label}
-            return result
+            self.builds[result['job']]={'argv':commands[-1],'workspace':ws.root,'project':project,'name':label,'context':context}
+            return {**result,'artifacts':plan.get('artifacts')}
         folder=Path(tempfile.mkdtemp(prefix='lumen-hacker-'));self.folders.append(folder)
         source=folder/file.name;source.write_text(content,encoding='utf-8',newline='')
         if mode=='python':
@@ -80,7 +87,7 @@ class Hacker:
         if not job.done:raise ValueError('La compilación sigue en curso.')
         if 'argv' in build:
             if job.code!=0:raise ValueError('La compilación falló. Revisa sus errores en la salida de tareas.')
-            result=self._terminal(build['argv'],build['name'],build['workspace']);del self.builds[key];return result
+            result=self._terminal(build['argv'],build['name'],build['workspace'],context=build.get('context'));del self.builds[key];return result
         if job.code!=0 or not build['target'].is_file():raise ValueError('GCC no pudo compilar. Revisa sus errores en la salida de tareas.')
         result=self._terminal([build['gdb'],'--quiet','-ex','set pagination off','-ex','start','--args',str(build['target'])],'GDB · '+build['name'],ws.root)
         del self.builds[key]

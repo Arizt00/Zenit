@@ -7,6 +7,10 @@ from unittest.mock import patch,MagicMock
 from backend.desktop import DesktopAPI
 
 class PreviewR8(unittest.TestCase):
+ def test_focus_detached_document_restores_existing_window_without_closing(self):
+  api=DesktopAPI();child=MagicMock();api._children['editor:main.py']=child
+  self.assertEqual(api.focus_panel('editor','main.py'),{'focused':True});child.restore.assert_called_once();child.show.assert_called_once();child.destroy.assert_not_called()
+  self.assertEqual(api.focus_panel('editor','other.py'),{'focused':False})
  def test_web_preview_serves_unsaved_utf8_buffers_without_writing_originals(self):
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);(root/'index.html').write_text('DISK',encoding='utf-8');(root/'style.css').write_text('body{color:red}',encoding='utf-8')

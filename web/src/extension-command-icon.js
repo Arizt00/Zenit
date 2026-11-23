@@ -1,0 +1,10 @@
+import {ICON_NAMES,escapeHTML} from './icons.js';
+const aliases={'debug-stop':'stop','stop-circle':'stop','run-all':'play','play-circle':'play','debug-start':'play','repo':'git','repo-forked':'git','git-branch':'git','git-commit':'git','git-pull-request':'git','sync':'refresh','refresh':'refresh','gear':'settings','settings-gear':'settings','list-tree':'files','output':'terminal','cloud-download':'download','cloud-upload':'upload','file-code':'code','warning':'warning','error':'error-circle'};
+const actions=[[/cancel|stop|abort|terminar|detener/i,'stop'],[/retry|refresh|restart|reload|reintentar|actualizar/i,'refresh'],[/download|artifact|descargar/i,'download'],[/upload|publish|publicar/i,'upload'],[/copy|copiar/i,'copy'],[/delete|remove|clear|borrar/i,'trash'],[/add|create|new\b|crear/i,'plus'],[/search|find|filter|buscar/i,'search'],[/security|finding|seguridad/i,'shield'],[/setting|config|ajustes/i,'settings'],[/chat|duo|explain|melody/i,'sparkles'],[/debug|breakpoint|depurar/i,'bug'],[/test|coverage|prueba/i,'flask'],[/log|trace|output|terminal/i,'terminal'],[/tree|sidebar|árbol/i,'files'],[/graph|repository|project|branch|commit|git/i,'git'],[/run|exec|pipeline|job|ejecutar/i,'play'],[/format|document|refactor/i,'code'],[/select|pick|choose|elegir/i,'sliders'],[/link|url|browser/i,'globe'],[/layout|view|vista/i,'layout']];
+export function commandAppearance(command,theme='day'){
+  const declared=typeof command.icon==='object'?command.icon?.[theme==='day'?'light':'dark']:command.icon;
+  if(typeof declared==='string'&&/^data:image\/(?:png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(declared))return {logo:`<img alt="" src="${escapeHTML(declared)}">`};
+  const id=declared?.match?.(/^\$\(([\w-]+)(?:~spin)?\)$/)?.[1],glyph=aliases[id]||(ICON_NAMES.includes(id)?id:null);
+  const description=`${command.id||''} ${command.title||command.label||''}`;
+  return {glyph:glyph||(/security|finding|seguridad/i.test(description)?'shield':actions.find(([pattern])=>pattern.test(description))?.[1])||'file'};
+}

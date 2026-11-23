@@ -8,6 +8,7 @@ import platform
 import secrets
 import sys
 import traceback
+import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -21,17 +22,21 @@ from .version import VERSION,REVISION
 
 
 class Application:
-    def __init__(self, project: Path, workspace: Path, allow_shell=False, data_dir=None):
+    def __init__(self, project: Path, workspace: Path, allow_shell=False, data_dir=None,timings=None):
+        initialized=time.perf_counter()
+        from .startup_metrics import StartupMetrics
+        self.timings=timings or StartupMetrics(initialized)
         self.project = project
-        self.native = NativeCore(project)
-        self.workspace = Workspace(workspace, self.native)
-        self.runner = Runner(allow_shell)
+        with self.timings.phase('native-core'):self.native = NativeCore(project)
+        with self.timings.phase('workspace'):self.workspace = Workspace(workspace, self.native)
+        with self.timings.phase('runner'):self.runner = Runner(allow_shell)
         self.assistant = LocalAssistant()
         self.token = secrets.token_urlsafe(32)
-        self.features = PlatformServices(self, data_dir)
-        self.features.restore_trust()
+        with self.timings.phase('core-services'):self.features = PlatformServices(self, data_dir)
+        with self.timings.phase('workspace-trust'):self.features.restore_trust()
         from .session import remember_workspace
-        remember_workspace(self.workspace.root, self.features.prefs.directory)
+        with self.timings.phase('session-metadata'):remember_workspace(self.workspace.root, self.features.prefs.directory)
+        self.initialization_ms=round((time.perf_counter()-initialized)*1000,2)
 
     def state(self):
         return {"version": VERSION, "revision":REVISION, "desktop":bool(getattr(self,'desktop',False)), "startup":getattr(self,'startup',{}), "workspace": str(self.workspace.root), "name": self.workspace.root.name,
@@ -45,6 +50,10 @@ class Application:
 class LumenServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
+    # Each desktop window loads its own module graph while the other windows
+    # keep polling. The default five pending TCP connections can drop imports
+    # during those bursts, especially while a compiler is busy on the host.
+    request_queue_size = 64
     def __init__(self, port: int, application: Application):
         self.app = application
         super().__init__(("127.0.0.1", port), Handler)
@@ -82,7 +91,7 @@ class Handler(BaseHTTPRequestHandler):
         from http.cookies import SimpleCookie
         cookies = SimpleCookie()
         cookies.load(self.headers.get("Cookie", ""))
-        cookie = cookies.get("lumen_session")
+        cookie = cookies.get(f"lumen_session_{self.server.server_port}")
         if not cookie or not secrets.compare_digest(cookie.value, self.app.token):
             raise PermissionError("Sesión no válida. Recarga Zénit desde su dirección local.")
         if not bootstrap and not secrets.compare_digest(self.headers.get("X-Lumen-Token", ""), self.app.token):
@@ -91,7 +100,7 @@ class Handler(BaseHTTPRequestHandler):
         if expected_workspace and unquote(expected_workspace)!=str(self.app.workspace.root):
             raise ConflictError('La carpeta cambió en otra ventana. Conserva o copia tu búfer antes de volver a abrir el editor.')
 
-    def reply(self, data, code=200, content_type="application/json; charset=utf-8", session=False, webview=False):
+    def reply(self, data, code=200, content_type="application/json; charset=utf-8", session=False, webview=False, webview_resource=False, resource_source=''):
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8") if isinstance(data, (dict, list)) else data
         self.send_response(code)
         self.send_header("Content-Type", content_type)
@@ -100,11 +109,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "SAMEORIGIN" if webview else "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        self.send_header("Cross-Origin-Resource-Policy", "cross-origin" if webview_resource else "same-origin")
+        if webview_resource:self.send_header("Access-Control-Allow-Origin", "*")
         policy="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' blob: https:; style-src 'unsafe-inline' blob: https:; img-src blob: data: https:; font-src blob: data: https:; connect-src https:; media-src blob: data: https:; frame-ancestors 'self'; base-uri 'none'; object-src 'none'" if webview else "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; media-src 'self' blob:; frame-src http://127.0.0.1:*; object-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+        if webview and resource_source:
+            for directive in ('script-src','style-src','img-src','font-src','media-src'):
+                policy=policy.replace(directive+' ',directive+' '+resource_source+' ')
+        if webview_resource:policy="default-src 'none'; sandbox; frame-ancestors 'none'; base-uri 'none'"
         self.send_header("Content-Security-Policy",policy)
         if session:
-            self.send_header("Set-Cookie", f"lumen_session={self.app.token}; HttpOnly; SameSite=Strict; Path=/")
+            self.send_header("Set-Cookie", f"lumen_session_{self.server.server_port}={self.app.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400")
         try:
             self.end_headers()
             if self.command != "HEAD":
@@ -130,9 +144,16 @@ class Handler(BaseHTTPRequestHandler):
             parsed = urlparse(self.path)
             path = parsed.path
             query = parse_qs(parsed.query)
+            if path.startswith('/extension-webview-resource/'):
+                parts=path.split('/',4)
+                if len(parts)!=5:raise FileNotFoundError('Recurso webview no disponible.')
+                self.app.features._trusted();raw,mime=self.app.features.extension_services.webview_resource(parts[2],parts[3],parts[4])
+                return self.reply(raw,content_type=mime,webview_resource=True)
             if path.startswith('/extension-webview/'):
                 self.auth(bootstrap=True);self.app.features._trusted();item=self.app.features.extension_services.webview_content(path.rsplit('/',1)[-1])
-                return self.reply(item['html'].encode('utf-8'),content_type='text/html; charset=utf-8',webview=True)
+                source=f'http://127.0.0.1:{self.server.server_port}/extension-webview-resource/'+path.rsplit('/',1)[-1]+'/'
+                from .webview_resources import RESOURCE_SOURCE
+                return self.reply(item['html'].replace(RESOURCE_SOURCE,source).encode('utf-8'),content_type='text/html; charset=utf-8',webview=True,resource_source=source)
             if path.startswith("/api/"):
                 self.auth(bootstrap=path == "/api/bootstrap")
                 ws = self.app.workspace
@@ -177,7 +198,8 @@ class Handler(BaseHTTPRequestHandler):
             if file.name=='index.html':
                 from .startup import appearance
                 initial=appearance(self.app.features.prefs,self.app.features.extensions)
-                marker=('data-theme="'+initial['base']+'" data-initial-theme="'+initial['base']+'" data-initial-extension-theme="'+html.escape(initial['extension'],quote=True)+'"').encode('utf-8')
+                density='compact' if self.app.features.prefs.get('appearance.density')=='compact' else 'comfortable'
+                marker=('data-theme="'+initial['base']+'" data-initial-theme="'+initial['base']+'" data-initial-extension-theme="'+html.escape(initial['extension'],quote=True)+'" data-density="'+density+'"').encode('utf-8')
                 raw=raw.replace(b'data-theme="day"',marker,1)
             return self.reply(raw, content_type=mime, session=file.name == "index.html")
         except Exception as exc:
@@ -186,15 +208,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             self.auth()
+            path = urlparse(self.path).path
             size = int(self.headers.get("Content-Length", "0"))
-            if not 0 < size <= 3_000_000:
+            # Recovery carries several bounded buffers. JSON escaping can use
+            # six wire bytes per text byte; other operations keep their limit.
+            limit = 52*1024*1024 if path in ('/api/platform/workbench/session','/api/platform/workbench/spaces/save') else 26*1024*1024 if path in ('/api/platform/editor/replace/preview','/api/platform/editor/search','/api/platform/lantern/start','/api/platform/lantern/buffer') else 3_000_000
+            if not 0 < size <= limit:
                 raise ValueError("Tamaño de petición no válido.")
             if not self.headers.get("Content-Type", "").startswith("application/json"):
                 raise ValueError("Se requiere JSON.")
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
                 raise ValueError("El cuerpo debe ser un objeto JSON.")
-            path = urlparse(self.path).path
             ws = self.app.workspace
             if path.startswith("/api/platform/"):
                 return self.reply(self.app.features.post(path[len("/api/platform"):], body))
@@ -219,15 +244,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/trust":
                 return self.reply(self.app.features.trust(body.get('trusted')))
             if path == "/api/console":
-                import shlex
-                parts=shlex.split(body.get('command',''))
-                if parts and parts[0]=='run' and len(parts)==2:
-                    from pathlib import PurePosixPath
-                    target=str(PurePosixPath(body.get('cwd',''))/parts[1])
-                    plan=self.app.features.runtimes.plan(ws,target)
-                    if plan.get('preview'):return self.reply({'preview':self.app.features.preview.start(ws,target)})
-                    return self.reply(self.app.runner.start(plan['commands'],ws.root,timeout=0))
-                return self.reply(self.app.runner.console(ws, body.get("command", ""), body.get("cwd", "")))
+                from .project_console import dispatch
+                return self.reply(dispatch(self.app.features,ws,body))
             if path == "/api/task":
                 from .runtimes import language
                 ws,target=self.app.features.execution_workspace(ws,body['path'])
@@ -241,7 +259,8 @@ class Handler(BaseHTTPRequestHandler):
                 if not ws.trusted:raise PermissionError('Autoriza el proyecto antes de interactuar con su programa.')
                 job=self.app.runner.jobs.get(body.get('id'))
                 if not job:raise ValueError('Tarea no encontrada.')
-                job.write(body.get('text'))
+                if body.get('eof') is True:job.finish_input()
+                else:job.write(body.get('text'))
                 return self.reply({'ok':True})
             if path == "/api/stop":
                 job = self.app.runner.jobs.get(body.get("id"))

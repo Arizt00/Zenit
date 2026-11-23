@@ -96,7 +96,7 @@ class ExtensionInstallPlans:
                     # Preserve another window's install and a user's disabled dependency.
                     if current and ticket!=plan['rootTicket']:
                         reused.append(current['id']);continue
-                    result={k:v for k,v in info.items() if k!='ticket'}
+                    result={k:v for k,v in info.items() if k not in ('ticket','previews')}
                     target=self.root/(result['id']+'-'+result['sha256'][:16]);result['directory']=target.name
                     if not target.exists():os.replace(folder,target);moved.append((target,folder))
                     receipt=target/'.lumen-install.json';receipts.append((receipt,receipt.read_bytes() if receipt.exists() else None))

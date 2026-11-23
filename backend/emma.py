@@ -16,17 +16,18 @@ def command(directory):
     if not node: raise ValueError('Emma necesita Node.js. Instálalo en Lenguajes y herramientas.')
     return [str(node), str(Path(__file__).with_name('emma_bridge.mjs')), str(root)]
 
-def models(directory):
-    result = subprocess.run([*command(directory), '--models'], capture_output=True, text=True, encoding='utf-8', errors='replace',
+def models(directory, specifications=()):
+    result = subprocess.run([*command(directory), '--models', '--model-specs', json.dumps(specifications)], capture_output=True, text=True, encoding='utf-8', errors='replace',
                             timeout=12, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     for line in result.stdout.splitlines():
         item = json.loads(line)
-        if item.get('type') == 'ready': return {'models':[item['model']], 'verified':True, 'note':'Motor y modelo locales de Emma detectados. No se ha cargado el modelo ni enviado una conversación.'}
+        if item.get('type') == 'ready': return {'models':item['models'], 'verified':True, 'note':'Modelos locales detectados sin cargarlos. La disponibilidad no acredita una generación completada.'}
         if item.get('type') == 'error': raise ValueError(item['message'])
     raise ValueError('El motor local de Emma no respondió. Revisa la carpeta y Node.js.')
 
-def stream(directory, job, messages, system, max_tokens, timeout):
-    process = subprocess.Popen(command(directory), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+def stream(directory, job, messages, system, max_tokens, timeout, specification=None):
+    args=[*command(directory),'--model',job.model,'--model-specs',json.dumps([specification] if specification else [])]
+    process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
         text=True, encoding='utf-8', errors='replace', creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     events=queue.Queue()
     def read():

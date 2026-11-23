@@ -3,7 +3,7 @@ import {outsideViewport} from './document-drag.js';
 import {defaultLayout,normalizeLayout,layoutPreset,movePanel,setCollapsed,sideOf,persistedLayout,SIDES,LAYOUT_KEY,PRESET_NAMES} from './layout-state.js';
 
 const PANEL_LABELS={project:'Proyecto',assistant:'Melody',console:'Consola'};
-const PANEL_ICONS={project:'files',assistant:'sparkles',console:'terminal'};
+const PANEL_ICONS={project:'folder',assistant:'sparkles',console:'terminal'};
 const SIDE_LABELS={left:'izquierda',right:'derecha',bottom:'abajo'};
 const PANEL_SELECTORS={project:'#project-panel',assistant:'#assistant-panel',console:'#terminal-panel'};
 
@@ -29,7 +29,7 @@ export class DockManager {
     this.listen(this.scrim,'click',()=>{this.compactOpen=false;this.render();});
     for(const [id,panel] of Object.entries(this.panels)) {
       const actions=panel.querySelector(id==='console'?'.terminal-tools':'.heading-actions');
-      actions.insertAdjacentHTML('beforeend',`<button class="icon-button pane-float" data-panel-float="${id}" title="Dejar ${PANEL_LABELS[id]} flotante" aria-label="Dejar ${PANEL_LABELS[id]} flotante">${icon('layout')}</button>${id!=='console'?`<button class="icon-button pane-close" data-dock-hide="${id}" title="Cerrar panel ${PANEL_LABELS[id]}" aria-label="Cerrar panel ${PANEL_LABELS[id]}">${icon('close')}</button>`:''}`);
+      actions.insertAdjacentHTML('beforeend',`<button class="icon-button pane-float" data-panel-float="${id}" title="Dejar ${PANEL_LABELS[id]} flotante" aria-label="Dejar ${PANEL_LABELS[id]} flotante">${icon('float')}</button>${id!=='console'?`<button class="icon-button pane-close" data-dock-hide="${id}" title="Cerrar panel ${PANEL_LABELS[id]}" aria-label="Cerrar panel ${PANEL_LABELS[id]}">${icon('close')}</button>`:''}`);
       if(id==='console')continue;
       const button=document.createElement('button');button.className='icon-button pane-collapse';button.dataset.collapsePanel=id;
       panel.querySelector('.heading-actions').appendChild(button);
@@ -40,7 +40,7 @@ export class DockManager {
   read(){try{return normalizeLayout(JSON.parse(localStorage.getItem(LAYOUT_KEY)||localStorage.getItem('lumen.layout.v2')||'null'));}catch(_){return defaultLayout();}}
   save(){if(new URLSearchParams(location.search).has('panel'))return;try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(this.snapshot({persistent:true})));}catch(_){/* Session remains usable in storage-restricted webviews. */}}
   snapshot({persistent=false}={}){return persistent?persistedLayout(this.state,[...this.nativeDetached]):JSON.parse(JSON.stringify(this.state));}
-  setContext(kind){this.contextHidden=new Set(kind==='extensions'?['project','assistant','console']:kind==='foundation'?['project','assistant']:kind==='debug'||kind==='search'?['assistant']:[]);this.render();}
+  setContext(kind){this.contextHidden=new Set(['extensions','conflicts'].includes(kind)?['project','assistant','console']:kind==='foundation'?['project','assistant']:kind==='debug'||kind==='search'?['assistant']:[]);this.render();}
   contextAllows(id){return !this.contextHidden?.has(id)||(this.root.dataset.page==='debug'&&id==='assistant'&&!!this.state.floating[id]);}
   visibleIds(side){return this.state.groups[side].filter(id=>!this.state.hidden.includes(id)&&!this.state.floating[id]&&this.contextAllows(id));}
   isVisible(id){const side=sideOf(this.state,id),drawerClosed=side==='right'&&matchMedia('(max-width:1099px)').matches&&!this.compactOpen;return this.contextAllows(id)&&!this.state.hidden.includes(id)&&(!!this.state.floating[id]||(!drawerClosed&&!this.state.collapsed.includes(side)&&this.state.active[side]===id));}
@@ -218,6 +218,7 @@ export class DockManager {
     trigger?.setAttribute('aria-label','Organizar paneles. Distribución: '+(PRESET_NAMES[this.state.preset]||'Personalizada'));
     document.querySelector('[data-action="toggle-ai"]')?.setAttribute('aria-pressed',String(this.isVisible('assistant')));
     this.onChange();
+    this.root.dispatchEvent(new CustomEvent('lumen:layout-rendered'));
   }
   limits(){
     const small=innerWidth<=1450;

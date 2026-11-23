@@ -1,0 +1,16 @@
+{
+  "name":"zenit-team","publisher":"zenit","displayName":"Co-Code · Zénit",
+  "description":"Edita los búferes compartidos por Zénit y ejecuta en su entorno anfitrión.",
+  "version":"0.2.2","license":"Apache-2.0","engines":{"vscode":"^1.95.0"},
+  "main":"./extension.cjs","categories":["Other"],
+  "contributes":{"commands":[
+    {"command":"zenit.team.join","title":"Co-Code: unirme con una invitación"},
+    {"command":"zenit.team.leave","title":"Co-Code: desconectar"},
+    {"command":"zenit.team.save","title":"Co-Code: guardar en el anfitrión"},
+    {"command":"zenit.team.run","title":"Co-Code: ejecutar en el anfitrión"},
+    {"command":"zenit.team.undo","title":"Co-Code: deshacer mi último cambio","icon":"$(discard)"},
+    {"command":"zenit.team.openProject","title":"Co-Code: abrir archivo del proyecto compartido","icon":"$(folder-opened)"},
+    {"command":"zenit.team.createFile","title":"Co-Code: crear archivo compartido","icon":"$(new-file)"},
+    {"command":"zenit.team.renameFile","title":"Co-Code: renombrar archivo compartido","icon":"$(edit)"}
+  ]}
+}

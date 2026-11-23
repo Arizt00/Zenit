@@ -185,9 +185,19 @@ def color_theme(root,relative,seen=None):
     return data
 
 
-def icon_theme(root,declaration,owner):
+def icon_theme(root,declaration,owner,preview=False):
     theme_path=(root/str(safe_member(declaration.get('path','')))).resolve()
     data=json_resource(root,declaration.get('path'));definitions={};fonts=[];size=0;rejected=0
+    if preview:
+        # Read just the five sample associations, not every icon in a large pack.
+        names={'main.py','app.java','index.ts','main.cpp','package.json'};extensions={'py','java','ts','cpp','json'};languages={'python','java','typescript','cpp','json'};keys=set()
+        for associations in (data,data.get('light',{}),data.get('highContrast',{})):
+            for field,allowed in [('fileNames',names),('fileExtensions',extensions),('languageIds',languages)]:
+                entries=associations.get(field,{})
+                if isinstance(entries,dict):associations[field]={k:v for k,v in entries.items() if k.lower() in allowed};keys.update(associations[field].values())
+            if isinstance(associations.get('file'),str):keys.add(associations['file'])
+        data['iconDefinitions']={k:v for k,v in data.get('iconDefinitions',{}).items() if k in keys}
+
     def resource(relative,limit):
         if not isinstance(relative,str) or ':' in relative or '\\' in relative:raise ValueError('Ruta de icono inválida.')
         path=(theme_path.parent/relative).resolve()
@@ -322,7 +332,7 @@ class ExtensionStore(ExtensionInstallPlans):
             self.refresh_index()
             result=[]
             for x in self.installed.values():
-                item=dict(x);item['supported']=list(x.get('supported',[]))
+                item=dict(x);item['supported']=list(x.get('supported',[]));from .extension_compatibility import evidence;item['verification']=evidence(item)
                 try:
                     manifest=localized_manifest(self.root/x['directory']/'extension')
                     item.update({k:manifest.get(k,item.get(k,'')) for k in ('displayName','description')})
@@ -444,10 +454,17 @@ class ExtensionStore(ExtensionInstallPlans):
             if extra: warnings.append('Contribuciones adicionales sujetas a la compatibilidad del motor: '+', '.join(sorted(extra)[:20]))
             if not supported: warnings.append('No hay contribuciones activables en este host. Instalación solo como paquete inactivo.')
             ticket=secrets.token_urlsafe(24)
+            previews={'themes':[],'iconThemes':[]}
+            for declaration in c.get('themes',[])[:8]:
+                try:previews['themes'].append({'label':str(declaration.get('label','Theme'))[:160],'uiTheme':declaration.get('uiTheme','vs-dark'),'data':color_theme(temp/'extension',declaration.get('path'))})
+                except (OSError,ValueError,TypeError):pass
+            for declaration in c.get('iconThemes',[])[:2]:
+                try:previews['iconThemes'].append(icon_theme(temp/'extension',declaration,eid,preview=True))
+                except (OSError,ValueError,TypeError):pass
             result={'id':eid,'name':name,'publisher':ns,'displayName':str(manifest.get('displayName') or name)[:160],
                 'version':version,'description':str(manifest.get('description',''))[:1000],'license':str(manifest.get('license','No declarada'))[:200],
                 'source':source,'sha256':sha,'size':size,'unpackedSize':total,'supported':supported,'warnings':warnings,'dependencies':dependencies,'icon':package_icon(temp/'extension',manifest),
-                'compatibility':'partial' if warnings else 'declarative','ticket':ticket,'enabled':bool(supported)}
+                'compatibility':'partial' if warnings else 'declarative','ticket':ticket,'enabled':bool(supported),'previews':previews}
             with self.lock:
                 self._expire()
                 if len(self.pending)>=64: raise ValueError('Cierra una revisión pendiente antes de abrir otra.')
@@ -500,7 +517,7 @@ class ExtensionStore(ExtensionInstallPlans):
         with self.lock,self.index_transaction():
             self._expire();item=self.pending.get(ticket)
             if not item: raise ValueError('La revisión ha caducado. Inspecciona otra vez el paquete.')
-            _,folder,result=item;result={k:v for k,v in result.items() if k!='ticket'}
+            _,folder,result=item;result={k:v for k,v in result.items() if k not in ('ticket','previews')}
             target=self.root/(result['id']+'-'+result['sha256'][:16])
             if not target.exists(): os.replace(folder,target)
             else: shutil.rmtree(folder,ignore_errors=True)
@@ -549,7 +566,7 @@ class ExtensionStore(ExtensionInstallPlans):
             if stream.tell() > 48*1024**2: raise ValueError('La exportación web admite VSIX de hasta 48 MB; el paquete instalado se conserva en el perfil de Zénit.')
             return {'filename': item['id'] + '-' + item['version'] + '.vsix', 'data': base64.b64encode(stream.getvalue()).decode('ascii')}
     def contributions(self):
-        output={'languages':[],'grammars':[],'snippets':[],'themes':[],'iconThemes':[],'commands':[],'errors':[]}
+        output={'languages':[],'grammars':[],'snippets':[],'themes':[],'iconThemes':[],'commands':[],'semanticTokenTypes':[],'semanticTokenScopes':[],'languageStyles':[],'errors':[]}
         grammar_bytes=0
         if not self.prefs.get('extensions.loadContributions'): return output
         for info in self.list():
@@ -562,7 +579,20 @@ class ExtensionStore(ExtensionInstallPlans):
                     lid=language.get('id','')
                     if not isinstance(lid,str) or not re.fullmatch(r'[a-zA-Z0-9_+.-]{1,80}',lid): continue
                     extensions=[x for x in language.get('extensions',[])[:60] if isinstance(x,str) and re.fullmatch(r'\.[\w.+-]{1,30}',x)]
-                    output['languages'].append({'id':lid,'extensions':extensions,'aliases':[str(x)[:80] for x in language.get('aliases',[])[:4]],'owner':info['id']})
+                    item={'id':lid,'extensions':extensions,'aliases':[str(x)[:80] for x in language.get('aliases',[])[:4]],'owner':info['id']}
+                    if language.get('configuration'):
+                        try:
+                            configuration=json_resource(root,language['configuration'])
+                            if not isinstance(configuration,dict):raise ValueError('La configuración debe ser un objeto.')
+                            item['configuration']=configuration
+                        except (OSError,ValueError,TypeError,UnicodeError) as e:output['errors'].append({'id':info['id'],'error':'Configuración de '+lid+': '+str(e)[:300]})
+                    output['languages'].append(item)
+                for entry in c.get('semanticTokenTypes',[])[:512]:
+                    if isinstance(entry,dict) and isinstance(entry.get('id'),str):output['semanticTokenTypes'].append({k:entry[k] for k in ('id','superType') if isinstance(entry.get(k),str)})
+                for entry in c.get('semanticTokenScopes',[])[:200]:
+                    if not isinstance(entry,dict) or not isinstance(entry.get('scopes'),dict):continue
+                    scopes={k:[s[:500] for s in v[:20] if isinstance(s,str)] for k,v in list(entry['scopes'].items())[:512] if isinstance(k,str) and isinstance(v,list)}
+                    output['semanticTokenScopes'].append({'language':str(entry.get('language',''))[:80],'scopes':scopes})
                 for declaration in c.get('grammars',[])[:200]:
                     try:
                         scope=declaration.get('scopeName','')
@@ -578,6 +608,7 @@ class ExtensionStore(ExtensionInstallPlans):
                         maps={key:{str(k):v for k,v in declaration.get(key,{}).items() if isinstance(k,str) and isinstance(v,str)} for key in ('embeddedLanguages','tokenTypes') if isinstance(declaration.get(key,{}),dict)}
                         output['grammars'].append({'scopeName':scope,'language':str(declaration.get('language',''))[:80],
                             'path':relative,'content':text,'injectTo':[x for x in declaration.get('injectTo',[])[:100] if isinstance(x,str)],
+                            **{k:[x for x in declaration[k][:100] if isinstance(x,str)] for k in ('balancedBracketScopes','unbalancedBracketScopes') if isinstance(declaration.get(k),list)},
                             **maps,'owner':info['id']})
                     except (OSError,ValueError,TypeError,AttributeError,UnicodeError) as e:
                         output['errors'].append({'id':info['id'],'error':'Gramática: '+str(e)[:350]})
@@ -598,6 +629,17 @@ class ExtensionStore(ExtensionInstallPlans):
                     data=color_theme(root,declaration.get('path'))
                     if isinstance(data,dict): output['themes'].append({'id':info['id']+':'+str(declaration.get('id',declaration.get('label','theme'))),'label':str(declaration.get('label','Theme'))[:160],'uiTheme':declaration.get('uiTheme','vs-dark'),'data':data,'owner':info['id']})
                 custom=manifest.get('lumen',{})
+                if isinstance(custom,dict) and isinstance(custom.get('languageStyles'),str):
+                    style_data=json_resource(root,custom['languageStyles'])
+                    if isinstance(style_data,dict):
+                        styles={'owner':info['id'],'provenance':style_data.get('provenance',{})}
+                        for mode in ('light','dark'):
+                            raw=style_data.get(mode,{})
+                            if not isinstance(raw,dict):continue
+                            entries=raw.get('tokenColors',[]);semantic=raw.get('semanticTokenColors',{})
+                            styles[mode]={'tokenColors':[e for e in entries[:2000] if isinstance(e,dict) and isinstance(e.get('settings'),dict) and isinstance(e.get('scope'),(str,list))] if isinstance(entries,list) else [],
+                                          'semanticTokenColors':{k:v for k,v in list(semantic.items())[:2000] if isinstance(k,str) and isinstance(v,(str,dict))} if isinstance(semantic,dict) else {}}
+                        output['languageStyles'].append(styles)
                 for declaration in c.get('iconThemes',[])[:5]:
                     output['iconThemes'].append(icon_theme(root,declaration,info['id']))
                 for cmd in (custom.get('commands',[]) if isinstance(custom,dict) else [])[:80]:

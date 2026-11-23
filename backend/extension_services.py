@@ -16,7 +16,11 @@ from .debug_adapters import ProtocolDebugger
 
 def file_path(uri):
     value=uri.get('external') or uri.get('value') if isinstance(uri,dict) else uri
-    if isinstance(uri,dict) and uri.get('fsPath'):value=uri['fsPath']
+    if isinstance(uri,dict):
+        if uri.get('fsPath'):value=uri['fsPath']
+        elif uri.get('scheme')=='file':
+            from urllib.parse import urlunsplit
+            value=urlunsplit(('file',uri.get('authority',''),uri.get('path',''),'',''))
     if not isinstance(value,str) or '\x00' in value:raise ValueError('URI de archivo inválida.')
     if value.startswith('file:'):
         parsed=urlsplit(value)
@@ -205,7 +209,12 @@ class ExtensionServices:
                 'dirty':bool(buffer and not buffer.get('saved')),'active':item.get('active') is True,'column':i+1,
                 'visibleRanges':visible,'selections':selected,'options':{k:opts[k] for k in ('tabSize','insertSpaces')}})
         if sum(x['active'] for x in editors)>1:raise ValueError('Solo puede haber un editor activo.')
-        snapshot={'editors':editors};signature=json.dumps(snapshot,ensure_ascii=False)
+        tabs=[]
+        for item in body.get('tabs',[]):
+            if not isinstance(item,dict) or not isinstance(item.get('path'),str) or len(tabs)>=500:raise ValueError('Pestaña inválida.')
+            target=file_path(item['path']) if Path(item['path']).is_absolute() else ws.resolve(item['path'],must_exist=False)
+            tabs.append({'path':str(target),'column':max(1,min(4,int(item.get('column',1)))),'active':bool(item.get('active')),'dirty':bool(item.get('dirty'))})
+        snapshot={'editors':editors,**({'tabs':tabs} if 'tabs' in body else {}),'owner':str(body.get('owner',''))[:100]};signature=json.dumps(snapshot,ensure_ascii=False)
         if len(signature.encode('utf-8'))>1_900_000:raise ValueError('Estado de editores demasiado grande para el host.')
         with self.lock:
             self.editor_snapshot=snapshot
@@ -226,14 +235,28 @@ class ExtensionServices:
         with self.lock:
             if ident not in self.panels:raise FileNotFoundError('El panel se cerró.')
             if not isinstance(html,str) or len(html)>2_000_000:raise ValueError('Documento webview demasiado grande.')
-            for token,item in list(self.documents.items()):
-                if item['panel']==ident:del self.documents[token]
-            token=uuid.uuid4().hex;self.documents[token]={'panel':ident,'html':html,'scripts':bool(self.panels[ident].get('options',{}).get('enableScripts'))};return {'url':'/extension-webview/'+token}
+            panel=self.panels[ident];roots=panel.get('options',{}).get('localResourceRoots')
+            if roots is None:roots=[str(panel['owner'].workspace.root),*[str(root) for root in getattr(panel['owner'],'extension_roots',[panel['owner'].extension_root])]]
+            roots=[file_path(root) for root in roots if root]
+            token=uuid.uuid4().hex
+            from .webview_resources import prepare_html
+            html=prepare_html(ident,token,html,roots)
+            for old_token,item in list(self.documents.items()):
+                if item['panel']==ident:del self.documents[old_token]
+            # Revoke the old document and its resource capability together.
+            self.documents[token]={'panel':ident,'html':html,'resourceRoots':[str(root) for root in roots],'scripts':bool(panel.get('options',{}).get('enableScripts'))};return {'url':'/extension-webview/'+token}
     def webview_content(self,token):
         with self.lock:
             item=self.documents.get(token)
             if not item or item['panel'] not in self.panels:raise FileNotFoundError('Documento webview cerrado.')
             return item.copy()
+    def webview_resource(self,token,root_index,relative):
+        document=self.webview_content(token)
+        from .webview_resources import resource_path
+        path=resource_path(document['resourceRoots'],root_index,relative)
+        if not path.is_file() or path.stat().st_size>20_000_000:raise FileNotFoundError('Recurso webview no disponible.')
+        import mimetypes
+        return path.read_bytes(),mimetypes.guess_type(path.name)[0] or 'application/octet-stream'
     def emit(self,command,**data):
         p=self.platform
         with p.command_lock:
@@ -259,6 +282,10 @@ class ExtensionServices:
                         else:raise ValueError('Tipo de mutación de entorno inválido.')
         result.update({k:str(v) for k,v in (overrides or {}).items() if v is not None});return result
     def close_host(self,host):
+        for key,item in list(getattr(self,'editor_decorations',{}).items()):
+            if key[0] is host:
+                del self.editor_decorations[key]
+        self.emit('zenit.editor.decorations',extension=host.extension_id,dispose=True)
         for (owner,ident),terminal in list(self.terminals.items()):
             if owner is host:terminal.close()
         for (owner,ident),debugger in list(self.debuggers.items()):
@@ -269,13 +296,25 @@ class ExtensionServices:
                 if item['owner'] is host:del self.status_items[key]
             for key,item in list(getattr(self,'outputs',{}).items()):
                 if item['owner'] is host:del self.outputs[key]
+            for key,item in list(getattr(self,'comments',{}).items()):
+                if item['owner'] is host:del self.comments[key]
+            for key,item in list(getattr(self,'notebooks',{}).items()):
+                if item['owner'] is host:del self.notebooks[key];self.emit('zenit.notebook',uri=item['uri'],disposed=True,ownerExtension=host.extension_id)
             for ident,panel in list(self.panels.items()):
                 if panel['owner'] is host:self.dispose_panel(ident)
             for ident,item in list(self.quickinputs.items()):
                 if item['owner'] is host:
                     del self.quickinputs[ident];self.emit('zenit.quickinput',id=ident,visible=False)
     def snapshot(self):
-        with self.lock:return {'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()], 'outputs':[{k:copy.deepcopy(v) for k,v in item.items() if k not in ('owner','text')} for item in self.outputs.values()]}
+        with self.lock:return {'comments':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'comments',{}).values()],'editorDecorations':copy.deepcopy(list(getattr(self,'editor_decorations',{}).values())),'panels':[{k:copy.deepcopy(v) for k,v in panel.items() if k!='owner'} for panel in self.panels.values()], 'quickinputs':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in self.quickinputs.values()], 'statusItems':[{k:copy.deepcopy(v) for k,v in item.items() if k!='owner'} for item in getattr(self,'status_items',{}).values()], 'outputs':[{k:copy.deepcopy(v) for k,v in item.items() if k not in ('owner','text')} for item in self.outputs.values()]}
+    def comment_control(self,extension,controller,thread,action):
+        if action not in ('collapse','dispose'):raise ValueError('Acción de comentario inválida.')
+        with self.lock:
+            item=next((v for v in getattr(self,'comments',{}).values() if v['extension']==extension and v['id']==controller),None)
+            if not item or not any(t['id']==thread for t in item['threads']):raise ValueError('El comentario ya no está disponible.')
+            owner=item['owner']
+        owner.event('commentControl',{'controller':controller,'thread':thread,'action':action})
+        return {'sent':True}
     def output(self,extension,key,action=None,level=None):
         with self.lock:
             item=next((v for v in self.outputs.values() if v['extension']==extension and v['key']==key),None)
@@ -309,7 +348,7 @@ class ExtensionServices:
                     if documents and p not in resets:
                         doc=next((d for d in documents if file_path(d['uri'])==p),None)
                         if doc:
-                            if cached and cached['text']!=doc['text']:raise ValueError('El archivo cambió en otra ventana.')
+                            if cached and cached['text'].replace('\r\n','\n').replace('\r','\n')!=doc['text'].replace('\r\n','\n').replace('\r','\n'):raise ValueError('El archivo cambió en otra ventana.')
                             text[p]=doc['text']
                     original[p]=text[p]
                 return text[p]
@@ -379,6 +418,104 @@ class ExtensionServices:
     def call(self,host,method,p):
         ws=host.workspace
         if not ws.trusted:raise PermissionError('Proyecto no autorizado.')
+        if method=='runtime.capabilities':
+            if not isinstance(p,dict) or not isinstance(p.get('commands'),list) or not isinstance(p.get('providers'),list) or len(json.dumps(p))>1_000_000:raise ValueError('Capacidades de extensión inválidas.')
+            icons=getattr(host,'command_icons',{})
+            for command in p['commands']:
+                if command.get('id') in icons:command['icon']=icons[command['id']]
+            host.capabilities={**getattr(host,'capabilities',{}),**p}
+            return {'ok':True}
+        if method=='notebook.update':
+            if not isinstance(p.get('uri'),str) or not isinstance(p.get('cells'),list) or len(json.dumps(p))>1_500_000:raise ValueError('Cuaderno demasiado grande o inválido.')
+            with self.lock:
+                if not hasattr(self,'notebooks'):self.notebooks={}
+                previous=self.notebooks.get((host,p['uri']))
+                if previous and p.get('version',0)<=previous.get('version',0):return {'stale':True}
+                source=p.get('source');target=file_path(p['uri'])
+                if isinstance(source,str) and target.is_relative_to(ws.root) and (p.get('dirty') or previous and previous.get('dirty')):
+                    relative=target.relative_to(ws.root).as_posix();buffers=self.platform.buffers
+                    with buffers.lock:
+                        old=buffers.items.get(relative)
+                        if old and old['text'] not in (source,p.get('before')):raise ValueError('El código del cuaderno cambió en el editor. Se conserva el búfer local.')
+                        import hashlib
+                        revision=hashlib.sha256(target.read_bytes()).hexdigest()
+                        buffers.update(ws,{'path':relative,'text':source,'saved':not p.get('dirty'),'sequence':old['sequence'] if old else 0,'revision':revision})
+                self.notebooks[host,p['uri']]={**p,'owner':host,'extension':host.extension_id}
+            self.emit('zenit.notebook',**{k:v for k,v in p.items() if k not in ('source','before')},ownerExtension=host.extension_id)
+            return {'ok':True}
+        if method=='editor.options':
+            target=file_path(p.get('uri'));key=self.key(ws,target)
+            if not target.is_relative_to(ws.root):self.file_workspace(target)
+            options=p.get('options');clean={}
+            if not isinstance(options,dict):raise ValueError('Opciones del editor inválidas.')
+            for name,value in options.items():
+                if value is None:continue
+                if name in ('tabSize','indentSize') and (type(value) is int and 1<=value<=20 or value in ('auto','tabSize')):clean[name]=value
+                elif name=='insertSpaces' and (type(value) is bool or value=='auto'):clean[name]=value
+                elif name=='cursorStyle' and type(value) is int and 1<=value<=6:clean[name]=value
+                elif name=='lineNumbers' and type(value) is int and 0<=value<=3:clean[name]=value
+                else:raise ValueError('Opción del editor no admitida: '+str(name))
+            self.emit('zenit.editor.options',path=key,options=clean);return {'ok':True}
+        if method in ('authentication.sessions','authentication.create'):
+            if p.get('provider')!='github':raise ValueError('Proveedor de cuenta no integrado.')
+            if p.get('extension') not in getattr(host,'extension_ids',{host.extension_id}):raise PermissionError('Cuenta solicitada por otra extensión.')
+            return self.platform.extension_accounts.sessions(p.get('scopes',[]),p.get('account'),method=='authentication.create')
+        if method=='editor.diff':
+            import difflib,subprocess
+            target=file_path(p['uri']);name=target.relative_to(ws.root).as_posix();text=p.get('text','')
+            if not isinstance(text,str) or len(text)>500000:raise ValueError('El documento supera el límite del diff de extensión.')
+            result=subprocess.run(['git','show','HEAD:'+name],cwd=ws.root,capture_output=True,timeout=5,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+            before=result.stdout.decode('utf-8','replace').splitlines() if result.returncode==0 else [];after=text.splitlines();changes=[]
+            for tag,a,b,c,d in difflib.SequenceMatcher(None,before,after).get_opcodes():
+                if tag!='equal':changes.append({'originalStartLineNumber':a+1,'originalEndLineNumber':b if b>a else 0,'modifiedStartLineNumber':c+1,'modifiedEndLineNumber':d if d>c else 0})
+            return changes
+        if method in ('terminal.inspect','terminal.linkWrite'):
+            session=self.platform.terminals.get(p['terminal'])
+            if method=='terminal.linkWrite':return session.write(str(p.get('text',''))[:65536])
+            return {'name':session.profile.get('label','Terminal'),'cwd':session.cwd,'closed':session.closed,'code':session.code,'pid':session.win.pid if getattr(session,'win',None) else session.process.pid if session.process else None}
+        if method=='editor.closeTabs':
+            paths=[self.key(ws,file_path(uri)) for uri in p.get('uris',[])[:500]];ident=uuid.uuid4().hex;reply=threading.Event();prompt={'reply':reply,'result':False}
+            with self.lock:self.prompts[ident]=prompt
+            self.emit('zenit.editor.close',id=ident,paths=paths,owner=(self.editor_snapshot or {}).get('owner'))
+            try:reply.wait(40);return prompt['result'] is True
+            finally:
+                with self.lock:self.prompts.pop(ident,None)
+        if method.startswith('secrets.'):
+            import hashlib
+            from .providers import CredentialVault
+            key=p.get('key')
+            if not isinstance(key,str) or not 1<=len(key)<=500:raise ValueError('Clave de secreto inválida.')
+            service='Zenit.extensions:'+hashlib.sha256(str(self.platform.prefs.directory).encode()).hexdigest()[:16]
+            extension=p.get('extension',host.extension_id)
+            if extension not in getattr(host,'extension_ids',{host.extension_id}):raise PermissionError('Almacén de otra extensión.')
+            identity=extension+':'+key;native=CredentialVault()._native()
+            if method=='secrets.get':return {'value':native.get_password(service,identity) if native else None}
+            if not native:raise ValueError('El almacén seguro del sistema no está disponible.')
+            if method=='secrets.store':
+                value=p.get('value')
+                if not isinstance(value,str) or len(value)>200000:raise ValueError('Secreto demasiado grande.')
+                native.set_password(service,identity,value)
+            elif method=='secrets.delete':
+                if native.get_password(service,identity) is not None:native.delete_password(service,identity)
+            else:raise ValueError('Operación de secreto desconocida.')
+            return {'ok':True}
+        if method=='editor.reveal':
+            target=file_path(p['uri']);name=self.key(ws,target)
+            self.emit('zenit.editor.reveal',path=self.key(ws,target),range=p['range'],revealType=p.get('revealType',0));return {'ok':True}
+        if method=='editor.decorations':
+            key=p.get('key')
+            if not isinstance(key,str) or len(key)>128 or len(json.dumps(p))>1_000_000:raise ValueError('Decoraciones inválidas.')
+            if not hasattr(self,'editor_decorations'):self.editor_decorations={}
+            if p.get('dispose'):
+                for entry in list(self.editor_decorations):
+                    if entry[:2]==(host,key):del self.editor_decorations[entry]
+                self.emit('zenit.editor.decorations',extension=host.extension_id,key=key,dispose=True);return {'ok':True}
+            target=file_path(p['uri']);self.key(ws,target)
+            ranges=p.get('ranges',[])
+            if not isinstance(ranges,list) or len(ranges)>10000:raise ValueError('Demasiadas decoraciones.')
+            item={**p,'path':self.key(ws,target),'extension':host.extension_id}
+            self.editor_decorations[host,key,str(target)]=item
+            self.emit('zenit.editor.decorations',**item);return {'ok':True}
         if method=='configuration.icons':
             value=p.get('value')
             if p.get('reset') is True:ident='auto'
@@ -407,6 +544,14 @@ class ExtensionServices:
             with self.lock:
                 if not hasattr(self,'environments'):self.environments={}
                 self.environments[host]=p['collections']
+            return {'ok':True}
+        if method=='comments.update':
+            if not isinstance(p.get('id'),str) or not isinstance(p.get('threads'),list) or len(json.dumps(p))>64000:raise ValueError('Hilos de comentarios inválidos.')
+            with self.lock:
+                if not hasattr(self,'comments'):self.comments={}
+                key=(host,p['id'])
+                if p.get('disposed'):self.comments.pop(key,None)
+                else:self.comments[key]={**p,'owner':host,'extension':host.extension_id}
             return {'ok':True}
         if method in ('output.update','output.dispose'):
             if not isinstance(p.get('key'),str) or len(json.dumps(p))>400000:raise ValueError('Canal de salida inválido.')
@@ -466,6 +611,10 @@ class ExtensionServices:
             self.emit('zenit.quickinput',id=p['id'],visible=False);return {'ok':True}
         if method=='context.set':self.contexts[p['key']]=p.get('value');return None
         if method=='command.execute':
+            if p['id']=='zenit.nc.projectDiagnostics':
+                if host.extension_id!='nc-lang.nc-language':raise PermissionError('Servicio reservado al adaptador nC.')
+                from .nc_diagnostics import check
+                return check(self.platform,ws,(p.get('args') or [{}])[0])
             if p['id'] in ('workbench.action.selectTheme','workbench.action.selectIconTheme','workbench.action.showCommands','workbench.action.quickOpen','workbench.action.openSettings'):
                 ident=uuid.uuid4().hex;reply=threading.Event();prompt={'reply':reply,'result':None}
                 with self.lock:self.prompts[ident]=prompt
@@ -484,9 +633,11 @@ class ExtensionServices:
             if opts.get('pty'):session=VirtualTerminal(host,p['id'],opts.get('name','Terminal'))
             else:
                 if not self.platform.prefs.get('security.terminals'):raise PermissionError('Terminales desactivadas en Ajustes.')
-                profiles=terminal_profiles();command=opts.get('shellPath') or (profiles[0]['argv'][0] if profiles else None)
+                profiles=terminal_profiles();preferred=self.platform.prefs.get('terminal.defaultProfile')
+                profile=next((row for row in profiles if row['id']==preferred),profiles[0] if profiles else None)
+                command=opts.get('shellPath') or (profile['argv'][0] if profile else None)
                 if not command:raise ValueError('No se encontró un shell local.')
-                args=opts.get('shellArgs',[])
+                args=opts.get('shellArgs',[] if opts.get('shellPath') else profile['argv'][1:])
                 if isinstance(args,str):
                     import shlex
                     args=shlex.split(args,posix=os.name!='nt')

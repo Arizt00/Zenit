@@ -13,7 +13,7 @@ class NativeLanguageHost:
         self.language=language;self.session=LanguageSession(profile,workspace)
         self.process=self.session.process;self.root=workspace.root;self.documents={};self.lock=threading.Lock();self.diagnostics={};self.sequence=0
         caps=self.session.capabilities
-        self.methods={'completion':('completionProvider','textDocument/completion'),'hover':('hoverProvider','textDocument/hover'),'definition':('definitionProvider','textDocument/definition'),'references':('referencesProvider','textDocument/references'),'symbols':('documentSymbolProvider','textDocument/documentSymbol'),'inlay':('inlayHintProvider','textDocument/inlayHint'),'format':('documentFormattingProvider','textDocument/formatting'),'semantic':('semanticTokensProvider','textDocument/semanticTokens/full')}
+        self.methods={'completion':('completionProvider','textDocument/completion'),'hover':('hoverProvider','textDocument/hover'),'definition':('definitionProvider','textDocument/definition'),'references':('referencesProvider','textDocument/references'),'symbols':('documentSymbolProvider','textDocument/documentSymbol'),'inlay':('inlayHintProvider','textDocument/inlayHint'),'format':('documentFormattingProvider','textDocument/formatting'),'semantic':('semanticTokensProvider','textDocument/semanticTokens/full'),'rename':('renameProvider','textDocument/rename'),'actions':('codeActionProvider','textDocument/codeAction')}
         providers=[{'kind':kind,'language':language,'triggers':caps.get(key,{}).get('triggerCharacters',[]) if isinstance(caps.get(key),dict) else []} for kind,(key,_) in self.methods.items() if key in caps and caps[key] is not False]
         for provider in providers:
             if provider['kind']=='semantic':provider['legend']=caps['semanticTokensProvider']['legend']
@@ -43,11 +43,26 @@ class NativeLanguageHost:
                 report=self.diagnostics.get(uri,{})
                 if report.get('version') is not None and report['version']!=version:return {'items':[]}
                 return {'items':[{'line':d['range']['start']['line']+1,'column':d['range']['start']['character']+1,'endLine':d['range']['end']['line']+1,'endColumn':d['range']['end']['character']+1,'message':d['message'],'severity':{1:'error',2:'warning',3:'info',4:'hint'}.get(d.get('severity',1),'error')} for d in report.get('diagnostics',[])]}
-            if kind not in self.methods:return {'items':[]}
+            if kind not in self.methods or self.session.capabilities.get(self.methods[kind][0]) in (None,False):return {'items':[]}
             params={'textDocument':{'uri':uri},**{k:message[k] for k in ('position','range') if k in message}}
             if kind=='references':params['context']={'includeDeclaration':True}
             if kind=='format':params['options']={'tabSize':4,'insertSpaces':True}
+            if kind=='rename':params['newName']=message.get('newName','')
+            if kind=='actions':
+                context=message.get('context',{});params['context']={'diagnostics':[{**d,'severity':d.get('severity',0)+1} for d in context.get('diagnostics',[])]}
+                if context.get('only'):params['context']['only']=[context['only']] if isinstance(context['only'],str) else context['only']
             value=self.session.request(self.methods[kind][1],params)
+            if kind=='rename':return {'items':[self.workspace_edit(value)] if value else []}
+            if kind=='actions':
+                actions=[]
+                for action in (value or [])[:100]:
+                    if action.get('edit'):
+                        try:action={**action,'edit':self.workspace_edit(action['edit'])}
+                        except ValueError as error:action={**action,'edit':None,'disabled':{'reason':str(error)}}
+                    if action.get('command') or not action.get('edit'):
+                        action={**action,'disabled':{'reason':'Esta acción requiere resolver o ejecutar un comando LSP. Usa el perfil LSP nativo para revisarla.'}}
+                    actions.append(action)
+                return {'items':actions}
             items=value if isinstance(value,list) else value.get('items',[value]) if isinstance(value,dict) else []
             if kind=='completion':
                 for item in items:
@@ -58,6 +73,18 @@ class NativeLanguageHost:
                     for child in symbol.get('children',[]):normalize(child)
                 for item in items:normalize(item)
             return {'items':items}
+
+    def workspace_edit(self,value):
+        """Keep every text change for the existing explicit Monaco review/undo."""
+        groups={uri:list(edits) for uri,edits in value.get('changes',{}).items()}
+        for change in value.get('documentChanges',[]):
+            document=change.get('textDocument')
+            if not document:raise ValueError('La refactorización modifica recursos. Utiliza el perfil LSP nativo para revisar esa operación.')
+            current=self.documents.get(document['uri'])
+            if current and document.get('version') is not None and document['version']!=current[1]:raise ValueError('El documento cambió durante la refactorización.')
+            groups.setdefault(document['uri'],[]).extend(change.get('edits',[]))
+        for uri in groups:self.session.validate_params({'uri':uri})
+        return {'changes':[{'uri':uri,'edits':edits} for uri,edits in groups.items()]}
 
     def close(self):self.session.close()
 

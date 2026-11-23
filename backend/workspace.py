@@ -54,7 +54,8 @@ class Workspace:
 
     def tree(self) -> list[dict]:
         count = [0]
-        def visit(path: Path, depth: int) -> list[dict]:
+        def visit(path: Path, depth: int, generated=False) -> list[dict]:
+            generated = generated or path.name in ('build', 'target', '.ncc')
             if depth > 9 or count[0] >= 3000:
                 return []
             try:
@@ -73,12 +74,16 @@ class Workspace:
             for p in children:
                 if count[0] >= 3000:
                     break
-                if p.is_symlink() or p.name in EXCLUDED or p.name.startswith(".env"):
+                hidden = p.name in EXCLUDED and not (generated and p.name in ('bin', 'obj'))
+                if generated and p.name in ('CMakeFiles', '_deps', 'Testing', 'cache', '.fingerprint', 'incremental', 'deps'):
+                    hidden = True
+                if p.is_symlink() or hidden or p.name.startswith(".env"):
                     continue
                 count[0] += 1
                 item = {"name": p.name, "path": p.relative_to(self.root).as_posix(), "directory": p.is_dir()}
+                if generated or p.name in ('build', 'target', '.ncc'):item['generated'] = True
                 if p.is_dir():
-                    item["children"] = visit(p, depth + 1)
+                    item["children"] = visit(p, depth + 1, generated)
                 result.append(item)
             return result
         return visit(self.root, 0)
@@ -87,6 +92,7 @@ class Workspace:
         result = []
         def collect(nodes):
             for n in nodes:
+                if n.get('generated'):continue
                 if n["directory"]:
                     collect(n.get("children", []))
                 else:
@@ -173,7 +179,7 @@ class Workspace:
                     os.unlink(temp_name)
             return self.read(name)
 
-    def search(self, query: str, *, content=False, folder='', case=False, word=False, include='', exclude='', file_type='', limit=200) -> list[dict]:
+    def search(self, query: str, *, content=False, folder='', case=False, word=False, include='', exclude='', file_type='', limit=200, buffers=None) -> list[dict]:
         if not query or len(query) > 200:
             return []
         results = []
@@ -195,16 +201,22 @@ class Workspace:
             if file_type and (bool(code.search(name))!=(file_type=='code')):continue
             if content:
                 try:
-                    data = self.read(name)
-                except (ValueError, OSError):
+                    if buffers and name in buffers:text=buffers[name]
+                    else:
+                        file=self.resolve(name)
+                        if file.stat().st_size>MAX_FILE:continue
+                        with file.open('rb') as stream:raw=stream.read(MAX_FILE+1)
+                        if len(raw)>MAX_FILE or b'\0' in raw:continue
+                        text=raw.decode('utf-8-sig').replace('\r\n','\n')
+                except (ValueError, UnicodeError, OSError):
                     continue
-                for number, line in enumerate(data["content"].splitlines(), 1):
+                for number, line in enumerate(text.splitlines(), 1):
                     match=needle.search(line)
                     if match:
                         start=max(0,match.start()-72);end=min(len(line),max(match.end()+72,start+180));snippet=line[start:end];prefix='…' if start else ''
                         units=lambda text:len(text.encode('utf-16-le'))//2
                         spans=[{'start':units(line[start:m.start()])+len(prefix),'end':units(line[start:m.end()])+len(prefix)} for m in needle.finditer(line,start,end)][:32]
-                        results.append({"path": name, "line": number, "column":units(line[:match.start()])+1,"text":prefix+snippet+('…' if end<len(line) else ''),'matches':spans})
+                        results.append({"path": name, "line": number, "column":units(line[:match.start()])+1,"endColumn":units(line[:match.end()])+1,"text":prefix+snippet+('…' if end<len(line) else ''),'matches':spans,'buffer':bool(buffers and name in buffers)})
                         if len(results) >= limit:
                             return results
             else:

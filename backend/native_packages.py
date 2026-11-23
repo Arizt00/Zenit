@@ -34,6 +34,7 @@ def dependency_finished(features,ws,task,languages):
             if root==ws.root and host.process.poll() is None and any(p.get('language') in languages for p in providers):
                 try:runtime.start(ws,key,True)
                 except Exception as error:runtime.errors[key]='Dependency refresh: '+str(error)[:300]
+        if hasattr(features,'hilo'):features.hilo.invalidate()
         features.extension_services.emit('zenit.dependencies.changed',workspace=str(ws.root),languages=list(languages),job=job.id)
     threading.Thread(target=watch,daemon=True).start()
 
@@ -87,7 +88,7 @@ class NativePackages:
                 atomic_json(candidate,{'workspace':str(ws.root),'requires':requires,'tools':tools})
                 worker=Path(__file__).with_name('native_package_worker.py')
                 commands=[[python,'-I',str(worker),str(candidate)]]
-            task=self.features.app.runner.start(commands,ws.root,timeout=1800,env=env,stop_on_output_limit=False)
+            task=self.features.app.runner.start(commands,ws.root,timeout=1800,scheduler=getattr(self.features,'hilo',None),env=env,stop_on_output_limit=False)
             self.jobs[str(ws.root)]=task['job'];dependency_finished(self.features,ws,task,(lang,) if lang=='nc' else NATIVE_LANGUAGES)
             return task
     def cancel(self,ws):

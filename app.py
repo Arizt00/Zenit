@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Start Zénit locally. Python 3.10+; no Python dependencies for browser mode."""
 from __future__ import annotations
+import time
+ENTRY_STARTED=time.perf_counter()
 import argparse
 import platform
 import shutil
@@ -9,7 +11,6 @@ import sys
 import threading
 import webbrowser
 from pathlib import Path
-from backend.server import Application, LumenServer
 from backend.version import VERSION,REVISION
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
@@ -115,10 +116,16 @@ def main():
     if not 0 <= args.port <= 65535:
         parser.error("El puerto no es válido.")
     try:
-        application = Application(ROOT, args.workspace, args.allow_shell)
+        from backend.startup_metrics import StartupMetrics
+        boot=StartupMetrics(ENTRY_STARTED)
+        with boot.phase('backend-imports'):
+            from backend.server import Application, LumenServer
+        application = Application(ROOT, args.workspace, args.allow_shell,timings=boot)
         application.desktop = args.desktop
         from backend.factory_extensions import install_factory
-        install_factory(application.features.extensions,ROOT)
+        with boot.phase('factory-extensions'):
+            factory_updates=install_factory(application.features.extensions,ROOT)
+            if any(item.get('_factoryPrevious') for item in factory_updates):application.features.extension_runtime.migrate_factory_approvals(factory_updates)
         application.startup={'path':args.open_file}
         if args.draft:
             import json
@@ -132,7 +139,7 @@ def main():
                 initial = json.loads(first_launch.read_text(encoding='utf-8'))
                 application.features.prefs.update({'general.locale': initial.get('general.locale', 'en')})
             except (OSError, ValueError): pass
-        server = LumenServer(args.port, application)
+        with boot.phase('http-listener'):server = LumenServer(args.port, application)
     except (OSError, ValueError) as exc:
         parser.exit(1, f"No se pudo iniciar Zénit: {exc}\nPrueba --port 8766 si el puerto está ocupado.\n")
     url = f"http://127.0.0.1:{server.server_port}"
@@ -148,7 +155,7 @@ def main():
         print("  Modo base disponible. Para Monaco + Babylon: python tools/setup_assets.py\n", flush=True)
     if args.desktop:
         try:
-            import webview
+            with boot.phase('native-window-import'):import webview
         except ImportError:
             print("pywebview no está instalado. Se abrirá en el navegador.\n", flush=True)
         else:
@@ -165,8 +172,11 @@ def main():
             from backend.startup import appearance
             first_theme=appearance(application.features.prefs,application.features.extensions)['base']
             background={'day':'#F4F6FC','dark':'#191d28','forest':'#15231e'}[first_theme]
-            api._window = webview.create_window("Zénit", url, js_api=api, width=1648, height=928,
-                min_size=(1050, 680), frameless=False, easy_drag=False, maximized=True, background_color=background)
+            with boot.phase('native-window-create'):
+                api._window = webview.create_window("Zénit", url, js_api=api, width=1648, height=928,
+                    min_size=(1050, 680), frameless=False, easy_drag=False, maximized=True, background_color=background)
+            api._window.events.loaded += lambda:boot.mark('native-document-loaded')
+            api._bind_session_close()
             api._window.events.maximized += lambda: setattr(api, "_maximized", True)
             api._window.events.restored += lambda: setattr(api, "_maximized", False)
             try:

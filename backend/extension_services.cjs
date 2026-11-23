@@ -7,10 +7,11 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   const terminal=(opts={},shellPath,shellArgs)=>{
     if(typeof opts==='string')opts={name:opts,shellPath,shellArgs};
     const id=uid(),t={_id:id,name:opts.name||'Terminal',creationOptions:opts,state:{isInteractedWith:false},exitStatus:undefined};
-    const ready=call('terminal.create',{id,options:{...opts,pty:!!opts.pty}}).then(info=>{t._pid=info.pid;event('terminalOpen').fire(t);if(opts.pty)opts.pty.open(info.dimensions);return info;});
+    const ready=call('terminal.create',{id,options:{...opts,pty:!!opts.pty}}).then(info=>{t._pid=info.pid;t._sessionId=info.id;event('terminalOpen').fire(t);if(opts.pty)opts.pty.open(info.dimensions);return info;});
     t.processId=ready.then(info=>info.pid);t._ready=ready;
     const invoke=(method,params={})=>ready.then(()=>call(method,{id,...params})).catch(e=>host.notify(e.message));
-    t.sendText=(text,addNewLine=true)=>{t.state.isInteractedWith=true;invoke('terminal.write',{text:String(text)+(addNewLine?'\r':'')});};
+    const interacted=()=>{if(!t.state.isInteractedWith){t.state={...t.state,isInteractedWith:true};event('terminalState').fire(t);}};
+    t.sendText=(text,addNewLine=true)=>{const value=String(text)+(addNewLine?'\r':'');ready.then(()=>call('terminal.write',{id,text:value})).then(()=>{if(value)interacted();}).catch(e=>host.notify(e.message));};
     t.show=(preserveFocus=false)=>{activeTerminal=t;invoke('terminal.show',{preserveFocus});event('activeTerminal').fire(t);};
     t.hide=()=>invoke('terminal.hide');t.dispose=()=>invoke('terminal.close');terminals.set(id,t);
     if(opts.pty){opts.pty.onDidWrite(text=>invoke('terminal.append',{text}));opts.pty.onDidClose?.(code=>invoke('terminal.finish',{code}));opts.pty.onDidChangeName?.(name=>{t.name=name;invoke('terminal.name',{name});});}
@@ -45,10 +46,10 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   function panel(viewType,title,column,opts={},id=uid()){
     let html='',disposed=false;const receive=new v.EventEmitter(),didDispose=new v.EventEmitter(),viewState=new v.EventEmitter();
     const p={_id:id,viewType,title,viewColumn:typeof column==='object'?column.viewColumn:column,active:true,visible:true,options:opts};
-    const ready=call('webview.create',{id,viewType,title,column:p.viewColumn,options:opts});
+    const ready=call('webview.create',{id,viewType,title,column:p.viewColumn,options:opts,preserveFocus:typeof column==='object'&&column.preserveFocus===true});
     let updateTail=ready;p._whenReady=()=>updateTail;
     const update=data=>{updateTail=updateTail.then(()=>call('webview.update',{id,...data}));updateTail.catch(e=>host.notify(e.message));return updateTail;};
-    const webview={cspSource:'blob: data:',onDidReceiveMessage:receive.event,
+    const webview={cspSource:'zenit-resource:',onDidReceiveMessage:receive.event,
       asWebviewUri(uri){return v.Uri.parse('zenit-resource://'+id+'/'+encodeURIComponent(uri.fsPath));},
       async postMessage(message){await ready;return call('webview.post',{id,message});}
     };
@@ -78,7 +79,30 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
   }
   v.ViewColumn={Active:-1,Beside:-2,One:1,Two:2,Three:3,Four:4,Five:5,Nine:9};
   v.window.createWebviewPanel=panel;
-  v.window.registerWebviewViewProvider=(id,provider,opts={})=>{const p=panel(id,id,1,opts);p.show=p.reveal;p.onDidChangeVisibility=p.onDidChangeViewState;Promise.resolve(provider.resolveWebviewView(p,{state:undefined},token)).catch(e=>host.notify(e.message));return new v.Disposable(()=>p.dispose());};
+  // Registering a sidebar provider must not create an editor or resolve its
+  // iframe during activation. Resolve only when the view's focus command runs.
+  const webviewProviders=new Map();
+  v.window.registerWebviewViewProvider=(id,provider,opts={})=>{
+    if(webviewProviders.has(id))throw Error('Vista webview ya registrada: '+id);
+    const entry={disposed:false,panel:null,pending:null};webviewProviders.set(id,entry);
+    const declaration=Object.values(options.manifest.contributes?.views||{}).flat().find(view=>view.id===id);
+    const title=declaration?.name||id;
+    const showView=async(preserveFocus=false)=>{
+      if(entry.disposed)throw Error('La vista ya no está registrada: '+id);
+      if(!entry.pending){
+        const p=panel(id,title,1,opts.webviewOptions||{});entry.panel=p;
+        p.show=(preserveFocus=false)=>p.reveal(p.viewColumn,preserveFocus);
+        p.onDidChangeVisibility=p.onDidChangeViewState;
+        p.onDidDispose(()=>{if(entry.panel===p){entry.panel=null;entry.pending=null;}});
+        entry.pending=Promise.resolve().then(()=>provider.resolveWebviewView(p,{state:undefined},token)).then(()=>p._whenReady()).then(()=>p).catch(error=>{p.dispose();throw error;});
+      }
+      const p=await entry.pending;
+      if(entry.disposed)throw Error('La vista ya no está registrada: '+id);
+      p.show(preserveFocus);await p._whenReady();
+    };showView.vscodeCommand=true;
+    const focus=host.registerCommand(id+'.focus',showView,'Abrir '+title);
+    return new v.Disposable(()=>{entry.disposed=true;webviewProviders.delete(id);focus.dispose();entry.panel?.dispose();});
+  };
   v.window.registerWebviewPanelSerializer=(id,serializer)=>{contexts.set('serializer:'+id,serializer);return new v.Disposable(()=>contexts.delete('serializer:'+id));};
   v.DebugAdapterServer=class{constructor(port,host='127.0.0.1'){Object.assign(this,{port,host});}};
   v.DebugAdapterNamedPipeServer=class{constructor(path){this.path=path;}};
@@ -174,7 +198,7 @@ module.exports=function install(v,host,options,event,makeDocument,documents){
       if(name==='debug.stop'&&session){session._tracker?.onWillStopSession?.();inline.get(value.id)?.dispose();inline.delete(value.id);sessions.delete(value.id);event('debugStop').fire(session);event('activeDebug').fire(v.debug.activeDebugSession);}
   }
   return {
-    runTask,openWith,visualize,
+    runTask,openWith,visualize,taskTypes:()=>[...taskProviders.keys()],listTasks:async()=>(await v.tasks.fetchTasks()).map(t=>({name:t.name,source:t.source,type:t.definition?.type,execution:t.execution instanceof v.ProcessExecution?{process:t.execution.process,args:t.execution.args,options:t.execution.options}:t.execution instanceof v.ShellExecution?{command:t.execution.command,commandLine:t.execution.commandLine,args:t.execution.args,options:t.execution.options}:undefined})),
     async message(id,message){const p=panels.get(id);if(!p)return {delivered:false};p._receive.fire(message);return {delivered:true};},disposePanel(id){panels.get(id)?.dispose();return {ok:true};},
     event:serviceEvent
   };

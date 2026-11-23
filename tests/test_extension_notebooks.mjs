@@ -1,0 +1,17 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {createRequire} from 'node:module';import {execFileSync} from 'node:child_process';
+const createAPI=createRequire(import.meta.url)('../backend/extension_api.cjs');
+test('Notebook cells edit, execute with a real process, persist valid output and preserve metadata',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'zenit-notebook-')),updates=[];
+ try{
+  const host={registerCommand:()=>({dispose(){}}),register:()=>({dispose(){}}),notify(){},effect(){},execute(){},service:async(method,params)=>{updates.push({method,params});return {};}};
+  const bridge=createAPI(host,{id:'qa.notebook',manifest:{},root,workspace:root,storage:root,extensions:[]}),v=bridge.vscode,file=path.join(root,'cells.ipynb'),uri=v.Uri.file(file);
+  const source={nbformat:4,nbformat_minor:5,metadata:{custom:{keep:true},language_info:{name:'javascript'}},customTop:'preserve',cells:[{id:'markdown',cell_type:'markdown',metadata:{folded:true},attachments:{image:{'image/png':'AAE='}},source:['# Title'],customCell:42},{id:'code',cell_type:'code',source:['console.log(42)'],metadata:{},execution_count:null,outputs:[]}]};fs.writeFileSync(file,JSON.stringify(source));
+  let opened=0,changed=0;v.workspace.onDidOpenNotebookDocument(()=>opened++);v.workspace.onDidChangeNotebookDocument(()=>changed++);
+  const book=await v.workspace.openNotebookDocument(uri);assert.equal(opened,1);assert.equal(v.workspace.notebookDocuments.length,1);assert.equal(book.cellAt(0).document.getText(),'# Title');
+  const controller=v.notebooks.createNotebookController('qa','jupyter-notebook','Real Node kernel',async(cells,book,c)=>{for(const cell of cells){const execution=c.createNotebookCellExecution(cell);execution.executionOrder=1;execution.start();await execution.clearOutput();const result=execFileSync(process.execPath,['-e',cell.document.getText()]);await execution.appendOutput(new v.NotebookCellOutput([v.NotebookCellOutputItem.stdout(result.toString())]));execution.end(true);}});
+  await v.window.showNotebookDocument(book);await bridge.notebooks.control({uri:uri.toString(),action:'select',controller:controller.id});await bridge.notebooks.control({uri:uri.toString(),action:'edit',index:1,text:'console.log(6 * 7)'});
+  await bridge.notebooks.control({uri:uri.toString(),action:'execute',index:1});while(book._running)await new Promise(r=>setTimeout(r,5));assert.equal(book.cellAt(1).executionSummary.success,true);assert.equal(Buffer.from(book.cellAt(1).outputs[0].items[0].data).toString(),'42\n');assert.ok(changed>=3);assert.equal(JSON.parse(fs.readFileSync(file)).cells[1].source[0],'console.log(42)');
+  await book.save();const saved=JSON.parse(fs.readFileSync(file));assert.equal(saved.customTop,'preserve');assert.equal(saved.cells[0].customCell,42);assert.deepEqual(saved.cells[0].attachments,source.cells[0].attachments);assert.deepEqual(saved.metadata,source.metadata);assert.equal(saved.cells[1].outputs[0].output_type,'stream');assert.equal(saved.cells[1].outputs[0].text,'42\n');assert.equal(saved.cells[1].execution_count,1);
+  fs.writeFileSync(file,'EXTERNAL CHANGE');await assert.rejects(()=>book.save(),/cambió en disco/);assert.equal(fs.readFileSync(file,'utf8'),'EXTERNAL CHANGE');assert.ok(updates.some(u=>u.method==='notebook.update'));
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});

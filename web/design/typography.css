@@ -1,0 +1,154 @@
+/* Four text roles for working surfaces. Welcome artwork and source/terminal
+   fonts keep their own settings. CSS pixels are logical pixels: do not multiply
+   these values by devicePixelRatio or scale the app with transforms. */
+:root {
+  --ui-title:1.125rem;
+  --ui-body:.8125rem;
+  --ui-description:.75rem;
+  --ui-metadata:.6875rem;
+  --type-page:var(--ui-title);
+  --type-heading:var(--ui-title);
+  --type-card:var(--ui-body);
+  --type-body:var(--ui-body);
+  --type-secondary:var(--ui-description);
+  --type-micro:var(--ui-metadata);
+  --ui-line:1.5;
+  --ui-description-line:1.6;
+  --ui-gap:1.25rem;
+  --ui-card-inset:1.125rem;
+  --ui-control-height:2.375rem;
+  --ui-row-height:2.125rem;
+  --ui-control-block:.5rem;
+  --ui-control-inline:.75rem;
+  --control-height:var(--ui-control-height);
+  --panel-header-height:3.25rem;
+  --tree-row-height:var(--ui-row-height);
+  --breadcrumb-height:2rem;
+}
+:root[data-density=compact] {
+  --ui-gap:.875rem;
+  --ui-card-inset:.875rem;
+  --ui-control-height:2rem;
+  --ui-row-height:1.75rem;
+  --ui-control-block:.3125rem;
+  --ui-control-inline:.625rem;
+  --panel-header-height:2.75rem;
+  --breadcrumb-height:1.75rem;
+}
+body{font-size:var(--ui-body);line-height:var(--ui-line);}
+
+/* Panel titles. Weight, rather than extra font sizes, distinguishes sections. */
+:is(#project-panel>.panel-heading,#assistant-panel>.assistant-heading) :is(h1,h2),
+.dock-strip .dock-tab,
+:is(#platform-page,.modal,.native-panel-content) :is(h2,h3),
+.project-workflows .project-section-heading h4,
+.code-detail-heading strong,.diagnostic-heading strong {
+  font-size:var(--ui-title)!important;line-height:1.3;font-weight:600;letter-spacing:-.015em;
+}
+:is(#platform-page,.modal) :is(h4,h5),
+.task-flow-card .task-flow-title h4,
+.project-language-card strong,.project-kit-detail strong,
+.code-reference-heading strong {
+  font-size:var(--ui-body);line-height:var(--ui-line);font-weight:600;letter-spacing:0;
+}
+
+/* Content and controls. Never select Monaco's editor or xterm text here. */
+#platform-page,
+.tree-root,.tree-row,.file-tab,.dock-tab,.terminal-tab,
+.native-window-heading,.profile-tool-heading,
+:is(.popover,.editor-context-menu) :is(.menu-item,.editor-menu-items button),
+.diagnostic-message,.zenit-code-reference .rendered-markdown,.code-detail-body {
+  font-size:var(--ui-body);line-height:var(--ui-line);
+}
+:is(#platform-page,.modal,.task-flow,.task-flow-card,.native-panel-content)
+  :is(.primary-button,.secondary-button,.text-button,.tool-button,.glass-select-trigger),
+.task-flow-choices .secondary-button,.code-reference-footer button,
+.zenit-diagnostic-panel [data-diagnostic-detail],.ai-action-card strong,
+.project-runner .project-file-identity strong,.project-workflows .project-kit-detail strong {
+  font-size:var(--ui-body);line-height:var(--ui-line);
+}
+#platform-page :is(input:not([type=checkbox]):not([type=range]),select,textarea),
+.machine-library .release-field input,.project-workflows .project-path-field input,
+.project-workflows .project-kit-form input,.task-flow-facts dd,
+.project-result-row summary strong,.python-package-list strong,
+.project-workflows .project-language-card strong,.project-kit-form button {
+  font-size:var(--ui-body);line-height:var(--ui-line);
+}
+
+/* Secondary descriptions use the same size on each screen. */
+:is(#platform-page,.modal) p,
+.project-workflows .project-workflow-heading p,.project-workflows .project-kit-detail p,
+.project-workflows .project-section-heading p,.task-flow-card>p,.task-flow-feedback,
+.preference-label small,.lab-note,.python-footnote,.python-install small,
+.project-language-card small,.code-help-category,.code-detail-heading small,
+.diagnostic-heading small,.menu-label,.editor-menu-heading {
+  font-size:var(--ui-description);line-height:var(--ui-description-line);letter-spacing:0;
+}
+
+/* File positions, counts and provenance. Keep the actual values verbatim. */
+.statusbar,.status-item,.breadcrumbs,.brand-tagline,
+#platform-page :is(small,.platform-eyebrow,.release-status),
+.project-workflows :is(.project-subtle,.project-section-heading>span),
+.project-file-identity small,.project-tool-list>span,.task-flow-facts dt,
+.task-flow-card .task-flow-title small,.task-flow-steps li,
+.code-reference-location,.code-reference-location>small,
+.diagnostic-file,.diagnostic-file>small,.code-detail-location,.code-detail-location>small,
+.code-detail-panel>footer,.popover .menu-shortcut,.editor-context-menu kbd {
+  font-size:var(--ui-metadata);line-height:var(--ui-line);letter-spacing:0;
+}
+#platform-page .platform-eyebrow,.task-flow-card .task-flow-title small,
+.forge-session-kicker,.sidebar-section h3,.collapsed-caption {
+  text-transform:none;letter-spacing:0;font-weight:500;
+}
+.lantern-monitor>header>span {font-size:var(--ui-metadata);letter-spacing:0;text-transform:none;}
+#platform-page :is(.preference-label small,.python-install small,.python-footnote,.lab-note,.project-workflow-heading p,.project-kit-detail p){font-size:var(--ui-description);line-height:var(--ui-description-line);}
+#platform-page .extension-card h4{font-size:var(--ui-body)!important;}
+.code-reference-footer button,.zenit-diagnostic-panel [data-diagnostic-detail]{height:auto;min-height:2rem;padding:.3125rem .5rem;}
+/* These captions repeat the adjacent panel title or brand. */
+.platform-header .platform-eyebrow,.project-workflow-heading .platform-eyebrow,
+.lab-heading .platform-eyebrow {display:none;}
+#platform-page :is(h2,h3,h4),.modal :is(h2,h3) {overflow-wrap:anywhere;}
+
+/* One density rhythm. Both modes use exactly the same four text roles. */
+:root[data-density] :is(#project-panel>.panel-heading,.editor-tabbar,#assistant-panel>.assistant-heading,.dock-strip){height:var(--panel-header-height);min-height:var(--panel-header-height);flex-basis:var(--panel-header-height);}
+:root[data-density] :is(.tree-root,.tree-row){height:var(--ui-row-height);min-height:var(--ui-row-height);}
+:is(.release-workspace,.project-workflows,.foundation-page,.dependency-workspace){gap:var(--ui-gap);}
+.project-workflows,.foundation-page,.dependency-workspace {padding:var(--ui-gap);}
+:is(.project-runner,.project-kit-detail,.task-flow-card,.release-card,.dependency-setup,.dependency-inventory,.lab-workflow,.session-card){padding:var(--ui-card-inset);}
+.sdk-manager form,.sdk-manager-list article{padding:var(--ui-card-inset);}
+.task-flow-card {gap:.75rem;}
+.project-runner,.release-grid,.dependency-grid,.lab-project-grid {gap:var(--ui-gap);}
+:is(#platform-page,.modal,.task-flow-card,.task-flow-choices,.native-panel-content)
+  :is(.primary-button,.secondary-button,.tool-button) {
+  box-sizing:border-box;min-height:var(--ui-control-height);
+  padding:var(--ui-control-block) var(--ui-control-inline);white-space:normal;
+}
+#platform-page :is(.settings-navigation>button,.lab-navigation>button){min-height:var(--ui-control-height);padding:var(--ui-control-block) var(--ui-control-inline);font-size:var(--ui-body);line-height:var(--ui-line);}
+#platform-page .preference-row {min-height:0;padding:var(--ui-card-inset);gap:var(--ui-gap);}
+.preference-label strong {font-size:var(--ui-body);line-height:var(--ui-line);}
+:is(.popover .menu-item,.editor-context-menu .editor-menu-items button){min-height:var(--ui-control-height);padding:var(--ui-control-block) var(--ui-control-inline);font-size:var(--ui-body);line-height:var(--ui-line);}
+.task-flow-steps {padding-bottom:var(--ui-card-inset);}
+.machine-library .release-field input,.sdk-manager input,.project-workflows .project-kit-form input{min-height:var(--ui-control-height);height:auto;box-sizing:border-box;}
+.project-path-field{min-height:var(--ui-control-height);height:auto;}.project-workflows .project-path-field input{height:auto;min-height:var(--ui-control-height);}
+.file-tab {min-height:0;}
+:root[data-density=compact] .file-tab {height:calc(var(--panel-header-height) - .625rem);}
+:root[data-density=compact] :is(.lab-heading,.python-heading){margin-bottom:var(--ui-gap);padding-bottom:var(--ui-gap);}
+
+/* A live example beside the density setting. No cloned editor or extra jobs. */
+.density-preview {display:grid;grid-template-columns:1fr auto;align-items:start;gap:var(--ui-gap);padding:var(--ui-card-inset);margin:0 0 var(--ui-gap);border:1px solid var(--border);border-radius:var(--radius-control);background:var(--header);}
+.density-preview>div {display:grid;gap:.375rem;min-width:0;}
+.density-preview .density-sample-title {font:600 var(--ui-title)/1.3 var(--font-ui);color:var(--text);}
+.density-preview .density-sample-body {font:500 var(--ui-body)/var(--ui-line) var(--font-ui);color:var(--text);}
+.density-preview .density-sample-description {font:var(--ui-description)/var(--ui-description-line) var(--font-ui);color:var(--secondary);}
+.density-preview .density-sample-metadata,.density-preview>span {font:var(--ui-metadata)/var(--ui-line) var(--font-ui);color:var(--secondary);}
+.density-preview>span {border:1px solid var(--border);border-radius:6px;padding:.25rem .5rem;white-space:nowrap;}
+@media(max-width:720px){.density-preview{grid-template-columns:1fr;}.density-preview>span{justify-self:start;}#platform-page .preference-row{flex-wrap:wrap;}.preference-control{max-width:100%;}}
+/* A higher Windows scale leaves fewer logical pixels vertically. Keep every
+   navigation control inside its rail and reserve the status bar's own space. */
+@media(max-height:760px){
+  .activity-rail{padding-top:4px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+  .activity-rail .rail-items{gap:4px;flex:none;min-height:0;}
+  .activity-rail .rail-item{box-sizing:border-box;height:52px;min-height:52px;gap:4px;padding:6px 2px;font-size:var(--ui-metadata);line-height:1.2;}
+  :root[data-density=compact] .activity-rail .rail-item{height:46px;min-height:46px;}
+  .activity-rail .rail-spacer{min-height:4px;}
+}

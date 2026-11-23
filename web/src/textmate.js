@@ -76,7 +76,8 @@ export class TextMateLanguages {
         const tokenTypes={};for(const [scope,type] of Object.entries(item.tokenTypes||{}))if(type in {other:0,comment:1,string:2})tokenTypes[scope]={other:0,comment:1,string:2}[type];
         const id=this.monaco.languages.getEncodedLanguageId(language);
         if(!id)throw new Error('Lenguaje no registrado: '+language);
-        const grammar=await registry.loadGrammarWithConfiguration(item.scopeName,id,{embeddedLanguages,tokenTypes});
+        const grammar=await registry.loadGrammarWithConfiguration(item.scopeName,id,{embeddedLanguages,tokenTypes,
+          balancedBracketSelectors:item.balancedBracketScopes||['*'],unbalancedBracketSelectors:item.unbalancedBracketScopes||[]});
         if(grammar)loaded.push({language,grammar,id});
       }catch(error){errors.push({id:item.owner,error:'Gramática '+item.scopeName+': '+error.message});}
     }

@@ -1,7 +1,22 @@
 import {themeIcon,installIconFonts} from './file-icon-theme.js';
 /** Lumen Line. Original 24-unit vector family; local and theme-aware. */
-export const ICON_NAMES=Object.freeze(["clock", "speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
+export const ICON_NAMES=Object.freeze(["rename","flask","layers","link","coco","undo","redo","team","person","editor-window", "workspace", "float", "detach", "clock", "speaker", "pause", "camera", "minus", "maximize", "layout", "sliders", "grip", "focus", "dock-left", "dock-right", "dock-bottom", "panel-collapse-left", "panel-collapse-right", "panel-expand-left", "panel-expand-right", "rail-compact", "search", "files", "file", "folder", "folder-open", "git", "play", "run", "stop", "extensions", "ai-circle", "settings", "plus", "more", "close", "chevron-down", "chevron-up", "chevron-right", "chevron-left", "cube", "sparkles", "refactor", "book", "bug", "send", "bulb", "plus-square", "terminal", "split", "trash", "error-circle", "warning", "bell", "sun", "moon", "leaf", "check", "shield", "info", "refresh", "code", "copy", "keyboard", "arrow-up-right", "pin", "globe", "build", "cpu", "download", "upload", "arrow-right", "palette", "cloud-off"]);
 const paths = {
+  "rename": '<path d="M3 7h7M3 12h5M3 17h7M15 3h6m-3 0v18m-3 0h6"/>',
+  "flask": '<path d="M9 3h6M10 3v6l-6 10a1.3 1.3 0 0 0 1.2 2h13.6a1.3 1.3 0 0 0 1.2-2L14 9V3M7 15h10"/>',
+  "layers": '<path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/>',
+  "link": '<path d="m10 13 4-4m-5 7-2 2a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m2 0 2-2a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0"/>',
+  "coco": '<path d="M11 4H6a3 3 0 0 0-3 3v5a3 3 0 0 0 3 3h1v4l4-4h1"/><path d="M13 6h5a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-1v3l-4-3"/><path d="m10 8-2 2 2 2m4-4 2 2-2 2"/>',
+  "redo": '<path d="M19 5v5h-5m5 0a7 7 0 1 0-1 8"/>',
+
+  "team": '<circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m1-15a3 3 0 0 1 0 6m3 9v-2a6 6 0 0 0-3-5"/>',
+  "person": '<circle cx="12" cy="8" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
+  "undo": '<path d="M5 5v5h5M5 10a7 7 0 1 1 1 8"/>',
+
+  "editor-window": '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 8h18m-13 4-2 2 2 2m8-4 2 2-2 2"/>',
+  "workspace": '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M9 9v11"/>',
+  "float": '<path d="M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"/><rect x="7" y="7" width="10" height="10" rx="2"/>',
+  "detach": '<rect x="9" y="3" width="12" height="12" rx="2.5"/><path d="M5 8H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-1"/>',
   "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
   "cut": '<circle cx="5" cy="6" r="3"/><circle cx="5" cy="18" r="3"/><path d="m8 8 12 12M8 16 20 4"/>',
   "clipboard": '<rect x="5" y="5" width="14" height="16" rx="2"/><rect x="9" y="3" width="6" height="4" rx="1"/>',
@@ -27,10 +42,10 @@ const paths = {
   "dock-left": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M9 4v16\"/><path class=\"icon-tone\" d=\"M6.5 4H9v16H6.5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z\"/>",
   "dock-right": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M15 4v16\"/><path class=\"icon-tone\" d=\"M15 4h2.5a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H15Z\"/>",
   "dock-bottom": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M4 14h16\"/><path class=\"icon-tone\" d=\"M4 14h16v3a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3Z\"/>",
-  "panel-collapse-left": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M9 4v16m7-11-3 3 3 3\"/>",
-  "panel-collapse-right": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M15 4v16m-7-11 3 3-3 3\"/>",
-  "panel-expand-left": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M9 4v16m4-11 3 3-3 3\"/>",
-  "panel-expand-right": "<rect x=\"3.5\" y=\"4\" width=\"17\" height=\"16\" rx=\"3\"/><path d=\"M15 4v16m-4-11-3 3 3 3\"/>",
+  "panel-collapse-left": '<path d="M5 4v16m13-15-7 7 7 7"/>',
+  "panel-collapse-right": '<path d="M19 4v16M6 5l7 7-7 7"/>',
+  "panel-expand-left": '<path d="M5 4v16m6-15 7 7-7 7"/>',
+  "panel-expand-right": '<path d="M19 4v16M13 5l-7 7 7 7"/>',
   "rail-compact": "<path d=\"M4 5h3v3H4zm0 6h3v3H4zm0 6h3v3H4z\"/><path d=\"M12 6.5h8m-8 6h8m-8 6h8\"/>",
   "search": "<circle cx=\"10.75\" cy=\"10.75\" r=\"6.75\"/><path d=\"m16 16 4.5 4.5\"/>",
   "files": "<path d=\"M9 3.5h5.5L19.5 9v10a1.5 1.5 0 0 1-1.5 1.5H9A1.5 1.5 0 0 1 7.5 19V5A1.5 1.5 0 0 1 9 3.5Z\"/><path d=\"M14 3.5V9h5.5M4.5 7v13A1.5 1.5 0 0 0 6 21.5M11 13h5m-5 3.5h3\"/>",
@@ -93,13 +108,18 @@ export function renderIcons(root=document) {
 export function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-let activeFileIcons=null;
+let activeFileIcons=null,ncFileIcons=null;
 let iconKind='dark',iconLanguage=()=>'';
-export function setFileIcons(theme,kind='dark',language=()=> ''){if(activeFileIcons!==theme)installIconFonts(theme);activeFileIcons=theme||null;iconKind=kind;iconLanguage=language;if(typeof document!=='undefined')document.documentElement.dataset.iconArrows=theme?.hidesExplorerArrows?'hidden':'visible';}
+export function setFileIcons(theme,kind='dark',language=()=> '',ncTheme=null){if(activeFileIcons!==theme)installIconFonts(theme);activeFileIcons=theme||null;ncFileIcons=ncTheme;iconKind=kind;iconLanguage=language;if(typeof document!=='undefined')document.documentElement.dataset.iconArrows=theme?.hidesExplorerArrows?'hidden':'visible';}
 export function folderIcon(path,expanded=false,root=false){if(activeFileIcons==='none')return '';return activeFileIcons?themeIcon(activeFileIcons,path,{folder:true,expanded,root,kind:iconKind}):icon(expanded?'folder-open':'folder');}
 export function fileIcon(path) {
   if(activeFileIcons==='none')return '';
-  if(/\.(?:nc|n|nm|ncp|nb|nbb)$/i.test(path))return `<span class="file-type file-type-nc"><img src="/assets/languages/nc.png" alt="" aria-hidden="true" draggable="false"></span>`;
+  if(/\.(?:nc|n|nm|ncp|nb|nbb|nbo)$/i.test(path)||iconLanguage(path)==='nc-target-init'){
+    const native=themeIcon(ncFileIcons,path,{language:iconLanguage(path),kind:iconKind});if(native)return native;
+    if(iconLanguage(path)==='nc-target-init')return `<span class="file-type">${icon('file')}</span>`;
+    const suffix=String(path).split('.').at(-1).toLowerCase(),label={nm:'M',nb:'B',nbb:'P',ncp:'H',nbo:'IR',init:'I'}[suffix]||'';
+    return `<span class="file-type file-type-nc" title="nC · .${escapeHTML(suffix)}"><img src="/assets/languages/nc.png" alt="" aria-hidden="true" draggable="false">${label?`<small>${label}</small>`:''}</span>`;
+  }
   const themed=themeIcon(activeFileIcons,path,{language:iconLanguage(path),kind:iconKind});if(themed)return themed;
   const ext = path.split('.').pop().toLowerCase();
   if(['html','htm'].includes(ext))return `<span class="file-type file-type-html">${icon('html')}</span>`;

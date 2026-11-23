@@ -72,7 +72,7 @@ def prepare(nc_root):
     for name in ('LICENSE','LICENSE-MIT','LICENSE-APACHE','NOTICE'):
         if (nc_root/name).is_file():shutil.copy2(nc_root/name,base/'nc'/name)
     index=json.loads((base/'tool-index.json').read_text(encoding='utf-8'))
-    for name in ('gcc','g++','gdb','cmake','ninja','as','ar'):index['tools'][name]='native-mingw/bin/'+name+'.exe'
+    for name in ('gcc','g++','gdb','cmake','ctest','ninja','as','ar'):index['tools'][name]='native-mingw/bin/'+name+'.exe'
     index['tools']['nasm']='nasm/nasm.exe';index['tools']['pylsp']='python/Scripts/pylsp.exe'
     index['components']=[x for x in index['components'] if x['id']!='nasm']+[{'id':'nasm','version':'2.16.03','license':'BSD-2-Clause','includes':['x86','x86_64']}]
     (base/'tool-index.json').write_text(json.dumps(index,indent=2),encoding='utf-8')

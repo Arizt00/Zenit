@@ -1,0 +1,8 @@
+{
+  "name": "cloudflared",
+  "version": "2026.10.1",
+  "license": "Apache-2.0",
+  "source": "https://github.com/cloudflare/cloudflared/tree/2026.10.1",
+  "release": "https://github.com/cloudflare/cloudflared/releases/tag/2026.10.1",
+  "delivery": "Optional download only after choosing Internet in CoCo; SHA-256 verified before execution."
+}

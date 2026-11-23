@@ -1,8 +1,13 @@
+import {EditorDepth} from './editor-depth.js';
 import {renderMarkdown} from './assistant-markdown.js';
+import {Release055} from './release-055.js';
 import {installProductUI} from './product-ui.js';
 import {installTabControls} from './tab-controls.js';
 import {installDiagnostics} from './diagnostics.js';
 import {installExplorerMenu} from './explorer-menu.js';
+import {ProjectOrganizerUI} from './project-organizer.js';
+import {TemporaryTabGroups} from './temporary-tab-groups.js';
+import {ConsoleContext} from './console-context.js';
 import './controls.js';
 import {installPreview} from './preview.js';
 import {icon,renderIcons,escapeHTML as esc,fileIcon,folderIcon} from './icons.js';
@@ -17,21 +22,26 @@ import {LumenPlatform} from './workbench.js';
 import {DesktopWorkflows} from './desktop-workflows.js';
 import {WorkspaceProfiles} from './workspace-profiles.js';
 import {FoundationUI} from './foundation-ui.js';
+import {TeamUI} from './team.js';
 import {MelodyCompanion} from './melody-companion.js';
+import {WorkbenchSession} from './workbench-session.js';
 
 const motion=new LumenMotion();
-let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,productUI=null,tabsSignature='';
+let dock=null,polish=null,platformUI=null,studio=null,previewUI=null,desktopUI=null,workspaceProfiles=null,workbenchUI=null,productUI=null,tabsSignature='';
 
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
+let teamUI=null,organizerUI=null,temporaryTabs=null;
 let token='',service=null,editor=null,scene=null,sceneStatus='CSS fallback',activeView='explorer';
 let tree=[],rootExpanded=true,openFolders=new Set(['Assets','Assets/Scripts','Assets/Scenes','Assets/Prefabs','Settings']);
 let cwd='',terminalHistory=[],historyIndex=0,activeJob=null,terminalMode='terminal',lastOutput='';
 let aiBusy=false,aiConsent=false,notifications=[],paletteEntries=[],paletteIndex=0,paletteRequest=0;
 let popoverAnchor=null,modalResolve=null,previousFocus=null,modalGeneration=0;
 const defaultSettings={fontSize:12.5,tabSize:4,minimap:true,wordWrap:false,motion:true,density:'comfortable'};
+const pendingFileOpens=new Set();
 let settings={...defaultSettings};
 try{Object.assign(settings,JSON.parse(localStorage.getItem('lumen.settings')||'{}'));}catch(_){/* Use defaults if local storage is unavailable. */}
+if(['comfortable','compact'].includes(document.documentElement.dataset.density))settings.density=document.documentElement.dataset.density;
 settings.fontSize=Math.min(22,Math.max(11,Number(settings.fontSize)||12.5));
 
 function persist(){try{localStorage.setItem('lumen.settings',JSON.stringify(settings));}catch(_){}}
@@ -39,7 +49,7 @@ async function api(path,body) {
   const options={credentials:'same-origin',headers:{'X-Lumen-Token':token}};
   if(service?.workspace)options.headers['X-Lumen-Workspace']=encodeURIComponent(service.workspace);
   if(body!==undefined){options.method='POST';options.headers['Content-Type']='application/json';options.body=JSON.stringify(body);}
-  const controller=new AbortController();options.signal=controller.signal;const deadline=setTimeout(()=>controller.abort(),35000);let response;try{response=await fetch('/api'+path,options);}catch(error){if(error.name==='AbortError')throw new Error('La operación está tardando demasiado. Puedes seguir trabajando; revisa su estado antes de repetirla.');throw error;}finally{clearTimeout(deadline);}
+  const controller=new AbortController();options.signal=controller.signal;const timeout=body===undefined&&path==='/platform/extensions/contributions'?120000:35000;const deadline=setTimeout(()=>controller.abort(),timeout);let response;try{response=await fetch('/api'+path,options);}catch(error){if(error.name==='AbortError')throw new Error('La operación está tardando demasiado. Puedes seguir trabajando; revisa su estado antes de repetirla.');throw error;}finally{clearTimeout(deadline);}
   const data=await response.json();
   if(!response.ok){const error=new Error(data.error||`Request failed (${response.status})`);error.status=response.status;throw error;}
   return data;
@@ -59,7 +69,7 @@ function notify(message,type='info',duration=5000,key=''){
 const guard=fn=>(...args)=>{try{return Promise.resolve(fn(...args)).catch(error=>notify(error.message,'error',6500));}catch(error){notify(error.message,'error',6500);}};
 function allFiles(nodes=tree){return nodes.flatMap(node=>node.directory?allFiles(node.children||[]):[node.path]);}
 function currentRecord(){return editor?.models.get(editor.current);}
-function closePopover(){$('#popover').classList.add('hidden');popoverAnchor?.setAttribute?.('aria-expanded','false');popoverAnchor=null;}
+function closePopover(animated=true){const pop=$('#popover');if(animated&&motion.enabled&&!pop.classList.contains('hidden')){const ghost=pop.cloneNode(true);ghost.removeAttribute('id');ghost.inert=true;ghost.setAttribute('aria-hidden','true');ghost.style.pointerEvents='none';document.body.append(ghost);ghost.animate([{opacity:1,translate:'0 0'},{opacity:0,translate:'0 -3px'}],{duration:110,easing:'ease-out'}).finished.finally(()=>ghost.remove());}pop.classList.add('hidden');popoverAnchor?.setAttribute?.('aria-expanded','false');popoverAnchor=null;}
 
 function applyTheme(theme,persistTheme=true) {
   if(persistTheme&&platformUI&&(platformUI.prefs['appearance.theme']!==theme||platformUI.prefs['appearance.extensionTheme']))return guard(()=>platformUI.savePreference('appearance.theme',theme))();
@@ -87,52 +97,65 @@ function applySettings(){
   const root=document.documentElement,animation=settings.motion?'on':'off',density=settings.density==='compact'?'compact':'comfortable';if(root.dataset.motion!==animation)root.dataset.motion=animation;if(root.dataset.density!==density)root.dataset.density=density;if(!motion.enabled)motion.cancelAll();scene?.setMotion(settings.motion);
 }
 
-function treeMarkup(nodes,depth=0){
-  return nodes.map(node=>{
+function treeMarkup(nodes,depth=0,parent=''){
+  return (organizerUI?.sort(nodes,parent)||nodes).map(node=>{
     const isOpen=openFolders.has(node.path),selected=editor?.current===node.path;
     const indent=16+depth*20;
-    if(node.directory)return `<div class="tree-node"><button class="tree-row" data-dir="${esc(node.path)}" style="padding-left:${indent}px" aria-expanded="${isOpen}"><span class="tree-chevron">${icon(isOpen?'chevron-down':'chevron-right')}</span><span class="folder-icon">${folderIcon(node.path,isOpen)}</span><span class="label">${esc(node.name)}</span></button><div class="tree-children${isOpen?'':' closed'}">${treeMarkup(node.children||[],depth+1)}</div></div>`;
+    if(node.directory)return `<div class="tree-node"><button class="tree-row" draggable="true" data-dir="${esc(node.path)}" style="padding-left:${indent}px" aria-expanded="${isOpen}"><span class="tree-chevron">${icon(isOpen?'chevron-down':'chevron-right')}</span><span class="folder-icon">${folderIcon(node.path,isOpen)}</span><span class="label">${esc(node.name)}</span></button><div class="tree-children${isOpen?'':' closed'}">${treeMarkup(node.children||[],depth+1,node.path)}</div></div>`;
     return `<button class="tree-row${selected?' active':''}" draggable="true" data-file="${esc(node.path)}" title="${esc(node.path)}" style="padding-left:${indent+20}px">${fileIcon(node.path)}<span class="label">${esc(node.name)}</span></button>`;
   }).join('');
 }
 function renderTree(){
   if(activeView!=='explorer')return;
+  if(organizerUI?.drag){organizerUI.pendingTree=true;return;}
+  $('.heading-mark').innerHTML=icon('folder');
   $('#sidebar-title').textContent=platformUI?.t('Proyecto','Project')||'Project';
   $('#sidebar-content').innerHTML=`<button class="tree-root" data-action="toggle-root" aria-expanded="${rootExpanded}">${icon(rootExpanded?'chevron-down':'chevron-right')}${folderIcon(service?.workspace||'',rootExpanded,true)}<span>${esc(service?.name||'MyProject')}</span></button><div class="tree-children${rootExpanded?'':' closed'}">${treeMarkup(tree)}</div>`;
+  $('#sidebar-content').dispatchEvent(new Event('zenit:tree-rendered'));
 }
 async function refreshTree(){const data=await api('/tree');tree=data.tree;service.name=data.name;renderTree();}
 function revealFile(path){
   const parts=path.split('/');parts.pop();let parent='';for(const part of parts){parent=parent?parent+'/'+part:part;openFolders.add(parent);}
   rootExpanded=true;
 }
-async function openFile(path,line=null){
+async function openFile(path,line=null,sharedDocument=null){
+  if(editor.detachedPaths.has(path)){await desktopUI?.focusEditor(path);return;}
   if(desktopUI?.query.get('panel')==='project'){desktopUI.openInParent(path);return;}
   studio?.enter();
   previewUI?.services.hide();
   if(platformUI?.page)platformUI.closePage();
-  if(!editor.models.has(path)){const external=/^(?:[A-Za-z]:[\\/]|\/)/.test(path);const item=await (external?platformUI.api('/extensions/file?path='+encodeURIComponent(path)):api('/file?path='+encodeURIComponent(path)));editor.open(item);}
+  if(!editor.models.has(path)){
+    const request={path,workspace:service.workspace,cancelled:false};pendingFileOpens.add(request);
+    try{const external=/^(?:[A-Za-z]:[\\/]|\/)/.test(path),item=sharedDocument||await (external?platformUI.api('/extensions/file?path='+encodeURIComponent(path)):api('/file?path='+encodeURIComponent(path)));if(request.cancelled||request.workspace!==service.workspace)return;editor.open(item);if(item.transient)editor.models.get(path).savedValue=null;}
+    catch(error){if(request.cancelled||request.workspace!==service.workspace)return;throw error;}
+    finally{pendingFileOpens.delete(request);}
+  }
   else editor.activate(path);
   revealFile(path);renderTabs();renderTree();updateDocumentStatus();
   if(line)editor.showLine(line);
   studio?.remember(path);previewUI?.activeChanged();desktopUI?.activeFile(path);
 }
-function renderTabs(){
-  const signature=JSON.stringify([...editor.models.keys()].map(path=>[path,path===editor.current,editor.isDirty(path)]));
-  if(signature===tabsSignature)return;tabsSignature=signature;
+function renderTabs(refreshIcons=false){
+  const visiblePaths=editor.visiblePaths(),signature=JSON.stringify(visiblePaths.map(path=>[path,path===editor.current,editor.isDirty(path)]));
+  if(signature===tabsSignature&&!refreshIcons)return;tabsSignature=signature;
   const container=$('#file-tabs'),previousTabs=new Map([...container.querySelectorAll('[data-tab]')].map(el=>[el.dataset.tab,el]));
-  for(const [path,tab] of previousTabs)if(!editor.models.has(path))tab.remove();
+  for(const [path,tab] of previousTabs)if(!visiblePaths.includes(path))tab.remove();
   let index=0;
   for(const item of editor.models.values()){
+    if(editor.detachedPaths.has(item.path))continue;
     let tab=previousTabs.get(item.path);
-    if(!tab){tab=document.createElement('button');tab.className='file-tab';tab.setAttribute('role','tab');tab.draggable=true;tab.setAttribute('aria-controls','editor-mount');tab.dataset.tab=item.path;tab.title=item.path;tab.innerHTML=`${fileIcon(item.path)}<span class="file-label">${esc(item.path.split('/').pop())}</span><span class="tab-close" data-close-file="${esc(item.path)}" aria-label="Cerrar archivo"></span>`;}
+    if(!tab){tab=document.createElement('button');tab.className='file-tab';tab.setAttribute('role','tab');tab.draggable=true;tab.setAttribute('aria-controls','editor-mount');tab.dataset.tab=item.path;tab.title=item.path;tab.innerHTML=`<span class="tab-file-icon" style="display:contents">${fileIcon(item.path)}</span><span class="file-label">${esc(item.path.split('/').pop())}</span><span class="tab-close" data-close-file="${esc(item.path)}" aria-label="Cerrar archivo"></span>`;}
+    else if(refreshIcons)tab.querySelector('.tab-file-icon').innerHTML=fileIcon(item.path);
     const active=item.path===editor.current;tab.classList.toggle('active',active);tab.tabIndex=active?0:-1;tab.setAttribute('aria-selected',String(active));
+    tab.dataset.modified=String(editor.isDirty(item.path));tab.setAttribute('aria-label',item.path+(editor.isDirty(item.path)?' · cambios sin guardar':''));
     const close=tab.querySelector('.tab-close'),dirty=String(editor.isDirty(item.path));if(close.dataset.dirty!==dirty){close.dataset.dirty=dirty;close.innerHTML=dirty==='true'?'<i class="dirty-dot"></i>':icon('close');}
     if(container.children[index]!==tab)container.insertBefore(tab,container.children[index]||null);index++;
     if(!previousTabs.has(item.path))motion.play(tab,[{opacity:0},{opacity:1}],120);
   }
   previewUI?.renderGroups();
   previewUI?.services.restoreTabs();
-  const empty=editor.models.size===0;$('#editor-empty').classList.toggle('hidden',!empty);
+  temporaryTabs?.render();
+  const empty=visiblePaths.length===0;$('#editor-empty').classList.toggle('hidden',!empty);
   $('#editor-mount').style.visibility='visible';
   document.title=(editor.current?editor.current.split('/').pop()+' · ':'')+'Zénit';
   const selected=$('#file-tabs .file-tab.active');
@@ -146,21 +169,23 @@ function reorderFile(source,target,after=false){
   editor.models=new Map(remaining);renderTabs();
 }
 function activateFile(path){studio?.enter();previewUI?.services.hide();if(platformUI?.page)platformUI.closePage();editor.activate(path);renderTabs();renderTree();updateDocumentStatus();studio?.remember(path);previewUI?.activeChanged();}
-function updateDocumentStatus(){
+function updateDocumentStatus(refreshOnly=false){
   const item=currentRecord();
   if(!item){$('#breadcrumbs').replaceChildren();$('#breadcrumbs').hidden=true;$('#language-status').textContent='';$('#target-label').textContent='';$('#cursor-status').textContent='';return;}
   $('#breadcrumbs').hidden=false;
-  const parts=item.path.replaceAll('\\','/').split('/').filter(Boolean);
-  $('#breadcrumbs').innerHTML=(/^(?:[A-Za-z]:[\\/]|\/)/.test(item.path)?'':`<span>${esc(service?.name||'')}</span>${icon('chevron-right')}`)+parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
-  $('#newline-status').textContent=item.kind==='binary'?'—':item.newline||'LF';$('#language-status').textContent=item.kind==='binary'?'Binary · read only':languageLabel(item.path);
+  const parts=item.path.startsWith('.team/')?['Equipo',...item.path.split('/').slice(2)]:item.path.replaceAll('\\','/').split('/').filter(Boolean);
+  $('#breadcrumbs').innerHTML=((/^(?:[A-Za-z]:[\\/]|\/)/.test(item.path)||item.path.startsWith('.team/'))?'':`<span>${esc(service?.name||'')}</span>${icon('chevron-right')}`)+parts.map((part,i)=>i===parts.length-1?`${fileIcon(item.path)}<span class="last">${esc(part)}</span>`:`<span>${esc(part)}</span>${icon('chevron-right')}`).join('');
+  $('#newline-status').textContent=item.kind==='binary'?'—':item.newline||'LF';$('#language-status').textContent=item.kind==='binary'?'Binario · hexadecimal':languageLabel(item.path);
   $('#target-label').textContent=languageLabel(item.path);
   document.dispatchEvent(new Event('zenit:breadcrumbs'));
-  updateDiagnostics(editor.diagnostics());platformUI?.documentChanged();
+  if(!refreshOnly){updateDiagnostics(editor.diagnostics());platformUI?.documentChanged();}
 }
 async function saveFile(path=editor.current,{automatic=false}={}){
   if(typeof path!=='string')path=editor.current;
+  if(teamUI?.owns(path))return teamUI.save(path);
+  if(path?.startsWith('.team/'))throw Error('Este búfer pertenece a un equipo desconectado. Vuelve a unirte o usa Guardar como para conservar una copia.');
   const item=editor.models.get(path);if(!item)return;
-  if(item.kind==='binary'){if(!automatic)notify('Binary files are read only.');return;}
+  if(item.kind==='binary'){if(!await ensureTrust())return;return editor.saveBinary(path);}
   await platformUI?.beforeSave?.(path,automatic);
   let content=path===editor.current?editor.getValue():item.model?.getValue()??item.value;if(platformUI?.prefs['files.trimTrailingWhitespace'])content=content.split('\n').map(line=>line.replace(/[ \t]+$/,'')).join('\n');if(platformUI?.prefs['files.insertFinalNewline']&&!content.endsWith('\n'))content+='\n';if(path===editor.current&&content!==editor.getValue())editor.insertText(content,true);
   item.value=content;
@@ -170,13 +195,14 @@ async function saveFile(path=editor.current,{automatic=false}={}){
   return result;
 }
 async function closeFile(path){
+  if(editor.detachedPaths.has(path)){await desktopUI?.focusEditor(path);return;}
   if(editor.isDirty(path)){
     const choice=await confirmDialog('Cambios sin guardar',`${path} tiene cambios. Puedes cancelar el cierre o descartarlos. Guarda antes con Ctrl+S para conservarlos.`,'Descartar y cerrar');
     if(!choice)return;
   }
-  const list=[...editor.models.keys()],index=list.indexOf(path),wasCurrent=path===editor.current;
+  const list=editor.visiblePaths(),index=list.indexOf(path),wasCurrent=path===editor.current;
   editor.close(path);
-  if(wasCurrent&&editor.models.size)editor.activate(list[index+1]||list[index-1]);
+  if(wasCurrent&&editor.visiblePaths().length)editor.activate(list[index+1]||list[index-1]);
   renderTabs();renderTree();updateDocumentStatus();previewUI?.activeChanged();
 }
 function updateDiagnostics(items=[]){
@@ -211,10 +237,11 @@ function newFileDialog(){
   $('#new-file-form').onsubmit=async event=>{event.preventDefault();try{const name=$('#new-file-name').value.trim();if(!name)throw new Error('Escribe un nombre.');await api('/save',{path:name,content:'',create:true});closeModal();await refreshTree();await openFile(name);editor.focus();}catch(error){showErrorInModal(error);}};
 }
 async function changeWorkspace(path){
-  if([...editor.models.keys()].some(p=>editor.isDirty(p))){const ok=await confirmDialog('Cambios sin guardar','Cambiar de carpeta descartará los cambios no guardados. Guarda primero para conservarlos.','Descartar y abrir');if(!ok)return false;}
+  if([...editor.models.keys()].some(p=>editor.isDirty(p))){const ok=await confirmDialog('Cambios sin guardar','Los cambios se conservarán en la recuperación de este proyecto. Puedes volver a esta carpeta para continuar.','Abrir carpeta');if(!ok)return false;}
+  await workbenchUI?.flush();
   const data=await api('/workspace',{path});service={...service,...data};tree=data.tree;cwd='';platformUI?.workspaceChanged();editor.reset();tabsSignature='';closeModal();activeView='explorer';
   desktopUI?.workspaceChanged();
-  await initializeDocuments();await setView('explorer');studio?.enter();updatePrompt();termClear();await checkWorkspace();notify('Carpeta abierta.');return true;
+  await initializeDocuments();await setView('explorer');await workbenchUI?.workspaceChanged();studio?.enter();updatePrompt();termClear();notify('Carpeta abierta.');return true;
 }
 function newProjectDialog(){
   const parent=service.workspace.replace(/[\\/][^\\/]+[\\/]?$/,'');
@@ -262,11 +289,17 @@ function sessionDialog(){
   $('#revoke-trust').onclick=guard(async()=>{await api('/trust',{trusted:false});service.trusted=false;closeModal();notify('Confianza revocada. Las tareas nuevas necesitan autorización.');});
 }
 function showMenu(anchor,items,label=''){
-  closePopover();popoverAnchor=anchor;$('#popover').dataset.overModal=String(!$('#modal-backdrop').classList.contains('hidden'));
-  const pop=$('#popover');pop.innerHTML=(label?`<div class="menu-label">${esc(label)}</div>`:'')+items.map((item,i)=>item.separator?'<div class="menu-separator"></div>':`<button class="menu-item" data-menu-index="${i}" role="menuitem" ${item.disabled?'disabled':''} aria-disabled="${!!item.disabled}" aria-label="${esc(item.label)}">${item.theme?`<span class="theme-swatch swatch-${item.theme}"></span>`:icon(item.icon||'code')}<span>${esc(item.label)}</span>${item.shortcut?`<span class="menu-shortcut" aria-hidden="true">${esc(item.shortcut)}</span>`:''}</button>`).join('');
+  if(popoverAnchor===anchor&&!$('#popover').classList.contains('hidden')){closePopover();return;}
+  closePopover(false);popoverAnchor=anchor;$('#popover').dataset.overModal=String(!$('#modal-backdrop').classList.contains('hidden'));
+  const pop=$('#popover'),glyph=anchor?.querySelector?.('[data-glyph]')?.dataset.glyph||'code';pop.innerHTML=(label?`<div class="menu-label">${icon(glyph==='more'?'layers':glyph)}<span>${esc(label)}</span></div>`:'')+items.map((item,i)=>item.separator?'<div class="menu-separator"></div>':`<button class="menu-item" data-menu-index="${i}" role="menuitem" ${item.disabled?'disabled':''} aria-disabled="${!!item.disabled}" aria-label="${esc(item.label)}">${item.theme?`<span class="theme-swatch swatch-${item.theme}"></span>`:icon(item.icon||'code')}<span>${esc(item.label)}</span>${item.shortcut?`<span class="menu-shortcut" aria-hidden="true">${esc(item.shortcut)}</span>`:''}</button>`).join('');
   pop.setAttribute('role','menu');popoverAnchor?.setAttribute?.('aria-expanded','true');
   pop.classList.remove('hidden');motion.enter(pop,-4);const rect=anchor?.getBoundingClientRect?.()||{right:innerWidth/2,left:innerWidth/2,bottom:80};
-  const box=pop.getBoundingClientRect(),left=anchor instanceof Element?rect.right-box.width:rect.left+4;pop.style.left=Math.max(12,Math.min(innerWidth-box.width-12,left))+'px';pop.style.top=Math.max(12,Math.min(innerHeight-box.height-12,rect.bottom+8))+'px';
+  // Choose a side before clamping: moving a bottom menu upward can cover its
+  // own trigger and prevent the user from toggling it closed.
+  pop.style.maxHeight='';
+  const below=Math.max(0,innerHeight-rect.bottom-28),above=Math.max(0,(rect.top??rect.bottom)-28),natural=pop.getBoundingClientRect(),down=natural.height<=below||below>=above;
+  pop.style.maxHeight=(down?below:above)+'px';
+  const box=pop.getBoundingClientRect(),left=anchor instanceof Element?rect.right-box.width:rect.left+4;pop.style.left=Math.max(12,Math.min(innerWidth-box.width-12,left))+'px';pop.style.top=Math.max(12,down?rect.bottom+16:(rect.top??rect.bottom)-box.height-16)+'px';
   pop.onkeydown=event=>{const items=[...pop.querySelectorAll('[role=menuitem]:not(:disabled)')],index=items.indexOf(document.activeElement);if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();const n=event.key==='Home'?0:event.key==='End'?items.length-1:(index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;items[n]?.focus();}if(event.key==='Escape'||event.key==='Tab'){event.preventDefault();event.stopPropagation();closePopover();anchor?.focus?.();}};
   requestAnimationFrame(()=>{if(!pop.classList.contains('hidden'))pop.querySelector('[role=menuitem]:not(:disabled)')?.focus();});
   pop.querySelectorAll('[data-menu-index]').forEach(button=>button.onclick=guard(async()=>{const item=items[+button.dataset.menuIndex];closePopover();if(item.run)await item.run();else if(item.action)await perform(item.action,anchor);}));
@@ -280,12 +313,15 @@ async function setView(view){
   activeView=view;dock?.show('project');
   $$('[data-view]').forEach(button=>{if(button.classList.contains('rail-item'))button.classList.toggle('active',button.dataset.view===view);});
   if(view==='explorer'){renderTree();return;}
+  $('.heading-mark').innerHTML=icon({search:'search',git:'git',run:'run'}[view]||'folder');
   if(view==='search'){
     $('#sidebar-title').textContent='Search';$('#sidebar-content').innerHTML='<div class="sidebar-search"><input id="project-search" type="text" placeholder="Search in files..." aria-label="Buscar texto en el proyecto"><div class="sidebar-badge">Literal · hasta 200 resultados</div></div><div id="project-search-results" class="search-results"></div>';
     let timer,request=0;$('#project-search').oninput=event=>{clearTimeout(timer);const q=event.target.value,id=++request;timer=setTimeout(guard(async()=>{const data=await api('/search?q='+encodeURIComponent(q)+'&content=1');if(id!==request)return;$('#project-search-results').innerHTML=data.results.map(result=>`<button class="search-result" data-file="${esc(result.path)}" data-line="${result.line}"><strong>${esc(result.path)}:${result.line}</strong><small>${esc(result.text)}</small></button>`).join('')||(q?'<div class="tree-message">Sin coincidencias.</div>':'');}),180);};$('#project-search').focus();return;
   }
+  if(view==='git'&&platformUI?.editorDepth)return platformUI.editorDepth.git.sidebar();
   if(view==='git'){
     $('#sidebar-title').textContent='Source Control';$('#sidebar-content').innerHTML=`<div class="sidebar-section"><button class="secondary-button" data-action="refresh-git">${icon('refresh')} Refresh</button><span class="sidebar-badge">Lectura del repositorio local</span></div><pre class="sidebar-pre" id="git-output">Consultando Git...</pre>`;
+    $('#sidebar-content .sidebar-section').insertAdjacentHTML('beforeend',`<button class="secondary-button" data-platform="git-conflicts">${icon('git')} ${platformUI?.t('Resolver conflictos','Resolve conflicts')||'Resolver conflictos'}</button>`);
     const result=await api('/git?mode=status');if(activeView!=='git')return;$('#git-output').textContent=result.output;
     const match=/^## ([^\.\n ]+)/m.exec(result.output);$('#branch-label').textContent=match?match[1]:'local';return;
   }
@@ -324,25 +360,42 @@ async function ensureTrust(){
   if(yes){const state=await api('/trust',{trusted:true});service.trusted=state.trusted;service.trustSource=state.source||state.trustSource;if(activeView==='run')setView('run');}
   return yes;
 }
+async function runBinary(path=editor.current){
+  if(!await ensureTrust())return;if(editor.isDirty(path))await saveFile(path);
+  const args=editor.models.get(path)?.binaryArguments||[];
+  if(desktopUI.editorTerminalInMain)return desktopUI.runInMain(path,false,true,args);
+  return desktopUI.runBinary(path,args);
+}
+async function rebuildBinary(path=editor.current){
+  if(!await ensureTrust())return;if(editor.isDirty(path))await saveFile(path);const info=await platformUI.api('/binary/info?path='+encodeURIComponent(path));
+  modal('Recompilar binario',`<p>Selecciona el código fuente de este artefacto. Se compila primero y se conserva una copia del binario antes de sustituirlo.</p><form id="binary-build-form"><label class="field-label">Código fuente<input name="source" required value="${esc(info.source||'')}" list="binary-sources" placeholder="src/main.c" autocomplete="off"></label><datalist id="binary-sources">${info.sources.map(p=>`<option value="${esc(p)}"></option>`).join('')}</datalist><p>No se reconstruye el código fuente a partir de los bytes. Puedes elegir C, C++, ASM, Rust, Go, Java o nC.</p><div class="modal-actions"><button type="button" class="secondary-button" data-action="close-modal">Cancelar</button><button class="primary-button">${icon('build')}Recompilar</button></div></form>`);
+  $('#binary-build-form').onsubmit=guard(async e=>{e.preventDefault();const source=new FormData(e.target).get('source');if(editor.models.has(source)&&editor.isDirty(source))await saveFile(source);const result=await platformUI.api('/binary/build',{path,source,revision:editor.models.get(path).revision});closeModal();showTerminal('terminal',{forceConsole:true});await watchJob(result.job,path);const built=await platformUI.api('/binary/finish',{job:result.job});editor.refreshBinary(path,built);notify('Binario recompilado. Se conserva la copia anterior.');});
+}
 async function runCurrent(check=false){
+  const path=editor.current,workspace=service.workspace;
+  if(teamUI?.owns(path))return teamUI.run(path);
   if(!editor.current){notify('Abre un archivo para ejecutarlo.');return;}
-  if(editor.models.get(editor.current)?.kind==='binary'){notify('Binary inspection is read only.');return;}
+  if(editor.models.get(path)?.kind==='binary'){if(check)return rebuildBinary(path);return runBinary(path);}
   if(activeJob){notify('Ya hay una tarea activa en esta consola. Deténla antes de iniciar otra.');return;}
   if(!await ensureTrust())return;
-  if(editor.isDirty())await saveFile();
+  if(editor.isDirty(path))await saveFile(path);
+  if(service.workspace!==workspace)throw Error('El proyecto cambió antes de ejecutar. Vuelve a intentarlo en el proyecto actual.');
+  if(desktopUI?.editorTerminalInMain)return desktopUI.runInMain(path,check);
+  if(!check&&desktopUI)return desktopUI.runFile(path);
   showTerminal('terminal',{forceConsole:true});termWrite('\n','term-muted');lastOutput='';
-  let result;try{result=await api('/task',{path:editor.current,check});}catch(error){lastOutput=error.message;termWrite(error.message+'\n','term-error');notify(error.message,'error');return;}
-  if(result.preview){studio.lantern.showPreview(result.preview);termWrite('Vista previa: '+result.preview.url+'\n','term-success');}else if(result.job)await watchJob(result.job);else{termWrite(result.output,'term-success');lastOutput=result.output;}
+  let result;try{result=await api('/task',{path,check});}catch(error){lastOutput=error.message;termWrite(error.message+'\n','term-error');notify(error.message,'error');return;}
+  if(result.preview){studio.lantern.showPreview(result.preview);termWrite('Vista previa: '+result.preview.url+'\n','term-success');}else if(result.job)await watchJob(result.job,path);else{termWrite(result.output,'term-success');lastOutput=result.output;}
 }
 function updateTaskUI(running){
   const button=$('.run-button');button.innerHTML=icon(running?'stop':'play');button.dataset.action=running?'stop-task':'run';
-  for(const external of document.querySelectorAll('[data-session-run]')){external.dataset.action=running?'stop-task':'run';external.innerHTML=icon(running?'stop':'play')+(running?'Detener':'Ejecutar');external.setAttribute('aria-busy',String(running));}button.classList.toggle('task-running',running);button.setAttribute('aria-label',running?'Detener tarea':'Ejecutar archivo activo');
+  for(const external of document.querySelectorAll('[data-session-run]')){external.dataset.action=running?'stop-task':'run';external.innerHTML=icon(running?'stop':'play')+'<span>'+(running?'Detener':'Ejecutar')+'</span>';external.setAttribute('aria-label',running?'Detener tarea':'Ejecutar archivo');external.setAttribute('aria-busy',String(running));}button.classList.toggle('task-running',running);button.setAttribute('aria-label',running?'Detener tarea':'Ejecutar archivo activo');
   button.dataset.tooltip=running?'Detener tarea (Shift+F5)':'Ejecutar archivo activo (F5)';button.setAttribute('aria-busy',String(running));
 }
 async function watchJob(id,path=editor.current){
   if(arguments[2]?.shared!==true)desktopUI?.publishTask(id,path);
   updateTaskUI(true);
-  activeJob=id;$('#stop-task').classList.remove('hidden');$('#terminal-input').disabled=false;const oldPlaceholder=$('#terminal-input').placeholder;$('#terminal-input').placeholder='Entrada del programa · Enter para enviar';let offset=0,jobOutput='';
+  const preparing=arguments[2]?.preparing===true;document.dispatchEvent(new CustomEvent('zenit:task-state',{detail:{id,path,running:true,preparing}}));
+  activeJob=id;$('#stop-task').classList.remove('hidden');$('#terminal-input').disabled=preparing;const oldPlaceholder=$('#terminal-input').placeholder;$('#terminal-input').placeholder=preparing?'Preparando el programa…':'Entrada del programa · Enter para enviar';let offset=0,jobOutput='';
   try{
     while(activeJob===id){
       const result=await api('/job?id='+encodeURIComponent(id)+'&offset='+offset);offset=result.offset;
@@ -350,20 +403,21 @@ async function watchJob(id,path=editor.current){
       if(result.done){const parsed=await api('/platform/diagnostics/output',{path,output:jobOutput});editor.setDiagnostics(path,parsed.diagnostics,'lumen-build');notify(`Tarea finalizada. Código de salida: ${result.code??0}`,result.code?'error':'info',3300);break;}
       await new Promise(resolve=>setTimeout(resolve,180));
     }
-  }finally{updateTaskUI(false);activeJob=null;$('#stop-task').classList.add('hidden');$('#terminal-input').disabled=false;$('#terminal-input').placeholder=oldPlaceholder;}
+  }finally{document.dispatchEvent(new CustomEvent('zenit:task-state',{detail:{id,running:false}}));updateTaskUI(false);activeJob=null;$('#stop-task').classList.add('hidden');$('#terminal-input').disabled=false;$('#terminal-input').placeholder=oldPlaceholder;await refreshTree().catch(()=>{});}
 }
 async function consoleCommand(command){
+  if(activeJob&&command.trim()===':eof'){await api('/task-input',{id:activeJob,eof:true});termWrite('[Entrada cerrada]\n','term-muted');$('#terminal-input').value='';return;}
   if(activeJob){await api('/task-input',{id:activeJob,text:command+'\n'});termWrite(command+'\n','term-command');$('#terminal-input').value='';return;}
   if(/^(?:lumen\s+)?\/?lantern$/i.test(command.trim())){$('#terminal-input').value='';await studio.lantern.action('start');return;}
   const focus=/^(?:lumen\s+)?(?:\/?focus|concentracion)(?:\s+(on|off|toggle))?$/i.exec(command.trim());if(focus&&platformUI){$('#terminal-input').value='';platformUI.setFocus(focus[1]||'toggle');return;}
   if(!command.trim())return;terminalHistory.push(command);historyIndex=terminalHistory.length;
   termWrite(`${$('#prompt-path').textContent} ❯ ${command}\n`,'term-command');$('#terminal-input').value='';
   const themeMatch=/^theme\s+(day|dark|forest)$/.exec(command.trim());if(themeMatch){applyTheme(themeMatch[1]);return;}
-  if(/^run\s/.test(command)&&!await ensureTrust())return;
+  if(/^(run|build|check)\s/.test(command)&&!await ensureTrust())return;
   try{
     const data=await api('/console',{command,cwd});
     if(data.clear)termClear();if(data.cwd!==undefined){cwd=data.cwd;updatePrompt();}if(data.output)termWrite(data.output);
-    if(data.preview)studio.lantern.showPreview(data.preview);if(data.job){lastOutput='';await watchJob(data.job);}
+    if(data.preview)studio.lantern.showPreview(data.preview);if(data.job){lastOutput='';await watchJob(data.job,data.path||editor.current);}
   }catch(error){termWrite(error.message+'\n','term-error');}
 }
 
@@ -409,7 +463,7 @@ function beginAiAction(action){
 function newChat(){if(platformUI)guard(()=>platformUI.clearAI())();if(aiBusy){notify('Espera a que termine la respuesta antes de abrir otra conversación.');return;}$('#chat-messages').textContent='';$('#chat-messages').classList.add('hidden');$('#assistant-hero').classList.remove('hidden');$('#ai-actions').classList.remove('hidden');$('#assistant-body').classList.remove('chatting');$('#ai-input').value='';}
 
 const commandDefinitions=[
-  ['new-window','plus','Nueva ventana','Ctrl Shift N'],['save-as','file','Guardar como','Ctrl Shift O'],['downloads','download','Descargas de compiladores · hasta 500 GB',''],['group-tabs','folder','Agrupar pestañas por carpeta',''],['lantern','sparkles','Lantern: iniciar continuidad','Ctrl Alt L'],['lantern-monitor','sparkles','Lantern: mostrar / ocultar monitor del proyecto',''],['debug-view','bug','Abrir depuración y Lantern',''],
+  ['new-window','plus','Nueva ventana','Ctrl Shift N'],['save-as','file','Guardar como','Ctrl Shift S'],['downloads','download','Descargas de compiladores · hasta 500 GB',''],['group-tabs','folder','Agrupar pestañas por carpeta',''],['lantern','sparkles','Lantern: iniciar continuidad','Ctrl Alt L'],['lantern-monitor','sparkles','Lantern: mostrar / ocultar monitor del proyecto',''],['debug-view','bug','Abrir depuración y Lantern',''],
   ['lumen.focus.toggle','focus','lumen.focus.toggle · Alternar concentración','Ctrl Alt F'],['platform-tools','build','Lenguajes, compiladores y CMake',''],['platform-terminal','terminal','Nueva terminal: CMD, PowerShell, Bash o WSL','Ctrl Alt T'],['extensions','extensions','Marketplace Open VSX y extensiones','Ctrl Alt E'],['platform-hardware','cpu','Métricas de hardware',''],['platform-snippets','code','Insertar fragmento de extensión',''],['platform-completion','code','LSP: solicitar autocompletado','Ctrl Space'],['platform-hover','info','LSP: consultar símbolo',''],
   ['settings','settings','Apariencia y ajustes','Ctrl ,'],['layout-settings','layout','Organizar y agrupar paneles',''],['focus-layout','focus','Alternar modo enfoque','Ctrl Alt F'],['reset-layout','refresh','Restaurar distribución Zénit',''],['open-workspace','folder-open','Abrir carpeta',''],['new-file','file','Nuevo archivo',''],
   ['save','check','Guardar archivo','Ctrl S'],['find','search','Buscar en el archivo','Ctrl F'],['run','play','Ejecutar archivo activo','F5'],
@@ -440,6 +494,8 @@ async function updatePalette(){
   paletteIndex=0;renderPalette();
 }
 function renderPalette(){
+  const results=$('#palette-results'),mode=$('#palette-input').value.startsWith('>')?'commands':'files',changed=results.dataset.mode&&results.dataset.mode!==mode;results.dataset.mode=mode;
+  if(changed&&motion.enabled){results.getAnimations().forEach(a=>a.cancel());results.animate([{opacity:.65},{opacity:1}],{duration:160,easing:'ease-out'});}
   $('#palette-count').textContent=paletteEntries.length+' resultados';
   $('#palette-files').classList.toggle('active',!$('#palette-input').value.startsWith('>'));$('#palette-commands').classList.toggle('active',$('#palette-input').value.startsWith('>'));
   $('#palette-results').innerHTML=paletteEntries.map((item,index)=>`<button class="palette-result${index===paletteIndex?' active':''}" data-palette-index="${index}" role="option" aria-selected="${index===paletteIndex}">${item.path?fileIcon(item.path):icon(item.icon)}<span>${esc(item.label)}</span><span class="result-meta">${esc(item.meta||'')}</span></button>`).join('')||'<div class="palette-empty">No se encontraron resultados.</div>';
@@ -449,6 +505,10 @@ function renderPalette(){
 async function choosePalette(index){const item=paletteEntries[index];if(!item)return;closePalette();if(item.path){await openFile(item.path);if(item.line)editor.showLine(item.line);}else if(item.category)await platformUI.settings(item.category);else await perform(item.action);}
 
 async function perform(action,anchor=null){
+  if(action==='rename-file')return previewUI.renameFile(editor.current);
+  if(action==='delete-file')return previewUI.deleteFile(editor.current);
+  if(action==='restore-deleted-file')return previewUI.restoreDeleted();
+  if(action==='team')return teamUI?.open();
   if(desktopUI&&await desktopUI.handle(action))return;
   if(action==='lantern')return studio?.lantern.action('start');
   if(action==='lantern-monitor')return studio?.lantern.action(platformUI.prefs['appearance.lanternMonitor']?'hide':'show');
@@ -516,14 +576,16 @@ async function perform(action,anchor=null){
 }
 
 function setupEvents(){
+  for(const name of ['zenit:files-deleted','zenit:files-renamed'])document.addEventListener(name,e=>{const paths=name==='zenit:files-deleted'?e.detail:e.detail.map(row=>row.oldPath);for(const request of pendingFileOpens)if(paths.some(path=>request.path===path||request.path.startsWith(path+'/')))request.cancelled=true;});
+  document.addEventListener('zenit:files-renamed',e=>{const remap=path=>{const row=e.detail.find(r=>path===r.oldPath||path.startsWith(r.oldPath+'/'));return row?row.path+path.slice(row.oldPath.length):path;};const paths=[...openFolders].map(remap);openFolders.clear();paths.forEach(path=>openFolders.add(path));});
   const nativeReady=()=>{if(window.pywebview?.api)document.documentElement.classList.add('desktop-host');};
   nativeReady();window.addEventListener('pywebviewready',nativeReady,{once:true});
   document.addEventListener('click',guard(async event=>{
     const close=event.target.closest('[data-close-file]');if(close){event.stopPropagation();return closeFile(close.dataset.closeFile);}
-    const file=event.target.closest('[data-file]');if(file)return openFile(file.dataset.file,+file.dataset.line||null);
+    const file=event.target.closest('[data-file]');if(file){const treeFocus=!!file.closest('#sidebar-content')&&file.classList.contains('tree-row')&&event.detail===1;await openFile(file.dataset.file,+file.dataset.line||null);if(treeFocus&&(document.activeElement===file||document.activeElement===document.body))[...$('#sidebar-content').querySelectorAll('[data-file]')].find(row=>row.dataset.file===file.dataset.file)?.focus({preventScroll:true});return;}
     const tab=event.target.closest('[data-tab]');if(tab)return activateFile(tab.dataset.tab);
     const directory=event.target.closest('[data-dir]');if(directory){const path=directory.dataset.dir;openFolders.has(path)?openFolders.delete(path):openFolders.add(path);renderTree();return;}
-    const view=event.target.closest('[data-view]');if(view)return setView(view.dataset.view);
+    const view=event.target.closest('button[data-view]');if(view)return setView(view.dataset.view);
     const terminal=event.target.closest('[data-terminal]');if(terminal){showTerminal(terminal.dataset.terminal);const active=platformUI?.terminals.get(platformUI.activeTerminal);if(terminal.dataset.terminal==='terminal'&&active&&!active.closed)platformUI.selectTerminal(active.id);return;}
     const aiAction=event.target.closest('[data-ai-action]');if(aiAction)return beginAiAction(aiAction.dataset.aiAction);
     const aiPrompt=event.target.closest('[data-ai-prompt]');if(aiPrompt){$('#ai-input').value=aiPrompt.dataset.aiPrompt;$('#ai-input').focus();return;}
@@ -547,6 +609,22 @@ function setupEvents(){
   });
   $('#ai-form').addEventListener('submit',guard(async event=>{event.preventDefault();await sendAI($('#ai-input').value);}));
   $('#ai-input').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();$('#ai-form').requestSubmit();}});
+  // Global theme keys must arrive before Monaco consumes editor keybindings.
+  // Windows can report Ctrl+left Alt as AltGraph too; remember the actual Alt
+  // key so an intentional shortcut and right-Alt text entry remain distinct.
+  let themeLeftAlt=false;
+  window.addEventListener('blur',()=>{themeLeftAlt=false;});
+  document.addEventListener('keyup',event=>{if(['AltLeft','AltRight'].includes(event.code)||event.key==='AltGraph')themeLeftAlt=false;},true);
+  document.addEventListener('keydown',event=>{
+    if(event.code==='AltLeft'){themeLeftAlt=true;return;}
+    if(event.code==='AltRight'||event.key==='AltGraph'){themeLeftAlt=false;return;}
+    // Some Windows input paths omit code and report the layout character
+    // (for example @ for Ctrl+Alt+2). Retain their virtual-key digit too.
+    const virtualKey=event.keyCode||event.which;
+    const digit=['1','2','3'].includes(event.key)?event.key:/^Digit[123]$/.test(event.code)?event.code.slice(-1):!event.code&&virtualKey>=49&&virtualKey<=51?String.fromCharCode(virtualKey):null;
+    if($('#onboarding')||!digit||!(event.ctrlKey||event.metaKey)||!event.altKey||event.getModifierState('AltGraph')&&!themeLeftAlt)return;
+    event.preventDefault();event.stopPropagation();guard(()=>perform(['theme-day','theme-dark','theme-forest'][+digit-1]))();
+  },true);
   document.addEventListener('keydown',event=>{
     if($('#onboarding'))return;
     if(event.key==='Escape'){
@@ -560,14 +638,18 @@ function setupEvents(){
       const first=list[0],last=list.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
     }
     const control=event.ctrlKey||event.metaKey;const key=event.key.toLowerCase();let action;
-    if(control&&event.altKey&&['1','2','3'].includes(key))action=['theme-day','theme-dark','theme-forest'][+key-1];
-    else if(control&&event.altKey&&key==='b')action='collapse-right';
+    if(platformUI?.page==='debug'&&!event.ctrlKey&&!event.altKey&&['F5','F10','F11'].includes(event.key)&&!event.target.closest?.('input,textarea,select,[contenteditable=true]')){
+      event.preventDefault();event.stopPropagation();const debug=studio.debugWorkspace;
+      const command=event.key==='F10'?'next':event.key==='F11'?(event.shiftKey?'out':'step'):event.shiftKey?'stop':debug?.state?.status==='paused'?'continue':null;
+      if(command&&(command==='stop'?debug?.busy():debug?.state?.status==='paused')&&(command!=='out'||debug?.state?.stepOutSupported))studio.safe(()=>debug.command(command));else if(event.key==='F5'&&!command)document.querySelector('#debug-start')?.click();return;
+    }
+    if(control&&event.altKey&&key==='b')action='collapse-right';
     else if(control&&event.altKey&&key==='n')action='toggle-rail';
     else if(control&&event.altKey&&key==='l')action='lantern';
     else if(control&&event.altKey&&key==='f')action='focus-layout';
     else if(control&&event.shiftKey&&key==='n')action='new-window';
     else if(control&&key==='n')action='new-file';
-    else if(control&&(key==='s'||key==='o'))action=event.shiftKey?'save-as':'save';
+    else if(control&&key==='s')action=event.shiftKey?'save-as':'save';
     else if(control&&event.altKey&&key==='l')action='lantern';
     else if(control&&key===',')action='settings';
     else if(control&&key==='b')action='toggle-tree';
@@ -595,14 +677,14 @@ async function start(){
     window.zenitStartup?.phase('service');
     const response=await fetch('/api/bootstrap',{credentials:'same-origin',signal:AbortSignal.timeout(25000)});service=await response.json();if(!response.ok)throw new Error(service.error);
     token=service.token;tree=service.tree;
-    editor=new LumenEditor($('#editor-mount'),{binary:(path,offset)=>/^(?:[A-Za-z]:[\\/]|\/)/.test(path)?platformUI.api('/extensions/binary?path='+encodeURIComponent(path)+'&offset='+offset):api('/binary?path='+encodeURIComponent(path)+'&offset='+offset),change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
+    editor=new LumenEditor($('#editor-mount'),{binarySave:body=>platformUI.api('/binary/save',body),binaryInspect:path=>platformUI.api('/binary/inspect',{path}),binaryCompare:(path,otherPath,offset)=>platformUI.api('/binary/compare',{path,otherPath,offset}),binaryBuild:rebuildBinary,binaryRun:runBinary,binaryInfo:path=>platformUI.api('/binary/info?path='+encodeURIComponent(path)),binary:(path,offset)=>/^(?:[A-Za-z]:[\\/]|\/)/.test(path)?platformUI.api('/extensions/binary?path='+encodeURIComponent(path)+'&offset='+offset):api('/binary?path='+encodeURIComponent(path)+'&offset='+offset),change:()=>{renderTabs();platformUI?.documentChanged();},active:()=>{renderTabs();renderTree();updateDocumentStatus();platformUI?.documentChanged();previewUI?.activeChanged();},cursor:(line,column)=>{$('#cursor-status').textContent=`Ln ${line}, Col ${column}`;platformUI?.companion?.changed();},save:guard(saveFile),diagnostics:updateDiagnostics});
     await editor.init(service,settings);applySettings();
     await initializeDocuments();renderTree();updatePrompt();
     scene={kind:service.babylon?'babylon':'css',setMotion(){},setTheme(){},dispose(){}};
     sceneStatus=service.babylon?'Babylon.js + Three.js · Lenon Glass':'Cristal CSS';
-    await checkWorkspace(false);
+    termWrite('Tu espacio está listo. Usa Comprobar proyecto cuando lo necesites.\n','term-muted');
     renderTerminalContent();
-    platformUI=new LumenPlatform({api,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs();},
+    platformUI=new LumenPlatform({api,perform,themeChrome:paintThemeChrome,voiceAudio:async id=>{const response=await fetch("/api/platform/ai/voice/audio?id="+encodeURIComponent(id),{credentials:"same-origin",headers:{"X-Lumen-Token":token,"X-Lumen-Workspace":encodeURIComponent(service.workspace)}});if(!response.ok)throw Error("La lectura ya no está disponible.");return response.blob();},notify,editor,motion,dock,modal,showMenu,closeModal,confirmDialog,ensureTrust,appendChat,saveFile,watchJob,updateDiagnostics,openFile,refreshTree,refreshFileViews:()=>{renderTree();renderTabs(true);updateDocumentStatus(true);},
       isTrusted:()=>service.trusted,setTrusted:value=>{service.trusted=value;},setTrustSource:value=>{service.trustSource=value;},workspace:()=>service.workspace,showConsole:mode=>showTerminal(mode,{forceConsole:true}),graphicsKind:()=>scene?.kind||'css',
       applyPlatformSettings:p=>{
         for(const [key,value] of Object.entries(p))if(key.startsWith('editor.'))settings[key.slice(7)]=value;
@@ -614,24 +696,47 @@ async function start(){
     studio=new LenonStudio({api,platform:platformUI,dock,editor,motion,modal,showMenu,closeModal,notify,ensureTrust,openFile,saveFile,changeWorkspace,palette:openPalette,refreshTree,service:()=>service,files:allFiles});
     platformUI.host.studio=studio;
     window.zenitStartup?.phase('welcome');await studio.init();
-    previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
+    previewUI=installPreview({api,editor,studio,platform:platformUI,dock,modal,closeModal,confirmDialog,notify,openFile,saveFile,refreshTree,renderTabs,closeFile,revealFile,service:()=>service,showMenu,perform,dragPaths:()=>organizerUI?.drag?.paths,detachEditor:(path,position)=>desktopUI.detach('editor',path,position)});
     platformUI.companion=new MelodyCompanion(platformUI);
-    if(service.startup?.path){await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}
-    desktopUI=new DesktopWorkflows({api,editor,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
+    // Child panels have their own explicit file and live buffer. Replaying the
+    // original process argument can fail after that original file was deleted.
+    if(service.startup?.path&&!new URLSearchParams(location.search).has('panel')){try{await openFile(service.startup.path);if(typeof service.startup.content==='string')editor.insertText(service.startup.content,true);}catch(error){notify(error.message,'error');}}
+    desktopUI=new DesktopWorkflows({api,editor,renderTabs,refreshTree,studio,platform:platformUI,dock,notify,openFile,ensureTrust,watchJob,saveFile,runCurrent,setRunState:updateTaskUI,isTaskRunning:()=>!!activeJob,showTaskConsole:()=>showTerminal('terminal',{forceConsole:true}),showConsole:()=>showTerminal(),service:()=>service,commands:commandDefinitions});await desktopUI.init();
+    platformUI.consoleContext=new ConsoleContext({api,platform:platformUI,target:()=>workbenchUI?.targets?.targets.find(t=>t.id===workbenchUI.targets.selected)?.label||''});
     workspaceProfiles=new WorkspaceProfiles({editor,studio,platform:platformUI,preview:previewUI,perform,ensureTrust,desktop:desktopUI});desktopUI.mountAuxiliary();
-    new FoundationUI({editor,studio,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
-    installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();}});
+    new FoundationUI({editor,studio,refreshTree,platform:platformUI,profiles:workspaceProfiles,desktop:desktopUI,ensureTrust,notify,watchJob,commands:commandDefinitions});
+    new Release055({editor,platform:platformUI,desktop:desktopUI,dock,modal,closeModal,openFile,refreshTree,notify,watchJob,commands:commandDefinitions});
+    const explorerMenu=installExplorerMenu({api,editor,notify,modal,closeModal,confirmDialog,confirmRoutine:(...args)=>platformUI.confirmRoutine(...args),saveFile,closeFile,saveAs:path=>previewUI.saveAs(path),openFile,refreshTree,showMenu,lantern:studio.lantern,workspace:()=>service.workspace,newWindow:path=>previewUI.newWindow(path),search:path=>studio.search(path),refreshDocuments:()=>{renderTabs();updateDocumentStatus();previewUI.activeChanged();},relocated:rows=>previewUI.services.event({command:'zenit.workspace.edit',edit:{resources:rows.map(row=>({kind:'rename',...row})),buffers:[]}}),removed:edit=>previewUI.services.event({command:'zenit.workspace.edit',edit})});
+    previewUI.renameFile=path=>explorerMenu.renameFile(path);
+    previewUI.deleteFile=path=>explorerMenu.deleteFile(path);previewUI.restoreDeleted=()=>explorerMenu.restoreDeleted();previewUI.canRestoreDeleted=()=>explorerMenu.canRestoreDeleted();
+    commandDefinitions.push(['rename-file','rename','Archivo: cambiar nombre del archivo actual','']);
+    commandDefinitions.push(['delete-file','trash','Archivo: eliminar archivo actual',''],['restore-deleted-file','undo','Archivo: deshacer eliminación','']);
+    const nodes=()=>{const result=[];const visit=items=>{for(const item of items){result.push(item);if(item.directory)visit(item.children||[]);}};visit(tree);return result;};
+    organizerUI=new ProjectOrganizerUI({api,editor,platform:platformUI,notify,modal,closeModal,refreshTree,renderTree,workspace:()=>service.workspace,
+      directories:()=>nodes().filter(n=>n.directory).map(n=>n.path),siblings:parent=>{const list=parent?nodes().find(n=>n.path===parent)?.children||[]:tree;return organizerUI.sort(list,parent).map(n=>n.path);},
+      relocated:rows=>previewUI.services.event({command:'zenit.workspace.edit',edit:{resources:rows.map(row=>({kind:'rename',...row})),buffers:[]}})});
+    temporaryTabs=new TemporaryTabGroups({editor,activateFile,renderTabs,modal,closeModal,notify,showMenu});
+    teamUI=new TeamUI({platform:platformUI,editor,modal,closeModal,ensureTrust,refreshTree});commandDefinitions.push(['team','coco','Co-Code: compartir archivo o unirme','']);
     productUI=installProductUI({showMenu,perform:guard(perform),platform:platformUI});
-    installTabControls({editor,openFile,activateFile,closeFile,showMenu,safe:fn=>guard(fn)()});
+    previewUI.tabControls=installTabControls({editor,openFile,activateFile,closeFile,showMenu,safe:fn=>guard(fn)()});
     installDiagnostics();
+    window.zenitStartup?.phase('session');workbenchUI=new WorkbenchSession({editor,dock,studio,profiles:workspaceProfiles,desktop:desktopUI,platform:platformUI,openFile,renderTabs,service:()=>service,commands:commandDefinitions});await workbenchUI.init();studio.workbench=workbenchUI;studio.refreshHome();
+    new EditorDepth({api,editor,platform:platformUI,desktop:desktopUI,openFile,renderTabs,notify,modal,closeModal,service:()=>service,commands:commandDefinitions,preview:previewUI,studio,ownsShared:path=>teamUI?.owns(path)});
     document.documentElement.removeAttribute('data-booting');
+    setTimeout(()=>desktopUI.showWhatsNew().catch(error=>console.warn('Release notes:',error.message)),1200);
     $('#engine-label').textContent='Local workspace';
     // Explicitly expose state for repeatable UI smoke tests; no secrets are exposed here.
     window.lumen={get theme(){return document.documentElement.dataset.theme;},get editorKind(){return editor.kind;},get graphicsKind(){return [...(studio?.scenes.values()||[])].some(s=>s.kind==='babylon')?'babylon':'css';},get graphicsAPI(){return document.querySelector('canvas[data-engine]')?.dataset.engine||'CSS';},get activeFile(){return editor.current;},get ready(){return true;},get platformReady(){return !!platformUI?.state;},get platformPage(){return platformUI?.page;},get languageServers(){return platformUI?.lspSessions.size||0;},get layout(){return dock.snapshot();},get motionEnabled(){return motion.enabled;}};
     window.zenitStartup?.ready();
-  }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
+    // Package grammars/icon catalogs and optional tool scans must not hold the
+    // editor or session recovery behind a slow extension or a cold filesystem.
+    // Start after Preview installs its runtime-command integration.
+    platformUI.contributionsTask=platformUI.safe(async()=>{await platformUI.loadContributions();window.zenitStartup?.background('extensions');});
+    if(desktopUI.forgeIntegrated||desktopUI.query.get('panel')==='forge')desktopUI.toolsTask=desktopUI.safe(async()=>{await desktopUI.refreshForgeTools();window.zenitStartup?.background('tools');});
+  }catch(error){window.zenitStartup?.fail(error);document.documentElement.removeAttribute('data-booting');
+    setTimeout(()=>desktopUI.showWhatsNew().catch(error=>console.warn('Release notes:',error.message)),1200);$('#connection-overlay').classList.remove('hidden');$('#connection-overlay p').textContent='No se pudo iniciar la interfaz: '+error.message;console.error(error);}
 }
-window.addEventListener('pagehide',event=>{if(!event.persisted){productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
+window.addEventListener('pagehide',event=>{if(!event.persisted){workbenchUI?.dispose();teamUI?.dispose();productUI?.dispose();workspaceProfiles?.dispose();previewUI?.services.dispose();previewUI?.documentDrag.dispose();desktopUI?.dispose();studio?.dispose();platformUI?.dispose();scene?.dispose();dock?.dispose();motion.dispose();polish?.dispose();}});
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key==='\\'){event.preventDefault();guard(()=>perform('split-editor'))();}});
 $('#retry-connection').onclick=()=>location.reload();
 start();

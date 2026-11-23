@@ -2,6 +2,8 @@ import {icon,escapeHTML as esc} from './icons.js';
 import {languageFor} from './editor.js';
 import {renderLanternReview} from './lantern-review.js';
 import {lanternConsultation} from './lantern-evidence.js';
+import {lanternRules,renderLanternRules} from './lantern-rules.js';
+import {captureLanternBuffers,sameLanternCapture} from './lantern-buffers.js';
 const $=s=>document.querySelector(s);
 const labels={idle:'En espera',stopped:'Detenido',preparing:'Preparando',running:'En ejecución',watching:'Escuchando cambios',debouncing:'Esperando estabilidad',waiting:'Esperando código válido',error:'Revisa los errores'};
 const englishLabels={idle:'Idle',stopped:'Stopped',preparing:'Preparing',running:'Running',watching:'Watching changes',debouncing:'Waiting for stable edits',waiting:'Waiting for valid code',error:'Review errors'};
@@ -11,12 +13,14 @@ export class LanternView{
   constructor(studio){this.studio=studio;this.host=studio.host;this.state={active:false,status:'idle',revision:0};this.disposed=false;this.previewRevision=-1;}
   init(){
     const card=document.createElement('section');card.className='lantern-monitor';card.id='lantern-monitor';card.setAttribute('aria-label','Monitor Lantern');
-    card.innerHTML=`<header><span>${icon('sparkles')} LANTERN</span><button class="icon-button" data-lantern="hide" aria-label="Ocultar monitor Lantern">${icon('close')}</button></header><button class="lantern-open" data-lantern="open"><span class="lantern-led"></span><strong data-lantern-status>En espera</strong>${icon('arrow-up-right')}</button><small data-lantern-path>Continuidad para tu código</small><p data-lantern-summary>Ejecuta, edita y revisa cada cambio.</p><div class="lantern-monitor-actions"><button class="primary-button" data-lantern="start">${icon('play')}Iniciar</button><button class="secondary-button" data-lantern="analyze">Analizar con IA</button><button class="text-button" data-lantern="stop" disabled>Detener</button></div>`;
+    card.innerHTML=`<header><span>${icon('sparkles')} Lantern</span><button class="icon-button" data-lantern="rules" aria-label="Entrada y verificación de Lantern" title="Entrada y verificación">${icon('sliders')}</button><button class="icon-button" data-lantern="hide" aria-label="Ocultar monitor Lantern">${icon('close')}</button></header><button class="lantern-open" data-lantern="open"><span class="lantern-led"></span><strong data-lantern-status>En espera</strong>${icon('detach')}</button><small data-lantern-path>Continuidad para tu código</small><p data-lantern-summary>Ejecuta, edita y revisa cada cambio.</p><div class="lantern-monitor-actions"><button class="primary-button" data-lantern="start">${icon('play')}Iniciar</button><button class="secondary-button" data-lantern="analyze">Analizar con IA</button><button class="text-button" data-lantern="stop" disabled>Detener</button></div>`;
     $('#sidebar-content').after(card);
     this.click=e=>{const action=e.target.closest('[data-lantern]')?.dataset.lantern;if(action)this.studio.safe(()=>this.action(action));};document.addEventListener('click',this.click);
     this.host.platform.lantern=this;this.render();this.poll();
   }
   async action(action){
+    if(action==='rules')return lanternRules(this);
+    if(action==='environments'){await this.studio.desktop.handle('lantern-environments');return;}
     if(action==='pin'){await this.host.platform.savePreference('lantern.followActive',this.host.platform.prefs['lantern.followActive']===false);this.render();if(this.host.platform.prefs['lantern.followActive'])await this.follow();return;}
     if(action==='detach'){await this.studio.desktop.detach('lantern',this.state.path||this.host.editor.current||'');return;}
     if(action==='hide'||action==='show'){await this.host.platform.savePreference('appearance.lanternMonitor',action==='show');this.render();return;}
@@ -32,7 +36,7 @@ export class LanternView{
     }
     if(action==='analyze'){
       const p=this.host.platform;if(p.aiJob||p.aiStarting)throw Error(this.studio.t('Detén o espera la respuesta actual.','Stop or wait for the current response.'));
-      this.host.dock.floatPanel('assistant');p.setMelodyMode?.('chat');const input=$('#ai-input');input.value=lanternConsultation(this.state,this.baselineRevision)+'\nThe attached editor scope, if any, is from '+(this.host.editor.current||'no file')+'. The executed file is '+(this.state.path||'not started')+'. Do not assume different files contain the same source.';input.focus();
+      this.host.dock.show('assistant');p.setMelodyMode?.('chat');const input=$('#ai-input');input.value=lanternConsultation(this.state,this.baselineRevision)+'\nThe attached editor scope, if any, is from '+(this.host.editor.current||'no file')+'. The executed file is '+(this.state.path||'not started')+'. Do not assume different files contain the same source.';input.focus();
       if(!p.prefs['ai.model']){p.openModelPicker?.();return;}
       await p.sendAI(input.value,{consult:true});return;
     }
@@ -43,7 +47,7 @@ export class LanternView{
       this.clearLens();this.submitted=this.capture();
       const buffer=this.submitted;
       this.enabled=true;await this.control(()=>this.host.api('/platform/lantern/start',buffer));
-      if(this.host.editor.current===path&&this.host.editor.getValue()!==buffer.content)this.changed();
+      if(!sameLanternCapture(this.capture(path),buffer))this.changed();
       this.openInline();
     }else {if(action!=='restart'){this.enabled=false;clearTimeout(this.followTimer);clearTimeout(this.bufferTimer);}await this.control(()=>this.host.api('/platform/lantern/'+(action==='restart'?'restart':'stop'),{}));}
     this.render();this.renderLens();
@@ -61,13 +65,13 @@ export class LanternView{
   async control(operation){
     const epoch=this.controlEpoch=(this.controlEpoch||0)+1;this.controlPending=true;this.render();
     const task=(this.controlQueue||Promise.resolve()).catch(()=>{}).then(async()=>{if(epoch!==this.controlEpoch)return;const state=await operation();if(epoch===this.controlEpoch)this.state=state;});
-    this.controlQueue=task;try{await task;}finally{if(epoch===this.controlEpoch)this.controlPending=false;}
+    this.controlQueue=task;try{await task;}finally{if(epoch===this.controlEpoch){this.controlPending=false;this.pendingCapture=null;}}
   }
   openInline(){
     this.studio.enter();if(this.host.platform.page)this.host.platform.closePage();
     if(!$('#lantern-inline')){
       const panel=document.createElement('section');panel.id='lantern-inline';panel.className='lantern-workbench lantern-inline';
-      panel.innerHTML=`<header><strong>${icon('sparkles')} Lantern</strong><span class="lantern-led"></span><span data-lantern-status></span><small data-lantern-path></small><button class="text-button" data-lantern="memory">Memoria e historial</button><button class="icon-button" data-lantern="restart" title="Aplicar de nuevo">${icon('refresh')}</button><button class="icon-button" data-lantern="stop" title="Detener">${icon('stop')}</button><button class="icon-button" data-lantern="detach" title="${new URLSearchParams(location.search).has('panel')?'Volver a Zénit':'Desacoplar Lantern en ventana'}" aria-label="Desacoplar o acoplar Lantern">${icon('arrow-up-right')}</button><button class="icon-button" data-lantern="close-inline" title="Ocultar monitor">${icon('close')}</button></header><div class="lantern-preview" hidden></div><pre class="lantern-output" aria-label="Salida de Lantern en el editor"></pre><form class="lantern-inline-input"><input aria-label="Entrada de Lantern" placeholder="Entrada del programa · Enter" autocomplete="off"><button class="icon-button">${icon('send')}</button><button type="button" class="text-button" data-lantern="analyze">Analizar con IA</button></form>`;
+      panel.innerHTML=`<header><strong>${icon('sparkles')} Lantern</strong><span class="lantern-led"></span><span data-lantern-status></span><small data-lantern-path></small><button class="text-button" data-lantern="environments">Environments</button><button class="text-button" data-lantern="memory">Memoria e historial</button><button class="icon-button" data-lantern="restart" title="Aplicar de nuevo">${icon('refresh')}</button><button class="icon-button" data-lantern="stop" title="Detener">${icon('stop')}</button><button class="icon-button" data-lantern="detach" title="${new URLSearchParams(location.search).has('panel')?'Volver a Zénit':'Desacoplar Lantern en ventana'}" aria-label="Desacoplar o acoplar Lantern">${icon('detach')}</button><button class="icon-button" data-lantern="close-inline" title="Ocultar monitor">${icon('close')}</button></header><div class="lantern-preview" hidden></div><pre class="lantern-output" aria-label="Salida de Lantern en el editor"></pre><form class="lantern-inline-input"><input aria-label="Entrada de Lantern" placeholder="Entrada del programa · Enter" autocomplete="off"><button class="icon-button">${icon('send')}</button><button type="button" class="text-button" data-lantern="analyze">Analizar con IA</button></form>`;
       $('#editor-panel').append(panel);panel.querySelector('form').onsubmit=e=>{e.preventDefault();this.studio.safe(async()=>{const input=panel.querySelector('input');if(!this.state.job)throw Error('No hay proceso esperando entrada.');await this.host.api('/task-input',{id:this.state.job,text:input.value+'\n'});input.value='';});};
     }
     this.render();
@@ -83,6 +87,7 @@ export class LanternView{
   }
   render(){
     const s=this.state,monitor=$('#lantern-monitor'),hidden=!this.host.platform.prefs['appearance.lanternMonitor'];if(monitor&&monitor.hidden!==hidden)monitor.hidden=hidden;
+    renderLanternRules(this);
     this.renderedStates ||= new WeakMap();const signature=JSON.stringify([s.status,s.active,s.path,s.revision,s.diagnostics?.length,s.error,s.code,s.output,s.preview,s.history,this.controlPending,this.host.platform.prefs['lantern.followActive'],this.studio.t('es','en')]);
     for(const root of document.querySelectorAll('.lantern-monitor,.lantern-workbench')){
       if(this.renderedStates.get(root)===signature)continue;this.renderedStates.set(root,signature);
@@ -99,42 +104,46 @@ export class LanternView{
       const preview=root.querySelector('.lantern-preview');if(preview){preview.hidden=!s.preview;if(s.preview&&preview.dataset.revision!==String(s.revision)){preview.replaceChildren(this.frame(s.preview));preview.dataset.revision=String(s.revision);}}
     }
   }
-  capture(){const ed=this.host.editor;return {path:ed.current,content:ed.getValue(),version:ed.models.get(ed.current)?.model?.getVersionId()??(this.bufferVersion=(this.bufferVersion||0)+1)};}
+  capture(path=this.host.editor.current){return captureLanternBuffers(this.host.editor,path);}
   changed(){
     if(new URLSearchParams(location.search).has('panel'))return;
     if(!this.state.active)return;this.clearLens();clearTimeout(this.bufferTimer);
-    const buffer=this.capture();if(!buffer.path||buffer.path!==this.state.path)return;
+    const buffer=this.capture(this.state.path);if(!buffer)return;
+    if(sameLanternCapture(buffer,this.submitted)){this.pendingCapture=null;return;}
+    this.pendingCapture=buffer;
     this.state={...this.state,status:'debouncing',lens:[],diagnostics:[]};this.render();
     // Send revisions in order; the backend handles syntax gating and debounce.
     this.bufferTimer=setTimeout(()=>{this.bufferQueue=(this.bufferQueue||Promise.resolve()).catch(()=>{}).then(async()=>{
-      if(!this.state.active||this.host.editor.current!==buffer.path||this.host.editor.getValue()!==buffer.content)return;
+      if(!this.state.active||this.state.path!==buffer.path||!sameLanternCapture(this.capture(buffer.path),buffer))return;
       this.submitted=buffer;
       const epoch=this.controlEpoch,result=await this.host.api('/platform/lantern/buffer',buffer);
-      if(!result.ignored&&!this.controlPending&&epoch===this.controlEpoch&&this.host.editor.current===buffer.path&&this.host.editor.getValue()===buffer.content){this.state=result;this.render();}
+      if(!result.ignored&&!this.controlPending&&epoch===this.controlEpoch&&this.state.path===buffer.path&&sameLanternCapture(this.capture(buffer.path),buffer)){if(this.pendingCapture===buffer)this.pendingCapture=null;this.state=result;this.render();}
     }).catch(e=>this.host.notify(e.message,'error'));},80);
   }
   clearLens(){
     if(this.lensModel&&!this.lensModel.isDisposed())this.lensModel.deltaDecorations(this.lensIds||[],[]);
     this.lensModel=null;this.lensIds=[];this.lensKey='';
   }
-  matchesBuffer(){const ed=this.host.editor;return this.state.active&&this.state.path===ed.current&&this.submitted?.path===ed.current&&this.submitted.content===ed.getValue()&&this.state.bufferVersion===this.submitted.version;}
+  matchesBuffer(){const ed=this.host.editor;return !this.pendingCapture&&this.state.active&&this.state.path===ed.current&&sameLanternCapture(this.capture(),this.submitted)&&this.state.bufferVersion===this.submitted.version;}
   renderLens(){
     const ed=this.host.editor,model=ed.models.get(ed.current)?.model;
     if(!this.matchesBuffer()||!model||!window.monaco||this.host.platform.prefs['lantern.lens']===false){this.clearLens();return;}
-    const values=[...(this.state.lens||[]),...(this.state.diagnostics||[]).map(x=>({line:x.startLineNumber,value:x.message,error:true}))];
+    // Diagnostics already belong to Monaco markers and their floating panel.
+    // Only observed runtime values are injected into the source line.
+    const values=(this.state.lens||[]).filter(v=>!v.error);
     const key=JSON.stringify(values);if(this.lensKey===key&&this.lensModel===model)return;
     this.clearLens();this.lensModel=model;this.lensKey=key;
     this.lensIds=model.deltaDecorations([],values.filter(v=>Number.isInteger(v.line)&&v.line>0&&v.line<=model.getLineCount()).slice(0,200).map(v=>{
       const col=model.getLineMaxColumn(v.line),text=(v.label?v.label+' · ':'')+String(v.value).replace(/[\r\n\t]/g,' ');
       return {range:new monaco.Range(v.line,col,v.line,col),options:{description:'Lantern Lens',showIfCollapsed:true,stickiness:monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-        after:{content:'   '+(v.error?'! ':'↳ ')+text.slice(0,120),inlineClassName:'lantern-lens-value'+(v.error?' lantern-lens-error':''),cursorStops:monaco.editor.InjectedTextCursorStops.None},hoverMessage:{value:'Lantern Lens: '+text,isTrusted:false}}};
+        after:{content:'   ↳ '+text.slice(0,120),inlineClassName:'lantern-lens-value',cursorStops:monaco.editor.InjectedTextCursorStops.None},hoverMessage:{value:'Lantern Lens: '+text,isTrusted:false}}};
     }));
   }
   frame(preview){const frame=document.createElement('iframe');frame.title='Vista previa del proyecto';frame.sandbox='allow-scripts allow-forms allow-modals allow-same-origin';frame.src=preview.url;frame.referrerPolicy='no-referrer';return frame;}
   showPreview(preview){this.studio.enter();this.host.platform.openPage('preview',`<div class="preview-toolbar"><span>${esc(preview.path)}</span><button class="secondary-button" id="refresh-preview">${icon('refresh')}Recargar</button><button class="primary-button" data-lantern="start">${icon('sparkles')}Continuar con Lantern</button></div><div class="embedded-preview"></div>`);$('.embedded-preview').append(this.frame(preview));$('#refresh-preview').onclick=()=>$('.embedded-preview').replaceChildren(this.frame(preview));}
   async poll(){
     if(this.disposed)return;
-    try{const epoch=this.controlEpoch;const s=await this.host.api('/platform/lantern');if(this.disposed)return;if(!this.controlPending&&epoch===this.controlEpoch){this.state=s;this.render();this.renderLens();
+    try{const epoch=this.controlEpoch;const s=await this.host.api('/platform/lantern');if(this.disposed)return;if(!this.controlPending&&!this.pendingCapture&&epoch===this.controlEpoch){this.state=s;this.render();this.renderLens();
       if(this.matchesBuffer()&&s.status!=='preparing')this.host.editor.setDiagnostics(s.path,s.diagnostics||[],'lumen-build');
       }
     }catch(error){if(!this.disposed)this.state={...this.state,status:'error',error:error.message};}

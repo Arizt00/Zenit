@@ -1,17 +1,41 @@
 import {ExtensionOutputUI} from './extension-output.js';
 import {escapeHTML as esc,icon} from './icons.js';
 import {ExtensionQuickInputUI} from './extension-quickinput.js';
+import {EditorDecorations} from './editor-decorations.js';
+import {sameBufferText} from './buffer-text.js';
+import {ExtensionCommentsUI} from './extension-comments.js';
+import {ExtensionNotebooks} from './extension-notebooks.js';
 
 export class ExtensionServicesUI {
-  constructor(host){this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
+  constructor(host){this.owner=crypto.randomUUID();this.host=host;this.outputUI=new ExtensionOutputUI(host);this.quickinput=new ExtensionQuickInputUI(host);this.panels=new Map();this.disposed=false;this.message=e=>this.receive(e);window.addEventListener('message',this.message);this.resize=new ResizeObserver(()=>this.layout());this.resize.observe(document.getElementById('editor-panel'));this.poll();}
   layout(){const panel=document.getElementById('editor-panel').getBoundingClientRect(),mount=document.getElementById('editor-mount').getBoundingClientRect();for(const state of this.panels.values())if(state.node)state.node.style.top=Math.max(54,mount.top-panel.top)+'px';}
   async event(event){
+    if(event.command==='zenit.notebook'){this.notebooksUI ||= new ExtensionNotebooks(this.host);this.notebooksUI.update(event);return;}
     const h=this.host,p=h.platform,ed=h.editor;
+    if(event.command==='zenit.editor.options'){
+      const model=ed.models.get(event.path)?.model,o=event.options;if(!model)return;
+      const opts={};if(Number.isInteger(o.tabSize))opts.tabSize=o.tabSize;if(typeof o.insertSpaces==='boolean')opts.insertSpaces=o.insertSpaces;if(Number.isInteger(o.indentSize)||o.indentSize==='tabSize')opts.indentSize=o.indentSize;
+      model.updateOptions(opts);if(o.tabSize==='auto'||o.insertSpaces==='auto')model.detectIndentation(model.getOptions().insertSpaces,model.getOptions().tabSize);
+      if(ed.current===event.path){const view=ed.activeView?.()||ed.view;view?.updateOptions({...o.cursorStyle?{cursorStyle:['line','block','underline','line-thin','block-outline','underline-thin'][o.cursorStyle-1]}:{},...o.lineNumbers!==undefined?{lineNumbers:['off','on','relative','interval'][o.lineNumbers]}:{}});}return;
+    }
+    if(event.command==='zenit.editor.close'){
+      if(event.owner!==this.owner)return;
+      for(const path of event.paths)if(ed.models.has(path))await h.closeFile(path);
+      await p.api('/extensions/pick',{id:event.id,value:event.paths.every(path=>!ed.models.has(path))});return;
+    }
+    if(event.command==='zenit.editor.reveal'){
+      if(ed.current!==event.path)return;const r=event.range,range={startLineNumber:r.start.line+1,startColumn:r.start.character+1,endLineNumber:r.end.line+1,endColumn:r.end.character+1},view=ed.activeView?.()||ed.view;
+      if(event.revealType===1)view?.revealRangeInCenter(range);else if(event.revealType===2)view?.revealRangeInCenterIfOutsideViewport(range);else if(event.revealType===3)view?.revealRangeAtTop(range);else view?.revealRange(range);return;
+    }
     if(event.command==='zenit.dependencies.changed'){
       if(event.workspace!==h.service().workspace)return;
-      for(const session of [...p.lspSessions.values()])if(session.languages.some(x=>event.languages.includes(x))){const profile=session.profile;await p.stopLSP(session.id);await p.startLSP(profile,true);}
-      await p.loadContributions();
-      h.notify(p.t('Dependencias integradas. Las herramientas activas se han actualizado.','Dependencies integrated. Active language tools refreshed.'));return;
+      const profiles=new Set(event.profiles||[]);p.languageRefresh=true;
+      try{
+        for(const session of [...p.lspSessions.values()])if(session.languages.some(x=>event.languages.includes(x))){profiles.add(session.profile);await p.stopLSP(session.id);}
+        await p.loadContributions();
+        for(const profile of profiles)if(![...p.lspSessions.values()].some(s=>s.profile===profile))await p.startLSP(profile,true);
+      }finally{p.languageRefresh=false;}
+      if(!event.profiles)h.notify(p.t('Dependencias integradas. Las herramientas activas se han actualizado.','Dependencies integrated. Active language tools refreshed.'));return;
     }
     if(event.command==='zenit.trust.changed'){p.host.setTrusted(event.trusted);p.host.setTrustSource?.(event.source);if(!event.trusted)p.workspaceChanged();return;}
     if(event.command==='zenit.preferences.changed'){await p.syncPreferences();return;}
@@ -52,21 +76,47 @@ export class ExtensionServicesUI {
     }
     if(event.command!=='zenit.workspace.edit')return;
     const change=event.edit;
+    if(change.resourceOperationId){this.resourceOperations ||= new Set();if(this.resourceOperations.has(change.resourceOperationId))return;this.resourceOperations.add(change.resourceOperationId);if(this.resourceOperations.size>128)this.resourceOperations.delete(this.resourceOperations.values().next().value);}
+    const renamed=(change.resources||[]).filter(resource=>resource.kind==='rename');
+    const deleted=(change.resources||[]).filter(resource=>resource.kind==='delete');
+    const desktop=h.studio.desktop;
+    for(const resource of deleted)if(desktop){for(const store of [desktop.shared,desktop.remoteBuffers])for(const path of [...store.keys()])if(path===resource.path||path.startsWith(resource.path+'/'))store.delete(path);for(const path of [...desktop.pending])if(path===resource.path||path.startsWith(resource.path+'/'))desktop.pending.delete(path);}
+    for(const resource of renamed)if(desktop){
+      for(const store of [desktop.shared,desktop.remoteBuffers])for(const [path,value] of [...store])if(path===resource.oldPath||path.startsWith(resource.oldPath+'/')){store.delete(path);const next=resource.path+path.slice(resource.oldPath.length);store.set(next,{...value,path:next});}
+      for(const path of [...desktop.pending])if(path===resource.oldPath||path.startsWith(resource.oldPath+'/')){desktop.pending.delete(path);desktop.pending.add(resource.path+path.slice(resource.oldPath.length));}
+    }
     for(const resource of change.resources||[]){
       if(resource.kind==='rename')for(const path of [...ed.models.keys()])if(path===resource.oldPath||path.startsWith(resource.oldPath+'/')){
-        const old=ed.models.get(path),active=ed.current===path,text=old.model?.getValue()??old.value,next=resource.path+path.slice(resource.oldPath.length);ed.close(path);ed.open({...old,path:next,content:text},{activate:active});ed.models.get(next).savedValue=old.savedValue;
+        const old=ed.models.get(path),active=ed.current===path,text=old.model?.getValue()??old.value,next=resource.path+path.slice(resource.oldPath.length),views=(ed.panes||[]).filter(p=>old.model&&p.view.getModel()===old.model).map(p=>({view:p.view,state:p.view.saveViewState()}));
+        ed.close(path);ed.open({...old,path:next,content:text},{activate:active});const record=ed.models.get(next);record.savedValue=old.savedValue;
+        for(const {view,state} of views){view.setModel(record.model);view.restoreViewState(state);}
+        ed.paintPaneLabels?.();
       }
       if(resource.kind==='delete')for(const path of [...ed.models.keys()])if(path===resource.path||path.startsWith(resource.path+'/'))ed.close(path);
     }
+    if(renamed.length)document.dispatchEvent(new CustomEvent('zenit:files-renamed',{detail:renamed}));
+    if(deleted.length)document.dispatchEvent(new CustomEvent('zenit:files-deleted',{detail:deleted.map(row=>row.path)}));
+    if(deleted.length&&!ed.current&&ed.visiblePaths().length)ed.activate(ed.visiblePaths().at(-1));
     for(const buffer of change.buffers||[]){
+      const desktop=h.studio.desktop,known=desktop?.shared.get(buffer.path);
+      // Polling may already have applied this revision, followed by a local
+      // undo. A late copy of its event must not put the extension text back.
+      if(known&&known.sequence>=buffer.sequence)continue;
       let record=ed.models.get(buffer.path);
       if(record?.kind==='binary')continue;
       if(!record){ed.open({path:buffer.path,content:buffer.before},{activate:false});record=ed.models.get(buffer.path);}
       const text=record.model?.getValue()??record.value;
-      if(text===buffer.text)continue;
-      if(text!==buffer.before){h.notify('Hay cambios simultáneos en '+buffer.path+'. El búfer local se conserva.','error');continue;}
-      if(record.model){record.model.pushStackElement();record.model.pushEditOperations([],[{range:record.model.getFullModelRange(),text:buffer.text}],()=>null);record.model.pushStackElement();}
-      else{record.value=buffer.text;if(ed.current===buffer.path)ed.setValue(buffer.text);}
+      if(!sameBufferText(text,buffer.text)){
+        if(!sameBufferText(text,buffer.before)){h.notify('Hay cambios simultáneos en '+buffer.path+'. El búfer local se conserva.','error');continue;}
+        const applying=desktop?.applying;if(desktop)desktop.applying=true;
+        try{
+          if(record.model){record.model.pushStackElement();record.model.pushEditOperations([],[{range:record.model.getFullModelRange(),text:buffer.text}],()=>null);record.model.pushStackElement();}
+          else{record.value=buffer.text;if(ed.current===buffer.path)ed.setValue(buffer.text);}
+        }finally{if(desktop)desktop.applying=applying;}
+      }
+      // Track the accepted server revision before the next user edit. Undo is
+      // then published as a new local change instead of overwritten by a poll.
+      desktop?.acknowledgeBuffer(buffer);
     }
     h.renderTabs();await h.refreshTree();
   }
@@ -85,14 +135,17 @@ export class ExtensionServicesUI {
   async poll(){
     if(this.disposed)return;
     try{
-      const {panels,quickinputs=[],statusItems=[],outputs=[]}=await this.host.platform.api('/extensions/services');
+      const {panels,quickinputs=[],statusItems=[],outputs=[],editorDecorations=[],comments=[]}=await this.host.platform.api('/extensions/services');
+      this.commentsUI ||= new ExtensionCommentsUI(this.host);this.commentsUI.sync(comments);
+      this.editorDecorations ||= new EditorDecorations(this.host);this.editorDecorations.sync(editorDecorations);
+      this.syncTerminalLinks();
       this.status(statusItems);this.outputUI.sync(outputs);
       await this.syncEditors();
       if(!this.quickinput.root)for(const input of quickinputs)if(input.visible)this.quickinput.update(input);
       const ids=new Set(panels.filter(x=>x.visible).map(x=>x.id));
       for(const [id,state] of this.panels)if(!ids.has(id)){this.remove(state);this.panels.delete(id);}
       for(const panel of panels){if(!panel.visible)continue;let state=this.panels.get(panel.id);
-        if(!state){state={panel,seq:0,urls:[]};this.panels.set(panel.id,state);await this.render(state);this.show(state);}else if(state.panel.html!==panel.html){state.panel=panel;await this.render(state);}else {const previous=state.panel;state.panel=panel;this.title(state);if(previous.revision!==panel.revision&&panel.revealSequence!==previous.revealSequence)this.show(state);}
+        if(!state){state={panel,seq:0,urls:[]};this.panels.set(panel.id,state);await this.render(state);if(!panel.preserveFocus)this.show(state);}else if(state.panel.html!==panel.html){state.panel=panel;await this.render(state);}else {const previous=state.panel;state.panel=panel;this.title(state);if(previous.revision!==panel.revision&&panel.revealSequence!==previous.revealSequence)this.show(state);}
         for(const item of panel.messages)if(item.seq>state.seq&&state.loaded){state.frame.contentWindow.postMessage(item.message,'*');state.seq=item.seq;}
       }
     }catch(error){if(!this.disposed)console.warn('Extension services:',error.message);}
@@ -118,13 +171,27 @@ export class ExtensionServicesUI {
     const covered=document.documentElement.dataset.editorCovered==='true',editors=[];
     const pos=(line,column)=>({line:line-1,character:column-1});
     if(!covered)for(const [index,pane] of (ed.panes||[]).entries()){
-      const view=pane.view,model=view?.getModel(),path=ed.pathFor(model);if(!path||!pane.node.getClientRects().length)continue;
+      const view=pane.view,model=view?.getModel(),path=ed.pathFor(model);if(!path||path.startsWith('.team/')||!pane.node.getClientRects().length)continue;
       const opts=model.getOptions();editors.push({id:String(index),path,version:model.getVersionId(),language:model.getLanguageId(),active:view===ed.view,
         visibleRanges:view.getVisibleRanges().map(r=>({start:pos(r.startLineNumber,r.startColumn),end:pos(r.endLineNumber,r.endColumn)})),
         selections:view.getSelections().map(s=>({anchor:pos(s.selectionStartLineNumber,s.selectionStartColumn),active:pos(s.positionLineNumber,s.positionColumn)})),options:{tabSize:opts.tabSize,insertSpaces:opts.insertSpaces}});
     }
-    const key=JSON.stringify(editors);if(key===this.editorKey&&Date.now()-this.editorSent<1500)return;
-    await h.platform.api('/extensions/editor-state',{editors});this.editorKey=key;this.editorSent=Date.now();
+    const tabs=ed.visiblePaths().filter(path=>!path.startsWith('.team/')).map(path=>({path,column:(editors.findIndex(e=>e.path===path)+1)||1,active:ed.current===path,dirty:ed.isDirty(path)}));const key=JSON.stringify({editors,tabs});if(key===this.editorKey&&Date.now()-this.editorSent<1500)return;
+    await h.platform.api('/extensions/editor-state',{editors,tabs,owner:this.owner});this.editorKey=key;this.editorSent=Date.now();
+  }
+  syncTerminalLinks(){
+    this.terminalRegistrations ||= new Map();const hosts=this.terminalLinkHosts||[],signature=hosts.map(x=>x.id).join(','),wanted=new Set();
+    for(const terminal of this.host.platform.terminals.values()){
+      if(!terminal.xterm?.registerLinkProvider||terminal.closed||!hosts.length)continue;wanted.add(terminal.id);const old=this.terminalRegistrations.get(terminal.id);if(old?.signature===signature)continue;old?.provider.dispose();
+      const provider=terminal.xterm.registerLinkProvider({provideLinks:(y,callback)=>{
+        const buffer=terminal.xterm.buffer.active.getLine(y-1),line=buffer?.translateToString(true)||'';if(!line){callback(undefined);return;}
+        Promise.allSettled(hosts.map(async ext=>{const result=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'terminalLinks',terminal:terminal.id,line});return (result.items||[]).map(link=>{
+          const cell=offset=>{let units=0;for(let column=0;column<buffer.length;column++){if(units>=offset)return column+1;units+=buffer.getCell(column)?.getChars().length||0;}return buffer.length;};
+          return {text:line.slice(link.startIndex,link.startIndex+link.length),range:{start:{x:cell(link.startIndex),y},end:{x:Math.max(1,cell(link.startIndex+link.length)-1),y}},activate:()=>this.host.platform.safe(async()=>{const data=await this.host.platform.api('/extensions/runtime/request',{id:ext.id,method:'terminalLink',link:link.id});for(const effect of data.effects||[]){if(effect.open)await this.host.openFile(effect.open);if(effect.message)this.host.notify(effect.message);if(effect.url){const url=new URL(effect.url);if(['https:','http:'].includes(url.protocol))window.open(url.href,'_blank','noopener,noreferrer');}}})};
+        });})).then(results=>callback(results.flatMap(r=>r.status==='fulfilled'?r.value:[])));
+      }});this.terminalRegistrations.set(terminal.id,{provider,signature});
+    }
+    for(const [id,value] of this.terminalRegistrations)if(!wanted.has(id)){value.provider.dispose();this.terminalRegistrations.delete(id);}
   }
   restoreTabs(){for(const state of this.panels.values())if(state.tab&&!state.tab.isConnected)document.getElementById('file-tabs').append(state.tab);}
   title(state){if(state.tab)state.tab.querySelector('span').textContent=state.panel.title;if(state.node)state.node.querySelector('strong').textContent=state.panel.title;}
@@ -137,8 +204,9 @@ export class ExtensionServicesUI {
     const node=document.createElement('section');node.className='extension-webview-surface';node.hidden=!active;node.classList.toggle('active',!!active);node.dataset.panel=p.id;
     const header=document.createElement('header');header.innerHTML=`<strong>${esc(p.title)}</strong><span>${esc(p.extension)}</span><button class="icon-button" aria-label="Cerrar panel de extensión">${icon('close')}</button>`;header.querySelector('button').onclick=()=>h.platform.api('/extensions/runtime/request',{id:p.extension,method:'webviewDispose',panel:p.id}).catch(error=>h.notify(error.message,'error'));node.append(header);
     const frame=document.createElement('iframe');frame.title=p.title;frame.setAttribute('sandbox',p.options?.enableScripts?'allow-scripts allow-forms allow-downloads':'allow-forms');node.append(frame);state.node=node;state.frame=frame;state.loaded=false;
-    let html=p.html;const resources=[...new Set(html.match(/zenit-resource:\/\/[^/]+\/[^"'<>\s)]+/g)||[])];
-    for(const resource of resources){try{const uri=new URL(resource),value=decodeURIComponent(uri.pathname.slice(1));const data=await h.platform.api('/extensions/resource?panel='+encodeURIComponent(p.id)+'&path='+encodeURIComponent(value)),raw=Uint8Array.from(atob(data.data),x=>x.charCodeAt(0)),blob=URL.createObjectURL(new Blob([raw],{type:data.mime}));state.urls.push(blob);html=html.replaceAll(resource,blob);}catch(error){h.notify('Recurso del panel: '+error.message,'error');}}
+    // An opaque sandbox cannot load blobs created in the parent origin. The
+    // backend gives this document a revocable, root-scoped resource capability.
+    const html=p.html;
     const nonce=html.match(/nonce=["']([^"']+)["']/)?.[1]||'';
     const script=`<script${nonce?' nonce="'+esc(nonce)+'"':''}>const __stateKey=${JSON.stringify(p.id)};let __state=${JSON.stringify(state.savedState??p.state??null).replaceAll('<','\\u003c')},__acquired=false;window.acquireVsCodeApi=()=>{if(__acquired)throw Error('acquireVsCodeApi ya se ha llamado.');__acquired=true;return Object.freeze({postMessage:message=>parent.postMessage({zenitWebview:__stateKey,message},'*'),getState:()=>__state,setState:value=>{__state=value;parent.postMessage({zenitWebview:__stateKey,state:value,stateUpdate:true},'*');return value;}});};<\/script>`;
     frame.onload=()=>{state.loaded=true;};const rendered=await h.platform.api('/extensions/webview/document',{panel:p.id,html:script+html});frame.src=rendered.url;
@@ -146,5 +214,5 @@ export class ExtensionServicesUI {
   }
   show(state){for(const value of this.panels.values()){if(value.node){value.node.hidden=true;value.node.classList.remove('active');}value.tab?.classList.remove('active');}this.host.platform.closePage();state.node.hidden=false;state.node.classList.add('active');state.tab.classList.add('active');document.documentElement.dataset.editorCovered='true';}
   async receive(event){const id=event.data?.zenitWebview,state=this.panels.get(id);if(!state||event.source!==state.frame?.contentWindow)return;if(event.data.stateUpdate){state.savedState=event.data.state;return;}try{await this.host.platform.api('/extensions/runtime/request',{id:state.panel.extension,method:'webviewMessage',panel:id,message:event.data.message});}catch(error){this.host.notify(error.message,'error');}}
-  dispose(){this.disposed=true;this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
+  dispose(){this.disposed=true;this.commentsUI?.dispose();this.editorDecorations?.dispose();for(const value of this.terminalRegistrations?.values()||[])value.provider.dispose();this.outputUI.dispose();this.quickinput.dispose();clearTimeout(this.timer);this.resize.disconnect();window.removeEventListener('message',this.message);for(const state of this.panels.values())this.remove(state);}
 }

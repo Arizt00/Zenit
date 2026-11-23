@@ -1,0 +1,23 @@
+name: Zénit nC LSP - lightweight validation
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'tests/test_nc_language_integration.py'
+      - '.github/workflows/zenit-nc-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check nC language integration and debugger source
+        run: |
+          python -m unittest discover -s tests -p test_nc_language_integration.py -v
+          python -m compileall -q backend

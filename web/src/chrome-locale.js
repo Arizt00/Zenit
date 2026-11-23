@@ -2,7 +2,7 @@ import {ENGLISH_CHROME} from './chrome-strings.js';
 
 /** Translate legacy chrome labels only. Documents, chat and user identity are excluded. */
 export function installChromeLocale(platform){
-  const ignore='script,style,svg,code,pre,textarea,input,[contenteditable],.monaco-editor,.xterm,.chat-message,.melody-plan-files,.file-tabs,.file-tree,.tree-row,.tree-name,.file-name,.forge-file,.forge-session-name,.activity-row,.activity-path,.profile-activity-identity,.activity-file-name,.profile-name,.profile-initial,.avatar,.welcome-profile-avatar,#home-name';
+  const ignore='#onboarding,script,style,svg,code,pre,textarea,input,[contenteditable],.monaco-editor,.xterm,.chat-message,.melody-plan-files,.file-tabs,.file-tree,.tree-row,.tree-name,.file-name,.forge-file,.forge-session-name,.activity-row,.activity-path,.profile-activity-identity,.activity-file-name,.profile-name,.profile-initial,.avatar,.welcome-profile-avatar,#home-name,.code-detail-body,.code-detail-location,#code-detail-title,.diagnostic-message,.diagnostic-file,.diagnostic-origin';
   const originals=new WeakMap(),attributes=new WeakMap();
   const translate=root=>{
     if(root.nodeType===Node.TEXT_NODE){

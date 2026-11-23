@@ -38,6 +38,14 @@ class StudioTests(unittest.TestCase):
         self.assertEqual(s.export(),before)
         with self.assertRaises(ValueError):s.update({'avatar':'data:image/png;base64,PHNjcmlwdD4='})
         with self.assertRaises(ValueError):s.update({'recent':[{'path':'x.py'}]})
+    def test_home_pins_persist_without_replacing_profile_or_history(self):
+        s=StudioState(self.base);s.update({'displayName':'Creator','recent':[{'path':'main.py','workspace':'C:/project','openedAt':'2026-10-28'}]})
+        s.update({'pinnedProjects':['C:/project','C:/project'],'pinnedSpaces':[{'workspace':'C:/project','name':'Revisión'}]})
+        data=StudioState(self.base).export();self.assertEqual(data['pinnedProjects'],['C:/project']);self.assertEqual(data['pinnedSpaces'][0]['name'],'Revisión');self.assertEqual(data['displayName'],'Creator');self.assertEqual(len(data['recent']),1)
+        before=s.export()
+        with self.assertRaises(ValueError):s.update({'displayName':'changed','pinnedSpaces':[{'workspace':'C:/project','name':'x','extra':True}]})
+        self.assertEqual(s.export(),before)
+        with self.assertRaises(ValueError):s.update({'pinnedProjects':['bad\npath']})
     def test_installer_copies_actual_payload_and_keeps_existing_version(self):
         payload=self.base/'payload';payload.mkdir();(payload/'zenit.exe').write_bytes(b'MZ-test-fixture');(payload/'_internal').mkdir();(payload/'_internal/test.txt').write_text('payload',encoding='utf-8')
         target=self.base/'installed';old=target/f'app-{VERSION}-R{REVISION}';old.mkdir(parents=True);(old/'old.txt').write_text('preserved')

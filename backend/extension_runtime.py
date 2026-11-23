@@ -16,13 +16,28 @@ from .preferences import atomic_json
 
 class Host:
     def __init__(self, node, root, entry, workspace, options, services=None):
-        self.lock=threading.Lock();self.write_lock=threading.Lock();self.responses=queue.Queue();self.logs=''
+        self.lock=threading.Lock();self.write_lock=threading.Lock();self.pending={};self.dead_error=None;self.logs=''
         self.services=services;self.workspace=workspace;self.extension_id=options['extensionId'];self.extension_root=Path(root)
+        self.extension_ids={self.extension_id,*[x['id'] for x in options.get('dependencies',[])]}
+        from .extension_cancellation import ProviderOperations
+        self.provider_operations=ProviderOperations(self)
         self.extension_roots=[self.extension_root,*[Path(x['root']) for x in options.get('dependencies',[])]]
-        self.process=subprocess.Popen([node,str(Path(__file__).with_name('extension_host.cjs'))],cwd=workspace.root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=child_environment(),creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+        environment=child_environment()
+        if self.extension_id=='nc-lang.nc-language' and services is not None:environment['ZENIT_NC_PROJECT_DIAGNOSTICS']='1'
+        self.process=subprocess.Popen([node,str(Path(__file__).with_name('extension_host.cjs'))],cwd=workspace.root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=environment,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
         threading.Thread(target=self.read,daemon=True).start();threading.Thread(target=self.read_errors,daemon=True).start()
-        try:self.capabilities=self.request({'method':'activate','entry':str(entry),'root':str(root),'workspace':str(workspace.root),**options})
-        except Exception:self.close();raise
+        try:
+            from .extension_bootstrap import activation_message
+            with activation_message({'method':'activate','entry':str(entry),'root':str(root),'workspace':str(workspace.root),**options},options['storage']) as message:
+                self.capabilities=self.request(message)
+            from .extension_command_icons import command_icons
+            icons={}
+            for item in [*options.get('dependencies',[]),{'root':root,'manifest':options['manifest']}]:icons.update(command_icons(item['root'],item['manifest']))
+            self.command_icons=icons
+            for command in self.capabilities.get('commands',[]):
+                if command['id'] in icons:command['icon']=icons[command['id']]
+        except Exception as error:
+            self.close();error.add_note(self.logs[-8000:]);raise
 
     def read(self):
         try:
@@ -31,10 +46,15 @@ class Host:
                 try:
                     message=json.loads(line)
                     if message.get('type')=='service':threading.Thread(target=self.service,args=(message,),daemon=True).start()
-                    else:self.responses.put(message)
+                    else:
+                        with self.lock:waiter=self.pending.get(message.get('id'))
+                        if waiter:waiter.put(message)
                 except ValueError:pass
         except (OSError,ValueError):pass
-        finally:self.responses.put({'error':'El proceso de la extensión terminó.'})
+        finally:
+            with self.lock:
+                self.dead_error='El proceso de la extensión terminó.'
+                for waiter in self.pending.values():waiter.put({'error':self.dead_error})
 
     def read_errors(self):
         try:
@@ -59,13 +79,18 @@ class Host:
         try:self.send({'type':'serviceEvent','name':name,'value':value})
         except (OSError,ValueError):pass
 
-    def request(self, message):
+    def request(self, message, cancellation=None):
+        message={**message,'id':uuid.uuid4().hex};waiter=queue.Queue()
         with self.lock:
-            message={**message,'id':uuid.uuid4().hex}
-            self.send(message)
+            if self.dead_error:raise ValueError(self.dead_error)
+            self.pending[message['id']]=waiter
+        try:
+            if cancellation:
+                if not cancellation.send(message):return {'items':[],'cancelled':True}
+            else:self.send(message)
             deadline=time.monotonic()+60
             while True:
-                try:result=self.responses.get(timeout=1);break
+                try:result=waiter.get(timeout=1);break
                 except queue.Empty:
                     # A visible wizard is waiting for the human, not a hung command.
                     if self.services and self.services.has_interaction(self):deadline=time.monotonic()+60
@@ -73,6 +98,8 @@ class Host:
             if result.get('error'):raise ValueError(result['error'])
             if result.get('id')!=message['id']:raise ValueError('Respuesta inesperada de la extensión.')
             return result['result']
+        finally:
+            with self.lock:self.pending.pop(message['id'],None)
 
     def close(self):
         if self.services:self.services.close_host(self)
@@ -127,6 +154,29 @@ class ExtensionRuntime:
                     self.start(workspace,eid,True)
                 except Exception as error:self.errors[eid]=str(error)
         return self.snapshot()
+
+    def migrate_factory_approvals(self,updates):
+        """An app-shipped exact-digest update can retain an existing single-package approval.
+
+        New dependencies, custom packages and projects without prior approval keep
+        the normal review path. The factory catalog is part of the app payload.
+        """
+        from .extension_dependencies import dependency_graph
+        import hashlib
+        changed=False
+        with self.lock:
+            for item in updates:
+                previous=item.get('_factoryPrevious');eid=item['id']
+                if not previous or not item.get('enabled'):continue
+                try:graph=dependency_graph(self.store,eid)
+                except ValueError:continue
+                if len(graph)!=1 or graph[0]['manifest'].get('extensionDependencies'):continue
+                old=[{'id':eid.casefold(),'sha256':previous['sha256'],'version':previous['version'],'requires':[]}]
+                signature=hashlib.sha256(json.dumps(old,sort_keys=True).encode()).hexdigest()
+                for workspace,entries in self.graph_approvals.items():
+                    if eid in self.approvals.get(workspace,[]) and entries.get(eid)==signature:
+                        entries[eid]=self.graph_signature(graph);changed=True
+            if changed:atomic_json(self.graph_approvals_path,self.graph_approvals)
     def start(self, workspace, eid, consent):
         if consent is not True or not workspace.trusted:raise PermissionError('Autoriza la extensión ejecutable en un proyecto de confianza.')
         with self.lock:
@@ -156,7 +206,13 @@ class ExtensionRuntime:
                 try:extensions.append({'id':item['id'],'root':str(other),'manifest':localized_manifest(other,self.store.prefs.get('general.locale'))})
                 except (OSError,ValueError):pass
             profiles=terminal_profiles()
-            options={'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None,'iconTheme':self.services.icon_state()['configurationId'] if self.services else 'zenit','themeKind':self.services.theme_state()['kind'] if self.services else 1,'themeLabel':self.services.theme_state()['label'] if self.services else 'Zénit Día'}
+            preferred=self.store.prefs.get('terminal.defaultProfile')
+            profiles=sorted(profiles,key=lambda row:row['id']!=preferred)
+            options={'installedAt':self.store.prefs.directory.stat().st_ctime*1000,'extensionId':eid,'manifest':manifest,'extensions':extensions,'dependencies':graph[:-1],'storage':str(self.store.root/'.runtime-data'/eid),'locale':self.store.prefs.get('general.locale'),'shell':profiles[0]['argv'][0] if profiles else None,'editorState':self.services.editor_snapshot if self.services else None,'iconTheme':self.services.icon_state()['configurationId'] if self.services else 'zenit','themeKind':self.services.theme_state()['kind'] if self.services else 1,'themeLabel':self.services.theme_state()['label'] if self.services else 'Zénit Día'}
+            options['authenticationProviders']=['github'] if self.services and hasattr(self.services.platform,'extension_accounts') else []
+            if manifest.get('contributes',{}).get('notebookRenderer') and self.services:
+                from .foundation import python_command
+                options['notebookPython']=python_command(workspace,self.services.platform.runtimes.config.get('tools'))
             self.stop(eid);self.hosts[eid]=Host(node,root,entry,workspace,options,self.services)
             self.approve(workspace,eid,graph)
             self.store.prefs.audit('extension.execute',extension=eid)
@@ -166,7 +222,33 @@ class ExtensionRuntime:
         host=self.hosts.get(body.get('id'))
         if not host:raise ValueError('Inicia el motor de la extensión primero.')
         method=body.get('method')
-        if method not in ('command','provide','virtual','willSave','didSave','tree','resolveAction','decorations','webviewMessage','webviewDispose','ports','debugVisualization'):raise ValueError('Operación no válida.')
+        if isinstance(host,Host) and method in ('provide','resolveCompletion','resolveAction'):
+            with host.provider_operations.begin(body.get('requestKey')) as operation:
+                if operation.event.is_set():return {'items':[],'cancelled':True}
+                try:result=self._request(workspace,host,body,operation)
+                except Exception:
+                    if not operation.event.is_set():raise
+                    return {'items':[],'cancelled':True}
+                return {'items':[],'cancelled':True} if operation.event.is_set() else result
+        return self._request(workspace,host,body)
+
+    def cancel(self,workspace,body):
+        if not workspace.trusted:raise PermissionError('Proyecto no autorizado.')
+        host=self.hosts.get(body.get('id'))
+        if not isinstance(host,Host):return {'cancelled':False}
+        host.provider_operations.cancel(body.get('requestKey'));return {'cancelled':True}
+
+    def _request(self,workspace,host,body,operation=None):
+        method=body.get('method')
+        if host.extension_id=='nc-lang.nc-language' and isinstance(host,Host) and method=='provide' and body.get('kind')=='rename':
+            from .nc_refactor import rename
+            result=rename(self.services.platform,workspace,host,body,operation.event.is_set if operation else lambda:False) if self.services else None
+            if result is not None:return result
+        if method not in ('command','provide','virtual','willSave','didSave','tree','resolveAction','resolveCompletion','decorations','webviewMessage','webviewDispose','ports','debugVisualization','treeCheckbox','editSessionIdentity','terminalLinks','terminalLink','tasks','notebook'):raise ValueError('Operación no válida.')
+        if method=='notebook':
+            from .extension_services import file_path
+            target=file_path(body.get('uri'))
+            if not target.resolve().is_relative_to(workspace.root.resolve()):raise ValueError('Abre un cuaderno dentro del proyecto actual.')
         if method=='decorations':
             paths=body.get('paths')
             if not isinstance(paths,list) or len(paths)>300:raise ValueError('Lista de decoraciones no válida.')
@@ -180,7 +262,13 @@ class ExtensionRuntime:
                 from .extension_services import file_path
                 file_path(str(candidate))
             else:workspace.resolve(document['path'],must_exist=False)
-        return host.request({k:body[k] for k in ('method','command','kind','document','position','range','uri','arguments','reason','newName','view','element','context','options','character','positions','color','action','paths','revision','panel','message','ports','visualization') if k in body})
+        message={k:body[k] for k in ('method','command','kind','document','position','range','uri','arguments','reason','newName','view','element','context','options','character','positions','color','action','completion','name','index','text','controller','paths','revision','panel','message','ports','visualization','checkboxState','scheme','identity1','identity2','line','terminal','link') if k in body}
+        if self.services and host.extension_id=='nc-lang.nc-language' and method=='provide':
+            pending=(self.services.platform.workbenches.snapshot(workspace).get('session') or {}).get('documents',[])
+            message['documents']=[{'path':d['path'],'text':d['content'],'language':'nc'} for d in pending
+                                  if d.get('dirty') and isinstance(d.get('content'),str) and not Path(d['path']).is_absolute()
+                                  and Path(d['path']).suffix.lower() in ('.n','.nc') and d['path']!=document.get('path')]
+        return host.request(message,cancellation=operation) if operation else host.request(message)
     def stop(self,eid,forget=False):
         with self.lock:
             if forget:

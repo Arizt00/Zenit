@@ -1,6 +1,9 @@
 from pathlib import Path
 import runpy
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+from PyInstaller.archive.writers import CArchiveWriter
+# Match the portable ZIP: avoid maximum compression delaying SDK packaging.
+CArchiveWriter._COMPRESSION_LEVEL=6
 ROOT=Path(SPECPATH).parent
 release=runpy.run_path(str(ROOT/'backend/version.py'))
 data=[(str(ROOT/'web'),'web')]+collect_data_files('webview')

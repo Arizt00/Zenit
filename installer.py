@@ -48,6 +48,14 @@ class Installer:
         return {'version': VERSION, 'revision': REVISION, 'target': str(self.target), 'bytes': size, 'available': (self.payload / 'zenit.exe').is_file(),
                 'winget': bool(shutil.which('winget')), 'packages': [{'id': k, 'name': v[0], 'package': v[1]} for k, v in PACKAGES.items()]}
 
+    def preflight(self):
+        if not (self.payload/'zenit.exe').is_file():raise ValueError('No se encuentra el programa que debe instalarse.')
+        if os.name=='nt':
+            target=self.target.expanduser().resolve();destination=target/f'app-{VERSION}-R{REVISION}'
+            longest=max((len(str(file.relative_to(self.payload))) for file in self.payload.rglob('*') if file.is_file()),default=0)
+            intermediate=max(len('.install-')+8,len(destination.name+'-previous-'+str(time.time_ns())) if destination.exists() else len(destination.name))
+            if len(str(target))+2+intermediate+longest>=260:raise ValueError('La ruta de instalación es demasiado larga para este paquete de Windows. Elige una carpeta más corta, por ejemplo la carpeta Programs de tu usuario.')
+
     def status(self):
         with self.lock:
             snapshot = copy.deepcopy(self.state)
@@ -163,6 +171,7 @@ class Installer:
     def _install(self, options):
         staging = None
         try:
+            self.preflight()
             target = self.target.expanduser().resolve()
             if target == Path(target.anchor) or len(target.parts) < 3 or target.is_symlink():
                 raise ValueError('Selecciona una carpeta de instalación válida.')
@@ -206,7 +215,7 @@ class Installer:
                 temporary_launcher=target/'.Zenit-launcher.new'
                 shutil.copy2(launcher,temporary_launcher)
                 temporary_launcher.replace(target/'Zenit.exe')
-            atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'en')})
+            atomic_json(target / 'installation.json', {'version': VERSION, 'revision':REVISION, 'directory': destination.name, 'directories':directories, 'packages': options.get('packages', []), 'locale': options.get('locale', 'en'),'integrations':{key:bool(options.get(key,default)) for key,default in (('shortcuts',True),('register',True),('desktop',False))}})
             # The app consumes this only if there is no profile yet.
             atomic_json(destination / 'first-launch.json', {'general.locale': options.get('locale', 'en')})
             if options.get('shortcuts', True): self._shortcuts(destination, options.get('desktop', False))
@@ -299,6 +308,13 @@ class StaticHandler(SimpleHTTPRequestHandler):
 
 
 def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--apply-update',type=Path);args=parser.parse_args()
+    if args.apply_update:
+        from backend.update_handoff import apply_update
+        def launch(executable,workspace):subprocess.Popen([str(executable),'--desktop','--workspace',workspace],cwd=executable.parent,creationflags=0x08000000 if os.name=='nt' else 0)
+        try:apply_update(args.apply_update,Installer,launch=launch)
+        except Exception:return 1
+        return 0
     import webview
     api = Installer()
     server = ThreadingHTTPServer(('127.0.0.1', 0), partial(StaticHandler, directory=str(ROOT / 'web')))
@@ -310,4 +326,4 @@ def main():
     finally: server.shutdown(); server.server_close()
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__': sys.exit(main() or 0)

@@ -24,7 +24,7 @@ export function installMelodyResearch(host){
       const evidence=()=>document.querySelector('.handoff-editor textarea')?.value||text;
       document.querySelector('[data-research-copy]').onclick=()=>p.safe(async()=>{await navigator.clipboard.writeText(evidence());h.notify('Evidence copied.');});
       document.querySelectorAll('[data-evidence-path]').forEach(b=>b.onclick=()=>p.safe(async()=>{h.closeModal();await h.openFile(b.dataset.evidencePath,+b.dataset.evidenceLine);}));
-      document.querySelector('[data-research-ask]').onclick=()=>p.safe(async()=>{const context=evidence();h.closeModal();h.dock.floatPanel('assistant');p.melodyMode='chat';const question='Review this '+title+' using only the supplied evidence. Separate facts, missing evidence, and hypotheses. Propose the next verification. Do not edit files.\n'+context;document.getElementById('ai-input').value=question;if(!p.prefs['ai.model'])return p.settings('ai');await p.sendAI(question,{consult:true});});
+      document.querySelector('[data-research-ask]').onclick=()=>p.safe(async()=>{const context=evidence();h.closeModal();h.dock.show('assistant');p.setMelodyMode?.('chat');const question='Review this '+title+' using only the supplied evidence. Separate facts, missing evidence, and hypotheses. Propose the next verification. Do not edit files.\n'+context;document.getElementById('ai-input').value=question;if(!p.prefs['ai.model'])return p.openModelPicker?.();await p.sendAI(question,{consult:true});});
     }finally{button.disabled=false;}
   });};
 }

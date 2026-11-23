@@ -31,10 +31,13 @@ class DesktopAPI:
                 app=self._application
                 target=Path(path).resolve()
                 known={os.path.normcase(str(Path(b['path']).resolve())) for b in app.features.buffers.snapshot()['buffers'] if Path(b['path']).is_absolute()}
-                if not app.workspace.trusted or os.path.normcase(str(target)) not in known or not target.is_file():
+                if not app.workspace.trusted or os.path.normcase(str(target)) not in known or target.exists() and not target.is_file():
                     raise PermissionError('Abre el archivo en la sesión antes de separarlo.')
                 path=str(target)
-            else:self._application.workspace.resolve(path)
+            else:
+                target=self._application.workspace.resolve(path,must_exist=False)
+                if not target.is_file() and (target.exists() or path not in self._application.features.buffers.items):
+                    raise FileNotFoundError('Abre el archivo o su búfer compartido antes de separarlo.')
         key=panel+':'+path if panel=='editor' else panel
         if key in self._children:
             self._children[key].destroy()
@@ -48,6 +51,7 @@ class DesktopAPI:
                 if isinstance(value,(int,float)) and -100_000<=value<=100_000:coordinates[axis]=round(value)
         child=webview.create_window(PRODUCT_NAME+' · '+titles[panel],self._url+'/?'+query,js_api=api,width=1060 if panel in ('editor','forge','preview','lantern') or panel.startswith('profile-') else 640,height=760,min_size=(380,320),easy_drag=False,background_color='#191d28',**coordinates)
         api._window=child;self._children[key]=child
+        api._bind_session_close()
         def closed():
             self._children.pop(key,None)
             # Qt evaluation can wait for a renderer already closing. Never keep
@@ -61,11 +65,49 @@ class DesktopAPI:
         child.events.closed+=closed
         return {'opened':True,'panel':panel}
 
+    def _bind_session_close(self):
+        """Defer the first close while capturing; never block WebView's UI thread."""
+        import threading
+        lock=threading.Lock();state={'pending':False,'allowed':False,'finished':False}
+        def closing():
+            import json
+            with lock:
+                if state['allowed']:return True
+                if state['pending']:return False
+                state['pending']=True
+            def finish():
+                with lock:
+                    if state['finished']:return
+                    state['finished']=True;state['allowed']=True
+                self._window.destroy()
+            def capture():
+                try:
+                    raw=self._window.evaluate_js('window.zenitSessionSnapshot ? JSON.stringify(window.zenitSessionSnapshot()) : null')
+                    if not raw:return
+                    if not isinstance(raw,str) or len(raw)>52*1024*1024:raise ValueError('Snapshot demasiado grande.')
+                    body=json.loads(raw);app=self._application
+                    if body.get('workspace')==str(app.workspace.root):app.features.workbenches.checkpoint(app.workspace,body)
+                except Exception as error:self._application.features.hilo._failure('session-close',error)
+                finally:timer.cancel();finish()
+            def timed_out():
+                self._application.features.hilo._failure('session-close',TimeoutError('El editor no respondió a la captura de cierre; se conserva el último checkpoint disponible.'))
+                finish()
+            timer=threading.Timer(4,timed_out);timer.daemon=True;timer.start();threading.Thread(target=capture,daemon=True).start()
+            return False
+        self._window.events.closing+=closing
+
     def close_panel(self):
         """Return this shared child to its original application, without stopping jobs."""
         if self._owner is None:raise ValueError('Esta ventana ya está acoplada.')
         self._window.destroy()
         return {'returned':True,'panel':self._panel}
+
+    def focus_panel(self, panel, path=''):
+        key=panel+':'+path if panel=='editor' else panel
+        child=self._children.get(key)
+        if child is None:return {'focused':False}
+        child.restore();child.show()
+        return {'focused':True}
 
     def focus_main(self):
         owner=self
@@ -80,7 +122,25 @@ class DesktopAPI:
     def install_update(self):
         import subprocess
         from pathlib import Path
+        previous=getattr(self,'_update_process',None)
+        if previous and previous.poll() is None:return {'prepared':True,'pid':previous.pid}
         installer=self._application.features.updates.installer()
+        if sys.platform=='win32':
+            import psutil,time,uuid
+            from .preferences import atomic_json
+            if not getattr(sys,'frozen',False):raise ValueError('La instalación con reinicio requiere la aplicación instalada.')
+            if self._owner or self._children:raise ValueError('Devuelve las ventanas externas al IDE antes de actualizar.')
+            app=self._application
+            if any(not job.done for job in app.runner.jobs.values()):raise ValueError('Espera o cancela las ejecuciones activas antes de actualizar.')
+            if any(not session.closed for session in app.features.terminals.sessions.values()):raise ValueError('Cierra las terminales y apaga las máquinas antes de actualizar.')
+            target=Path(sys.executable).resolve().parent.parent
+            if not (target/'installation.json').is_file():raise ValueError('No se encontró el lanzador instalado. Usa el instalador manual para esta edición portable.')
+            state=app.features.updates.snapshot();request=app.features.prefs.directory/'updates'/('handoff-'+uuid.uuid4().hex+'.json')
+            atomic_json(request,{'profile':str(app.features.prefs.directory),'target':str(target),'workspace':str(app.workspace.root),'locale':app.features.prefs.get('general.locale'),'pid':os.getpid(),'processCreated':psutil.Process().create_time(),'created':time.time(),'version':state['available']['version'],'installer':str(installer),'sha256':state['available']['sha256']})
+            self._update_request=request.name
+            process=subprocess.Popen([str(installer),'--apply-update',str(request)],cwd=installer.parent,creationflags=subprocess.CREATE_NO_WINDOW)
+            self._update_process=process
+            return {'prepared':True,'pid':process.pid}
         # The user launches the downloaded installer when ready. The current
         # editor stays open, so unsaved buffers are never forcibly discarded.
         if sys.platform=='darwin':
@@ -93,6 +153,17 @@ class DesktopAPI:
         else:command=[str(installer)]
         process=subprocess.Popen(command,cwd=installer.parent,creationflags=subprocess.CREATE_NO_WINDOW if sys.platform=='win32' else 0)
         return {'opened':True,'pid':process.pid}
+
+    def update_handoff_status(self):
+        import json
+        try:state=json.loads((self._application.features.prefs.directory/'updates/install-result.json').read_text('utf-8'))
+        except (OSError,ValueError):return {'state':'preparing'}
+        return state if state.get('request')==getattr(self,'_update_request',None) else {'state':'preparing'}
+
+    def finish_update(self):
+        if self.update_handoff_status().get('state')!='waiting':raise ValueError('El instalador aún no está preparado.')
+        self._window.destroy()
+        return {'restarting':True}
 
     def new_window(self, path='', content=None):
         import subprocess

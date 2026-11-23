@@ -9,10 +9,10 @@
 **Code, execution and AI assistance in one desktop workspace — even across windows.**
 
 [![Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-7b61ff)](LICENSE)
-[![Public preview](https://img.shields.io/badge/preview-0.5.4_R11-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11)
-[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe)
+[![Public preview](https://img.shields.io/badge/preview-0.5.5_R7-7b61ff)](https://github.com/Arizt00/Zenit/releases/tag/v0.5.5-preview.7)
+[![Windows x64](https://img.shields.io/badge/download-Windows_x64-252638)](https://github.com/Arizt00/Zenit/releases/download/v0.5.5-preview.7/Zenit-0.5.5-R7-Windows-Setup.exe)
 
-[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.4-preview.11) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
+[**Download Zénit**](https://github.com/Arizt00/Zenit/releases/tag/v0.5.5-preview.7) · [Getting started](docs/GETTING_STARTED.md) · [Contribute](CONTRIBUTING.md) · [Discuss](https://github.com/Arizt00/Zenit/discussions)
 
 [Read the launch article on DEV Community](https://dev.to/aristote_motehernndez/zenit-a-desktop-workspace-for-code-ai-assistance-and-real-execution-1np8)
 
@@ -39,6 +39,15 @@ Melody evidence tools and actual DAP memory/disassembly with pause comparison.
 See the [feature gallery](docs/media/r7/README.md), captured during R7 development,
 and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 
+The source now includes **R16**: per-project saved spaces, durable session
+recovery, a shared execution target and optional verified SDK components.
+HILO coordinates subsystems inside the backend; Melody and Lantern retain their
+own product surfaces. R15 also adds Co-Code shared editing and the NASM workbench.
+See [R16 notes](docs/PREVIEW_054_R16.md), [Co-Code](docs/TEAM.md) and the
+[Lantern environment guide](docs/SESSION_ENVIRONMENTS.md). The public download
+links above still point to the published R11 assets; source/local builds do not
+change that public release.
+
 ## What makes it useful
 
 | A daily problem | How Zénit helps |
@@ -54,7 +63,7 @@ and the [R11 verification record](docs/VERIFICATION_054_R11.md).
 
 **Windows 10/11 x64** with Microsoft Edge WebView2:
 
-1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.4-preview.11/Zenit-0.5.4-R11-Windows-Portable.zip).
+1. Download the [Windows installer](https://github.com/Arizt00/Zenit/releases/download/v0.5.5-preview.7/Zenit-0.5.5-R7-Windows-Setup.exe), or the [portable ZIP](https://github.com/Arizt00/Zenit/releases/download/v0.5.5-preview.7/Zenit-0.5.4-R11-Windows-Portable.zip).
 2. Run the installer, then open **Zénit**. For the portable version, extract the entire ZIP and run `Zenit/zenit.exe`.
 3. Choose **Open project**, select a folder, open a source file and use **Run** or **Forge**.
 

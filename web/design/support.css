@@ -747,7 +747,7 @@ input[type=checkbox]:disabled{cursor:default;}
 }
 /* Ancillary contracts from continuity.css */
 .sidebar,.platform-page,.setup-card,.terminal-profile,.tool-installer,.tool-sections>section,.provider-detail,.provider-card,.hardware-metrics>div,.platform-notice{background:var(--glass);border-color:var(--glass-edge);box-shadow:var(--inset);}
-.setup-shell,.onboarding,.installer-app{background:radial-gradient(ellipse at 80% 40%,var(--ambient-b),transparent 65%),var(--bg);}
+.setup-shell,.onboarding,.installer-app{background:radial-gradient(ellipse at 80% 40%,var(--ambient-b,var(--accent-soft)),transparent 65%),var(--bg);}
 .setup-sidebar{background:transparent;border-color:var(--border);}
 .setup-brand{background:var(--glass);border-color:var(--border);}
 .setup-card{min-width:0;}
@@ -1057,8 +1057,10 @@ input[type=checkbox]:disabled{cursor:default;}
 }
 .quick-input-widget{background:var(--surface);color:var(--text);border:1px solid var(--border-strong);border-radius:16px;padding:8px;box-shadow:0 18px 60px #0004;overflow:hidden;max-width:calc(100vw - 36px);}
 .quick-input-widget .quick-input-header{padding:6px 6px 10px;gap:8px;}
+/* Monaco computes its centre and negative margin from the editor width.
+   A second translateX(-50%) moves half the picker behind the project panel. */
 .overlayWidgets>div:has(>.quick-input-widget){left:12px;right:auto;width:calc(100% - 24px);}
-.quick-input-widget{position:absolute;top:16px;left:50%;margin-left:0;transform:translateX(-50%);width:min(620px,100%);max-width:100%;box-sizing:border-box;}
+.quick-input-widget{position:absolute;top:16px;left:50%;margin-left:0;transform:none;width:min(620px,100%);max-width:100%;box-sizing:border-box;}
 .quick-input-widget .monaco-list,.quick-input-widget .monaco-scrollable-element{width:100%;}
 .quick-input-widget .scrollbar.vertical{right:0;left:auto;}
 .quick-input-widget .monaco-inputbox{background:var(--field);border:1px solid var(--border);border-radius:10px;min-height:38px;box-sizing:border-box;}

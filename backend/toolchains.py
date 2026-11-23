@@ -94,7 +94,7 @@ class Toolchains:
         return candidate
     def discover_servers(self):
         from .runtime_paths import find_tool
-        candidates=[('clangd',['c','cpp'],['--background-index']),('pylsp',['python'],[]),('pyright-langserver',['python'],['--stdio']),('rust-analyzer',['rust'],[]),('gopls',['go'],[]),('jdtls',['java'],[]),('csharp-ls',['csharp'],[]),('ncc-lsp',['nc'],[]),('asm-lsp',['asm'],[])]
+        candidates=[('clangd',['c','cpp'],['--background-index']),('pylsp',['python'],[]),('pyright-langserver',['python'],['--stdio']),('rust-analyzer',['rust'],[]),('gopls',['go'],[]),('jdtls',['java'],[]),('csharp-ls',['csharp'],[]),('asm-lsp',['asm'],[])]
         covered={lang for profile in self.config['servers'] for lang in profile['languages']}
         for name,languages,args in candidates:
             if all(lang in covered for lang in languages):continue
@@ -103,6 +103,22 @@ class Toolchains:
             if Path(executable).suffix.lower() in ('.cmd','.bat'):continue
             self.config['servers'].append({'id':'detected-'+name,'label':name+' · detectado','argv':[executable,*args],'languages':languages})
             covered.update(languages)
+        # Expose both nC LSP families without starting servers before workspace approval.
+        identifiers={profile['id'] for profile in self.config['servers']}
+        general=find_tool('nclsp')
+        python=find_tool('python') or find_tool('python3')
+        bridge=Path(__file__).with_name('nc_lsp_stdio.py')
+        if general and python and bridge.is_file() and 'detected-nclsp' not in identifiers:
+            self.config['servers'].append({
+                'id':'detected-nclsp', 'label':'nC · General (LSP diagnostics)',
+                'argv':[python,'-I',str(bridge),'--nclsp',general], 'languages':['nc']
+            })
+        system=find_tool('nc-sys-lsp')
+        if system and 'detected-nc-sys-lsp' not in identifiers:
+            self.config['servers'].append({
+                'id':'detected-nc-sys-lsp', 'label':'nC · System / Machine (LSP)',
+                'argv':[system,'lsp'], 'languages':['nc']
+            })
         return self.config
 
     def detect(self,refresh=False):

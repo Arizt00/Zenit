@@ -12,11 +12,32 @@ SKIP = {'.git', '.lumen', '.ncc', 'node_modules', '__pycache__', '.venv', 'venv'
 
 class Superseded(Exception): pass
 
-def stage(workspace, path, content, directory, obsolete):
+def buffer_sources(workspace, path, content, buffers=None):
+    """Validate a bounded set of editor sources before making a private copy."""
+    if buffers is None: buffers=[]
+    if not isinstance(buffers,list) or len(buffers)>199:
+        raise ValueError('Lantern admite hasta 200 archivos abiertos por revisión.')
+    active=workspace.resolve(path,must_exist=False).relative_to(workspace.root).as_posix()
+    sources={};names=set();total=0
+    for row in [*buffers,{'path':active,'content':content}]:
+        if not isinstance(row,dict):raise ValueError('Búfer de contexto no válido.')
+        name=workspace.resolve(row.get('path'),must_exist=False).relative_to(workspace.root).as_posix()
+        if any(part in SKIP or part.startswith('.env') for part in Path(name).parts):
+            raise ValueError('Lantern no copia búferes privados o generados: '+name)
+        text=row.get('content')
+        if not isinstance(text,str) or len(text.encode('utf-8'))>MAX_FILE:
+            raise ValueError('Cada búfer de Lantern admite hasta 2 MiB.')
+        key=os.path.normcase(name)
+        if key in names:raise ValueError('Búfer de contexto repetido: '+name)
+        names.add(key);sources[name]=text;total+=len(text.encode('utf-8'))
+    if total>4*1024*1024:raise ValueError('Los búferes de Lantern superan 4 MiB. Guarda o cierra algunos archivos antes de continuar.')
+    return sources
+
+
+def stage(workspace, path, content, directory, obsolete, buffers=None):
     """A bounded private project copy, never links to mutable original sources."""
-    workspace.resolve(path, must_exist=False)
-    if not isinstance(content, str) or len(content.encode('utf-8')) > MAX_FILE:
-        raise ValueError('El buffer de Lantern admite hasta 2 MiB.')
+    sources=buffer_sources(workspace,path,content,buffers)
+    replacements={os.path.normcase(name) for name in sources}
     directory.mkdir(parents=True, exist_ok=True)
     count = total = 0
     for folder, dirs, files in os.walk(workspace.root, followlinks=False):
@@ -32,7 +53,7 @@ def stage(workspace, path, content, directory, obsolete):
             relative = source.relative_to(workspace.root)
             # Exclude secrets, VCS internals and bytecode from the execution copy.
             if name.startswith('.env') or source.suffix == '.pyc': continue
-            if relative.as_posix() == path.replace('\\', '/'): continue
+            if os.path.normcase(relative.as_posix()) in replacements: continue
             count += 1; total += source.stat().st_size
             if count > 15000 or total > 256 * 1024 * 1024:
                 raise ValueError('El contexto Live supera 15 000 archivos o 256 MiB. Abre la carpeta del programa o configura una tarea específica.')
@@ -40,15 +61,28 @@ def stage(workspace, path, content, directory, obsolete):
             shutil.copy2(source, output)
     shadow = Workspace(directory, workspace.native); shadow.trusted = True
     shadow.python_workspace=getattr(workspace,'python_workspace',workspace)
-    file = shadow.resolve(path, must_exist=False); file.parent.mkdir(parents=True, exist_ok=True)
-    file.write_text(content, encoding='utf-8', newline='')
+    for name,text in sources.items():
+        if obsolete():raise Superseded()
+        count+=1;total+=len(text.encode('utf-8'))
+        if count>15000 or total>256*1024*1024:raise ValueError('El contexto Live supera 15 000 archivos o 256 MiB.')
+        file=shadow.resolve(name,must_exist=False);file.parent.mkdir(parents=True,exist_ok=True)
+        file.write_text(text,encoding='utf-8',newline='')
     return shadow
 
 def prepare(runtimes, workspace, path):
     """Return separate validation and execution commands. A compiler runs only once."""
-    lang = language(path)
+    lang = language(path,runtimes.config['languages'])
     if not lang: raise ValueError('No hay adaptador Lantern para este archivo.')
     profile = runtimes.config['languages'].get(lang, {})
+    remote = getattr(runtimes,'execution',None)
+    if remote and remote.selected(workspace)['kind']!='local':
+        plan = runtimes.plan(workspace,path)
+        if lang in ('python','javascript','bash') or profile.get('run') and not profile.get('build'):
+            checks=runtimes.plan(workspace,path,check=True)['commands'];commands=plan['commands']
+        elif lang=='nc' and Path(path).suffix.lower() not in ('.n','.nc'):
+            checks=runtimes.plan(workspace,path,check=True)['commands'];commands=plan['commands']
+        else:checks=plan['commands'][:-1];commands=plan['commands'][-1:]
+        return {**plan,'checks':checks,'commands':commands,'custom':True,'lensMode':'cooperative','adapter':lang,'preview':False}
     if profile.get('run') or profile.get('build'):
         if not (profile.get('check') or profile.get('build')):
             raise ValueError('El adaptador personalizado necesita check o build para validar el buffer antes de ejecutarlo.')
@@ -64,7 +98,10 @@ def prepare(runtimes, workspace, path):
     elif lang in ('html', 'css'):
         plan = runtimes.plan(workspace, path); checks = []; commands = []
     elif lang == 'nc':
-        if Path(path).suffix.lower() in ('.n', '.nc'):
+        from .nc_project_bridge import has_project_imports
+        if Path(path).suffix.lower() in ('.n','.nc') and has_project_imports(workspace.resolve(path)):
+            plan=runtimes.plan(workspace,path);checks=[];commands=plan['commands']
+        elif Path(path).suffix.lower() in ('.n', '.nc'):
             plan = runtimes.plan(workspace, path, debug=True); checks = plan['commands']; commands = [[str(plan['target'])]]
         else:
             plan = runtimes.plan(workspace, path); checks = runtimes.plan(workspace, path, check=True)['commands']; commands = plan['commands']

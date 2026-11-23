@@ -42,7 +42,8 @@ export function themePalette(theme) {
   palette['field-text']=readable(pick('input.foreground',palette.text),palette.field);
   palette['field-muted']=readable(pick('input.placeholderForeground',palette.muted),palette.field);
   for(const [token,background] of [['chrome','header'],['rail','rail'],['canvas','bg']]){
-    palette[token+'-text']=readable(palette.text,palette[background]);palette[token+'-secondary']=readable(palette.secondary,palette[background]);palette[token+'-accent']=readable(palette.accent,palette[background]);
+    const foreground=token==='chrome'?pick('titleBar.activeForeground',palette.text):token==='rail'?pick('activityBar.foreground',palette.text):palette.text;
+    palette[token+'-text']=readable(foreground,palette[background]);palette[token+'-secondary']=readable(palette.secondary,palette[background]);palette[token+'-accent']=readable(palette.accent,palette[background]);
   }
   palette.overlay=palette.bg+'88';palette.focus=readable(pick('focusBorder',palette.accent),palette.surface,3);
   palette['editor-text']=readable(text,palette.editor);
@@ -60,12 +61,32 @@ export function themePalette(theme) {
   for(const key of Object.keys(palette).filter(k=>k.startsWith('syntax-')))palette[key]=readable(palette[key],palette.editor);
   return {palette,colors,dark};
 }
+// Monaco and the shell must composite against the same actual surfaces. Theme
+// authors often use alpha for line numbers or placeholders; preserve readable
+// colours and repair only pairs that otherwise disappear in the editor.
+export function editorThemeColors(theme){
+  const {palette:p,colors}=themePalette(theme),result={...colors},solid=(key,fallback,base)=>opaque(colors[key]||fallback,base),foreground=(key,fallback,bg)=>readable(colors[key]||fallback,bg);
+  result['editor.background']=p.editor;result['editor.foreground']=p['editor-text'];
+  const gutter=solid('editorGutter.background',p.editor,p.editor);result['editorGutter.background']=gutter;
+  result['editorLineNumber.foreground']=foreground('editorLineNumber.foreground',p['editor-muted'],gutter);
+  result['editorLineNumber.activeForeground']=foreground('editorLineNumber.activeForeground',p['editor-text'],gutter);
+  result['editorCursor.foreground']=foreground('editorCursor.foreground',p.accent,p.editor);
+  result['minimap.background']=solid('minimap.background',p.editor,p.editor);
+  for(const name of ['editorWidget','editorHoverWidget','editorSuggestWidget','quickInput']){
+    const bg=solid(name+'.background',p.surface,p.editor);result[name+'.background']=bg;result[name+'.foreground']=foreground(name+'.foreground',p.text,bg);
+    if(name!=='quickInput')result[name+'.border']=readable(colors[name+'.border']||p.border,bg,1.3);
+  }
+  const selected=solid('editorSuggestWidget.selectedBackground',p.selected,result['editorSuggestWidget.background']);result['editorSuggestWidget.selectedBackground']=selected;
+  result['editorSuggestWidget.selectedForeground']=foreground('editorSuggestWidget.selectedForeground',p['selected-text'],selected);
+  const field=solid('input.background',p.field,result['quickInput.background']);result['input.background']=field;result['input.foreground']=foreground('input.foreground',p['field-text'],field);result['input.placeholderForeground']=foreground('input.placeholderForeground',p['field-muted'],field);
+  return result;
+}
 export function restoreShellAppearance(root=document.documentElement,storage=localStorage){return globalThis.ZenitThemeAppearance.restore(root,storage);}
-export function applyShellTheme(theme,root=document.documentElement,baseTheme='day'){
+export function applyShellTheme(theme,root=document.documentElement,baseTheme='day',{persist=true}={}){
   const resolved=theme?themePalette(theme):null,palette=resolved?.palette||{};if(theme)palette.glass=palette.surface.slice(0,7)+'f0';
   for(const key of (root.dataset.extensionTokens||'').split(' ').filter(Boolean))if(!(key in palette))root.style.removeProperty('--'+key);
   for(const [key,value] of Object.entries(palette))if(root.style.getPropertyValue('--'+key)!==value)root.style.setProperty('--'+key,value);
   if(theme){root.dataset.extensionTokens=Object.keys(palette).join(' ');root.dataset.extensionTheme=theme.id;root.dataset.theme=resolved.dark?'dark':'day';}
   else{delete root.dataset.extensionTheme;delete root.dataset.extensionTokens;root.dataset.theme=baseTheme;}
-  try{if(theme)localStorage.setItem('zenit.themeAppearance',JSON.stringify({id:theme.id,base:root.dataset.theme,palette}));else localStorage.removeItem('zenit.themeAppearance');}catch{}
+  if(persist)try{if(theme)localStorage.setItem('zenit.themeAppearance',JSON.stringify({id:theme.id,base:root.dataset.theme,palette}));else localStorage.removeItem('zenit.themeAppearance');}catch{}
 }

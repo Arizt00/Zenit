@@ -1,0 +1,28 @@
+"""Two real UI clients, with temporary projects and no user session changes."""
+import argparse,json,sys,tempfile,threading,time
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
+from backend.server import Application,LumenServer
+from playwright.sync_api import sync_playwright,expect
+
+def main():
+ parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,default=ROOT/'qa-output/r17-coco-project-ui');out=parser.parse_args().output;out.mkdir(parents=True,exist_ok=True);checks=[];errors=[]
+ with tempfile.TemporaryDirectory(prefix='zenit-r17-coco-ui-') as tmp:
+  base=Path(tmp);ws=base/'project';ws.mkdir();(ws/'shared.py').write_text('print("ONE_HOST_UI")\n');(ws/'other.py').write_text('VALUE=42\n');app=Application(ROOT,ws,data_dir=base/'profile');app.workspace.trusted=True;app.features.studio.update({'onboarded':True});app.features.prefs.update({'general.locale':'es','general.showWelcome':False,'updates.automatic':False,'security.confirmRoutineActions':False});state=app.features.team.start(app.workspace,{'protocol':2,'shareProject':True,'documents':[{'path':'shared.py'}],'allowRun':True});server=LumenServer(0,app);threading.Thread(target=server.serve_forever,daemon=True).start()
+  try:
+   with sync_playwright() as pw:
+    browser=pw.chromium.launch(channel='msedge',headless=True);host=browser.new_page(viewport={'width':1600,'height':1000});host.on('pageerror',lambda e:errors.append(str(e)))
+    def inject(route):
+     response=route.fetch();route.fulfill(response=response,body=response.text()+'\nwindow.__qa={get team(){return teamUI},get editor(){return editor}};')
+    host.route('**/src/app.js',inject);host.goto(f'http://127.0.0.1:{server.server_port}');host.wait_for_function('window.lumen?.platformReady');host.evaluate('__qa.team.open()');expect(host.locator('.coco-project-files button')).to_have_count(2)
+    guest_context=browser.new_context(viewport={'width':1440,'height':900});guest=guest_context.new_page();guest.on('pageerror',lambda e:errors.append(str(e)));guest.goto(state['invitation']);guest.locator('#name').fill('Estación QA');guest.locator('#connect').click();expect(guest.locator('#status')).to_contain_text('lectura');assert guest.locator('#run').is_disabled();assert guest.locator('#new-file').is_disabled();checks.append('Host project tree and browser guest render; fresh participants enter read-only')
+    member=next(m for m in app.features.team.room.project.members.values() if m['role']!='host');host.locator('.coco-participant-permissions summary').click();host.locator('[data-coco-role]').select_option('runner');expect(guest.locator('#run')).to_be_enabled();guest.evaluate('(text)=>monaco.editor.getModels()[0].setValue(text)', '# Unicode 🙂\nprint("ONE_HOST_UI")\n');host.wait_for_function('__qa.team.files.values().next().value.text.toString().includes("Unicode 🙂")');checks.append('Host grants execution; Unicode edits converge in the actual Zénit editor')
+    app.features.team.request({'action':'project-create','path':'created.py','text':'VALUE=42\n'});expect(host.locator('#sidebar-content [data-file="created.py"]')).to_have_count(1);checks.append('A shared file creation also refreshes the main host project explorer')
+    guest.locator('#project-tree button',has_text='other.py').click();expect(guest.locator('#files button')).to_have_count(3);guest.wait_for_function('monaco.editor.getModels().some(m=>m.getValue().includes("VALUE=42"))');checks.append('Lazy opening another project file creates the same shared document')
+    app.features.team.request({'action':'project-rename','path':'shared.py','newPath':'renamed.py'});expect(guest.locator('#files button',has_text='renamed.py')).to_be_visible();host.wait_for_function('[...__qa.team.files.values()].some(e=>e.path==="renamed.py")');guest.locator('#files button',has_text='renamed.py').click();checks.append('Rename preserves CRDT identity and updates both clients')
+    guest_context.set_offline(True);guest.evaluate('(text)=>monaco.editor.getModels().find(m=>m.getValue().includes("ONE_HOST_UI")).setValue(text)', '# recovered offline λ\nprint("ONE_HOST_UI")\n');guest.wait_for_timeout(900);guest_context.set_offline(False);guest.reload();guest.locator('#connect').click();expect(guest.locator('#run')).to_be_enabled();host.wait_for_function('[...__qa.team.files.values()].some(e=>e.text.toString().includes("recovered offline λ"))');assert len([m for m in app.features.team.room.project.members.values() if m['role']!='host'])==1;checks.append('Reload restores the same participant permission and IndexedDB CRDT changes after disconnect')
+    guest.locator('#files button',has_text='renamed.py').click();guest.locator('#run').click();expect(guest.locator('#output')).to_contain_text('ONE_HOST_UI',timeout=20000);assert len(app.runner.jobs)==1;assert (ws/'renamed.py').read_text().startswith('# recovered');checks.append('Guest executes and saves on the host; one process and one shared output')
+    host.evaluate('__qa.team.open()');host.locator('[data-team-copy]').hover();host.wait_for_timeout(350);host.screenshot(path=str(out/'host-project.png'));guest.screenshot(path=str(out/'browser-project.png'));assert not errors,errors;guest_context.close();browser.close()
+  finally:server.shutdown();server.server_close();app.features.shutdown();app.runner.shutdown()
+ (out/'verification.json').write_text(json.dumps({'checks':checks,'errors':errors,'scope':'Independent real UI contexts on one machine; not two physical stations.'},ensure_ascii=False,indent=2),encoding='utf-8');print('PASS',checks,flush=True)
+if __name__=='__main__':main()

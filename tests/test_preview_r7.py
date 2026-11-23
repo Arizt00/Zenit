@@ -96,7 +96,7 @@ class PreviewR7(unittest.TestCase):
             try:
                 runtime.start(workspace,'lumen.r7-test',True)
                 call=lambda cmd:runtime.request(workspace,{'id':'lumen.r7-test','method':'command','command':cmd})['result']
-                self.assertIn(str(ws/'main.py'),call('r7.files'));self.assertEqual(call('r7.write'),'áéíóú ñ')
+                self.assertIn(str(ws/'main.py').casefold(),[p.casefold() for p in call('r7.files')]);self.assertEqual(call('r7.write'),'áéíóú ñ')
                 runtime.shutdown();runtime=ExtensionRuntime(ExtensionStore(prefs))
                 self.assertTrue(runtime.restore(workspace)['hosts'][0]['running'])
                 runtime.stop('lumen.r7-test',forget=True);self.assertEqual(runtime.restore(workspace)['hosts'],[])

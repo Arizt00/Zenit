@@ -12,21 +12,82 @@ export function byteValue(bytes,index,little=true){
   if(index+4<=bytes.length)values.push('u32: '+view.getUint32(index,little),'f32: '+view.getFloat32(index,little));
   return values.join('  ·  ');
 }
-/** Each page reads at most 512 bytes; no model, edit action, or write endpoint. */
-export class BinaryView{
-  constructor(mount,item,load){
-    this.item=item;this.load=load;this.epoch=0;this.node=document.createElement('section');this.node.className='binary-view';
-    this.node.innerHTML=`<header><div>${icon('assembly')}<strong>${esc(item.format)}</strong><span>${item.size.toLocaleString()} bytes · Read only</span></div><form><label>Offset <input aria-label="Byte offset" value="0x0" size="12" autocomplete="off"></label><button class="secondary-button">Go</button></form></header><div class="binary-scroll"><table><thead><tr><th>Offset</th><th>Hexadecimal</th><th>ASCII</th></tr></thead><tbody></tbody></table></div><footer><span class="binary-value" role="status">Select a byte to inspect its value</span><label><input type="checkbox" checked> Little endian</label><button class="secondary-button" data-byte-prev>${icon('chevron-left')}Previous</button><button class="secondary-button" data-byte-next>Next${icon('chevron-right')}</button></footer><p class="binary-error" role="alert" hidden></p>`;
-    mount.append(this.node);this.render(item);
-    this.node.querySelector('form').onsubmit=e=>{e.preventDefault();const raw=this.node.querySelector('form input').value.trim();if(!/^(?:0x[\da-f]+|\d+)$/i.test(raw))return this.error('Enter a decimal or hexadecimal offset.');this.page(Number(raw));};
-    this.node.querySelector('[data-byte-prev]').onclick=()=>this.page(Math.max(0,this.item.offset-512));
-    this.node.querySelector('[data-byte-next]').onclick=()=>this.page(this.item.offset+512);
-    this.node.querySelector('tbody').onclick=e=>{const button=e.target.closest('[data-byte]');if(!button)return;this.selected=+button.dataset.byte;this.node.querySelectorAll('[data-byte]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));this.value();};
-    this.node.querySelector('footer input').onchange=()=>this.value();
+export function binaryState(item){return item.binaryState ||= {revision:item.revision,patches:new Map(),undo:[],redo:[],saving:false};}
+export function binaryPatches(state){const groups=[];for(const [offset,p] of [...state.patches].sort((a,b)=>a[0]-b[0])){let group=groups.at(-1);if(!group||group.offset+group.before.length!==offset||group.before.length>=4096){group={offset,before:[],after:[]};groups.push(group);}group.before.push(p.before);group.after.push(p.after);}const encode=bytes=>btoa(bytes.map(x=>String.fromCharCode(x)).join(''));return groups.map(g=>({offset:g.offset,before:encode(g.before),after:encode(g.after)}));}
+export function captureBinary(item,offset=0){
+  const state=binaryState(item);
+  return {revision:state.revision,patches:binaryPatches(state),offset};
+}
+export function restoreBinary(item,recovery){
+  const patches=new Map(),undo=[];
+  for(const group of recovery.patches){
+    const before=Uint8Array.from(atob(group.before),c=>c.charCodeAt(0)),after=Uint8Array.from(atob(group.after),c=>c.charCodeAt(0));
+    for(let i=0;i<before.length;i++)if(before[i]!==after[i]){
+      const offset=group.offset+i;patches.set(offset,{before:before[i],after:after[i]});
+      undo.push({offset,before:before[i],after:after[i],original:before[i]});
+    }
   }
-  error(message){const node=this.node.querySelector('.binary-error');node.textContent=message;node.hidden=!message;}
-  async page(offset){const epoch=++this.epoch;this.error('');this.node.setAttribute('aria-busy','true');try{const item=await this.load(this.item.path,offset);if(epoch===this.epoch&&this.node.isConnected)this.render(item);}catch(e){if(epoch===this.epoch)this.error(e.message);}finally{if(epoch===this.epoch)this.node.removeAttribute('aria-busy');}}
-  render(item){this.item=item;this.bytes=Uint8Array.from(atob(item.data),c=>c.charCodeAt(0));this.selected=null;this.node.querySelector('form input').value='0x'+item.offset.toString(16);this.node.querySelector('tbody').innerHTML=byteRows(this.bytes,item.offset).map(row=>`<tr><th>${row.offset.toString(16).padStart(8,'0')}</th><td>${row.hex.map((v,i)=>`<button type="button" data-byte="${row.offset-item.offset+i}" aria-label="Byte ${row.offset+i}: ${v}" aria-pressed="false">${v}</button>`).join('')}</td><td>${esc(row.ascii)}</td></tr>`).join('');this.node.querySelector('[data-byte-prev]').disabled=item.offset===0;this.node.querySelector('[data-byte-next]').disabled=item.offset+item.count>=item.size;this.value();}
-  value(){this.node.querySelector('.binary-value').textContent=this.selected===null?'Select a byte to inspect its value':'0x'+(this.item.offset+this.selected).toString(16)+' · '+byteValue(this.bytes,this.selected,this.node.querySelector('footer input').checked);}
+  item.binaryState={revision:recovery.revision,patches,undo,redo:[],saving:false};
+  item.recoveryConflict=item.revision!==recovery.revision;
+  return !item.recoveryConflict;
+}
+/** Page data stays small; edits survive tab changes and never decode bytes as text. */
+export class BinaryView{
+  constructor(mount,item,load,actions={}){
+    this.record=item;this.item=item;this.state=binaryState(item);this.load=load;this.actions=actions;this.epoch=0;this.node=document.createElement('section');this.node.className='binary-view';
+    this.node.innerHTML=`<header><div>${icon('assembly')}<strong>${esc(item.format)}</strong><span>${item.size.toLocaleString()} bytes</span></div><form data-binary-offset><label>Posición <input aria-label="Byte offset" value="0x0" size="12" autocomplete="off"></label><button class="secondary-button">Ir</button></form></header><div class="binary-tools"><div class="binary-edit-tools"><button class="secondary-button" data-binary-edit>${icon('code')}Editar bytes</button><form data-binary-edit-form><label>Hex <input aria-label="Valor hexadecimal" maxlength="2" placeholder="00" spellcheck="false" autocomplete="off" disabled></label><button class="secondary-button" disabled>Aplicar</button></form><button class="icon-button" data-binary-undo aria-label="Deshacer byte">${icon('undo')}</button><button class="icon-button" data-binary-redo aria-label="Rehacer byte">${icon('redo')}</button><span class="binary-modified" role="status"></span></div><div class="binary-action-tools"><button class="icon-button" data-binary-export title="Exportar cambios hexadecimales" aria-label="Exportar cambios hexadecimales">${icon('download')}</button><button class="secondary-button" data-binary-save>${icon('check')}Guardar</button><button class="secondary-button" data-binary-build>${icon('build')}Recompilar</button><button class="primary-button" data-binary-run>${icon('play')}Ejecutar</button></div></div><div class="binary-scroll"><table><thead><tr><th>Offset</th><th>Hexadecimal</th><th>ASCII</th></tr></thead><tbody></tbody></table></div><footer><span class="binary-value" role="status">Selecciona un byte</span><label><input type="checkbox" checked> Little endian</label><button class="secondary-button" data-byte-prev>${icon('chevron-left')}Anterior</button><button class="secondary-button" data-byte-next>Siguiente${icon('chevron-right')}</button></footer><details class="binary-arguments"><summary>Argumentos de ejecución</summary><label>Un argumento por línea<textarea rows="2" aria-label="Argumentos de ejecución" placeholder="argumento"></textarea></label></details><p class="binary-error" role="alert" hidden></p>`;
+    for(const [action,label,title] of [['save','Guardar','Guardar cambios del binario'],['build','Recompilar','Recompilar desde su archivo fuente'],['run','Ejecutar','Ejecutar binario']]){
+      const button=this.node.querySelector(`[data-binary-${action}]`);button.setAttribute('aria-label',label);button.title=title;
+      const text=[...button.childNodes].find(node=>node.nodeType===Node.TEXT_NODE&&node.textContent.trim());if(text){const span=document.createElement('span');span.className='binary-action-label';span.textContent=text.textContent;text.replaceWith(span);}
+    }
+    const inspection=document.createElement('details');inspection.className='binary-structure';inspection.innerHTML=`<summary>${icon('layers')}Estructura y comparación</summary><div class="binary-inspection-actions"><button class="secondary-button" data-binary-inspect>${icon('search')}Inspeccionar ELF / PE</button><form data-binary-compare><label>Comparar con otro binario del proyecto<input name="otherPath" placeholder="build/version-anterior.exe" required></label><button class="secondary-button">${icon('split')}Comparar</button><button type="button" class="secondary-button" data-binary-compare-next hidden>Siguiente intervalo</button></form></div><div data-binary-structure></div><div data-binary-comparison></div>`;this.node.append(inspection);
+    mount.append(this.node);this.render(item);this.editing=false;
+    const safe=fn=>async()=>{try{this.error('');await fn();}catch(error){this.error(error.message);}};
+    this.node.querySelector('[data-binary-inspect]').onclick=safe(async()=>{const data=await this.actions.inspect?.();if(!this.node.isConnected||!data)return;this.node.querySelector('[data-binary-structure]').innerHTML=`<h3>${esc(data.format)} · ${esc(data.architecture||'')} · Entrada ${esc(data.entry||'—')}</h3>${data.message?`<p>${esc(data.message)}</p>`:''}<h4>Secciones · ${data.sections.length}</h4><div class="binary-section-list"><table><thead><tr><th>Nombre</th><th>Dirección</th><th>Offset</th><th>Archivo</th><th>Memoria</th></tr></thead><tbody>${data.sections.map(s=>`<tr><th>${esc(s.name||'#'+s.index)}</th><td>${esc(s.address)}</td><td>${s.offset}</td><td>${s.fileSize}</td><td>${s.size}</td></tr>`).join('')}</tbody></table></div><details><summary>Símbolos · ${data.symbols.length}${data.symbolsTruncated?' · vista limitada':''}</summary><div class="binary-symbol-list">${data.symbols.map(s=>`<div><code>${esc(s.name)}</code><span>${esc(s.address)}</span><small>Sección ${s.section}</small></div>`).join('')||'<p>El archivo no conserva una tabla de símbolos disponible.</p>'}</div></details>`;});
+    const comparisonForm=this.node.querySelector('[data-binary-compare]');let compareOffset=0;const compare=async()=>{const data=await this.actions.compare?.(comparisonForm.elements.otherPath.value,compareOffset);if(!this.node.isConnected||!data)return;this.node.querySelector('[data-binary-comparison]').innerHTML=`<h4>Intervalo ${data.offset.toLocaleString()}–${data.end.toLocaleString()}</h4><p>${data.differentBytes.toLocaleString()} bytes distintos en este intervalo. Tamaños: ${data.sizes.map(n=>n.toLocaleString()).join(' / ')} bytes.</p><ul>${data.ranges.map(r=>`<li>0x${r.offset.toString(16)} · ${r.count} bytes</li>`).join('')}</ul>${data.rangesTruncated?'<p>Se muestran los primeros 256 grupos de diferencias.</p>':''}${data.nextOffset===null?'<p>Fin de ambos archivos.</p>':''}`;this.compareNext=data.nextOffset;this.node.querySelector('[data-binary-compare-next]').hidden=data.nextOffset===null;};comparisonForm.onsubmit=e=>{e.preventDefault();compareOffset=0;safe(compare)();};this.node.querySelector('[data-binary-compare-next]').onclick=safe(async()=>{compareOffset=this.compareNext;await compare();});
+    this.node.querySelector('[data-binary-offset]').onsubmit=e=>{e.preventDefault();const raw=this.node.querySelector('[data-binary-offset] input').value.trim();if(!/^(?:0x[\da-f]+|\d+)$/i.test(raw))return this.error('Introduce una posición decimal o hexadecimal.');this.page(Number(raw));};
+    this.node.querySelector('[data-byte-prev]').onclick=()=>this.page(Math.max(0,this.item.offset-512));this.node.querySelector('[data-byte-next]').onclick=()=>this.page(this.item.offset+512);
+    this.node.querySelector('tbody').onclick=e=>{const button=e.target.closest('[data-byte]');if(!button)return;this.selected=+button.dataset.byte;this.paintSelection();};
+    this.node.querySelector('tbody').ondblclick=e=>{if(!e.target.closest('[data-byte]'))return;this.editing=!item.readOnly;this.paintControls();this.node.querySelector('[data-binary-edit-form] input').focus();this.node.querySelector('[data-binary-edit-form] input').select();};
+    this.node.querySelector('[data-binary-edit]').onclick=()=>{this.editing=!this.editing;this.paintControls();};
+    this.node.querySelector('[data-binary-edit-form]').onsubmit=e=>{e.preventDefault();this.edit(this.node.querySelector('[data-binary-edit-form] input').value);};
+    this.node.querySelector('[data-binary-undo]').onclick=()=>this.undo();this.node.querySelector('[data-binary-redo]').onclick=()=>this.undo(true);
+    this.node.querySelector('[data-binary-export]').onclick=()=>{const data={format:'zenit-hexpatch-1',path:item.path,revision:this.state.revision,patches:binaryPatches(this.state)},url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=item.path.split(/[\\/]/).at(-1)+'.hexpatch.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
+    this.node.querySelector('[data-binary-save]').onclick=safe(()=>this.actions.save?.());this.node.querySelector('[data-binary-build]').onclick=safe(()=>this.actions.build?.());this.node.querySelector('[data-binary-run]').onclick=safe(()=>this.actions.run?.());
+    const args=this.node.querySelector('textarea');args.value=(item.binaryArguments||[]).join('\n');args.oninput=()=>{item.binaryArguments=args.value.split(/\r?\n/).filter(x=>x.length);};
+    this.node.querySelector('footer input').onchange=()=>this.value();
+    this.node.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&['z','y'].includes(e.key.toLowerCase())){e.preventDefault();e.stopImmediatePropagation();this.undo(e.shiftKey||e.key.toLowerCase()==='y');}};
+    this.actions.info?.().then(info=>{if(!this.node.isConnected)return;this.node.querySelector('[data-binary-run]').disabled=!info.canRun;this.node.querySelector('[data-binary-run]').title=info.runReason||'Ejecutar en la terminal seleccionada';}).catch(error=>this.error(error.message));
+    this.paintControls();
+    if(item.recoveryConflict)this.error('Se recuperaron tus bytes pendientes, pero el archivo cambió en disco. Exporta los cambios antes de revisar el binario; no se mezclan revisiones.');
+  }
+  error(message){const node=this.node.querySelector('.binary-error');node.classList.remove('binary-save-result');node.textContent=message;node.hidden=!message;}
+  async page(offset){if(this.state.saving)return;const epoch=++this.epoch;this.error('');this.node.setAttribute('aria-busy','true');try{const item=await this.load(this.item.path,offset);if(epoch===this.epoch&&this.node.isConnected){if(item.revision!==this.state.revision&&this.state.patches.size)throw Error('El archivo cambió en disco. Tus cambios permanecen aquí; expórtalos antes de volver a abrirlo. No se mezclan revisiones.');this.state.revision=item.revision;this.render(item);}}catch(e){if(epoch===this.epoch)this.error(e.message);}finally{if(epoch===this.epoch)this.node.removeAttribute('aria-busy');}}
+  render(item){Object.assign(this.record,item);this.item=item;this.original=Uint8Array.from(atob(item.data),c=>c.charCodeAt(0));this.selected=null;this.node.querySelector('[data-binary-offset] input').value='0x'+item.offset.toString(16);this.paintBytes();}
+  paintBytes(){
+    this.bytes=this.original.slice();for(let i=0;i<this.bytes.length;i++){const patch=this.state.patches.get(this.item.offset+i);if(patch)this.bytes[i]=patch.after;}
+    this.node.querySelector('tbody').innerHTML=byteRows(this.bytes,this.item.offset).map(row=>`<tr><th>${row.offset.toString(16).padStart(8,'0')}</th><td>${row.hex.map((v,i)=>`<button type="button" class="${this.state.patches.has(row.offset+i)?'byte-modified':''}" data-byte="${row.offset-this.item.offset+i}" aria-label="Byte ${row.offset+i}: ${v}" aria-pressed="false">${v}</button>`).join('')}</td><td>${esc(row.ascii)}</td></tr>`).join('');this.paintSelection();
+  }
+  paintSelection(){this.node.querySelectorAll('[data-byte]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.byte===this.selected)));this.value();this.paintControls();}
+  paintControls(){
+    const selected=this.selected!==null,editable=this.editing&&!this.item.readOnly&&!this.state.saving&&!this.record.recoveryConflict;
+    this.node.querySelector('[data-binary-edit]').setAttribute('aria-pressed',String(this.editing));this.node.querySelector('[data-binary-edit]').disabled=this.item.readOnly||this.state.saving;
+    const input=this.node.querySelector('[data-binary-edit-form] input');input.disabled=!editable||!selected;if(selected&&document.activeElement!==input)input.value=this.bytes[this.selected].toString(16).padStart(2,'0');this.node.querySelector('[data-binary-edit-form] button').disabled=input.disabled;
+    this.node.querySelector('[data-binary-undo]').disabled=!this.state.undo.length||this.state.saving;this.node.querySelector('[data-binary-redo]').disabled=!this.state.redo.length||this.state.saving;
+    this.node.querySelector('[data-binary-save]').disabled=!this.state.patches.size||this.state.saving||!!this.record.recoveryConflict;this.node.querySelector('[data-binary-build]').disabled=this.state.saving||!!this.record.recoveryConflict;
+    this.node.querySelector('.binary-modified').textContent=this.state.saving?'Guardando…':this.state.patches.size?this.state.patches.size+' bytes modificados':'Sin cambios';
+    this.node.querySelector('[data-byte-prev]').disabled=this.item.offset===0||this.state.saving;this.node.querySelector('[data-byte-next]').disabled=this.item.offset+this.item.count>=this.item.size||this.state.saving;
+  }
+  edit(hex){
+    if(!this.editing||this.state.saving||this.item.readOnly||this.record.recoveryConflict||this.selected===null)return;
+    if(!/^[\da-f]{2}$/i.test(hex))return this.error('Escribe exactamente dos dígitos hexadecimales.');
+    const offset=this.item.offset+this.selected,after=parseInt(hex,16),before=this.bytes[this.selected];if(after===before)return;
+    if(!this.state.patches.has(offset)&&this.state.patches.size>=65536)return this.error('Guarda antes de modificar más de 64 KiB.');
+    const operation={offset,before,after,original:this.original[this.selected]};this.state.undo.push(operation);if(this.state.undo.length>65536)this.state.undo.shift();this.state.redo=[];this.apply(operation,after);this.error('');
+  }
+  apply(op,value){if(value===op.original)this.state.patches.delete(op.offset);else this.state.patches.set(op.offset,{before:op.original,after:value});this.paintBytes();this.actions.changed?.();}
+  undo(redo=false){if(this.state.saving)return;const from=redo?this.state.redo:this.state.undo,to=redo?this.state.undo:this.state.redo,op=from.pop();if(op){to.push(op);this.apply(op,redo?op.after:op.before);}}
+  value(){this.node.querySelector('.binary-value').textContent=this.selected===null?'Selecciona un byte para inspeccionarlo':'0x'+(this.item.offset+this.selected).toString(16)+' · '+byteValue(this.bytes,this.selected,this.node.querySelector('footer input').checked);}
+  saved(item){this.state.revision=item.revision;this.state.patches.clear();this.state.undo=[];this.state.redo=[];Object.assign(this.record,item);this.render(item);this.error(item.backup?'Guardado. Copia previa: '+item.backup:'');this.node.querySelector('.binary-error').classList.add('binary-save-result');}
   dispose(){this.epoch++;this.node.remove();}
 }

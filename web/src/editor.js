@@ -1,11 +1,14 @@
 import {installMonacoOverlays} from './monaco-overlays.js';
+import {installDiagnosticPanels} from './diagnostic-panel.js';
 import {waitForNativeBridge} from './native-ready.js';
-import {themePalette} from './extension-theme.js';
+import {themePalette,editorThemeColors} from './extension-theme.js';
 import {TextMateLanguages,textMateTheme} from './textmate.js';
+import {languageConfiguration} from './language-configuration.js';
+import {SemanticStyles} from './semantic-styles.js';
 import {monacoThemeRules,tokenColor,themeEntries} from './theme-tokens.js';
 import {assemblyCompletions,assemblySyntax} from './assembly-language.js';
 import {escapeHTML, icon} from './icons.js';
-import {BinaryView} from './binary-view.js';
+import {BinaryView,binaryPatches,binaryState} from './binary-view.js';
 // Monaco rejects outstanding worker requests when a model/provider is disposed.
 // Handle only that expected cancellation; other editor failures still surface.
 window.addEventListener('unhandledrejection',event=>{
@@ -13,7 +16,8 @@ window.addEventListener('unhandledrejection',event=>{
   if(reason?.name==='Canceled'&&reason?.message==='Canceled'&&String(reason.stack).includes('/vendor/monaco/'))event.preventDefault();
 });
 
-const languages = Object.assign(Object.create(null), {cs:'csharp',fs:'fsharp',fsx:'fsharp',vb:'vb',js:'javascript',jsx:'javascript',mjs:'javascript',cjs:'javascript',ts:'typescript',tsx:'typescript',json:'json',jsonc:'json',py:'python',pyw:'python',c:'c',h:'cpp',hpp:'cpp',cpp:'cpp',cc:'cpp',cxx:'cpp',rs:'rust',css:'css',scss:'scss',less:'less',html:'html',htm:'html',htmll:'html',md:'markdown',markdown:'markdown',s:'asm',asm:'asm',n:'nc',nc:'nc',nm:'nc',ncp:'nc',nb:'nc',nbb:'nc',xml:'xml',svg:'xml',sh:'shell',bash:'shell',zsh:'shell',ps1:'powershell',psm1:'powershell',bat:'bat',cmd:'bat',yml:'yaml',yaml:'yaml',java:'java',go:'go',kt:'kotlin',kts:'kotlin',swift:'swift',rb:'ruby',php:'php',pl:'perl',pm:'perl',lua:'lua',r:'r',jl:'julia',dart:'dart',ex:'elixir',exs:'elixir',erl:'erlang',hrl:'erlang',hs:'haskell',scala:'scala',clj:'clojure',sql:'sql',toml:'ini',ini:'ini',conf:'ini',cmake:'cmake',make:'makefile',zig:'zig',pas:'pascal',f90:'fortran',f:'fortran',cob:'cobol',tex:'latex',proto:'protobuf',graphql:'graphql',vue:'html',svelte:'html',ipynb:'json'});
+const languages = Object.assign(Object.create(null), {cs:'csharp',fs:'fsharp',fsx:'fsharp',vb:'vb',js:'javascript',jsx:'javascript',mjs:'javascript',cjs:'javascript',ts:'typescript',tsx:'typescript',json:'json',jsonc:'json',py:'python',pyw:'python',pyi:'python',c:'c',h:'cpp',hpp:'cpp',cpp:'cpp',cc:'cpp',cxx:'cpp',rs:'rust',css:'css',scss:'scss',less:'less',html:'html',htm:'html',htmll:'html',md:'markdown',markdown:'markdown',s:'asm',asm:'asm',n:'nc',nc:'nc',nm:'nc',ncp:'nc',nb:'nc',nbb:'nc',xml:'xml',svg:'xml',sh:'shell',bash:'shell',zsh:'shell',ps1:'powershell',psm1:'powershell',bat:'bat',cmd:'bat',yml:'yaml',yaml:'yaml',java:'java',go:'go',kt:'kotlin',kts:'kotlin',swift:'swift',rb:'ruby',php:'php',pl:'perl',pm:'perl',lua:'lua',r:'r',jl:'julia',dart:'dart',ex:'elixir',exs:'elixir',erl:'erlang',hrl:'erlang',hs:'haskell',scala:'scala',clj:'clojure',sql:'sql',toml:'ini',ini:'ini',conf:'ini',cmake:'cmake',make:'makefile',zig:'zig',pas:'pascal',f90:'fortran',f:'fortran',cob:'cobol',tex:'latex',proto:'protobuf',graphql:'graphql',vue:'html',svelte:'html',ipynb:'json'});
+Object.assign(languages,{nm:'nc-machine',nb:'nc-root',nbb:'nc-primitive',ncp:'nc-hardware',nbo:'nc-backend-object',init:'nc-target-init'});
 let contributedAssociations=new Map();
 export const languageFor = path => {
   const normalized=String(path||'').replaceAll('\\','/').toLowerCase(),name=normalized.split('/').at(-1);
@@ -21,7 +25,7 @@ export const languageFor = path => {
   const extra=[...contributedAssociations.entries()].sort((a,b)=>b[0].length-a[0].length).find(([suffix])=>normalized.endsWith(suffix));
   return extra?.[1]||languages[normalized.split('.').pop()]||'plaintext';
 };
-export const languageLabel = path => ({csharp:'C#',javascript:'JavaScript',typescript:'TypeScript',cpp:'C++',c:'C',python:'Python',rust:'Rust',asm:'ASM',nc:'nC',plaintext:'Plain Text',markdown:'Markdown',json:'JSON',css:'CSS',html:'HTML'}[languageFor(path)] || languageFor(path));
+export const languageLabel = path => ({csharp:'C#',javascript:'JavaScript',typescript:'TypeScript',cpp:'C++',c:'C',python:'Python',rust:'Rust',asm:'ASM',nc:'nC','nc-root':'nC · Basal','nc-machine':'nC · Máquina','nc-primitive':'nC · Primitivas','nc-hardware':'nC · Hardware','nc-backend-object':'nC · Objeto IR','nc-target-init':'nC · Inicio de destino',plaintext:'Plain Text',markdown:'Markdown',json:'JSON',css:'CSS',html:'HTML'}[languageFor(path)] || languageFor(path));
 const keywords = new Set(('using namespace public private protected internal class sealed abstract static readonly const void float double int long short byte string bool char var new return if else for foreach while do switch case default break continue null true false this base override virtual async await interface enum struct get set in out ref try catch finally throw sizeof typeof import from def print for in is not and or pass with as lambda yield global nonlocal elif None True False match fn let mut impl use pub mod self trait extern unsafe auto unsigned signed volatile template typename std include define primitive stc fa strictly binary bind raw probe').split(' '));
 const types = new Set(('MonoBehaviour Vector2 Vector3 Vector4 Quaternion Transform Rigidbody Camera Time Input Mathf Debug Header SerializeField List Dictionary HashSet Console String Object Task int32_t uint32_t size_t uint64_t float32 bool8 vec3 mat4').split(' '));
 
@@ -48,7 +52,7 @@ export function highlighted(text, path='') {
 
 export class LumenEditor {
   constructor(mount, callbacks={}) {
-    this.mount=mount; this.callbacks=callbacks; this.models=new Map(); this.current=null;
+    this.mount=mount; this.callbacks=callbacks; this.models=new Map(); this.current=null;this.detachedPaths=new Set();
     this.kind='base'; this.settings={fontSize:12.5,tabSize:4,minimap:true,wordWrap:false};
     this.view=null; this.disposables=[]; this.highlightFrame=0;
   }
@@ -94,6 +98,7 @@ export class LumenEditor {
         [/"([^"\\]|\\.)*"/,'string'],[/\b\d+\b/,'number']
       ]}};this.languageSyntax.set(id,syntax);monaco.languages.setMonarchTokensProvider(id,syntax);
     }
+    this.semanticStyles=new SemanticStyles(()=>this.refreshSemanticStyles());
     this.textmate=new TextMateLanguages(monaco,()=>this.defineMonacoTheme(),id=>this.prepareGrammarLanguage(id),(id,current)=>this.restoreGrammarLanguage(id,current));
     this.defineMonacoTheme();
     this.panes=[];this.mount.classList.add('editor-panes');
@@ -106,13 +111,17 @@ export class LumenEditor {
       minimap:{enabled:this.settings.minimap,renderCharacters:false,maxColumn:80,scale:1},
       padding:{top:3,bottom:24},tabSize:this.settings.tabSize,insertSpaces:true,wordWrap:this.settings.wordWrap?'on':'off',
       guides:{indentation:true,highlightActiveIndentation:false,bracketPairs:false},
-      bracketPairColorization:{enabled:false},folding:true,showFoldingControls:'mouseover',
+      bracketPairColorization:{enabled:this.settings.bracketColors!==false},folding:true,showFoldingControls:'mouseover',
       overviewRulerLanes:0,hideCursorInOverviewRuler:true,overviewRulerBorder:false,
       scrollbar:{vertical:'hidden',horizontal:'hidden',verticalScrollbarSize:0,horizontalScrollbarSize:0,useShadows:false},
-      fixedOverflowWidgets:true,overflowWidgetsDomNode:document.body,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Editor de código de Zénit',
+      // Keep interactive widgets in Monaco's focus tree. Moving them to body
+      // makes rename cancel itself as soon as its input receives focus.
+      fixedOverflowWidgets:true,stickyScroll:{enabled:false},accessibilitySupport:'auto',ariaLabel:'Editor de código de Zénit',
+      hover:{above:false,delay:240,hidingDelay:200,sticky:true},
       quickSuggestions:{other:true,comments:false,strings:false},suggest:{preview:true},inlineSuggest:{enabled:true},
       tabCompletion:'on',wordBasedSuggestions:'currentDocument',
     });
+    this.diagnosticPanels=installDiagnosticPanels(this);this.disposables.push(this.diagnosticPanels);
     primary.view=this.view;this.bindPane(primary);
     monaco.editor.onDidChangeMarkers(()=>this.callbacks.diagnostics?.(this.diagnostics()));
     this.breakpoints=new Map();this.breakpointDecorations=[];
@@ -120,34 +129,41 @@ export class LumenEditor {
   }
   createPane(){
     const node=document.createElement('section');node.className='editor-pane';
-    node.innerHTML='<header class="editor-pane-heading"><span></span><button class="icon-button" title="Separar este editor en otra ventana" aria-label="Separar este editor en otra ventana">'+icon('layout')+'</button></header><div class="editor-pane-content"></div>';
+    node.innerHTML='<header class="editor-pane-heading"><span draggable="true"></span><button class="icon-button" data-merge-editor title="Merge editors" aria-label="Merge editors">'+icon('minus')+'</button><button class="icon-button" data-detach-editor title="Open in another window" aria-label="Open in another window">'+icon('detach')+'</button></header><div class="editor-pane-content"></div>';
     this.mount.append(node);const pane={node,content:node.lastElementChild};this.panes.push(pane);
-    node.querySelector('button').onclick=()=>{pane.view.focus();window.dispatchEvent(new CustomEvent('lumen:detach-editor'));};return pane;
+    node.querySelector('[data-merge-editor]').onclick=()=>this.closeSplit(this.pathFor(pane.view.getModel()));
+    node.querySelector('[data-detach-editor]').onclick=()=>{pane.view.focus();window.dispatchEvent(new CustomEvent('lumen:detach-editor'));};return pane;
   }
   bindPane(pane){
+    this.diagnosticPanels?.bind(pane.view);
     pane.view.onDidFocusEditorText(()=>{
       this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();this.paintBreakpoints();this.updateCursor();this.callbacks.active?.(this.current);window.dispatchEvent(new Event('lumen:editor-active'));
     });
-    pane.view.onDidChangeModel(()=>this.paintPaneLabels());
+    pane.view.onDidChangeModel(()=>{this.paintPaneLabels();pane.view.updateOptions({readOnly:this.models.get(this.pathFor(pane.view.getModel()))?.teamReadOnly===true});});
     pane.view.onDidChangeCursorPosition(e=>{if(this.view===pane.view)this.callbacks.cursor?.(e.position.lineNumber,e.position.column);});
     pane.view.addCommand(monaco.KeyMod.CtrlCmd|monaco.KeyCode.KeyS,()=>this.callbacks.save?.());
     pane.view.onMouseDown(e=>{const path=this.pathFor(pane.view.getModel());if(e.target.type===monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN&&e.target.position&&path){const lines=this.breakpoints.get(path)||new Set(),line=e.target.position.lineNumber;lines.has(line)?lines.delete(line):lines.add(line);this.breakpoints.set(path,lines);this.paintBreakpoints();}});
     this.callbacks.pane?.(pane.view);
   }
   pathFor(model){return model?[...this.models].find(([,r])=>r.model===model)?.[0]||null:null;}
-  paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());p.node.querySelector('span').textContent=name||'Elige un archivo';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
+  paintPaneLabels(){for(const p of this.panes||[]){const name=this.pathFor(p.view?.getModel());const label=p.node.querySelector('span');label.textContent=name||'Choose a file';label.dataset.paneDocument=name||'';p.node.classList.toggle('focused',p.view===this.view);}this.mount.classList.toggle('is-split',(this.panes?.length||0)>1);}
   split(path,side='right'){
-    if(this.models.get(path||this.current)?.kind==='binary')throw Error('Binary files use the read-only byte inspector.');
+    if(this.detachedPaths.has(path||this.current)){this.callbacks.detached?.(path||this.current);return;}
+    if(this.models.get(path||this.current)?.kind==='binary')throw Error('Usa el editor hexadecimal para modificar los bytes de este archivo.');
     if(this.kind!=='monaco')throw Error('La vista dividida requiere el editor Monaco incluido en la distribución.');
+    const model=this.models.get(path||this.current)?.model;if(!model)return;
     let pane=this.panes[1];
-    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model:null,automaticLayout:true,overflowWidgetsDomNode:document.body});this.bindPane(pane);}
+    if(!pane){pane=this.createPane();const {theme,...options}=this.view.getRawOptions();pane.view=monaco.editor.create(pane.content,{...options,model,automaticLayout:true});this.bindPane(pane);}
     this.mount.dataset.splitAxis=['top','bottom'].includes(side)?'vertical':'horizontal';
     pane.node.style.order=['left','top'].includes(side)?'-1':'1';
     pane.view.setModel(this.models.get(path||this.current)?.model||null);this.view=pane.view;this.current=this.pathFor(pane.view.getModel());this.paintPaneLabels();pane.view.focus();this.callbacks.active?.(this.current);
   }
-  closeSplit(){
+  closeSplit(path=this.current){
     if((this.panes?.length||0)<2)return;
-    const second=this.panes.pop(),first=this.panes[0];second.view.dispose();second.node.remove();this.view=first.view;this.current=this.pathFor(first.view.getModel());this.paintPaneLabels();this.focus();this.callbacks.active?.(this.current);
+    const selected=this.panes.find(p=>this.pathFor(p.view.getModel())===path),state=selected?.view.saveViewState();
+    const second=this.panes.pop(),first=this.panes[0];second.view.dispose();second.node.remove();this.view=first.view;
+    if(this.models.get(path)?.model)first.view.setModel(this.models.get(path).model);if(state)first.view.restoreViewState(state);
+    this.current=this.pathFor(first.view.getModel());delete this.mount.dataset.splitAxis;this.paintPaneLabels();this.focus();this.callbacks.active?.(this.current);
   }
   registerLocalIntelligence(){
     const m=monaco;
@@ -195,10 +211,13 @@ export class LumenEditor {
     if (!window.monaco) return;
     const css=getComputedStyle(document.documentElement);
     const c=name=>css.getPropertyValue('--'+name).trim();
+    const interactionColors={'editor.selectionBackground':c('selection'),'editor.inactiveSelectionBackground':c('selection'),'editor.selectionHighlightBackground':c('selected'),'editor.selectionHighlightBorder':'#00000000','editor.wordHighlightBackground':c('hover'),'editor.wordHighlightStrongBackground':c('selected'),'editor.findMatchBackground':c('selection'),'editor.findMatchHighlightBackground':c('hover'),'editor.findMatchBorder':c('focus'),'minimap.selectionHighlight':c('selection')};
     const syntax=Object.fromEntries(['keyword','type','number','string','comment','function'].map(key=>[key,c('syntax-'+key)]));
-    const external=this.extensionTheme,themeColors=external?.data?.colors||{},editorBackground=external?themePalette(external).palette.editor:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
-    const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},themeEntries(external)));
-    monaco.editor.defineTheme('lumen-theme',{
+    const external=this.extensionTheme,themeColors=external?editorThemeColors(external):{},editorBackground=external?themeColors['editor.background']:c('editor'),editorForeground=tokenColor(themeColors['editor.foreground'],editorBackground)||c('text');
+    const styleMode=document.documentElement.dataset.theme==='day'?'light':'dark',languageEntries=(this.languageStyles||[]).flatMap(s=>s[styleMode]?.tokenColors||[]);
+    this.semanticStyles?.setTheme(external,{editor:editorBackground,text:editorForeground,...syntax},styleMode);
+    const encodedTokensColors=this.textmate?.setTheme(textMateTheme({text:editorForeground,editor:editorBackground,...syntax},[...themeEntries(external),...languageEntries]));
+    this.monacoTheme={id:'lumen-theme',data:{
       base:document.documentElement.dataset.theme==='day'?'vs':'vs-dark',inherit:true,encodedTokensColors,
       rules:[{token:'',foreground:c('text').slice(1)},{token:'keyword',foreground:c('syntax-keyword').slice(1)},
         {token:'type',foreground:c('syntax-type').slice(1)},{token:'type.identifier',foreground:c('syntax-type').slice(1)},
@@ -229,14 +248,17 @@ export class LumenEditor {
         'input.background':c('field'),'input.foreground':c('text'),'input.border':c('border'),
         'input.placeholderForeground':c('muted'),'keybindingLabel.background':c('field'),
         'keybindingLabel.foreground':c('secondary'),'keybindingLabel.border':c('border'),
-        'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border')},
-    });
+        'pickerGroup.foreground':c('accent'),'pickerGroup.border':c('border'),...interactionColors},
+    }};
     if(this.extensionTheme){
-      const theme=this.extensionTheme,{colors,dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
-      monaco.editor.defineTheme('lumen-extension-theme',{base,inherit:true,rules,colors,encodedTokensColors});monaco.editor.setTheme('lumen-extension-theme');
-    }else monaco.editor.setTheme('lumen-theme');
+      const theme=this.extensionTheme,{dark}=themePalette(theme),rules=monacoThemeRules(theme),base=['vs','vs-dark','hc-black','hc-light'].includes(theme.uiTheme)?theme.uiTheme:dark?'vs-dark':'vs';
+      this.monacoTheme={id:'lumen-extension-theme',data:{base,inherit:true,rules,colors:{...themeColors,...interactionColors},encodedTokensColors}};
+    }
+    this.applyMonacoTheme();
     for(const pane of this.panes||[])pane.view?.updateOptions({'semanticHighlighting.enabled':this.extensionTheme?.data?.semanticHighlighting!==false});
   }
+  applyMonacoTheme(){const theme=this.monacoTheme;if(!theme||!window.monaco)return;monaco.editor.defineTheme(theme.id,{...theme.data,rules:[...theme.data.rules,...this.semanticStyles?.rules||[]]});monaco.editor.setTheme(theme.id);}
+  refreshSemanticStyles(){if(this.semanticThemeFrame)return;this.semanticThemeFrame=requestAnimationFrame(()=>{this.semanticThemeFrame=0;this.applyMonacoTheme();});}
   initBase() {
     this.kind='base';
     this.mount.innerHTML=`<div class="fallback-editor"><div class="code-gutter" aria-hidden="true"><div class="gutter-lines"></div></div><div class="code-scroller"><div class="code-canvas"><pre class="code-highlight" aria-hidden="true"></pre><textarea class="code-input" aria-label="Editor de código" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea></div></div><div class="code-minimap" title="Navegar por el archivo"><canvas></canvas><div class="minimap-window"></div></div><div class="editor-find hidden"><input placeholder="Find..." aria-label="Buscar en el archivo"><small></small><button class="icon-button find-next" title="Siguiente">${icon('chevron-down')}</button><button class="icon-button find-close" title="Cerrar búsqueda">${icon('close')}</button></div></div>`;
@@ -276,6 +298,7 @@ export class LumenEditor {
     if(activate)this.activate(item.path);
   }
   activate(path) {
+    if(this.detachedPaths.has(path)){this.callbacks.detached?.(path);return false;}
     const previous=this.models.get(this.current);
     if(previous){
       previous.value=this.getValue();
@@ -289,7 +312,7 @@ export class LumenEditor {
     if(record.kind==='binary'){
       this.externalDiagnostics=[];
       if(this.kind==='monaco')this.view.setModel(null);
-      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary);
+      this.binaryView=new BinaryView(this.mount,record,this.callbacks.binary,{changed:()=>this.callbacks.change?.(path,this.isDirty(path)),save:()=>this.callbacks.save?.(path),build:()=>this.callbacks.binaryBuild?.(path),run:()=>this.callbacks.binaryRun?.(path),info:()=>this.callbacks.binaryInfo?.(path),inspect:()=>this.callbacks.binaryInspect?.(path),compare:(otherPath,offset)=>this.callbacks.binaryCompare?.(path,otherPath,offset)});
       this.callbacks.active?.(path);window.dispatchEvent(new Event('lumen:editor-active'));return;
     }
     if(this.kind==='monaco'){
@@ -308,7 +331,10 @@ export class LumenEditor {
     for(const [suffix,id] of Object.entries(associations||{}))contributedAssociations.set(suffix.toLowerCase(),id);
     if(this.kind==='monaco'){
       const registered=new Set(monaco.languages.getLanguages().map(x=>x.id));
-      for(const id of new Set([...Object.values(languages),...contributedAssociations.values()]))if(!registered.has(id)){monaco.languages.register({id});registered.add(id);}
+      const declaredIds=(items||[]).map(item=>item.id).filter(id=>typeof id==='string'&&id);
+      for(const id of new Set([...Object.values(languages),...contributedAssociations.values(),...declaredIds]))if(!registered.has(id)){monaco.languages.register({id});registered.add(id);}
+      for(const d of this.languageConfigurations||[])d.dispose();this.languageConfigurations=[];
+      for(const item of items)if(item.configuration)this.languageConfigurations.push(monaco.languages.setLanguageConfiguration(item.id,languageConfiguration(item.configuration,monaco.languages.IndentAction)));
       for(const [path,record] of this.models)if(record.model)monaco.editor.setModelLanguage(record.model,languageFor(path));
     }else this.schedulePaint();
   }
@@ -350,13 +376,22 @@ export class LumenEditor {
     record.value=this.getValue();
     this.callbacks.change?.(record.path,record.value!==record.savedValue);
   }
-  isDirty(path=this.current){const item=this.models.get(path);return item?item.value!==item.savedValue:false;}
+  isDirty(path=this.current){const item=this.models.get(path);return item?.kind==='binary'?!!item.binaryState?.patches.size:item?item.value!==item.savedValue:false;}
+  async saveBinary(path){
+    const record=this.models.get(path),state=binaryState(record);if(!state.patches.size)return record;if(state.saving)throw Error('El guardado sigue en curso.');
+    state.saving=true;this.binaryView?.paintControls();
+    try{const result=await this.callbacks.binarySave({path,revision:state.revision,patches:binaryPatches(state),offset:this.current===path?this.binaryView.item.offset:0});
+      if(this.current===path)this.binaryView.saved(result);else{Object.assign(record,result);state.revision=result.revision;state.patches.clear();state.undo=[];state.redo=[];}this.callbacks.change?.(path,false);return result;
+    }finally{state.saving=false;this.binaryView?.paintControls();}
+  }
+  refreshBinary(path,result){const record=this.models.get(path);if(!record)return;Object.assign(record,result);if(this.current===path)this.binaryView.saved(result);else{record.binaryState={revision:result.revision,patches:new Map(),undo:[],redo:[],saving:false};}this.callbacks.change?.(path,false);}
   markSaved(result) {
     const record=this.models.get(result.path);if(!record)return;
     record.savedValue=result.content;record.revision=result.revision;record.newline=result.newline;record.bom=result.bom;
     this.callbacks.change?.(result.path,record.value!==record.savedValue);
   }
   close(path) {
+    if(this.detachedPaths.has(path)){this.callbacks.detached?.(path);return;}
     const item=this.models.get(path);if(!item)return;
     if(this.current===path){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');}
     if(this.current===path){this.current=null;if(this.kind==='monaco')this.view.setModel(null);else{this.input.value='';this.paint();}}
@@ -364,7 +399,26 @@ export class LumenEditor {
     if(item.model)item.model.dispose();
     this.models.delete(path);
   }
-  reset(){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');this.current=null;for(const p of this.panes||[])p.view.setModel(null);for(const item of this.models.values())item.model?.dispose();this.models.clear();if(this.kind==='base'){this.input.value='';this.paint();}}
+  visiblePaths(){return [...this.models.keys()].filter(path=>!this.detachedPaths.has(path));}
+  suspend(path){
+    const record=this.models.get(path);if(!record||this.detachedPaths.has(path))return;
+    const wasCurrent=this.current===path;
+    if(wasCurrent){record.value=this.getValue();if(this.kind==='monaco')record.viewState=this.view.saveViewState();}
+    this.detachedPaths.add(path);
+    if(this.kind==='monaco'){
+      const remaining=this.panes.filter(p=>p.view.getModel()!==record.model),keep=remaining[0]||this.panes[0];
+      for(const pane of [...this.panes])if(pane!==keep&&pane.view.getModel()===record.model){pane.view.dispose();pane.node.remove();this.panes.splice(this.panes.indexOf(pane),1);}
+      this.view=keep.view;
+      if(keep.view.getModel()===record.model)keep.view.setModel(null);
+      this.current=this.pathFor(keep.view.getModel());
+      if(this.panes.length<2)delete this.mount.dataset.splitAxis;
+      this.paintPaneLabels();
+    }else if(this.current===path){this.current=null;this.input.value='';this.paint();}
+    if(wasCurrent){this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');}
+    if(!this.current){const next=this.visiblePaths().at(-1);if(next)this.activate(next);else this.callbacks.active?.(null);}
+  }
+  resume(path){if(!this.detachedPaths.delete(path))return false;this.activate(path);return true;}
+  reset(){this.detachedPaths.clear();this.binaryView?.dispose();this.binaryView=null;this.mount.classList.remove('showing-binary');this.current=null;for(const p of this.panes||[])p.view.setModel(null);for(const item of this.models.values())item.model?.dispose();this.models.clear();if(this.kind==='base'){this.input.value='';this.paint();}}
   focus(){if(this.binaryView){this.binaryView.node.querySelector('form input').focus();return;}if(this.kind==='monaco')this.view.focus();else this.input.focus({preventScroll:true});}
   changedTheme(){this.defineMonacoTheme();if(this.kind==='base')this.schedulePaint();}
   applySettings(settings) {

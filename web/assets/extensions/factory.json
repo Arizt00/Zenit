@@ -1,1 +1,10 @@
-[{"id":"nc-lang.nc-language","file":"nc-language-1.0.0-21v.vsix","sha256":"926c4329e7be8756b7e22c72cf26e9d6fac9c852c76e39d6fdfd35575889e0ac"}]
+[
+  {
+    "id": "nc-lang.nc-language",
+    "file": "nc-language-1.0.0-21v.zenit.7.vsix",
+    "sha256": "059aed6da49049ab430d25fe16f61b6f34932ecd86ad7aeadc56c91be301280e",
+    "replaces": [
+      "b2060a8e23057ca6212f691d0c88c174d836948463f521687ec7f83502c3e233"
+    ]
+  }
+]

@@ -20,3 +20,20 @@ test('Registered auth providers require access consent and never fabricate a mis
   accept=false;await assert.rejects(api.authentication.getSession('qa-provider',['read'],{createIfNone:true}),/cancelado/);
  }finally{d.dispose();changed.dispose();rmSync(storage,{recursive:true,force:true});}
 });
+
+test('Built-in GitHub account is empty before connection and requires each extension grant',async()=>{
+ const storage=mkdtempSync(join(tmpdir(),'zenit-auth-builtin-'));let sessions=[],consents=0;
+ const host={registerCommand:()=>({dispose(){}}),register:()=>({dispose(){}}),notify(){},effect(){},execute(){},service:async(method,p)=>{assert.equal(p.provider,'github');if(method==='authentication.sessions')return sessions;if(method==='authentication.create')throw Error('Connect in Settings');throw Error(method);}};
+ const bridge=createAPI(host,{id:'qa.github-consumer',manifest:{},root:storage,workspace:storage,storage,extensions:[],authenticationProviders:['github']}),api=bridge.vscode;
+ api.window.showQuickPick=async items=>{consents++;return items[0];};
+ try{
+  assert.equal(await api.authentication.getSession('github',['repo'],{silent:true}),undefined);
+  await assert.rejects(api.authentication.getSession('github',['repo'],{createIfNone:true}),/Settings/);
+  sessions=[{id:'github-fixture-session',accessToken:'fixture-only',account:{id:'42',label:'QA'},scopes:['repo']}];
+  assert.equal(await api.authentication.getSession('github',['repo'],{silent:true}),undefined);
+  assert.equal((await api.authentication.getSession('github',['repo'],{createIfNone:true})).account.id,'42');
+  assert.equal((await api.authentication.getSession('github',['repo'],{silent:true})).id,'github-fixture-session');
+  bridge.services.event('authentication.changed',{provider:'github'});
+  assert.equal(await api.authentication.getSession('github',['repo'],{silent:true}),undefined);assert.equal(consents,2);
+ }finally{rmSync(storage,{recursive:true,force:true});}
+});

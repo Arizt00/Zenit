@@ -14,7 +14,7 @@ from backend.version import VERSION,REVISION
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--bundle',type=Path);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--bundle',type=Path);parser.add_argument('--integrity-only',action='store_true',help='Verify archives without repeating an already completed native GUI test');args=parser.parse_args()
     prefix=f'Zenit-{VERSION}-R{REVISION}'
     manifest=json.loads((ROOT/f'dist/{prefix}-{sys.platform}-{architecture()}-manifest.json').read_text(encoding='utf-8'))
     for item in manifest['outputs']:
@@ -34,8 +34,31 @@ def main():
         files={file.relative_to(payload).as_posix() for file in payload.rglob('*') if file.is_file() and '__pycache__' not in file.parts and file.suffix!='.pyc'}
         assert {name.removeprefix('payload/') for name in entries if name.startswith('payload/')}==files, 'Installer payload differs from the application bundle'
         index=json.loads((payload/'sdk/foundation/tool-index.json').read_text(encoding='utf-8'))
-        critical={'zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
+        critical={'_internal/web/src/release-055.js','_internal/web/src/code-popovers.js','_internal/web/src/machine-library.js','_internal/web/design/release-055.css','_internal/docs/RELEASE_055.md','zenit.exe','zenit-python.exe','_internal/web/src/studio.js'}
+        critical.update('_internal/web/'+name for name in (
+            'src/panel-chrome.js','src/development-tools.js','src/code-detail.js','src/task-flow.js',
+            'src/product-ui.js','src/controls.js','src/chrome-locale.js',
+            'src/local-models.js','design/local-models.css',
+            'src/project-organizer.js','src/temporary-tab-groups.js','design/project-organizer.css',
+            'src/python-packages.js','src/native-packages.js',
+            'design/panel-chrome.css','design/code-help.css','design/task-flow.css','design/typography.css','design.css'))
+        critical.update('_internal/web/'+name for name in (
+            'src/workbench.js','src/foundation-ui.js','src/session-workbench.js','src/workbench-session.js','src/sdk-manager.js','design/coherence-r16.css',
+            'src/hover-reveal.js','src/melody-stream.js','src/workspace-setup.js','design/workspace-setup.css',
+            'src/desktop-workflows.js','src/editor.js','src/diagnostic-panel.js','design/diagnostic-panel.css','src/explorer-menu.js','src/preview.js','src/tab-controls.js','src/editor-context-menu.js','src/icons.js','src/dependency-layout.js','design/refine-r14.css','design/refine-r15.css','src/team.js','team-peer.js','team-vendor/yjs.mjs',
+            'design/workflow-polish.css','design/session-workbench.css',
+            'src/team-view.js','team-execution.js','src/assembly-workbench.js','src/workspace-profiles.js',
+            'design/co-code.css','design/assembly-workspace.css'))
         critical.update('sdk/foundation/'+path.replace('\\','/') for path in index['tools'].values())
+        critical.update('_internal/web/'+name for name in ('src/team-project.js','coco-drafts.js','src/task-center.js','src/tern-portability.js','src/project-tests.js','src/git-conflicts.js','src/machine-inspector.js','src/extension-command-icon.js','src/extension-accounts.js','design/workflows-r17.css'))
+        critical.update(('_internal/config/extension-compatibility.json','_internal/docs/PREVIEW_054_R17.md','_internal/backend/test_bridge.py','_internal/backend/nc_test_bridge.py'))
+        critical.add('_internal/backend/emma_bridge.mjs')
+        critical.add('_internal/backend/extension_selectors.cjs')
+        critical.add('_internal/backend/extension_diagnostics.cjs')
+        critical.update(('_internal/web/src/experience-r2.js','_internal/web/design/experience-r2.css'))
+        critical.update('_internal/web/'+name for name in (
+            'src/focused-context.js','src/melody-countercheck.js','src/lantern-rules.js',
+            'src/studio-start.js','design/experience-055.css'))
         for name in sorted(critical):
             assert hashlib.sha256(archive.extract(entries['payload/'+name])).hexdigest()==sha256(payload/name), name
     if sys.platform=='darwin':
@@ -45,18 +68,19 @@ def main():
             try:
                 assert (Path(temp)/'Applications').is_symlink()
                 executable=Path(temp)/'Zenit.app/Contents/MacOS/zenit-python'
-                probe(executable,prefix)
+                if not args.integrity_only:probe(executable,prefix)
             finally:subprocess.run(['hdiutil','detach',temp],check=True)
     else:
         bundle=args.bundle or ROOT/'dist/Zenit'
-        probe(bundle/('zenit-python.exe' if sys.platform=='win32' else 'zenit-python'),prefix)
+        if not args.integrity_only:probe(bundle/('zenit-python.exe' if sys.platform=='win32' else 'zenit-python'),prefix)
+    if args.integrity_only:print('PASS package manifests, hashes and installer payload integrity',flush=True)
 
 
 def probe(executable,prefix):
     report=ROOT/f'dist/{prefix}-{sys.platform}-{architecture()}-verification.json'
     env={**os.environ,'QT_QPA_PLATFORM':'xcb','QTWEBENGINE_CHROMIUM_FLAGS':'--disable-gpu','QTWEBENGINE_DISABLE_SANDBOX':'1'}
     subprocess.run([str(executable),'--python-child',str(ROOT/'tests/native_smoke_worker.py'),'--report',str(report)],env=env,check=True,timeout=300)
-    result=json.loads(report.read_text(encoding='utf-8'));assert not result['errors'] and len(result['checks'])==15,result
+    result=json.loads(report.read_text(encoding='utf-8'));assert not result['errors'] and len(result['checks'])==20,result
     print('PASS installer integrity and actual packaged native GUI:',sys.platform,architecture(),flush=True)
 
 if __name__=='__main__':main()

@@ -12,6 +12,15 @@ test('Tampered cached CSS and unknown tokens cannot enter the shell',()=>{
   const target=root(),storage={getItem:()=>JSON.stringify({id:'qa:dark',base:'dark',palette})};assert.equal(restoreShellAppearance(target,storage),false);assert.equal(target.style.values.size,0);
  }
 });
+test('Setup previews clear extension colours without replacing the saved appearance',()=>{
+ const values=new Map();globalThis.localStorage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
+ try{
+  const target=root();applyShellTheme({id:'qa:saved',uiTheme:'vs-dark',data:{colors:{'editor.background':'#102030'}}},target);
+  const saved=values.get('zenit.themeAppearance');applyShellTheme(null,target,'forest',{persist:false});
+  assert.equal(target.dataset.theme,'forest');assert.equal(target.style.values.size,0);assert.equal(values.get('zenit.themeAppearance'),saved);
+  const restored=root();assert.equal(restoreShellAppearance(restored,localStorage),true);assert.equal(restored.dataset.extensionTheme,'qa:saved');
+ }finally{delete globalThis.localStorage;}
+});
 test('A previous browser origin cannot restore a theme different from the current profile',()=>{
  const storage={getItem:()=>JSON.stringify({id:'qa:old',base:'dark',palette:{editor:'#121212'}})};
  const target=root();assert.equal(ZenitThemeAppearance.restore(target,storage,''),false);

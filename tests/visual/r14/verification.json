@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Detached files disappear from tabs and split panes, keep unsaved shared text and cannot reopen in the main window",
+    "External actions expand left smoothly; returning restores the latest unsaved text without writing the file",
+    "All open-in-window routes transfer ownership; closing one of two external editors restores only its own document",
+    "Activity buttons keep their positions and sizes when opening Extensions at 1600, 1280 and 900 pixels",
+    "Activity icons animate without layout changes; all extension views remain usable",
+    "Native and Python package panels share aligned columns, responsive typography and one quiet focus indicator",
+    "Lantern opens packages in its real active Python environment instead of creating a second .venv"
+  ],
+  "errors": []
+}

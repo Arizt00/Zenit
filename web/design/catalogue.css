@@ -544,17 +544,6 @@
   padding: 0;
 }
 
-@media (min-width:1550px) {
-
-  .app:has(.workspace[data-page=extensions]) {
-    --chrome-height: 64px;
-  }
-
-  .workspace[data-page=extensions] {
-    --rail-width: 59px;
-    grid-template-columns: var(--rail-width) max(0px,calc(var(--dock-left-track) - 13px)) minmax(0,1fr) var(--dock-right-track);
-  }
-}
 
 .extension-art img {
   width: 96px;

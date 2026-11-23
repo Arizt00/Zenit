@@ -9,3 +9,5 @@ qtpy>=2.4,<3; sys_platform == "linux"
 
 websocket-client>=1.8,<2
 packaging>=24.2,<27
+
+pycrdt==0.14.9

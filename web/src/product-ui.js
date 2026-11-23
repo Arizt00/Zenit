@@ -1,13 +1,26 @@
 import {icon} from './icons.js';
 import {installMelodyExperience} from './melody-experience.js';
 import {installChromeLocale} from './chrome-locale.js';
+import {installDevelopmentTools} from './development-tools.js';
+import {installPanelChrome} from './panel-chrome.js';
 
 /** Keep existing actions and handlers; expose secondary tools through one menu. */
 export function installProductUI(host){
   const platform=host.platform;
+  const development=installDevelopmentTools(host);
+  const railAnimations=new Map(),pressRail=event=>{
+    const button=event.target.closest?.('.activity-rail .rail-item,.activity-rail .rail-settings');
+    if(!button||event.type==='click'&&event.detail!==0||document.documentElement.dataset.motion==='off'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const glyph=button.querySelector('svg');if(!glyph)return;
+    railAnimations.get(glyph)?.cancel();
+    const animation=glyph.animate([{transform:'scale(.84)'},{transform:'scale(1.055)',offset:.65},{transform:'scale(1)'}],{duration:320,easing:'cubic-bezier(.22,1,.36,1)'});
+    railAnimations.set(glyph,animation);animation.finished.catch(()=>{}).finally(()=>{if(railAnimations.get(glyph)===animation)railAnimations.delete(glyph);});
+  };
+  document.addEventListener('pointerdown',pressRail,true);document.addEventListener('click',pressRail,true);
   if(platform?.sessionbar){
     const picker=document.createElement('button');picker.className='console-mode zenit-terminal-picker';picker.setAttribute('aria-haspopup','menu');picker.setAttribute('aria-label','Seleccionar terminal');picker.innerHTML=icon('terminal')+'<span>Consola</span>'+icon('chevron-down');
     document.querySelector('.terminal-tools').prepend(picker);
+    if(platform.runTerminalButton)picker.after(platform.runTerminalButton);
     picker.onclick=()=>host.showMenu(picker,[{label:'Consola de tareas',icon:'terminal',run:()=>platform.useConsole()},...Array.from(platform.terminals.values()).map(t=>({label:platform.terminalLabel(t),icon:platform.showingPTY&&t.id===platform.activeTerminal?'check':'terminal',run:()=>platform.selectTerminal(t.id)})),{separator:true},{label:'Nueva terminal',icon:'plus',run:()=>platform.terminalProfiles()},...(platform.showingPTY&&platform.activeTerminal?[{label:'Cerrar esta sesión',icon:'trash',run:()=>platform.closeTerminal(platform.activeTerminal)}]:[])],'Terminales');
     const original=platform.renderActiveTerminal.bind(platform);platform.renderActiveTerminal=(...args)=>{const result=original(...args),terminal=platform.terminals.get(platform.activeTerminal),label=platform.showingPTY&&terminal?platform.terminalLabel(terminal):'Consola';if(picker.querySelector('span').textContent!==label)picker.querySelector('span').textContent=label;return result;};
     platform.sessionbar.classList.add('zenit-sessions-hidden');document.querySelector('.console-mode:not(.zenit-terminal-picker)')?.classList.add('zenit-overflow-action');
@@ -17,20 +30,25 @@ export function installProductUI(host){
     const hidden=[...container.querySelectorAll('button')].filter(button=>!button.matches(keep)&&!button.classList.contains('dock-grip'));
     hidden.forEach(button=>button.classList.add('zenit-overflow-action'));
     const menu=document.createElement('button');menu.type='button';menu.className='icon-button zenit-tools-menu';menu.setAttribute('aria-label','Más acciones');menu.title='Más acciones';menu.innerHTML=icon('more');container.append(menu);
-    menu.onclick=()=>host.showMenu(menu,hidden.map(button=>({label:button.getAttribute('aria-label')||button.title||button.textContent.trim(),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'settings',disabled:button.disabled,run:()=>button.click()})),'Acciones');
+    menu.onclick=()=>{
+      const actions=[...container.querySelectorAll('button')].filter(button=>button!==menu&&(hidden.includes(button)||button.classList.contains('zenit-responsive-action')&&!button.offsetWidth));
+      host.showMenu(menu,actions.map(button=>({label:button.getAttribute('aria-label')||button.title||button.textContent.trim(),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'settings',disabled:button.disabled,run:()=>button.click()})),'Acciones');
+    };
   }
+  document.querySelector('#project-panel .heading-actions [data-action="new-file"]')?.classList.add('zenit-responsive-action','project-header-create');
+  document.querySelector('#project-panel .heading-actions [title*="escritorio"]')?.classList.add('zenit-responsive-action','project-header-external');
   compact(document.querySelector('#project-panel .heading-actions'),'[data-action="new-file"],[data-action="project-menu"],[data-collapse-panel],[title*="escritorio"]');
-  compact(document.querySelector('#assistant-panel .heading-actions'),'[title*="escritorio"],.melody-selection-voice');
+  compact(document.querySelector('#assistant-panel .heading-actions'),'[data-panel-float]');
   compact(document.querySelector('.editor-tabbar'),'.file-tab,.new-tab,.file-group');
   const crumbs=document.createElement('span');crumbs.className='breadcrumbs-actions';
   for(const [action,glyph,label] of [['run','play','Ejecutar archivo'],['debug-view','bug','Depurar archivo'],['settings','settings','Ajustes']]){
     const button=document.createElement('button');button.className='icon-button';button.type='button';button.title=label;button.setAttribute('aria-label',label);button.innerHTML=icon(glyph);button.dataset.documentAction=action;button.onclick=()=>host.perform(action);crumbs.append(button);
   }
   // Breadcrumbs are updated independently; reuse the same toolbar after each update.
-  const updateCrumbs=()=>{const binary=platform.host.editor.models.get(platform.host.editor.current)?.kind==='binary';crumbs.querySelectorAll('button').forEach(b=>b.disabled=b.dataset.documentAction!=='settings'&&binary);document.querySelector('.run-button').disabled=binary;document.querySelector('#breadcrumbs')?.append(crumbs);};document.addEventListener('zenit:breadcrumbs',updateCrumbs);
+  const updateCrumbs=()=>{const binary=platform.host.editor.models.get(platform.host.editor.current)?.kind==='binary';crumbs.querySelectorAll('button').forEach(b=>b.disabled=b.dataset.documentAction==='debug-view'&&binary);document.querySelector('.run-button').disabled=false;document.querySelector('#breadcrumbs')?.append(crumbs);};document.addEventListener('zenit:breadcrumbs',updateCrumbs);
   document.querySelector('#breadcrumbs')?.append(crumbs);
   const run=document.querySelector('.run-button'),panes=document.querySelector('.pane-switcher');if(run&&panes)run.after(panes);
-  const editorMenu=document.querySelector('.editor-tabbar .zenit-tools-menu'),previousMenu=editorMenu?.onclick;if(editorMenu)editorMenu.onclick=()=>host.showMenu(editorMenu,[...Array.from(panes?.querySelectorAll('button')||[]).map(button=>({label:button.title||button.getAttribute('aria-label'),icon:'layout',run:()=>button.click()})),{label:'Más herramientas del editor',icon:'more',run:previousMenu}],'Editor');
+  const editorMenu=document.querySelector('.editor-tabbar .zenit-tools-menu'),previousMenu=editorMenu?.onclick;if(editorMenu)editorMenu.onclick=()=>host.showMenu(editorMenu,[...Array.from(panes?.querySelectorAll('button')||[]).map(button=>({label:button.title||button.getAttribute('aria-label'),icon:button.querySelector('[data-glyph]')?.dataset.glyph||'layout',run:()=>button.click()})),{label:'Más herramientas del editor',icon:'more',run:previousMenu}],'Editor');
   const explorer=document.querySelector('.rail-item[data-view=explorer] [data-icon]');if(explorer)explorer.innerHTML=icon('folder');
   const explain=document.querySelector('[data-ai-action=explain]'),generate=document.querySelector('[data-ai-action=generate]'),refactor=document.querySelector('[data-ai-action=refactor]'),fix=document.querySelector('[data-ai-action=fix]');
   const cards=[[explain,'shield','Explica este código','Te lo detallo paso a paso'],[generate,'build','Genera una función','A partir de una descripción'],[refactor,'search','Busca en tu proyecto','Encuentra archivos, clases, símbolos…'],[fix,'flask','Resuelve un error','Analiza el problema y te da una solución']];
@@ -55,6 +73,7 @@ export function installProductUI(host){
   let locale;
   const refresh=()=>{
     const next=platform.prefs['general.locale'];if(locale===next)return;locale=next;
+    development.refresh();
     const t=(es,en)=>platform.t(es,en),set=(selector,text)=>{const node=document.querySelector(selector);if(node)node.textContent=text;};
     const english=[['Explain this code','I’ll walk you through it'],['Generate a function','From a description'],['Search your project','Find files, classes and symbols…'],['Resolve an error','Understand the problem and its solution']];
     cards.forEach(([button,,heading,detail],i)=>{if(button){button.querySelector('strong').textContent=t(heading,english[i][0]);button.querySelector('small').textContent=t(detail,english[i][1]);}});
@@ -67,6 +86,7 @@ export function installProductUI(host){
   };
   const applyPreferences=platform.applyPreferences.bind(platform);platform.applyPreferences=(...args)=>{const result=applyPreferences(...args);refresh();return result;};refresh();
   const melody=installMelodyExperience(host);
+  const panelChrome=installPanelChrome(host);
   const localeUI=installChromeLocale(platform);
-  return {dispose(){localeUI.dispose();melody.dispose();document.removeEventListener('zenit:breadcrumbs',updateCrumbs);document.removeEventListener('pointerdown',providerPointer);document.removeEventListener('keydown',providerKey);}};
+  return {dispose(){panelChrome.dispose();development.dispose();localeUI.dispose();melody.dispose();document.removeEventListener('pointerdown',pressRail,true);document.removeEventListener('click',pressRail,true);for(const animation of railAnimations.values())animation.cancel();document.removeEventListener('zenit:breadcrumbs',updateCrumbs);document.removeEventListener('pointerdown',providerPointer);document.removeEventListener('keydown',providerKey);}};
 }
